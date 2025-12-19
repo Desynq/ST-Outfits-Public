@@ -19,4 +19,7 @@ export class MutableOutfitView extends OutfitView {
     deleteSlot(slotId) {
         return this.slotView.deleteSlot(slotId);
     }
+    sortByKind(kindOrder) {
+        this.slotView.sortByKind(kindOrder);
+    }
 }

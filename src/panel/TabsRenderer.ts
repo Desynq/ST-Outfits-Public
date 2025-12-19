@@ -9,6 +9,7 @@ type OutfitTab = SlotKind | 'outfits';
 export class OutfitTabsRenderer {
 
 	private currentTab: OutfitTab = 'clothing';
+	private draggedTab: HTMLButtonElement | null = null;
 
 	public constructor(
 		private panel: OutfitTabsHost,
@@ -82,6 +83,8 @@ export class OutfitTabsRenderer {
 				event.target.classList.add('active');
 			});
 
+			this.addDragCapabilityToTab(tab);
+
 			if (tab !== outfitsTab) {
 				tabList.appendChild(tab);
 			}
@@ -90,6 +93,58 @@ export class OutfitTabsRenderer {
 		tabsContainer.appendChild(tabList);
 		tabsContainer.appendChild(outfitsTab);
 		tabsContainer.appendChild(this.createAddTabButton());
+	}
+
+	private addDragCapabilityToTab(tab: HTMLButtonElement) {
+		tab.addEventListener('dragstart', () => {
+			this.draggedTab = tab;
+			tab.classList.add('dragging');
+		});
+
+		tab.addEventListener('dragend', () => {
+			this.draggedTab = null;
+			tab.classList.remove('dragging');
+		});
+
+		tab.addEventListener('dragover', (e) => {
+			e.preventDefault(); // required for drop
+		});
+
+		tab.addEventListener('drop', (e) => {
+			e.preventDefault();
+			if (!this.draggedTab || this.draggedTab === tab) return;
+
+			const list = tab.parentElement!;
+			const draggedIndex = [...list.children].indexOf(this.draggedTab);
+			const targetIndex = [...list.children].indexOf(tab);
+
+			if (draggedIndex < targetIndex) {
+				list.insertBefore(this.draggedTab, tab.nextSibling);
+			} else {
+				list.insertBefore(this.draggedTab, tab);
+			}
+
+			this.commitTabOrder(list);
+		});
+	}
+
+	private commitTabOrder(tabList: HTMLElement): void {
+		const kindOrder: SlotKind[] = [];
+
+		for (const child of tabList.children) {
+			const el = child as HTMLElement;
+			const kind = el.dataset.kind;
+			if (kind) {
+				kindOrder.push(kind as SlotKind);
+			}
+		}
+
+		this.outfitManager
+			.getOutfitView()
+			.sortByKind(kindOrder);
+
+		this.saveSettings();
+		this.panel.renderContent();
 	}
 
 	private createTab(name: string): HTMLButtonElement {
@@ -102,6 +157,11 @@ export class OutfitTabsRenderer {
 
 		tab.dataset.tab = name;
 		tab.textContent = this.formatKind(name);
+
+		if (name !== 'outfits') {
+			tab.draggable = true;
+			tab.dataset.kind = name;
+		}
 		return tab;
 	}
 
@@ -134,6 +194,9 @@ export class OutfitTabsRenderer {
 		return result;
 	}
 
+	private normalizeKindInput(input: string): string {
+		return input.trim().toLowerCase();
+	}
 
 	private createAddTabButton(): HTMLButtonElement {
 		const button = document.createElement('button');
@@ -142,10 +205,6 @@ export class OutfitTabsRenderer {
 
 		button.addEventListener('click', () => this.onAddTabClick());
 		return button;
-	}
-
-	private normalizeKindInput(input: string): string {
-		return input.trim().toLowerCase();
 	}
 
 	private onAddTabClick(): void {

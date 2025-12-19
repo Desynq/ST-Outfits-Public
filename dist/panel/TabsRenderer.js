@@ -3,6 +3,7 @@ export class OutfitTabsRenderer {
         this.panel = panel;
         this.saveSettings = saveSettings;
         this.currentTab = 'clothing';
+        this.draggedTab = null;
     }
     get outfitManager() {
         return this.panel.getOutfitManager();
@@ -55,6 +56,7 @@ export class OutfitTabsRenderer {
                 // @ts-ignore
                 event.target.classList.add('active');
             });
+            this.addDragCapabilityToTab(tab);
             if (tab !== outfitsTab) {
                 tabList.appendChild(tab);
             }
@@ -62,6 +64,49 @@ export class OutfitTabsRenderer {
         tabsContainer.appendChild(tabList);
         tabsContainer.appendChild(outfitsTab);
         tabsContainer.appendChild(this.createAddTabButton());
+    }
+    addDragCapabilityToTab(tab) {
+        tab.addEventListener('dragstart', () => {
+            this.draggedTab = tab;
+            tab.classList.add('dragging');
+        });
+        tab.addEventListener('dragend', () => {
+            this.draggedTab = null;
+            tab.classList.remove('dragging');
+        });
+        tab.addEventListener('dragover', (e) => {
+            e.preventDefault(); // required for drop
+        });
+        tab.addEventListener('drop', (e) => {
+            e.preventDefault();
+            if (!this.draggedTab || this.draggedTab === tab)
+                return;
+            const list = tab.parentElement;
+            const draggedIndex = [...list.children].indexOf(this.draggedTab);
+            const targetIndex = [...list.children].indexOf(tab);
+            if (draggedIndex < targetIndex) {
+                list.insertBefore(this.draggedTab, tab.nextSibling);
+            }
+            else {
+                list.insertBefore(this.draggedTab, tab);
+            }
+            this.commitTabOrder(list);
+        });
+    }
+    commitTabOrder(tabList) {
+        const kindOrder = [];
+        for (const child of tabList.children) {
+            const el = child;
+            const kind = el.dataset.kind;
+            if (kind) {
+                kindOrder.push(kind);
+            }
+        }
+        this.outfitManager
+            .getOutfitView()
+            .sortByKind(kindOrder);
+        this.saveSettings();
+        this.panel.renderContent();
     }
     createTab(name) {
         const tab = document.createElement('button');
@@ -71,6 +116,10 @@ export class OutfitTabsRenderer {
         }
         tab.dataset.tab = name;
         tab.textContent = this.formatKind(name);
+        if (name !== 'outfits') {
+            tab.draggable = true;
+            tab.dataset.kind = name;
+        }
         return tab;
     }
     formatKind(kind) {
@@ -97,15 +146,15 @@ export class OutfitTabsRenderer {
         }
         return result;
     }
+    normalizeKindInput(input) {
+        return input.trim().toLowerCase();
+    }
     createAddTabButton() {
         const button = document.createElement('button');
         button.textContent = '+';
         button.classList.add('outfit-tab', 'add-tab');
         button.addEventListener('click', () => this.onAddTabClick());
         return button;
-    }
-    normalizeKindInput(input) {
-        return input.trim().toLowerCase();
     }
     onAddTabClick() {
         const raw = prompt(`

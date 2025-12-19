@@ -27,4 +27,10 @@ export class MutableOutfitView extends OutfitView {
 	public deleteSlot(slotId: string): boolean {
 		return this.slotView.deleteSlot(slotId);
 	}
+
+
+
+	public sortByKind(kindOrder?: readonly SlotKind[]): void {
+		this.slotView.sortByKind(kindOrder);
+	}
 }

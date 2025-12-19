@@ -164,4 +164,43 @@ export class MutableSlotView {
 		this.rebuildIndex();
 		return 'renamed';
 	}
+
+
+
+	public sortByKind(kindOrder?: readonly SlotKind[]): void {
+		const buckets = new Map<SlotKind, OutfitSlot[]>();
+
+		for (const slot of this._slots) {
+			let bucket = buckets.get(slot.kind);
+			if (!bucket) {
+				bucket = [];
+				buckets.set(slot.kind, bucket);
+			}
+
+			bucket.push(slot);
+		}
+
+		let i = 0;
+
+		if (kindOrder) {
+			for (const kind of kindOrder) {
+				const bucket = buckets.get(kind);
+				if (!bucket) continue;
+
+				for (const slot of bucket) {
+					this._slots[i++] = slot;
+				}
+
+				buckets.delete(kind);
+			}
+		}
+
+		for (const bucket of buckets.values()) {
+			for (const slot of bucket) {
+				this._slots[i++] = slot;
+			}
+		}
+
+		this.rebuildIndex();
+	}
 }

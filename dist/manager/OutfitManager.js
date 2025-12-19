@@ -1,7 +1,11 @@
 import { OutfitTracker } from "../outfit/tracker.js";
 import { deleteGlobalVariable, formatAccessorySlotName, toSlotName, getGlobalVariable, serializeRecord, setGlobalVariable } from "../shared.js";
 export class OutfitManager {
-    constructor() {
+    constructor(settingsSaver) {
+        this.settingsSaver = settingsSaver;
+    }
+    saveSettings() {
+        this.settingsSaver();
     }
     exportPreset(outfitName, character) {
         // Create preset data for all slots

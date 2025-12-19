@@ -5,10 +5,9 @@ import { OutfitTracker } from '../outfit/tracker.js';
 
 export class BotOutfitPanel extends OutfitPanel<BotOutfitManager> {
     constructor(
-        outfitManager: BotOutfitManager,
-        saveSettingsDebounced: Function
+        outfitManager: BotOutfitManager
     ) {
-        super(outfitManager, saveSettingsDebounced);
+        super(outfitManager);
         this.isVisible = false;
         this.minimized = false;
         this.domElement = null;
@@ -94,8 +93,7 @@ export class BotOutfitPanel extends OutfitPanel<BotOutfitManager> {
             this.sendSystemMessage(message);
         }
 
-        this.saveSettingsDebounced();
-        this.renderContent();
+        this.saveAndRenderContent();
     }
 
     toggle() {

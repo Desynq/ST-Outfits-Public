@@ -58,7 +58,7 @@ export class SlotsRenderer {
             return;
         }
         this.outfitManager.updateOutfitValue(id);
-        this.panel.renderContent();
+        this.panel.saveAndRenderContent();
     }
     renderSlot(container, display) {
         const slotElement = document.createElement('div');
@@ -83,7 +83,7 @@ export class SlotsRenderer {
         slotElement.querySelector('.slot-toggle').addEventListener('click', () => {
             this.outfitView.toggleSlot(display.slot.id);
             this.outfitManager.updateOutfitValue(display.slot.id);
-            this.panel.renderContent();
+            this.panel.saveAndRenderContent();
         });
         slotElement.querySelector('.slot-shift').addEventListener('click', () => {
             this.beginSlotShift(slotElement, display);
@@ -132,7 +132,7 @@ export class SlotsRenderer {
         if (confirmed) {
             this.outfitManager.deleteOutfitSlot(slot.id);
         }
-        this.panel.renderContent();
+        this.panel.saveAndRenderContent();
     }
     /* ------------------------------ Slot Shifting ----------------------------- */
     beginSlotShift(slotElement, display) {
@@ -209,7 +209,7 @@ export class SlotsRenderer {
                 break;
             default: assertNever(result);
         }
-        this.panel.renderContent();
+        this.panel.saveAndRenderContent();
     }
     /* --------------------------- Slot Label Renaming -------------------------- */
     beginRename(slotElement, slot) {
@@ -264,7 +264,7 @@ export class SlotsRenderer {
                 break;
             default: assertNever(result);
         }
-        this.panel.renderContent();
+        this.panel.saveAndRenderContent();
     }
     cancelRename() {
         this.panel.renderContent();
@@ -327,7 +327,7 @@ export class SlotsRenderer {
             ? 'None'
             : textarea.value.trim();
         await this.outfitManager.setOutfitItem(slot.id, newValue);
-        this.panel.renderContent();
+        this.panel.saveAndRenderContent();
     }
     cancelValueEdit() {
         this.panel.renderContent();

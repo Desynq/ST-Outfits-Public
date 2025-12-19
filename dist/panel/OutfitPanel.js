@@ -3,16 +3,15 @@ import { isMobile } from "../shared.js";
 import { OutfitTabsRenderer as TabsRenderer } from "./TabsRenderer.js";
 import { SlotsRenderer } from "./SlotsRenderer.js";
 export class OutfitPanel {
-    constructor(outfitManager, saveSettingsDebounced) {
+    constructor(outfitManager) {
         this.outfitManager = outfitManager;
-        this.saveSettingsDebounced = saveSettingsDebounced;
         this.domElement = null;
         this.minimized = false;
         this.hideDisabled = false;
         this.hideEmpty = false;
         this.isVisible = false;
         this.slotsRenderer = new SlotsRenderer(this);
-        this.tabsRenderer = new TabsRenderer(this, this.saveSettingsDebounced);
+        this.tabsRenderer = new TabsRenderer(this);
     }
     isMinimized() {
         return this.minimized;
@@ -48,6 +47,10 @@ export class OutfitPanel {
         if (!contentArea)
             return;
         this.tabsRenderer.renderTabs(tabsContainer, contentArea);
+    }
+    saveAndRenderContent() {
+        this.outfitManager.saveSettings();
+        this.renderContent();
     }
     makePanelDraggable() {
         if (!this.domElement || !isMobile())

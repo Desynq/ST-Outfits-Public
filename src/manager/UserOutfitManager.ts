@@ -4,8 +4,10 @@ import { MutableOutfitView } from "../outfit/view/MutableOutfitView.js";
 import { areOutfitSnapshotsEqual } from "../outfit/model/OutfitSnapshots.js";
 
 export class UserOutfitManager extends OutfitManager {
-    constructor() {
-        super();
+    constructor(
+        settingsSaver: Function
+    ) {
+        super(settingsSaver);
         this.onActiveOutfitChanged();
     }
 
@@ -21,15 +23,17 @@ export class UserOutfitManager extends OutfitManager {
         return `User_${slot}`;
     }
 
-    public override async setOutfitItem(slotId: string, value: string) {
+    public override async setOutfitItem(slotId: string, value: string): Promise<string> {
         const previousValue = this.getValue(slotId);
         this.applyOutfitValue(slotId, value);
 
         if (previousValue === 'None' && value !== 'None') {
             return `You put on ${value}.`;
-        } else if (value === 'None') {
+        }
+        else if (value === 'None') {
             return `You removed ${previousValue}.`;
-        } else {
+        }
+        else {
             return `You changed from ${previousValue} to ${value}.`;
         }
     }

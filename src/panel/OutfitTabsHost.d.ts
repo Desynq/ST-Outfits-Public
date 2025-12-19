@@ -10,6 +10,8 @@ export interface OutfitTabsHost {
 
 	public renderContent(): void;
 
+	public saveAndRenderContent(): void;
+
 	public sendSystemMessage(message: string): void;
 
 	public exportButtonClickListener(): Promise<void>;

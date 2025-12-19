@@ -30,10 +30,10 @@ async function initializeExtension() {
             showPopup() { }
         };
     }
-    const botManager = new BotOutfitManager();
-    const userManager = new UserOutfitManager();
-    const botPanel = new BotOutfitPanel(botManager, saveSettingsDebounced);
-    const userPanel = new UserOutfitPanel(userManager, saveSettingsDebounced);
+    const botManager = new BotOutfitManager(saveSettingsDebounced);
+    const userManager = new UserOutfitManager(saveSettingsDebounced);
+    const botPanel = new BotOutfitPanel(botManager);
+    const userPanel = new UserOutfitPanel(userManager);
     const autoOutfitSystem = new AutoOutfitSystem(botManager);
     // Store panels globally for access in other functions
     window.botOutfitPanel = botPanel;

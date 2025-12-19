@@ -11,7 +11,13 @@ type RenameSlotResult =
 
 export abstract class OutfitManager {
 
-	public constructor() {
+	public constructor(
+		private settingsSaver: Function
+	) {
+	}
+
+	public saveSettings(): void {
+		this.settingsSaver();
 	}
 
 	public exportPreset(outfitName: string, character: string): string {

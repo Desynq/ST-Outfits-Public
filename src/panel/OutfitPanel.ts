@@ -15,11 +15,10 @@ export abstract class OutfitPanel<T extends OutfitManager> implements OutfitSlot
 	protected isVisible: boolean = false;
 
 	protected slotsRenderer: SlotsRenderer = new SlotsRenderer(this);
-	protected tabsRenderer: TabsRenderer = new TabsRenderer(this, this.saveSettingsDebounced);
+	protected tabsRenderer: TabsRenderer = new TabsRenderer(this);
 
 	public constructor(
-		protected outfitManager: T,
-		protected saveSettingsDebounced: Function
+		protected outfitManager: T
 	) { }
 
 	public isMinimized(): boolean {
@@ -64,6 +63,11 @@ export abstract class OutfitPanel<T extends OutfitManager> implements OutfitSlot
 		if (!contentArea) return;
 
 		this.tabsRenderer.renderTabs(tabsContainer, contentArea);
+	}
+
+	public saveAndRenderContent(): void {
+		this.outfitManager.saveSettings();
+		this.renderContent();
 	}
 
 

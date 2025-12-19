@@ -5,10 +5,9 @@ import { OutfitTracker } from '../outfit/tracker.js';
 
 export class UserOutfitPanel extends OutfitPanel<UserOutfitManager> {
     constructor(
-        outfitManager: UserOutfitManager,
-        saveSettingsDebounced: Function
+        outfitManager: UserOutfitManager
     ) {
-        super(outfitManager, saveSettingsDebounced);
+        super(outfitManager);
         this.isVisible = false;
         this.minimized = false;
         this.domElement = null;
@@ -90,8 +89,7 @@ export class UserOutfitPanel extends OutfitPanel<UserOutfitManager> {
             this.sendSystemMessage(message);
         }
 
-        this.saveSettingsDebounced();
-        this.renderContent();
+        this.saveAndRenderContent();
     }
 
     toggle() {

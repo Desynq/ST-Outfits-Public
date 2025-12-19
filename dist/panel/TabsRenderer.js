@@ -1,7 +1,6 @@
 export class OutfitTabsRenderer {
-    constructor(panel, saveSettings) {
+    constructor(panel) {
         this.panel = panel;
-        this.saveSettings = saveSettings;
         this.currentTab = 'clothing';
         this.draggedTab = null;
     }
@@ -105,8 +104,7 @@ export class OutfitTabsRenderer {
         this.outfitManager
             .getOutfitView()
             .sortByKind(kindOrder);
-        this.saveSettings();
-        this.panel.renderContent();
+        this.panel.saveAndRenderContent();
     }
     createTab(name) {
         const tab = document.createElement('button');
@@ -181,7 +179,7 @@ New slot kind name:
                 this.panel.sendSystemMessage('Slot kind does not conform to rules.');
                 return;
             case 'added':
-                this.panel.renderContent();
+                this.panel.saveAndRenderContent();
                 return;
         }
     }
@@ -206,8 +204,7 @@ New slot kind name:
                     if (message) {
                         this.panel.sendSystemMessage(message);
                     }
-                    this.saveSettings();
-                    this.panel.renderContent();
+                    this.panel.saveAndRenderContent();
                 });
                 presetElement.querySelector('.delete-preset').addEventListener('click', () => {
                     if (confirm(`Delete "${preset}" outfit?`)) {
@@ -215,8 +212,7 @@ New slot kind name:
                         if (message) {
                             this.panel.sendSystemMessage(message);
                         }
-                        this.saveSettings();
-                        this.panel.renderContent();
+                        this.panel.saveAndRenderContent();
                     }
                 });
                 container.appendChild(presetElement);
@@ -232,8 +228,7 @@ New slot kind name:
                 if (message) {
                     this.panel.sendSystemMessage(message);
                 }
-                this.saveSettings();
-                this.panel.renderContent();
+                this.panel.saveAndRenderContent();
             }
         });
         container.appendChild(saveButton);

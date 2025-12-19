@@ -6,8 +6,10 @@ import { areOutfitSnapshotsEqual } from "../outfit/model/OutfitSnapshots.js";
 export class BotOutfitManager extends OutfitManager {
     public character!: string;
 
-    public constructor() {
-        super();
+    public constructor(
+        settingsSaver: Function
+    ) {
+        super(settingsSaver);
         this.setCharacter('Unknown');
     }
 
@@ -29,15 +31,17 @@ export class BotOutfitManager extends OutfitManager {
         return `${this.character.replace(/\s+/g, '_')}_${slot}`;
     }
 
-    public async setOutfitItem(slotId: string, value: string) {
+    public async setOutfitItem(slotId: string, value: string): Promise<string> {
         const previousValue = this.getValue(slotId);
         this.applyOutfitValue(slotId, value);
 
         if (previousValue === 'None' && value !== 'None') {
             return `${this.character} put on ${value}.`;
-        } else if (value === 'None') {
+        }
+        else if (value === 'None') {
             return `${this.character} removed ${previousValue}.`;
-        } else {
+        }
+        else {
             return `${this.character} changed from ${previousValue} to ${value}.`;
         }
     }

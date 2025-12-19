@@ -80,7 +80,7 @@ export class SlotsRenderer {
 		}
 
 		this.outfitManager.updateOutfitValue(id);
-		this.panel.renderContent();
+		this.panel.saveAndRenderContent();
 	}
 
 	private renderSlot(
@@ -109,31 +109,31 @@ export class SlotsRenderer {
 			</div>
 		`;
 
-		slotElement.querySelector('.slot-toggle')!.addEventListener('click', () => {
+		slotElement.querySelector<HTMLButtonElement>('.slot-toggle')!.addEventListener('click', () => {
 			this.outfitView.toggleSlot(display.slot.id);
 			this.outfitManager.updateOutfitValue(display.slot.id);
-			this.panel.renderContent();
+			this.panel.saveAndRenderContent();
 		});
 
-		slotElement.querySelector('.slot-shift')!.addEventListener('click', () => {
+		slotElement.querySelector<HTMLButtonElement>('.slot-shift')!.addEventListener('click', () => {
 			this.beginSlotShift(slotElement, display);
 		});
 
 		this.addDoubleTapEventListener(
-			slotElement.querySelector('.slot-name')!,
+			slotElement.querySelector<HTMLDivElement>('.slot-name')!,
 			() => this.beginRename(slotElement, display.slot)
 		);
 
 		this.addDoubleTapEventListener(
-			slotElement.querySelector('.slot-value')!,
+			slotElement.querySelector<HTMLDivElement>('.slot-value')!,
 			() => this.beginInlineEdit(slotElement, display.slot)
 		);
 
-		slotElement.querySelector('.slot-change')!.addEventListener('click', () => {
+		slotElement.querySelector<HTMLButtonElement>('.slot-change')!.addEventListener('click', () => {
 			this.beginInlineEdit(slotElement, display.slot);
 		});
 
-		slotElement.querySelector('.delete-slot')!
+		slotElement.querySelector<HTMLButtonElement>('.delete-slot')!
 			.addEventListener('click', () => this.askDeleteSlot(slotElement, display.slot));
 
 		container.appendChild(slotElement);
@@ -142,7 +142,7 @@ export class SlotsRenderer {
 	private removeActionButtons(slotElement: HTMLDivElement): void {
 		const selectors = ['.slot-toggle', '.delete-slot', '.slot-shift', '.slot-change'];
 		for (const selector of selectors) {
-			slotElement.querySelector(selector)?.remove();
+			slotElement.querySelector<HTMLButtonElement>(selector)?.remove();
 		}
 	}
 
@@ -184,7 +184,7 @@ export class SlotsRenderer {
 			this.outfitManager.deleteOutfitSlot(slot.id);
 		}
 
-		this.panel.renderContent();
+		this.panel.saveAndRenderContent();
 	}
 
 	/* ------------------------------ Slot Shifting ----------------------------- */
@@ -282,7 +282,7 @@ export class SlotsRenderer {
 			default: assertNever(result);
 		}
 
-		this.panel.renderContent();
+		this.panel.saveAndRenderContent();
 	}
 
 	/* --------------------------- Slot Label Renaming -------------------------- */
@@ -353,7 +353,7 @@ export class SlotsRenderer {
 			default: assertNever(result);
 		}
 
-		this.panel.renderContent();
+		this.panel.saveAndRenderContent();
 	}
 
 	private cancelRename(): void {
@@ -438,7 +438,7 @@ export class SlotsRenderer {
 			: textarea.value.trim();
 
 		await this.outfitManager.setOutfitItem(slot.id, newValue);
-		this.panel.renderContent();
+		this.panel.saveAndRenderContent();
 	}
 
 	private cancelValueEdit(): void {

@@ -2,8 +2,8 @@ import { OutfitPanel } from './OutfitPanel.js';
 import { dragElement } from '../shared.js';
 import { OutfitTracker } from '../outfit/tracker.js';
 export class UserOutfitPanel extends OutfitPanel {
-    constructor(outfitManager, saveSettingsDebounced) {
-        super(outfitManager, saveSettingsDebounced);
+    constructor(outfitManager) {
+        super(outfitManager);
         this.isVisible = false;
         this.minimized = false;
         this.domElement = null;
@@ -68,8 +68,7 @@ export class UserOutfitPanel extends OutfitPanel {
         if (message && OutfitTracker.areSystemMessagesEnabled()) {
             this.sendSystemMessage(message);
         }
-        this.saveSettingsDebounced();
-        this.renderContent();
+        this.saveAndRenderContent();
     }
     toggle() {
         this.isVisible ? this.hide() : this.show();

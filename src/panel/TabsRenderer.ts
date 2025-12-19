@@ -12,8 +12,7 @@ export class OutfitTabsRenderer {
 	private draggedTab: HTMLButtonElement | null = null;
 
 	public constructor(
-		private panel: OutfitTabsHost,
-		private saveSettings: Function
+		private panel: OutfitTabsHost
 	) { }
 
 	private get outfitManager(): OutfitManager {
@@ -143,8 +142,7 @@ export class OutfitTabsRenderer {
 			.getOutfitView()
 			.sortByKind(kindOrder);
 
-		this.saveSettings();
-		this.panel.renderContent();
+		this.panel.saveAndRenderContent();
 	}
 
 	private createTab(name: string): HTMLButtonElement {
@@ -233,7 +231,7 @@ New slot kind name:
 				this.panel.sendSystemMessage('Slot kind does not conform to rules.');
 				return;
 			case 'added':
-				this.panel.renderContent();
+				this.panel.saveAndRenderContent();
 				return;
 		}
 	}
@@ -263,8 +261,7 @@ New slot kind name:
 					if (message) {
 						this.panel.sendSystemMessage(message);
 					}
-					this.saveSettings();
-					this.panel.renderContent();
+					this.panel.saveAndRenderContent();
 				});
 
 				presetElement.querySelector('.delete-preset')!.addEventListener('click', () => {
@@ -273,8 +270,7 @@ New slot kind name:
 						if (message) {
 							this.panel.sendSystemMessage(message);
 						}
-						this.saveSettings();
-						this.panel.renderContent();
+						this.panel.saveAndRenderContent();
 					}
 				});
 
@@ -292,8 +288,7 @@ New slot kind name:
 				if (message) {
 					this.panel.sendSystemMessage(message);
 				}
-				this.saveSettings();
-				this.panel.renderContent();
+				this.panel.saveAndRenderContent();
 			}
 		});
 

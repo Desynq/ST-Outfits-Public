@@ -14,6 +14,9 @@ export class ResolvedOutfitSlot extends OutfitSlotBase {
     static fromSlot(slot, value) {
         return new ResolvedOutfitSlot(slot.id, slot.kind, value, slot.enabled);
     }
+    isEnabled() {
+        return this.enabled;
+    }
     isDisabled() {
         return !this.enabled;
     }

@@ -74,13 +74,17 @@ export class SlotsRenderer {
 			</div>
 			<div class="slot-value ${disabledClass} ${noneClass}" title="${display.slot.value}">${display.slot.value}</div>
 			<div class="slot-actions">
-				<button class="slot-button slot-toggle">${display.slot.isDisabled() ? 'Enable' : 'Disable'}</button>
+				<button class="slot-button slot-toggle"></button>
 				<button class="slot-button delete-slot">Delete</button>
 				<button class="slot-button slot-shift">Shift</button>
 				<button class="slot-button slot-change">✏️</button>
 			</div>
 		`;
-        slotElement.querySelector('.slot-toggle').addEventListener('click', () => {
+        const toggleButton = slotElement.querySelector('.slot-toggle');
+        const enabled = display.slot.isEnabled();
+        toggleButton.textContent = enabled ? 'Disable' : 'Enable';
+        toggleButton.classList.add(enabled ? 'is-enabled' : 'is-disabled');
+        toggleButton.addEventListener('click', () => {
             this.outfitView.toggleSlot(display.slot.id);
             this.outfitManager.updateOutfitValue(display.slot.id);
             this.panel.saveAndRenderContent();

@@ -139,8 +139,59 @@
 
 .slot-button.slot-shift {
 	margin-right: auto;
+	background-color: rgba(120, 160, 255, 0.12);
+	color: rgba(220, 235, 255, 0.9);
+	border: 1px solid rgba(120, 160, 255, 0.35);
+	box-shadow: inset 0 0 0 1px rgba(120, 160, 255, 0.08);
+}
+
+.slot-button.slot-shift:hover {
+	background-color: rgba(120, 160, 255, 0.5);
 }
 
 .slot-button.delete-slot {
 	background: rgba(255, 128, 128, 0.25);
+	color: rgba(255, 230, 230, 0.9);
+	border: 1px solid rgba(255, 128, 128, 0.35);
+	transition:
+		background-color 120ms ease,
+		border-color 120ms ease,
+		box-shadow 120ms ease;
+}
+
+.slot-button.delete-slot:hover {
+	background: rgba(220, 60, 60, 0.85);
+	color: #fff;
+	border-color: rgba(220, 60, 60, 1);
+	box-shadow: 0 0 0 2px rgba(220, 60, 60, 0.35);
+}
+
+.slot-button.slot-toggle {
+	font-weight: 600;
+	transition:
+		background-color 120ms ease,
+		color 120ms ease,
+		border-color 120ms ease,
+		box-shadow 120ms ease;
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.slot-button.slot-toggle.is-enabled {
+	background-color: rgba(80, 200, 160, 0.12);
+	color: rgba(200, 255, 230, 0.9);
+	border: 1px solid rgba(80, 200, 160, 0.35);
+}
+
+.slot-button.slot-toggle.is-enabled:hover {
+	background-color: rgba(80, 200, 160, 0.25);
+}
+
+.slot-button.slot-toggle.is-disabled {
+	background-color: rgba(255, 255, 255, 0.04);
+	color: rgba(255, 255, 255, 0.55);
+	border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.slot-button.slot-toggle.is-disabled:hover {
+	background-color: rgba(255, 255, 255, 0.25);
 }

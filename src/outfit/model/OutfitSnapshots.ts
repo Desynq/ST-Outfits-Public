@@ -26,6 +26,10 @@ export class ResolvedOutfitSlot extends OutfitSlotBase {
 		return new ResolvedOutfitSlot(slot.id, slot.kind, value, slot.enabled);
 	}
 
+	public isEnabled(): boolean {
+		return this.enabled;
+	}
+
 	public isDisabled(): boolean {
 		return !this.enabled;
 	}

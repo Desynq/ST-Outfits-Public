@@ -37,7 +37,7 @@ export class OutfitView {
 	}
 
 	public getSlotKinds(): readonly SlotKind[] {
-		return [...new Set(this.slots.map(s => s.kind))];
+		return this.slotView.getKinds();
 	}
 
 	public getClothingSlotIds(): readonly string[] {

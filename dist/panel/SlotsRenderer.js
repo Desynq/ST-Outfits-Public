@@ -114,7 +114,7 @@ export class SlotsRenderer {
     addDoubleTapEventListener(element, listener) {
         const DOUBLE_TAP_MS = 300;
         let lastTapTime = 0;
-        element.addEventListener('click', (e) => {
+        element.addEventListener('click', () => {
             const now = performance.now();
             const delta = now - lastTapTime;
             if (delta > 0 && delta < DOUBLE_TAP_MS) {

@@ -1,5 +1,6 @@
 @import "./outfit-preview.css";
 @import "./outfit-slot.css";
+@import "./outfit-tabs.css";
 
 #bot-outfit-panel,
 #user-outfit-panel {
@@ -63,63 +64,6 @@
     font-size: 1.3em;
     font-weight: 700;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-}
-
-/* Tabs Navigation */
-.outfit-tabs {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-
-    padding: 0 4px;
-    margin-bottom: 8px;
-
-    background: none;
-    border-radius: 0;
-}
-
-.outfit-tab-list {
-    display: flex;
-    gap: 12px;
-    flex: 1;
-    overflow-x: auto;
-}
-
-.outfit-tab-list::-webkit-scrollbar {
-    display: none;
-}
-
-.outfit-tab {
-    background: none;
-    border: none;
-    padding: 6px 0;
-
-    font-size: 1.2em;
-    font-weight: 600;
-    text-transform: none;
-    letter-spacing: normal;
-
-    color: rgba(255, 255, 255, 0.6);
-    cursor: pointer;
-
-    border-bottom: 2px solid transparent;
-}
-
-.outfit-tab:hover {
-    color: rgba(255, 255, 255, 0.85);
-}
-
-.outfit-tab.active {
-    color: #fff;
-    border-bottom-color: #fff;
-}
-
-.outfit-tab.add-tab {
-    padding: 4px 8px;
-    font-size: 1em;
-    line-height: 1;
-    border-radius: 6px;
-    background: rgba(255, 255, 255, 0.12);
 }
 
 

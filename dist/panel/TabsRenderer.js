@@ -1,3 +1,5 @@
+import { assertNever } from "../shared.js";
+import { ElementHelper } from "../util/ElementHelper.js";
 export class OutfitTabsRenderer {
     constructor(panel) {
         this.panel = panel;
@@ -10,14 +12,12 @@ export class OutfitTabsRenderer {
     get outfitView() {
         return this.outfitManager.getOutfitView();
     }
-    changeTab(newTab) {
-    }
     renderTabs(tabsContainer, contentArea) {
         this.recreateTabs(tabsContainer);
         contentArea.innerHTML = '';
         switch (this.currentTab) {
             case 'outfits':
-                this.renderOutfits(contentArea);
+                this.renderOutfitsTab(contentArea);
                 break;
             default:
                 const slots = this.outfitManager.getOutfitView().slots
@@ -32,6 +32,7 @@ export class OutfitTabsRenderer {
         }
     }
     recreateTabs(tabsContainer) {
+        const preservedTabScroll = this.getTabScroll(tabsContainer);
         tabsContainer.innerHTML = '';
         const tabs = [];
         const kinds = this.outfitView.getSlotKinds();
@@ -44,25 +45,86 @@ export class OutfitTabsRenderer {
         const tabList = document.createElement('div');
         tabList.classList.add('outfit-tab-list');
         for (const tab of tabs) {
-            tab.addEventListener('click', (event) => {
-                // @ts-ignore
-                const tabName = event.target.dataset.tab;
-                this.currentTab = tabName;
-                this.panel.renderContent();
-                for (const t of tabs) {
-                    t.classList.remove('active');
-                }
-                // @ts-ignore
-                event.target.classList.add('active');
+            tab.addEventListener('click', () => {
+                this.changeTab(tabs, tab);
             });
             this.addDragCapabilityToTab(tab);
             if (tab !== outfitsTab) {
+                ElementHelper.addContextActionListener(tab, () => {
+                    if (!tab.classList.contains('active'))
+                        return; // user can only rename current tab
+                    const result = this.renameTab(tab);
+                    if (result.status === 'renamed') {
+                        this.currentTab = result.newName;
+                        this.panel.saveAndRenderContent();
+                    }
+                });
                 tabList.appendChild(tab);
             }
         }
         tabsContainer.appendChild(tabList);
         tabsContainer.appendChild(outfitsTab);
         tabsContainer.appendChild(this.createAddTabButton());
+        requestAnimationFrame(() => {
+            tabList.scrollLeft = preservedTabScroll;
+        });
+    }
+    getTabScroll(tabsContainer) {
+        const tabList = tabsContainer.querySelector('.outfit-tab-list');
+        return tabList ? tabList.scrollLeft : 0;
+    }
+    assertTabKind(tab) {
+        const tabName = tab.dataset.tab;
+        if (tabName === undefined)
+            throw new Error(`Tab has no name.`);
+        return tabName;
+    }
+    changeTab(tabs, tab) {
+        const tabName = tab.dataset.tab;
+        if (tabName === undefined)
+            throw new Error(`Tab has no name.`);
+        this.currentTab = tabName;
+        this.panel.renderContent();
+        for (const t of tabs) {
+            t.classList.remove('active');
+        }
+        tab.classList.add('active');
+    }
+    renameTab(tab) {
+        const kind = this.assertTabKind(tab);
+        const newKind = this.promptKind();
+        if (newKind === null)
+            return { status: 'cancelled', newName: null }; // user cancelled
+        const result = this.outfitView.renameKind(kind, newKind);
+        switch (result) {
+            case "invalid-new-kind":
+                this.panel.sendSystemMessage(`Kind "${newKind}" is invalid.`);
+                return { status: 'rejected', newName: null };
+            case "old-kind-not-found":
+                throw new Error(`Tab has kind "${kind}" that does not exist for the current outfit.`);
+            case "new-kind-already-exists":
+                this.panel.sendSystemMessage(`Kind ${newKind} already exists.`);
+                return { status: 'rejected', newName: null };
+            case "renamed":
+                return { status: 'renamed', newName: newKind };
+            default: assertNever(result);
+        }
+    }
+    promptKind() {
+        const message = `Rules:
+• Use lowercase letters only
+• Hyphens (-) separate words
+• Underscore (_) capitalizes the next letter
+• No numbers or special characters
+• Cannot start or end words with _
+• Cannot start or end with -
+• "outfits" is reserved and cannot be used
+
+New slot kind name:`;
+        const raw = prompt(message)?.trim();
+        if (raw === undefined || raw === '')
+            return null;
+        return this.normalizeKindInput(raw);
     }
     addDragCapabilityToTab(tab) {
         tab.addEventListener('dragstart', () => {
@@ -114,7 +176,10 @@ export class OutfitTabsRenderer {
         }
         tab.dataset.tab = name;
         tab.textContent = this.formatKind(name);
-        if (name !== 'outfits') {
+        if (name === 'outfits') {
+            tab.classList.add('.outfits-tab');
+        }
+        else {
             tab.draggable = true;
             tab.dataset.kind = name;
         }
@@ -155,21 +220,9 @@ export class OutfitTabsRenderer {
         return button;
     }
     onAddTabClick() {
-        const raw = prompt(`
-Rules:
-• Use lowercase letters only
-• Hyphens (-) separate words
-• Underscore (_) capitalizes the next letter
-• No numbers or special characters
-• Cannot start or end words with _
-• Cannot start or end with -
-• "outfits" is reserved and cannot be used
-
-New slot kind name:
-`)?.trim();
-        if (raw == null)
+        const kind = this.promptKind();
+        if (kind === null)
             return; // user cancelled
-        const kind = this.normalizeKindInput(raw);
         const result = this.outfitManager.getOutfitView().addSlot(kind, kind);
         switch (result) {
             case 'slot-already-exists':
@@ -183,7 +236,7 @@ New slot kind name:
                 return;
         }
     }
-    renderOutfits(container) {
+    renderOutfitsTab(container) {
         const presets = this.outfitManager.getPresets();
         if (presets.length === 0) {
             container.innerHTML = '<div>No saved outfits.</div>';

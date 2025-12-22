@@ -22,4 +22,7 @@ export class MutableOutfitView extends OutfitView {
     sortByKind(kindOrder) {
         this.slotView.sortByKind(kindOrder);
     }
+    renameKind(kind, newKind) {
+        return this.slotView.renameKind(kind, newKind);
+    }
 }

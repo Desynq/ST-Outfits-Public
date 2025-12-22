@@ -1,4 +1,4 @@
-import { Outfit, OutfitSlot, SlotKind } from "../model/Outfit";
+import { Outfit, OutfitSlot, SlotKind } from "../model/Outfit.js";
 
 
 export type MoveSlotResult =
@@ -16,6 +16,17 @@ export type AddSlotResult =
 	| 'invalid-slot-kind'
 	| 'slot-already-exists'
 	| 'added';
+
+export type RenameKindResult =
+	| 'invalid-new-kind'
+	| 'old-kind-not-found'
+	| 'new-kind-already-exists'
+	| 'renamed';
+
+export type MoveToKindResult =
+	| 'slot-not-found'
+	| 'noop'
+	| 'moved';
 
 export class MutableSlotView {
 
@@ -43,15 +54,19 @@ export class MutableSlotView {
 		return this._slots;
 	}
 
+	public getKinds(): readonly SlotKind[] {
+		return [...new Set(this.slots.map(s => s.kind))];
+	}
+
 	public getSlotById(id: string): Readonly<OutfitSlot> | undefined {
 		const i = this.indexById[id];
 		return i === undefined ? undefined : this._slots[i];
 	}
 
 	public getSlotAt(index: number): Readonly<OutfitSlot> | undefined {
-		if (index < 0 || index >= this._slots.length) return undefined;
+		if (index < 0 || index >= this.slots.length) return undefined;
 
-		return this._slots[index];
+		return this.slots[index];
 	}
 
 	public getIndex(id: string): number | undefined {
@@ -68,24 +83,23 @@ export class MutableSlotView {
 		return true;
 	}
 
-	/**
-	 * Undecided on whether the user should be allowed to change a slot's kind directly.
-	 *
-	 * The current UI groups slots by kind and orders them by index within each group.
-	 * Changing a slot's kind implicitly changes its ordering context.
-	 *
-	 * Allowing this mutation directly would require the user to also choose
-	 * the target position in the new group to preserve UX predictability.
-	 *
-	 * For now, the user must delete the slot from one category and re-add it to the other.
-	 * @deprecated
-	 */
-	private setKind(id: string, kind: SlotKind): boolean {
+	public moveToKind(id: string, kind: SlotKind): MoveToKindResult {
 		const i = this.indexById[id];
-		if (i === undefined) return false;
+		if (i === undefined) return 'slot-not-found';
 
-		this._slots[i].kind = kind;
-		return true;
+		const slot = this._slots[i];
+		if (slot.kind === kind) return 'noop';
+
+		slot.kind = kind;
+		const result = this.moveIndex(i, this._slots.length);
+		switch (result) {
+			case 'moved':
+				return 'moved';
+			default:
+				throw new Error(
+					`Invariant violation: moveIndex failed during moveToKind (result=${result})`
+				);
+		}
 	}
 
 	public setEnabled(id: string, enabled: boolean): boolean {
@@ -112,7 +126,8 @@ export class MutableSlotView {
 			value: 'None',
 			enabled: true
 		});
-		this.rebuildIndex();
+
+		this.indexById[id] = this._slots.length - 1; // append to index
 		return 'added';
 	}
 
@@ -153,15 +168,18 @@ export class MutableSlotView {
 		return this.moveIndex(i, targetIndex);
 	}
 
-	public rename(id: string, newId: string): RenameResult {
-		const i = this.indexById[id];
+	public rename(oldId: string, newId: string): RenameResult {
+		const i = this.indexById[oldId];
 		if (i === undefined) return 'slot-not-found';
 
 		const duplicate = this.indexById[newId];
 		if (duplicate !== undefined) return 'slot-already-exists';
 
 		this._slots[i].id = newId;
-		this.rebuildIndex();
+
+		delete this.indexById[oldId];
+		this.indexById[newId] = i;
+
 		return 'renamed';
 	}
 
@@ -202,5 +220,26 @@ export class MutableSlotView {
 		}
 
 		this.rebuildIndex();
+	}
+
+	public renameKind(oldKind: string, newKind: string): RenameKindResult {
+		if (!this.isValidSlotKind(newKind)) return 'invalid-new-kind';
+
+		const kinds = this.getKinds();
+		let exists: boolean = false;
+		for (const k of kinds) {
+			if (k === newKind) return 'new-kind-already-exists';
+
+			if (k === oldKind) exists = true;
+		}
+
+		if (!exists) return 'old-kind-not-found';
+
+		for (const slot of this._slots) {
+			if (slot.kind !== oldKind) continue;
+			slot.kind = newKind;
+		}
+
+		return 'renamed';
 	}
 }

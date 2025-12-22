@@ -1,10 +1,15 @@
-import { OutfitManager } from "../manager/OutfitManager";
-import { SlotKind } from "../outfit/model/Outfit";
-import { OutfitTracker } from "../outfit/tracker";
-import { MutableOutfitView } from "../outfit/view/MutableOutfitView";
-import { OutfitTabsHost } from "./OutfitTabsHost";
+import { OutfitManager } from "../manager/OutfitManager.js";
+import { SlotKind } from "../outfit/model/Outfit.js";
+import { MutableOutfitView } from "../outfit/view/MutableOutfitView.js";
+import { assertNever } from "../shared.js";
+import { ElementHelper } from "../util/ElementHelper.js";
+import { OutfitTabsHost } from "./OutfitTabsHost.js";
 
 type OutfitTab = SlotKind | 'outfits';
+
+type RenameTabResult =
+	| { status: 'renamed'; newName: string; }
+	| { status: 'cancelled' | 'rejected'; newName: null; };
 
 export class OutfitTabsRenderer {
 
@@ -23,19 +28,13 @@ export class OutfitTabsRenderer {
 		return this.outfitManager.getOutfitView();
 	}
 
-
-
-	public changeTab(newTab: OutfitTab): void {
-
-	}
-
 	public renderTabs(tabsContainer: HTMLDivElement, contentArea: HTMLDivElement): void {
 		this.recreateTabs(tabsContainer);
 		contentArea.innerHTML = '';
 
 		switch (this.currentTab) {
 			case 'outfits':
-				this.renderOutfits(contentArea);
+				this.renderOutfitsTab(contentArea);
 				break;
 			default:
 				const slots = this.outfitManager.getOutfitView().slots
@@ -52,6 +51,8 @@ export class OutfitTabsRenderer {
 	}
 
 	private recreateTabs(tabsContainer: HTMLDivElement): void {
+		const preservedTabScroll = this.getTabScroll(tabsContainer);
+
 		tabsContainer.innerHTML = '';
 		const tabs: HTMLButtonElement[] = [];
 
@@ -69,22 +70,21 @@ export class OutfitTabsRenderer {
 		tabList.classList.add('outfit-tab-list');
 
 		for (const tab of tabs) {
-			tab.addEventListener('click', (event) => {
-				// @ts-ignore
-				const tabName = event.target.dataset.tab;
-				this.currentTab = tabName;
-				this.panel.renderContent();
-
-				for (const t of tabs) {
-					t.classList.remove('active');
-				}
-				// @ts-ignore
-				event.target.classList.add('active');
+			tab.addEventListener('click', () => {
+				this.changeTab(tabs, tab);
 			});
 
 			this.addDragCapabilityToTab(tab);
 
 			if (tab !== outfitsTab) {
+				ElementHelper.addContextActionListener(tab, () => {
+					if (!tab.classList.contains('active')) return; // user can only rename current tab
+					const result = this.renameTab(tab);
+					if (result.status === 'renamed') {
+						this.currentTab = result.newName;
+						this.panel.saveAndRenderContent();
+					}
+				});
 				tabList.appendChild(tab);
 			}
 		}
@@ -92,6 +92,72 @@ export class OutfitTabsRenderer {
 		tabsContainer.appendChild(tabList);
 		tabsContainer.appendChild(outfitsTab);
 		tabsContainer.appendChild(this.createAddTabButton());
+		requestAnimationFrame(() => {
+			tabList.scrollLeft = preservedTabScroll;
+		});
+	}
+
+	private getTabScroll(tabsContainer: HTMLDivElement): number {
+		const tabList = tabsContainer.querySelector<HTMLDivElement>('.outfit-tab-list');
+		return tabList ? tabList.scrollLeft : 0;
+	}
+
+	private assertTabKind(tab: HTMLButtonElement): string {
+		const tabName = tab.dataset.tab;
+		if (tabName === undefined) throw new Error(`Tab has no name.`);
+
+		return tabName;
+	}
+
+	private changeTab<T extends HTMLButtonElement>(tabs: readonly T[], tab: T): void {
+		const tabName = tab.dataset.tab;
+		if (tabName === undefined) throw new Error(`Tab has no name.`);
+
+		this.currentTab = tabName;
+		this.panel.renderContent();
+
+		for (const t of tabs) {
+			t.classList.remove('active');
+		}
+
+		tab.classList.add('active');
+	}
+
+	private renameTab(tab: HTMLButtonElement): RenameTabResult {
+		const kind = this.assertTabKind(tab);
+		const newKind = this.promptKind();
+		if (newKind === null) return { status: 'cancelled', newName: null }; // user cancelled
+
+		const result = this.outfitView.renameKind(kind, newKind);
+		switch (result) {
+			case "invalid-new-kind":
+				this.panel.sendSystemMessage(`Kind "${newKind}" is invalid.`);
+				return { status: 'rejected', newName: null };
+			case "old-kind-not-found":
+				throw new Error(`Tab has kind "${kind}" that does not exist for the current outfit.`);
+			case "new-kind-already-exists":
+				this.panel.sendSystemMessage(`Kind ${newKind} already exists.`);
+				return { status: 'rejected', newName: null };
+			case "renamed":
+				return { status: 'renamed', newName: newKind };
+			default: assertNever(result);
+		}
+	}
+
+	private promptKind(): string | null {
+		const message = `Rules:
+• Use lowercase letters only
+• Hyphens (-) separate words
+• Underscore (_) capitalizes the next letter
+• No numbers or special characters
+• Cannot start or end words with _
+• Cannot start or end with -
+• "outfits" is reserved and cannot be used
+
+New slot kind name:`;
+		const raw = prompt(message)?.trim();
+		if (raw === undefined || raw === '') return null;
+		return this.normalizeKindInput(raw);
 	}
 
 	private addDragCapabilityToTab(tab: HTMLButtonElement) {
@@ -119,7 +185,8 @@ export class OutfitTabsRenderer {
 
 			if (draggedIndex < targetIndex) {
 				list.insertBefore(this.draggedTab, tab.nextSibling);
-			} else {
+			}
+			else {
 				list.insertBefore(this.draggedTab, tab);
 			}
 
@@ -156,7 +223,10 @@ export class OutfitTabsRenderer {
 		tab.dataset.tab = name;
 		tab.textContent = this.formatKind(name);
 
-		if (name !== 'outfits') {
+		if (name === 'outfits') {
+			tab.classList.add('.outfits-tab');
+		}
+		else {
 			tab.draggable = true;
 			tab.dataset.kind = name;
 		}
@@ -206,21 +276,8 @@ export class OutfitTabsRenderer {
 	}
 
 	private onAddTabClick(): void {
-		const raw = prompt(`
-Rules:
-• Use lowercase letters only
-• Hyphens (-) separate words
-• Underscore (_) capitalizes the next letter
-• No numbers or special characters
-• Cannot start or end words with _
-• Cannot start or end with -
-• "outfits" is reserved and cannot be used
-
-New slot kind name:
-`)?.trim();
-		if (raw == null) return; // user cancelled
-
-		const kind = this.normalizeKindInput(raw);
+		const kind = this.promptKind();
+		if (kind === null) return; // user cancelled
 
 		const result = this.outfitManager.getOutfitView().addSlot(kind, kind);
 		switch (result) {
@@ -239,7 +296,7 @@ New slot kind name:
 
 
 
-	private renderOutfits(container: HTMLDivElement) {
+	private renderOutfitsTab(container: HTMLDivElement): void {
 		const presets = this.outfitManager.getPresets();
 
 		if (presets.length === 0) {
@@ -298,7 +355,7 @@ New slot kind name:
 		this.renderOutfitPreviewButton(container);
 	}
 
-	private renderExportButton(container: HTMLDivElement) {
+	private renderExportButton(container: HTMLDivElement): void {
 		const exportButton = document.createElement('button');
 		exportButton.className = 'export-outfit-btn';
 		exportButton.textContent = 'Export Current Outfit';

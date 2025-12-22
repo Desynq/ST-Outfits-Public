@@ -22,7 +22,7 @@ export class OutfitView {
         return this.slots.map(s => s.id);
     }
     getSlotKinds() {
-        return [...new Set(this.slots.map(s => s.kind))];
+        return this.slotView.getKinds();
     }
     getClothingSlotIds() {
         return this.slots.filter(s => s.kind === 'clothing').map(s => s.id);

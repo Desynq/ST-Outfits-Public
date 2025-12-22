@@ -16,14 +16,17 @@ export class MutableSlotView {
     get slots() {
         return this._slots;
     }
+    getKinds() {
+        return [...new Set(this.slots.map(s => s.kind))];
+    }
     getSlotById(id) {
         const i = this.indexById[id];
         return i === undefined ? undefined : this._slots[i];
     }
     getSlotAt(index) {
-        if (index < 0 || index >= this._slots.length)
+        if (index < 0 || index >= this.slots.length)
             return undefined;
-        return this._slots[index];
+        return this.slots[index];
     }
     getIndex(id) {
         return this.indexById[id];
@@ -36,24 +39,21 @@ export class MutableSlotView {
         this._slots[i].value = value;
         return true;
     }
-    /**
-     * Undecided on whether the user should be allowed to change a slot's kind directly.
-     *
-     * The current UI groups slots by kind and orders them by index within each group.
-     * Changing a slot's kind implicitly changes its ordering context.
-     *
-     * Allowing this mutation directly would require the user to also choose
-     * the target position in the new group to preserve UX predictability.
-     *
-     * For now, the user must delete the slot from one category and re-add it to the other.
-     * @deprecated
-     */
-    setKind(id, kind) {
+    moveToKind(id, kind) {
         const i = this.indexById[id];
         if (i === undefined)
-            return false;
-        this._slots[i].kind = kind;
-        return true;
+            return 'slot-not-found';
+        const slot = this._slots[i];
+        if (slot.kind === kind)
+            return 'noop';
+        slot.kind = kind;
+        const result = this.moveIndex(i, this._slots.length);
+        switch (result) {
+            case 'moved':
+                return 'moved';
+            default:
+                throw new Error(`Invariant violation: moveIndex failed during moveToKind (result=${result})`);
+        }
     }
     setEnabled(id, enabled) {
         const i = this.indexById[id];
@@ -77,7 +77,7 @@ export class MutableSlotView {
             value: 'None',
             enabled: true
         });
-        this.rebuildIndex();
+        this.indexById[id] = this._slots.length - 1; // append to index
         return 'added';
     }
     deleteSlot(id) {
@@ -110,15 +110,16 @@ export class MutableSlotView {
             return 'slot-not-found';
         return this.moveIndex(i, targetIndex);
     }
-    rename(id, newId) {
-        const i = this.indexById[id];
+    rename(oldId, newId) {
+        const i = this.indexById[oldId];
         if (i === undefined)
             return 'slot-not-found';
         const duplicate = this.indexById[newId];
         if (duplicate !== undefined)
             return 'slot-already-exists';
         this._slots[i].id = newId;
-        this.rebuildIndex();
+        delete this.indexById[oldId];
+        this.indexById[newId] = i;
         return 'renamed';
     }
     sortByKind(kindOrder) {
@@ -149,5 +150,25 @@ export class MutableSlotView {
             }
         }
         this.rebuildIndex();
+    }
+    renameKind(oldKind, newKind) {
+        if (!this.isValidSlotKind(newKind))
+            return 'invalid-new-kind';
+        const kinds = this.getKinds();
+        let exists = false;
+        for (const k of kinds) {
+            if (k === newKind)
+                return 'new-kind-already-exists';
+            if (k === oldKind)
+                exists = true;
+        }
+        if (!exists)
+            return 'old-kind-not-found';
+        for (const slot of this._slots) {
+            if (slot.kind !== oldKind)
+                continue;
+            slot.kind = newKind;
+        }
+        return 'renamed';
     }
 }

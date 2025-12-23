@@ -25,4 +25,7 @@ export class MutableOutfitView extends OutfitView {
     renameKind(kind, newKind) {
         return this.slotView.renameKind(kind, newKind);
     }
+    moveToKind(id, kind) {
+        return this.slotView.moveToKind(id, kind);
+    }
 }

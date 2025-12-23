@@ -18,8 +18,8 @@ export class BotOutfitManager extends OutfitManager {
         this.character = name;
         this.onActiveOutfitChanged();
     }
-    getVarName(slot) {
-        return `${this.character.replace(/\s+/g, '_')}_${slot}`;
+    getVarName(namespace) {
+        return `${this.character.replace(/\s+/g, '_')}_${namespace}`;
     }
     async setOutfitItem(slotId, value) {
         const previousValue = this.getValue(slotId);

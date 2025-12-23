@@ -1,5 +1,5 @@
 import { OutfitSlot, SlotKind } from "../model/Outfit.js";
-import { AddSlotResult, MoveSlotResult, RenameKindResult } from "./MutableSlotView.js";
+import { AddSlotResult, MoveSlotResult, MoveToKindResult, RenameKindResult } from "./MutableSlotView.js";
 import { OutfitView } from "./OutfitView.js";
 
 export class MutableOutfitView extends OutfitView {
@@ -36,5 +36,9 @@ export class MutableOutfitView extends OutfitView {
 
 	public renameKind(kind: SlotKind, newKind: SlotKind): RenameKindResult {
 		return this.slotView.renameKind(kind, newKind);
+	}
+
+	public moveToKind(id: string, kind: SlotKind): MoveToKindResult {
+		return this.slotView.moveToKind(id, kind);
 	}
 }

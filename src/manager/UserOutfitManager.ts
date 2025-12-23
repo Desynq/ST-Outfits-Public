@@ -19,8 +19,8 @@ export class UserOutfitManager extends OutfitManager {
         return true;
     }
 
-    public override getVarName(slot: string) {
-        return `User_${slot}`;
+    public override getVarName(namespace: string) {
+        return `User_${namespace}`;
     }
 
     public override async setOutfitItem(slotId: string, value: string): Promise<string> {

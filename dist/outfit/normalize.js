@@ -46,8 +46,8 @@ function isLegacyOutfit(value) {
 }
 function inferKindFromId(id) {
     return id.toLowerCase().includes('accessory')
-        ? 'accessory'
-        : 'clothing';
+        ? 'Accessory'
+        : 'Clothing';
 }
 function normalizeLegacyOutfit(value) {
     const values = asStringRecord()(value);
@@ -61,9 +61,7 @@ function normalizeLegacyOutfit(value) {
 }
 function normalizeKind(kind) {
     if (typeof kind !== 'string')
-        return 'clothing';
-    if (kind === 'outfits')
-        return 'clothing';
+        return 'Clothing';
     return kind;
 }
 function normalizeOutfit(value) {

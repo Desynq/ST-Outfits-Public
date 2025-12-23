@@ -1,5 +1,5 @@
 import { OutfitManager } from "../manager/OutfitManager.js";
-import { SlotKind } from "../outfit/model/Outfit.js";
+import { OutfitSlot, SlotKind } from "../outfit/model/Outfit.js";
 import { OutfitSlotView, ResolvedOutfitSlot } from "../outfit/model/OutfitSnapshots.js";
 import { MutableOutfitView } from "../outfit/view/MutableOutfitView.js";
 import { assertNever, isMobile, toSlotName } from "../shared.js";
@@ -105,7 +105,6 @@ export class SlotsRenderer {
 				<button class="slot-button slot-toggle"></button>
 				<button class="slot-button delete-slot">Delete</button>
 				<button class="slot-button slot-shift">Shift</button>
-				<button class="slot-button slot-change">✏️</button>
 			</div>
 		`;
 
@@ -134,12 +133,32 @@ export class SlotsRenderer {
 			() => this.beginInlineEdit(slotElement, display.slot)
 		);
 
-		slotElement.querySelector<HTMLButtonElement>('.slot-change')!.addEventListener('click', () => {
-			this.beginInlineEdit(slotElement, display.slot);
-		});
-
 		slotElement.querySelector<HTMLButtonElement>('.delete-slot')!
 			.addEventListener('click', () => this.askDeleteSlot(slotElement, display.slot));
+
+
+		const slotActionsDiv = slotElement.querySelector<HTMLDivElement>('.slot-actions')!;
+
+
+		const moveSlotBtn = document.createElement('button');
+		moveSlotBtn.classList.add('slot-button', 'move-slot');
+		moveSlotBtn.textContent = 'Move';
+		moveSlotBtn.addEventListener(
+			'click',
+			() => this.moveSlot(display.slot)
+		);
+		slotActionsDiv.appendChild(moveSlotBtn);
+
+
+		const changeSlotBtn = document.createElement('button');
+		changeSlotBtn.classList.add('slot-button', 'slot-change');
+		changeSlotBtn.textContent = '✏️';
+		changeSlotBtn.addEventListener(
+			'click',
+			() => this.beginInlineEdit(slotElement, display.slot)
+		);
+		slotActionsDiv.appendChild(changeSlotBtn);
+
 
 		container.appendChild(slotElement);
 	}
@@ -178,6 +197,25 @@ export class SlotsRenderer {
 
 			lastTapTime = now;
 		});
+	}
+
+	/* ------------------------------- Slot Moving ------------------------------ */
+
+	private moveSlot(slot: OutfitSlot): void {
+		const kind = prompt('Move slot to kind:')?.trim();
+		if (!kind) return;
+
+		const result = this.outfitView.moveToKind(slot.id, kind);
+		switch (result) {
+			case "slot-not-found":
+				throw new Error(`Could not find slot "${slot.id}" when moving to "${kind}"`);
+			case "noop":
+				return;
+			case "moved":
+				this.panel.saveAndRenderContent();
+				return;
+			default: assertNever(result);
+		}
 	}
 
 	/* ------------------------------ Slot Deletion ----------------------------- */

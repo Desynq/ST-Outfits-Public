@@ -65,8 +65,8 @@ function isLegacyOutfit(value: any): value is Record<string, string> {
 
 function inferKindFromId(id: string): SlotKind {
 	return id.toLowerCase().includes('accessory')
-		? 'accessory'
-		: 'clothing';
+		? 'Accessory'
+		: 'Clothing';
 }
 
 function normalizeLegacyOutfit(value: any): Outfit {
@@ -85,8 +85,7 @@ function normalizeLegacyOutfit(value: any): Outfit {
 }
 
 function normalizeKind(kind: unknown): string {
-	if (typeof kind !== 'string') return 'clothing';
-	if (kind === 'outfits') return 'clothing';
+	if (typeof kind !== 'string') return 'Clothing';
 	return kind;
 }
 

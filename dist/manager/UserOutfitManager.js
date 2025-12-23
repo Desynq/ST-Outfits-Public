@@ -12,8 +12,8 @@ export class UserOutfitManager extends OutfitManager {
     isUser() {
         return true;
     }
-    getVarName(slot) {
-        return `User_${slot}`;
+    getVarName(namespace) {
+        return `User_${namespace}`;
     }
     async setOutfitItem(slotId, value) {
         const previousValue = this.getValue(slotId);

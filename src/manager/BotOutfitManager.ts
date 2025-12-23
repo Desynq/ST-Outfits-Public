@@ -27,8 +27,8 @@ export class BotOutfitManager extends OutfitManager {
         this.onActiveOutfitChanged();
     }
 
-    public override getVarName(slot: string) {
-        return `${this.character.replace(/\s+/g, '_')}_${slot}`;
+    public override getVarName(namespace: string) {
+        return `${this.character.replace(/\s+/g, '_')}_${namespace}`;
     }
 
     public async setOutfitItem(slotId: string, value: string): Promise<string> {

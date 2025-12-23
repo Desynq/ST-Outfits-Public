@@ -107,7 +107,6 @@ export function formatAccessorySlotName(name: string): string {
 
 export function serializeRecord(record: Record<string, string>, slotFormatter: (slot: string) => string, category: string): string {
 	return Object.entries(record)
-		//.map(([slot, value]) => `${slotFormatter(slot)}: ${value}`)
 		.map(([slot, value]) => `<${category} slot="${slotFormatter(slot)}">\n${value}\n</${category}>`)
 		.join("\n\n");
 }

@@ -3,6 +3,7 @@ import { OutfitTracker } from "../outfit/tracker.js";
 import { MutableOutfitView } from "../outfit/view/MutableOutfitView.js";
 import { Outfit, OutfitSlot } from "../outfit/model/Outfit.js";
 import { deleteGlobalVariable, filterRecord, formatAccessorySlotName, toSlotName, getGlobalVariable, pruneRecord, serializeRecord, setGlobalVariable } from "../shared.js";
+import { StringHelper } from "../util/StringHelper.js";
 
 type RenameSlotResult =
 	| 'slot-not-found'
@@ -78,31 +79,38 @@ Cancel to keep the current value.`,
 
 
 
-	public getRecordsFromKind(kind: string): Record<string, string> {
+	public getVisibleRecordsByType(kind: string): Record<string, string> {
 		return this.getOutfitView().getSlotRecords(s => s.kind === kind && s.enabled);
 	}
 
-	public abstract getVarName(slotId: string): string;
+	public abstract getVarName(namespace: string): string;
 
 	protected updateSummaries(): void {
+		let fullSummary = '<outfit>';
 		for (const kind of this.getOutfitView().getSlotKinds()) {
 			const value = serializeRecord(
-				this.getRecordsFromKind(kind),
+				this.getVisibleRecordsByType(kind),
 				kind === 'accessory' ? formatAccessorySlotName : toSlotName,
 				kind
 			);
 
-			this.setKindSummary(kind, value);
+			this.setSummary(kind + '_summary', value);
+			if (value !== '') {
+				fullSummary += `\n${StringHelper.indent(value)}`;
+			}
 		}
+
+		fullSummary += '\n</outfit>';
+		this.setSummary('summary', fullSummary);
 	}
 
-	public getKindSummary(kind: string): string {
-		const varName = this.getVarName(`${kind}_summary`);
+	public getSummary(namespace: string): string {
+		const varName = this.getVarName(namespace);
 		return getGlobalVariable(varName);
 	}
 
-	public setKindSummary(kind: string, value: string): void {
-		const varName = this.getVarName(`${kind}_summary`);
+	public setSummary(namespace: string, value: string): void {
+		const varName = this.getVarName(namespace);
 		setGlobalVariable(varName, value);
 	}
 

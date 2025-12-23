@@ -77,7 +77,6 @@ export class SlotsRenderer {
 				<button class="slot-button slot-toggle"></button>
 				<button class="slot-button delete-slot">Delete</button>
 				<button class="slot-button slot-shift">Shift</button>
-				<button class="slot-button slot-change">✏️</button>
 			</div>
 		`;
         const toggleButton = slotElement.querySelector('.slot-toggle');
@@ -94,11 +93,19 @@ export class SlotsRenderer {
         });
         this.addDoubleTapEventListener(slotElement.querySelector('.slot-name'), () => this.beginRename(slotElement, display.slot));
         this.addDoubleTapEventListener(slotElement.querySelector('.slot-value'), () => this.beginInlineEdit(slotElement, display.slot));
-        slotElement.querySelector('.slot-change').addEventListener('click', () => {
-            this.beginInlineEdit(slotElement, display.slot);
-        });
         slotElement.querySelector('.delete-slot')
             .addEventListener('click', () => this.askDeleteSlot(slotElement, display.slot));
+        const slotActionsDiv = slotElement.querySelector('.slot-actions');
+        const moveSlotBtn = document.createElement('button');
+        moveSlotBtn.classList.add('slot-button', 'move-slot');
+        moveSlotBtn.textContent = 'Move';
+        moveSlotBtn.addEventListener('click', () => this.moveSlot(display.slot));
+        slotActionsDiv.appendChild(moveSlotBtn);
+        const changeSlotBtn = document.createElement('button');
+        changeSlotBtn.classList.add('slot-button', 'slot-change');
+        changeSlotBtn.textContent = '✏️';
+        changeSlotBtn.addEventListener('click', () => this.beginInlineEdit(slotElement, display.slot));
+        slotActionsDiv.appendChild(changeSlotBtn);
         container.appendChild(slotElement);
     }
     removeActionButtons(slotElement) {
@@ -129,6 +136,23 @@ export class SlotsRenderer {
             }
             lastTapTime = now;
         });
+    }
+    /* ------------------------------- Slot Moving ------------------------------ */
+    moveSlot(slot) {
+        const kind = prompt('Move slot to kind:')?.trim();
+        if (!kind)
+            return;
+        const result = this.outfitView.moveToKind(slot.id, kind);
+        switch (result) {
+            case "slot-not-found":
+                throw new Error(`Could not find slot "${slot.id}" when moving to "${kind}"`);
+            case "noop":
+                return;
+            case "moved":
+                this.panel.saveAndRenderContent();
+                return;
+            default: assertNever(result);
+        }
     }
     /* ------------------------------ Slot Deletion ----------------------------- */
     askDeleteSlot(slotElement, slot) {

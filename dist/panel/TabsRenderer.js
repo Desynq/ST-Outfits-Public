@@ -5,7 +5,7 @@ export class OutfitTabsRenderer {
         this.panel = panel;
         this.currentTab = {
             type: 'kind',
-            kind: 'clothing'
+            kind: 'Clothing'
         };
         this.draggedTab = null;
     }
@@ -25,17 +25,27 @@ export class OutfitTabsRenderer {
                 break;
             case 'kind':
                 const kind = this.currentTab.kind;
-                const slots = this.outfitManager.getOutfitView().slots
+                const slots = this.outfitView.slots
                     .filter(s => s.kind === kind)
                     .map(s => s.id);
-                if (slots.length === 0) { // fallback
-                    tabsContainer.querySelector('button[data-tab-type="system"]')?.click();
+                if (slots.length === 0) {
+                    this.renderFallback(tabsContainer);
                     return;
                 }
                 this.panel.getSlotsRenderer().renderSlots(kind, slots, contentArea);
                 break;
             default: assertNever(this.currentTab);
         }
+    }
+    renderFallback(tabsContainer) {
+        const kinds = this.outfitView.getSlotKinds();
+        if (kinds.length > 0) {
+            this.currentTab = { type: 'kind', kind: kinds[0] };
+        }
+        else {
+            this.currentTab = { type: 'system', id: 'outfits' };
+        }
+        this.panel.renderContent();
     }
     recreateTabs(tabsContainer) {
         const preservedTabScroll = this.getTabScroll(tabsContainer);
@@ -338,20 +348,11 @@ export class OutfitTabsRenderer {
 		`;
         const previewBody = modal.querySelector('.outfit-preview-body');
         for (const kind of this.outfitManager.getOutfitView().getSlotKinds()) {
-            const section = document.createElement('div');
-            section.classList.add('outfit-preview-section');
-            const header = document.createElement('h4');
-            header.textContent = `${this.formatKind(kind)}`;
-            const code = document.createElement('code');
-            code.textContent = `{{getglobalvar::${this.outfitManager.getVarName(kind)}_summary}}`;
-            const pre = document.createElement('pre');
-            pre.classList.add('outfit-preview-text', `${kind}-summary`);
-            pre.textContent = this.outfitManager.getKindSummary(kind);
-            section.appendChild(header);
-            section.appendChild(code);
-            section.appendChild(pre);
+            const section = this.createPreviewSection(this.formatKind(kind), kind + '_summary');
             previewBody.appendChild(section);
         }
+        const fullSummarySection = this.createPreviewSection('Full Summary', 'summary');
+        previewBody.appendChild(fullSummarySection);
         overlay.appendChild(modal);
         document.body.appendChild(overlay);
         overlay.querySelector('.outfit-preview-close-btn').addEventListener('click', () => {
@@ -361,5 +362,26 @@ export class OutfitTabsRenderer {
             if (e.target === overlay)
                 overlay.remove();
         });
+    }
+    createPreviewSection(header, namespace) {
+        const section = document.createElement('div');
+        section.classList.add('outfit-preview-section');
+        const h4 = document.createElement('h4');
+        h4.textContent = header;
+        const code = document.createElement('code');
+        code.textContent = `{{getglobalvar::${this.outfitManager.getVarName(namespace)}}}`;
+        const details = document.createElement('details');
+        details.classList.add('outfit-preview-details');
+        const summary = document.createElement('summary');
+        summary.textContent = 'Show summary';
+        const pre = document.createElement('pre');
+        pre.classList.add('outfit-preview-text');
+        pre.textContent = this.outfitManager.getSummary(namespace);
+        details.appendChild(summary);
+        details.appendChild(pre);
+        section.appendChild(h4);
+        section.appendChild(code);
+        section.appendChild(details);
+        return section;
     }
 }

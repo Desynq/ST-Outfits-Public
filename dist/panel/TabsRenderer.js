@@ -3,7 +3,10 @@ import { ElementHelper } from "../util/ElementHelper.js";
 export class OutfitTabsRenderer {
     constructor(panel) {
         this.panel = panel;
-        this.currentTab = 'clothing';
+        this.currentTab = {
+            type: 'kind',
+            kind: 'clothing'
+        };
         this.draggedTab = null;
     }
     get outfitManager() {
@@ -15,91 +18,88 @@ export class OutfitTabsRenderer {
     renderTabs(tabsContainer, contentArea) {
         this.recreateTabs(tabsContainer);
         contentArea.innerHTML = '';
-        switch (this.currentTab) {
-            case 'outfits':
-                this.renderOutfitsTab(contentArea);
+        switch (this.currentTab.type) {
+            case 'system':
+                if (this.currentTab.id === 'outfits')
+                    this.renderOutfitsTab(contentArea);
                 break;
-            default:
+            case 'kind':
+                const kind = this.currentTab.kind;
                 const slots = this.outfitManager.getOutfitView().slots
-                    .filter(s => s.kind === this.currentTab)
+                    .filter(s => s.kind === kind)
                     .map(s => s.id);
                 if (slots.length === 0) { // fallback
-                    tabsContainer.querySelector('button[data-tab="outfits"]')?.click();
+                    tabsContainer.querySelector('button[data-tab-type="system"]')?.click();
                     return;
                 }
-                this.panel.getSlotsRenderer().renderSlots(this.currentTab, slots, contentArea);
+                this.panel.getSlotsRenderer().renderSlots(kind, slots, contentArea);
                 break;
+            default: assertNever(this.currentTab);
         }
     }
     recreateTabs(tabsContainer) {
         const preservedTabScroll = this.getTabScroll(tabsContainer);
         tabsContainer.innerHTML = '';
-        const tabs = [];
+        const tabEls = [];
         const kinds = this.outfitView.getSlotKinds();
         for (const kind of kinds) {
-            const tab = this.createTab(kind);
-            tabs.push(tab);
+            const tab = this.createTab({ type: 'kind', kind });
+            tabEls.push(tab);
         }
-        const outfitsTab = this.createTab('outfits');
-        tabs.push(outfitsTab);
-        const tabList = document.createElement('div');
-        tabList.classList.add('outfit-tab-list');
-        for (const tab of tabs) {
-            tab.addEventListener('click', () => {
-                this.changeTab(tabs, tab);
-            });
-            this.addDragCapabilityToTab(tab);
-            if (tab !== outfitsTab) {
-                ElementHelper.addContextActionListener(tab, () => {
-                    if (!tab.classList.contains('active'))
-                        return; // user can only rename current tab
-                    const result = this.renameTab(tab);
-                    if (result.status === 'renamed') {
-                        this.currentTab = result.newName;
-                        this.panel.saveAndRenderContent();
-                    }
-                });
-                tabList.appendChild(tab);
+        const systemOutfitsTabEl = this.createTab({ type: 'system', id: 'outfits' });
+        tabEls.push(systemOutfitsTabEl);
+        const tabListEl = document.createElement('div');
+        tabListEl.classList.add('outfit-tab-list');
+        for (const tabEl of tabEls) {
+            tabEl.addEventListener('click', () => this.changeTab(tabEls, tabEl));
+            const kindTab = this.getKindTabFromElement(tabEl);
+            if (kindTab) {
+                this.addDragCapabilityToTab(tabEl);
+                ElementHelper.addContextActionListener(tabEl, () => this.tryRenameTab(tabEl));
+                tabListEl.appendChild(tabEl);
             }
         }
-        tabsContainer.appendChild(tabList);
-        tabsContainer.appendChild(outfitsTab);
+        tabsContainer.appendChild(tabListEl);
+        tabsContainer.appendChild(systemOutfitsTabEl);
         tabsContainer.appendChild(this.createAddTabButton());
         requestAnimationFrame(() => {
-            tabList.scrollLeft = preservedTabScroll;
+            tabListEl.scrollLeft = preservedTabScroll;
         });
     }
     getTabScroll(tabsContainer) {
         const tabList = tabsContainer.querySelector('.outfit-tab-list');
         return tabList ? tabList.scrollLeft : 0;
     }
-    assertTabKind(tab) {
-        const tabName = tab.dataset.tab;
-        if (tabName === undefined)
-            throw new Error(`Tab has no name.`);
-        return tabName;
-    }
-    changeTab(tabs, tab) {
-        const tabName = tab.dataset.tab;
-        if (tabName === undefined)
-            throw new Error(`Tab has no name.`);
-        this.currentTab = tabName;
+    changeTab(allTabs, clickedTab) {
+        const tab = this.getTabFromElement(clickedTab);
+        if (!tab)
+            throw new Error(`Element could not be coerced into a tab: ${clickedTab.outerHTML}`);
+        this.currentTab = tab;
         this.panel.renderContent();
-        for (const t of tabs) {
+        for (const t of allTabs) {
             t.classList.remove('active');
         }
-        tab.classList.add('active');
+        clickedTab.classList.add('active');
     }
-    renameTab(tab) {
-        const kind = this.assertTabKind(tab);
+    tryRenameTab(tabEl) {
+        if (!tabEl.classList.contains('active'))
+            return; // user can only rename current tab
+        const result = this.renameTab(tabEl);
+        if (result.status === 'renamed') {
+            this.currentTab = {
+                type: 'kind',
+                kind: result.newName
+            };
+            this.panel.saveAndRenderContent();
+        }
+    }
+    renameTab(tabElement) {
+        const kind = this.assertKindTab(tabElement).kind;
         const newKind = this.promptKind();
         if (newKind === null)
             return { status: 'cancelled', newName: null }; // user cancelled
         const result = this.outfitView.renameKind(kind, newKind);
         switch (result) {
-            case "invalid-new-kind":
-                this.panel.sendSystemMessage(`Kind "${newKind}" is invalid.`);
-                return { status: 'rejected', newName: null };
             case "old-kind-not-found":
                 throw new Error(`Tab has kind "${kind}" that does not exist for the current outfit.`);
             case "new-kind-already-exists":
@@ -111,16 +111,7 @@ export class OutfitTabsRenderer {
         }
     }
     promptKind() {
-        const message = `Rules:
-• Use lowercase letters only
-• Hyphens (-) separate words
-• Underscore (_) capitalizes the next letter
-• No numbers or special characters
-• Cannot start or end words with _
-• Cannot start or end with -
-• "outfits" is reserved and cannot be used
-
-New slot kind name:`;
+        const message = `New slot kind name:`;
         const raw = prompt(message)?.trim();
         if (raw === undefined || raw === '')
             return null;
@@ -168,49 +159,80 @@ New slot kind name:`;
             .sortByKind(kindOrder);
         this.panel.saveAndRenderContent();
     }
-    createTab(name) {
-        const tab = document.createElement('button');
-        tab.classList.add('outfit-tab');
-        if (this.currentTab === name) {
-            tab.classList.add('active');
+    createTab(tab) {
+        const element = document.createElement('button');
+        element.classList.add('outfit-tab');
+        if (this.tabsEqual(this.currentTab, tab)) {
+            element.classList.add('active');
         }
-        tab.dataset.tab = name;
-        tab.textContent = this.formatKind(name);
-        if (name === 'outfits') {
-            tab.classList.add('.outfits-tab');
+        element.dataset.tabType = tab.type;
+        switch (tab.type) {
+            case 'system':
+                element.dataset.tabId = tab.id;
+                element.textContent = 'Outfits';
+                element.classList.add('outfits-tab');
+                break;
+            case 'kind':
+                element.dataset.kind = tab.kind;
+                element.textContent = this.formatKind(tab.kind);
+                element.draggable = true;
+                break;
+            default: assertNever(tab);
         }
-        else {
-            tab.draggable = true;
-            tab.dataset.kind = name;
+        return element;
+    }
+    getTabFromElement(element) {
+        const tabType = element.dataset.tabType;
+        if (tabType === 'system') {
+            const id = element.dataset.tabId;
+            if (!id)
+                return undefined;
+            return { type: 'system', id: id };
+        }
+        if (tabType === 'kind') {
+            const kind = element.dataset.kind;
+            if (!kind)
+                return undefined;
+            return { type: 'kind', kind };
+        }
+        return undefined;
+    }
+    assertTab(element) {
+        const tab = this.getTabFromElement(element);
+        if (!tab) {
+            throw new Error(`Element could not be coerced into a tab: ${element.outerHTML}`);
         }
         return tab;
     }
-    formatKind(kind) {
-        let result = '';
-        let capitalizeNext = true; // start words capitalized
-        for (let i = 0; i < kind.length; i++) {
-            const char = kind[i];
-            if (char === '-') {
-                result += ' ';
-                capitalizeNext = true;
-                continue;
-            }
-            if (char === '_') {
-                capitalizeNext = true;
-                continue;
-            }
-            if (capitalizeNext) {
-                result += char.toUpperCase();
-                capitalizeNext = false;
-            }
-            else {
-                result += char;
-            }
+    getKindTabFromElement(element) {
+        const tab = this.getTabFromElement(element);
+        if (!tab)
+            return undefined;
+        return tab.type === 'kind' ? tab : undefined;
+    }
+    assertKindTab(element) {
+        const tab = this.getKindTabFromElement(element);
+        if (!tab) {
+            throw new Error(`System tabs cannot be renamed: ${element.outerHTML}`);
         }
-        return result;
+        return tab;
+    }
+    tabsEqual(a, b) {
+        if (a.type !== b.type)
+            return false;
+        switch (a.type) {
+            case 'system':
+                return b.type === 'system' && a.id === b.id;
+            case 'kind':
+                return b.type === 'kind' && a.kind === b.kind;
+            default: assertNever(a);
+        }
+    }
+    formatKind(kind) {
+        return kind;
     }
     normalizeKindInput(input) {
-        return input.trim().toLowerCase();
+        return input.trim();
     }
     createAddTabButton() {
         const button = document.createElement('button');
@@ -227,9 +249,6 @@ New slot kind name:`;
         switch (result) {
             case 'slot-already-exists':
                 this.panel.sendSystemMessage(`Make sure no pre-existing slots are named ${kind}.`);
-                return;
-            case 'invalid-slot-kind':
-                this.panel.sendSystemMessage('Slot kind does not conform to rules.');
                 return;
             case 'added':
                 this.panel.saveAndRenderContent();

@@ -183,7 +183,7 @@
 }
 
 .slot-button.slot-toggle.is-enabled:hover {
-	background-color: rgba(80, 200, 160, 0.25);
+	background-color: rgba(80, 200, 160, 0.5);
 }
 
 .slot-button.slot-toggle.is-disabled {

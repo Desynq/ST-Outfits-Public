@@ -13,12 +13,10 @@ export type RenameResult =
 	| 'renamed';
 
 export type AddSlotResult =
-	| 'invalid-slot-kind'
 	| 'slot-already-exists'
 	| 'added';
 
 export type RenameKindResult =
-	| 'invalid-new-kind'
 	| 'old-kind-not-found'
 	| 'new-kind-already-exists'
 	| 'renamed';
@@ -110,13 +108,7 @@ export class MutableSlotView {
 		return true;
 	}
 
-	private isValidSlotKind(kind: string): boolean {
-		return /^[a-z](?:[a-z]|_(?=[a-z])|-(?=[a-z]))*$/.test(kind) && kind !== 'outfits';
-	}
-
 	public addSlot(id: string, kind: SlotKind): AddSlotResult {
-		if (!this.isValidSlotKind(kind)) return 'invalid-slot-kind';
-
 		const i = this.indexById[id];
 		if (i !== undefined) return 'slot-already-exists';
 
@@ -223,8 +215,6 @@ export class MutableSlotView {
 	}
 
 	public renameKind(oldKind: string, newKind: string): RenameKindResult {
-		if (!this.isValidSlotKind(newKind)) return 'invalid-new-kind';
-
 		const kinds = this.getKinds();
 		let exists: boolean = false;
 		for (const k of kinds) {

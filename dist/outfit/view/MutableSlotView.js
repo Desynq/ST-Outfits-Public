@@ -62,12 +62,7 @@ export class MutableSlotView {
         this._slots[i].enabled = enabled;
         return true;
     }
-    isValidSlotKind(kind) {
-        return /^[a-z](?:[a-z]|_(?=[a-z])|-(?=[a-z]))*$/.test(kind) && kind !== 'outfits';
-    }
     addSlot(id, kind) {
-        if (!this.isValidSlotKind(kind))
-            return 'invalid-slot-kind';
         const i = this.indexById[id];
         if (i !== undefined)
             return 'slot-already-exists';
@@ -152,8 +147,6 @@ export class MutableSlotView {
         this.rebuildIndex();
     }
     renameKind(oldKind, newKind) {
-        if (!this.isValidSlotKind(newKind))
-            return 'invalid-new-kind';
         const kinds = this.getKinds();
         let exists = false;
         for (const k of kinds) {

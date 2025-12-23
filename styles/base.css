@@ -277,18 +277,16 @@
 .outfit-actions {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 6px;
 }
 
 .outfit-actions .outfit-action {
     font-weight: bold;
     font-size: 1.6em;
 
-    width: auto;
-    height: auto;
+    height: 1.6em;
 
     padding: 12px;
-    margin: -12px;
     display: inline-flex;
     justify-content: center;
     align-items: center;

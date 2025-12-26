@@ -109,7 +109,7 @@ export class SlotsRenderer {
         container.appendChild(slotElement);
     }
     removeActionButtons(slotElement) {
-        const selectors = ['.slot-toggle', '.delete-slot', '.slot-shift', '.slot-change'];
+        const selectors = ['.slot-toggle', '.delete-slot', '.slot-shift', '.slot-change', '.move-slot'];
         for (const selector of selectors) {
             slotElement.querySelector(selector)?.remove();
         }

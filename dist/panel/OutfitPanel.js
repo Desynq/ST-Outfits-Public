@@ -146,7 +146,7 @@ export class OutfitPanel {
             if (pressTimer) {
                 clearTimeout(pressTimer);
                 pressTimer = null;
-                if (!dragging) {
+                if (!dragging && e.button === 0) {
                     // Treat as tap
                     this.toggleMinimize();
                 }

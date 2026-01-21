@@ -184,7 +184,7 @@ export abstract class OutfitPanel<T extends OutfitManager> implements OutfitSlot
 				clearTimeout(pressTimer);
 				pressTimer = null;
 
-				if (!dragging) {
+				if (!dragging && e.button === 0) {
 					// Treat as tap
 					this.toggleMinimize();
 				}

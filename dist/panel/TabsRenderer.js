@@ -1,5 +1,5 @@
 import { assertNever } from "../shared.js";
-import { ElementHelper } from "../util/ElementHelper.js";
+import { addContextActionListener } from "../util/ElementHelper.js";
 export class OutfitTabsRenderer {
     constructor(panel) {
         this.panel = panel;
@@ -65,7 +65,7 @@ export class OutfitTabsRenderer {
             const kindTab = this.getKindTabFromElement(tabEl);
             if (kindTab) {
                 this.addDragCapabilityToTab(tabEl);
-                ElementHelper.addContextActionListener(tabEl, () => this.tryRenameTab(tabEl));
+                addContextActionListener(tabEl, () => this.tryRenameTab(tabEl));
                 tabListEl.appendChild(tabEl);
             }
         }

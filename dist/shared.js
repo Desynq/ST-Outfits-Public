@@ -1,6 +1,6 @@
 // @ts-expect-error
 import { extension_settings } from "../../../../extensions.js";
-export function dragElement(element) {
+export function mouseDragElement(element) {
     let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
     const header = element.find('.outfit-header')[0];
     if (header)

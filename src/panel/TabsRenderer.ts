@@ -2,7 +2,7 @@ import { OutfitManager } from "../manager/OutfitManager.js";
 import { SlotKind } from "../outfit/model/Outfit.js";
 import { MutableOutfitView } from "../outfit/view/MutableOutfitView.js";
 import { assertNever } from "../shared.js";
-import { ElementHelper } from "../util/ElementHelper.js";
+import { addContextActionListener } from "../util/ElementHelper.js";
 import { OutfitTabsHost } from "./OutfitTabsHost.js";
 
 interface OutfitSystemTab {
@@ -115,7 +115,7 @@ export class OutfitTabsRenderer {
 			if (kindTab) {
 				this.addDragCapabilityToTab(tabEl);
 
-				ElementHelper.addContextActionListener(
+				addContextActionListener(
 					tabEl,
 					() => this.tryRenameTab(tabEl)
 				);

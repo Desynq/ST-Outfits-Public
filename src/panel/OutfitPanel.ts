@@ -1,10 +1,11 @@
 import { OutfitManager } from "../manager/OutfitManager.js";
 import { OutfitTracker } from "../outfit/tracker.js";
 import { isMobile } from "../shared.js";
-import { OutfitTabsRenderer as TabsRenderer } from "./TabsRenderer.js";
-import { SlotsRenderer } from "./SlotsRenderer.js";
+import { createElements } from "../util/ElementHelper.js";
 import { OutfitSlotsHost } from "./OutfitSlotsHost.js";
 import { OutfitTabsHost } from "./OutfitTabsHost.js";
+import { SlotsRenderer } from "./SlotsRenderer.js";
+import { OutfitTabsRenderer as TabsRenderer } from "./TabsRenderer.js";
 
 export abstract class OutfitPanel<T extends OutfitManager> implements OutfitSlotsHost, OutfitTabsHost {
 
@@ -74,24 +75,23 @@ export abstract class OutfitPanel<T extends OutfitManager> implements OutfitSlot
 
 
 	protected makePanelDraggable() {
-		if (!this.domElement || !isMobile()) return;
+		if (!this.domElement) return;
 
 		const handle = this.domElement.querySelector(".outfit-header") as HTMLElement;
 		if (!handle) return;
 
-		let isDragging = false;
 		let offsetX = 0;
 		let offsetY = 0;
 
 		const start = (e: PointerEvent) => {
 			if (!this.domElement) return;
 			handle.setPointerCapture(e.pointerId);
-			isDragging = true;
 
 			const rect = this.domElement.getBoundingClientRect();
 			offsetX = e.clientX - rect.left;
 			offsetY = e.clientY - rect.top;
 
+			this.domElement.style.position ||= 'absolute';
 			this.domElement.style.right = "auto";
 			this.domElement.style.left = rect.left + "px";
 			this.domElement.style.top = rect.top + "px";
@@ -102,24 +102,27 @@ export abstract class OutfitPanel<T extends OutfitManager> implements OutfitSlot
 		};
 
 		const move = (e: PointerEvent) => {
-			if (!this.domElement || !isDragging) return;
+			if (!this.domElement) return;
 
-			e.preventDefault(); // stops scrolling
+			if (e.pointerType === 'touch') {
+				e.preventDefault(); // stops scrolling
+			}
 
 			this.domElement.style.left = `${e.clientX - offsetX}px`;
 			this.domElement.style.top = `${e.clientY - offsetY}px`;
 		};
 
 		const stop = (e: PointerEvent) => {
-			handle.releasePointerCapture(e.pointerId);
-			isDragging = false;
+			if (handle.hasPointerCapture(e.pointerId)) {
+				handle.releasePointerCapture(e.pointerId);
+			}
 			handle.removeEventListener("pointermove", move);
 			handle.removeEventListener("pointerup", stop);
 			handle.removeEventListener("pointercancel", stop);
 		};
 
 		handle.addEventListener("pointerdown", (e) => {
-			if ((e.target as HTMLElement).tagName === "H3") return;
+			if (e.target !== handle) return;
 			start(e);
 		});
 	}
@@ -214,6 +217,44 @@ export abstract class OutfitPanel<T extends OutfitManager> implements OutfitSlot
 
 	protected abstract getHeaderTitle(): string;
 
+	protected createOutfitActions(): HTMLDivElement {
+		const div = document.createElement('div');
+		div.classList.add('outfit-actions');
+
+		const createSpan = () => document.createElement('span');
+
+		const actions = createElements(createSpan,
+			(minimizeBtn) => {
+				minimizeBtn.classList.add('minimize-button');
+				minimizeBtn.textContent = '−';
+				minimizeBtn.addEventListener('click', () => this.toggleMinimize());
+			},
+			(refreshBtn) => {
+				refreshBtn.classList.add('refresh-button');
+				refreshBtn.textContent = '↻';
+				refreshBtn.addEventListener('click', () => {
+					this.outfitManager.initializeOutfit();
+					this.renderContent();
+				});
+			},
+			(closeBtn) => {
+				closeBtn.classList.add('close-button');
+				closeBtn.textContent = '×';
+				closeBtn.addEventListener('click', () => {
+					this.hide();
+				});
+			}
+		);
+
+		for (const action of actions) {
+			action.classList.add('outfit-action', 'no-highlight');
+		}
+
+		div.append(...actions);
+
+		return div;
+	}
+
 	private expandHeader(): void {
 		if (!this.domElement) return;
 		const titleElement = this.domElement.querySelector(".outfit-header h3");
@@ -225,6 +266,7 @@ export abstract class OutfitPanel<T extends OutfitManager> implements OutfitSlot
 		const titleEl = this.domElement.querySelector('.outfit-header h3') as HTMLElement;
 		if (titleEl) titleEl.textContent = "";
 	}
+
 
 	protected toggleMinimize() {
 		this.minimized = !this.minimized;
@@ -249,8 +291,6 @@ export abstract class OutfitPanel<T extends OutfitManager> implements OutfitSlot
 		}
 	}
 
-	public abstract show(): void;
-
 	public autoOpen(x: number, y: number): void {
 		this.show();
 		this.toggleMinimize();
@@ -265,4 +305,26 @@ export abstract class OutfitPanel<T extends OutfitManager> implements OutfitSlot
 
 
 	public abstract exportButtonClickListener(): Promise<void>;
+
+	protected abstract initializePanel(): void;
+
+	public show() {
+		this.initializePanel();
+
+		this.renderContent();
+		this.domElement!.style.display = 'flex';
+		this.isVisible = true;
+	}
+
+	public hide() {
+		if (this.domElement) {
+			this.domElement.style.display = 'none';
+		}
+		this.isVisible = false;
+		this.minimized = false;
+	}
+
+	public toggle() {
+		this.isVisible ? this.hide() : this.show();
+	}
 }

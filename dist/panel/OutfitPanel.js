@@ -1,7 +1,7 @@
 import { OutfitTracker } from "../outfit/tracker.js";
-import { isMobile } from "../shared.js";
-import { OutfitTabsRenderer as TabsRenderer } from "./TabsRenderer.js";
+import { createElements } from "../util/ElementHelper.js";
 import { SlotsRenderer } from "./SlotsRenderer.js";
+import { OutfitTabsRenderer as TabsRenderer } from "./TabsRenderer.js";
 export class OutfitPanel {
     constructor(outfitManager) {
         this.outfitManager = outfitManager;
@@ -53,22 +53,22 @@ export class OutfitPanel {
         this.renderContent();
     }
     makePanelDraggable() {
-        if (!this.domElement || !isMobile())
+        if (!this.domElement)
             return;
         const handle = this.domElement.querySelector(".outfit-header");
         if (!handle)
             return;
-        let isDragging = false;
         let offsetX = 0;
         let offsetY = 0;
         const start = (e) => {
+            var _a;
             if (!this.domElement)
                 return;
             handle.setPointerCapture(e.pointerId);
-            isDragging = true;
             const rect = this.domElement.getBoundingClientRect();
             offsetX = e.clientX - rect.left;
             offsetY = e.clientY - rect.top;
+            (_a = this.domElement.style).position || (_a.position = 'absolute');
             this.domElement.style.right = "auto";
             this.domElement.style.left = rect.left + "px";
             this.domElement.style.top = rect.top + "px";
@@ -77,21 +77,24 @@ export class OutfitPanel {
             handle.addEventListener("pointercancel", stop);
         };
         const move = (e) => {
-            if (!this.domElement || !isDragging)
+            if (!this.domElement)
                 return;
-            e.preventDefault(); // stops scrolling
+            if (e.pointerType === 'touch') {
+                e.preventDefault(); // stops scrolling
+            }
             this.domElement.style.left = `${e.clientX - offsetX}px`;
             this.domElement.style.top = `${e.clientY - offsetY}px`;
         };
         const stop = (e) => {
-            handle.releasePointerCapture(e.pointerId);
-            isDragging = false;
+            if (handle.hasPointerCapture(e.pointerId)) {
+                handle.releasePointerCapture(e.pointerId);
+            }
             handle.removeEventListener("pointermove", move);
             handle.removeEventListener("pointerup", stop);
             handle.removeEventListener("pointercancel", stop);
         };
         handle.addEventListener("pointerdown", (e) => {
-            if (e.target.tagName === "H3")
+            if (e.target !== handle)
                 return;
             start(e);
         });
@@ -166,6 +169,34 @@ export class OutfitPanel {
         this.hideEmpty = !this.hideEmpty;
         this.renderContent();
     }
+    createOutfitActions() {
+        const div = document.createElement('div');
+        div.classList.add('outfit-actions');
+        const createSpan = () => document.createElement('span');
+        const actions = createElements(createSpan, (minimizeBtn) => {
+            minimizeBtn.classList.add('minimize-button');
+            minimizeBtn.textContent = '−';
+            minimizeBtn.addEventListener('click', () => this.toggleMinimize());
+        }, (refreshBtn) => {
+            refreshBtn.classList.add('refresh-button');
+            refreshBtn.textContent = '↻';
+            refreshBtn.addEventListener('click', () => {
+                this.outfitManager.initializeOutfit();
+                this.renderContent();
+            });
+        }, (closeBtn) => {
+            closeBtn.classList.add('close-button');
+            closeBtn.textContent = '×';
+            closeBtn.addEventListener('click', () => {
+                this.hide();
+            });
+        });
+        for (const action of actions) {
+            action.classList.add('outfit-action', 'no-highlight');
+        }
+        div.append(...actions);
+        return div;
+    }
     expandHeader() {
         if (!this.domElement)
             return;
@@ -208,5 +239,21 @@ export class OutfitPanel {
         this.domElement.style.left = `${x}px`;
         this.domElement.style.top = `${y}px`;
         this.domElement.style.right = "auto"; // ensure right doesn't override left positioning
+    }
+    show() {
+        this.initializePanel();
+        this.renderContent();
+        this.domElement.style.display = 'flex';
+        this.isVisible = true;
+    }
+    hide() {
+        if (this.domElement) {
+            this.domElement.style.display = 'none';
+        }
+        this.isVisible = false;
+        this.minimized = false;
+    }
+    toggle() {
+        this.isVisible ? this.hide() : this.show();
     }
 }

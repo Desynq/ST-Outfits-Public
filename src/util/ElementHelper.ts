@@ -33,6 +33,18 @@ export function addContextActionListener(element: HTMLElement, listener: () => v
 	element.addEventListener('pointercancel', cancel);
 }
 
+
+export function addLeftClickListener(element: HTMLElement, listener: () => void): void {
+	element.addEventListener('click', (e) => {
+		if (e.button !== 0) return;
+		listener();
+	});
+}
+
+
+
+
+
 export function append<T extends HTMLElement>(container: ParentNode, factory: () => T): T {
 	const element = factory();
 	container.appendChild(element);
@@ -45,15 +57,46 @@ export function pushConfigured<T extends HTMLElement>(list: HTMLElement[], eleme
 	return element;
 }
 
-export function createElements<T extends HTMLElement>(creator: () => T, ...configures: ((element: T) => void)[]): T[] {
+export function createElements<T extends HTMLElement>(...creators: (() => T)[]): T[] {
+	const elements: T[] = [];
+	for (const creator of creators) {
+		const element = creator();
+		elements.push(element);
+	}
+
+	return elements;
+}
+
+export function configureSharedElements<T extends HTMLElement>(configure: (element: T) => void, elements: readonly T[]): readonly T[];
+export function configureSharedElements<T extends HTMLElement>(configure: (element: T) => void, ...elements: readonly T[]): readonly T[];
+export function configureSharedElements<T extends HTMLElement>(configure: (element: T) => void, ...elements: readonly T[]): readonly T[] {
+	for (const element of elements) {
+		configure(element);
+	}
+	return elements;
+}
+
+export function createSharedElements<T extends HTMLElement>(configure: (element: T) => void, ...creators: (() => T)[]): T[] {
+	const elements = createElements(...creators);
+	for (const element of elements) {
+		configure(element);
+	}
+	return elements;
+}
+
+export function createConfiguredElements<T extends HTMLElement>(creator: () => T, ...configures: ((element: T) => void)[]): T[] {
 	const elements: T[] = [];
 	for (const configure of configures) {
 		const element = creator();
 		configure(element);
 		elements.push(element);
 	}
+
 	return elements;
 }
+
+
+
 
 function describeContainer(container: ParentNode): string {
 	if (container instanceof Element) {

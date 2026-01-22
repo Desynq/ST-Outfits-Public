@@ -24,6 +24,13 @@ export function addContextActionListener(element, listener, longPressMs = 550) {
     element.addEventListener('pointerleave', cancel);
     element.addEventListener('pointercancel', cancel);
 }
+export function addLeftClickListener(element, listener) {
+    element.addEventListener('click', (e) => {
+        if (e.button !== 0)
+            return;
+        listener();
+    });
+}
 export function append(container, factory) {
     const element = factory();
     container.appendChild(element);
@@ -34,7 +41,28 @@ export function pushConfigured(list, element, configure) {
     list.push(element);
     return element;
 }
-export function createElements(creator, ...configures) {
+export function createElements(...creators) {
+    const elements = [];
+    for (const creator of creators) {
+        const element = creator();
+        elements.push(element);
+    }
+    return elements;
+}
+export function configureSharedElements(configure, ...elements) {
+    for (const element of elements) {
+        configure(element);
+    }
+    return elements;
+}
+export function createSharedElements(configure, ...creators) {
+    const elements = createElements(...creators);
+    for (const element of elements) {
+        configure(element);
+    }
+    return elements;
+}
+export function createConfiguredElements(creator, ...configures) {
     const elements = [];
     for (const configure of configures) {
         const element = creator();

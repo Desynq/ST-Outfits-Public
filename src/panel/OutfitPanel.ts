@@ -1,7 +1,7 @@
 import { OutfitManager } from "../manager/OutfitManager.js";
 import { OutfitTracker } from "../outfit/tracker.js";
 import { isMobile } from "../shared.js";
-import { createElements } from "../util/ElementHelper.js";
+import { createConfiguredElements } from "../util/ElementHelper.js";
 import { OutfitSlotsHost } from "./OutfitSlotsHost.js";
 import { OutfitTabsHost } from "./OutfitTabsHost.js";
 import { SlotsRenderer } from "./SlotsRenderer.js";
@@ -223,7 +223,7 @@ export abstract class OutfitPanel<T extends OutfitManager> implements OutfitSlot
 
 		const createSpan = () => document.createElement('span');
 
-		const actions = createElements(createSpan,
+		const actions = createConfiguredElements(createSpan,
 			(minimizeBtn) => {
 				minimizeBtn.classList.add('minimize-button');
 				minimizeBtn.textContent = '−';

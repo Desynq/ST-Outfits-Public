@@ -1,5 +1,5 @@
 import { OutfitTracker } from "../outfit/tracker.js";
-import { createElements } from "../util/ElementHelper.js";
+import { createConfiguredElements } from "../util/ElementHelper.js";
 import { SlotsRenderer } from "./SlotsRenderer.js";
 import { OutfitTabsRenderer as TabsRenderer } from "./TabsRenderer.js";
 export class OutfitPanel {
@@ -173,7 +173,7 @@ export class OutfitPanel {
         const div = document.createElement('div');
         div.classList.add('outfit-actions');
         const createSpan = () => document.createElement('span');
-        const actions = createElements(createSpan, (minimizeBtn) => {
+        const actions = createConfiguredElements(createSpan, (minimizeBtn) => {
             minimizeBtn.classList.add('minimize-button');
             minimizeBtn.textContent = '−';
             minimizeBtn.addEventListener('click', () => this.toggleMinimize());

@@ -32,10 +32,11 @@
 	border-radius: 0;
 }
 
-.outfits-tab {
-	grid-column: 1;
-	grid-row: 1;
-	justify-self: start;
+.system-tab-list {
+	grid-column: 1 / span 2;
+	display: flex;
+	gap: 12px;
+	align-self: start;
 
 	opacity: 0.8;
 }

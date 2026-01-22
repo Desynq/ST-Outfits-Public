@@ -1,5 +1,10 @@
 import { assertNever } from "../shared.js";
 import { addContextActionListener } from "../util/ElementHelper.js";
+import { VisibilityTab } from "./tab/VisibilityTab.js";
+const OUTFIT_SYSTEM_TAB_IDS = ['outfits', 'visibility'];
+function formatKind(kind) {
+    return kind;
+}
 export class OutfitTabsRenderer {
     constructor(panel) {
         this.panel = panel;
@@ -8,6 +13,7 @@ export class OutfitTabsRenderer {
             kind: 'Clothing'
         };
         this.draggedTab = null;
+        this.visibilityTab = new VisibilityTab(this.outfitManager, formatKind);
     }
     get outfitManager() {
         return this.panel.getOutfitManager();
@@ -20,8 +26,16 @@ export class OutfitTabsRenderer {
         contentArea.innerHTML = '';
         switch (this.currentTab.type) {
             case 'system':
-                if (this.currentTab.id === 'outfits')
-                    this.renderOutfitsTab(contentArea);
+                switch (this.currentTab.id) {
+                    case 'outfits':
+                        this.renderOutfitsTab(contentArea);
+                        break;
+                    case 'visibility':
+                        this.visibilityTab.render(contentArea);
+                        break;
+                    default:
+                        return assertNever(this.currentTab.id);
+                }
                 break;
             case 'kind':
                 const kind = this.currentTab.kind;
@@ -34,7 +48,8 @@ export class OutfitTabsRenderer {
                 }
                 this.panel.getSlotsRenderer().renderSlots(kind, slots, contentArea);
                 break;
-            default: assertNever(this.currentTab);
+            default:
+                return assertNever(this.currentTab);
         }
     }
     renderFallback(tabsContainer) {
@@ -51,29 +66,40 @@ export class OutfitTabsRenderer {
         const preservedTabScroll = this.getTabScroll(tabsContainer);
         tabsContainer.innerHTML = '';
         const tabEls = [];
+        const kindTabEls = [];
         const kinds = this.outfitView.getSlotKinds();
         for (const kind of kinds) {
             const tab = this.createTab({ type: 'kind', kind });
             tabEls.push(tab);
+            kindTabEls.push(tab);
         }
-        const systemOutfitsTabEl = this.createTab({ type: 'system', id: 'outfits' });
-        tabEls.push(systemOutfitsTabEl);
-        const tabListEl = document.createElement('div');
-        tabListEl.classList.add('outfit-tab-list');
+        const systemTabEls = [];
+        const createSystemTabEl = (id) => {
+            const el = this.createTab({ type: 'system', id });
+            tabEls.push(el);
+            systemTabEls.push(el);
+        };
+        createSystemTabEl('outfits');
+        createSystemTabEl('visibility');
         for (const tabEl of tabEls) {
             tabEl.addEventListener('click', () => this.changeTab(tabEls, tabEl));
             const kindTab = this.getKindTabFromElement(tabEl);
             if (kindTab) {
                 this.addDragCapabilityToTab(tabEl);
                 addContextActionListener(tabEl, () => this.tryRenameTab(tabEl));
-                tabListEl.appendChild(tabEl);
             }
         }
-        tabsContainer.appendChild(tabListEl);
-        tabsContainer.appendChild(systemOutfitsTabEl);
-        tabsContainer.appendChild(this.createAddTabButton());
+        const createTabListEl = (token, elements) => {
+            const el = document.createElement('div');
+            el.classList.add(token);
+            el.append(...elements);
+            return el;
+        };
+        const systemTabListEl = createTabListEl('system-tab-list', systemTabEls);
+        const outfitTabListEl = createTabListEl('outfit-tab-list', kindTabEls);
+        tabsContainer.append(outfitTabListEl, systemTabListEl, this.createAddTabButton());
         requestAnimationFrame(() => {
-            tabListEl.scrollLeft = preservedTabScroll;
+            outfitTabListEl.scrollLeft = preservedTabScroll;
         });
     }
     getTabScroll(tabsContainer) {
@@ -178,24 +204,36 @@ export class OutfitTabsRenderer {
         element.dataset.tabType = tab.type;
         switch (tab.type) {
             case 'system':
-                element.dataset.tabId = tab.id;
-                element.textContent = 'Outfits';
-                element.classList.add('outfits-tab');
+                this.configureSystemTab(element, tab.id);
                 break;
             case 'kind':
                 element.dataset.kind = tab.kind;
-                element.textContent = this.formatKind(tab.kind);
+                element.textContent = formatKind(tab.kind);
                 element.draggable = true;
                 break;
             default: assertNever(tab);
         }
         return element;
     }
+    configureSystemTab(element, tabId) {
+        element.dataset.tabId = tabId;
+        switch (tabId) {
+            case 'outfits':
+                element.textContent = 'Outfits';
+                element.classList.add('outfits-tab');
+                break;
+            case 'visibility':
+                element.textContent = 'Visibility';
+                element.classList.add('visibility-tab');
+                break;
+            default: assertNever(tabId);
+        }
+    }
     getTabFromElement(element) {
         const tabType = element.dataset.tabType;
         if (tabType === 'system') {
-            const id = element.dataset.tabId;
-            if (!id)
+            const id = this.getSystemTabId(element);
+            if (id === undefined)
                 return undefined;
             return { type: 'system', id: id };
         }
@@ -227,6 +265,17 @@ export class OutfitTabsRenderer {
         }
         return tab;
     }
+    isOutfitSystemTabId(value) {
+        return OUTFIT_SYSTEM_TAB_IDS.includes(value);
+    }
+    getSystemTabId(element) {
+        const id = element.dataset.tabId;
+        if (id === undefined)
+            return undefined;
+        if (!this.isOutfitSystemTabId(id))
+            return undefined;
+        return id;
+    }
     tabsEqual(a, b) {
         if (a.type !== b.type)
             return false;
@@ -237,9 +286,6 @@ export class OutfitTabsRenderer {
                 return b.type === 'kind' && a.kind === b.kind;
             default: assertNever(a);
         }
-    }
-    formatKind(kind) {
-        return kind;
     }
     normalizeKindInput(input) {
         return input.trim();
@@ -271,7 +317,7 @@ export class OutfitTabsRenderer {
             container.innerHTML = '<div>No saved outfits.</div>';
         }
         else {
-            presets.forEach(preset => {
+            for (const preset of presets) {
                 const presetElement = document.createElement('div');
                 presetElement.className = 'outfit-preset';
                 presetElement.innerHTML = `
@@ -298,7 +344,7 @@ export class OutfitTabsRenderer {
                     }
                 });
                 container.appendChild(presetElement);
-            });
+            }
         }
         const saveButton = document.createElement('button');
         saveButton.className = 'save-outfit-btn';
@@ -315,7 +361,6 @@ export class OutfitTabsRenderer {
         });
         container.appendChild(saveButton);
         this.renderExportButton(container);
-        this.renderOutfitPreviewButton(container);
     }
     renderExportButton(container) {
         const exportButton = document.createElement('button');
@@ -323,65 +368,5 @@ export class OutfitTabsRenderer {
         exportButton.textContent = 'Export Current Outfit';
         exportButton.addEventListener('click', this.panel.exportButtonClickListener.bind(this));
         container.appendChild(exportButton);
-    }
-    renderOutfitPreviewButton(container) {
-        const previewButton = document.createElement('button');
-        previewButton.className = 'save-outfit-btn';
-        previewButton.textContent = 'Preview Outfit (LLM)';
-        previewButton.addEventListener('click', () => {
-            this.showOutfitPreview();
-        });
-        container.appendChild(previewButton);
-    }
-    showOutfitPreview() {
-        const overlay = document.createElement('div');
-        overlay.className = 'outfit-preview-overlay';
-        const modal = document.createElement('div');
-        modal.className = 'outfit-preview-modal';
-        /*html*/
-        modal.innerHTML = `
-		<div class="outfit-preview-header">
-			<h3>What the AI Sees</h3>
-			<button class="outfit-preview-close-btn">✕</button>
-		</div>
-		<div class="outfit-preview-body"></div>
-		`;
-        const previewBody = modal.querySelector('.outfit-preview-body');
-        for (const kind of this.outfitManager.getOutfitView().getSlotKinds()) {
-            const section = this.createPreviewSection(this.formatKind(kind), kind + '_summary');
-            previewBody.appendChild(section);
-        }
-        const fullSummarySection = this.createPreviewSection('Full Summary', 'summary');
-        previewBody.appendChild(fullSummarySection);
-        overlay.appendChild(modal);
-        document.body.appendChild(overlay);
-        overlay.querySelector('.outfit-preview-close-btn').addEventListener('click', () => {
-            overlay.remove();
-        });
-        overlay.addEventListener('click', (e) => {
-            if (e.target === overlay)
-                overlay.remove();
-        });
-    }
-    createPreviewSection(header, namespace) {
-        const section = document.createElement('div');
-        section.classList.add('outfit-preview-section');
-        const h4 = document.createElement('h4');
-        h4.textContent = header;
-        const code = document.createElement('code');
-        code.textContent = `{{getglobalvar::${this.outfitManager.getVarName(namespace)}}}`;
-        const details = document.createElement('details');
-        details.classList.add('outfit-preview-details');
-        const summary = document.createElement('summary');
-        summary.textContent = 'Show summary';
-        const pre = document.createElement('pre');
-        pre.classList.add('outfit-preview-text');
-        pre.textContent = this.outfitManager.getSummary(namespace);
-        details.appendChild(summary);
-        details.appendChild(pre);
-        section.appendChild(h4);
-        section.appendChild(code);
-        section.appendChild(details);
-        return section;
     }
 }

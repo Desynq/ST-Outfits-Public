@@ -71,6 +71,12 @@ export function createConfiguredElements(creator, ...configures) {
     }
     return elements;
 }
+export function appendElement(container, tag, className) {
+    const el = document.createElement(tag);
+    el.className = className;
+    container.appendChild(el);
+    return el;
+}
 function describeContainer(container) {
     if (container instanceof Element) {
         return `<${container.tagName.toLowerCase()}>`;

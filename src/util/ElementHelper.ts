@@ -95,6 +95,17 @@ export function createConfiguredElements<T extends HTMLElement>(creator: () => T
 	return elements;
 }
 
+export function appendElement<K extends keyof HTMLElementTagNameMap>(
+	container: HTMLElement,
+	tag: K,
+	className: string
+): HTMLElementTagNameMap[K] {
+	const el = document.createElement(tag);
+	el.className = className;
+	container.appendChild(el);
+	return el;
+}
+
 
 
 

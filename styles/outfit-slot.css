@@ -113,10 +113,25 @@
 
 
 .slot-actions {
-	display: flex;
-	justify-content: flex-end;
-	gap: 8px;
+	display: grid;
+	grid-template-columns: 1fr auto;
+	column-gap: 8px;
+	align-items: center;
 }
+
+.slot-actions-left {
+	display: flex;
+	gap: 8px;
+	justify-self: flex-start;
+}
+
+.slot-actions-right {
+	display: flex;
+	gap: 8px;
+	justify-self: flex-end;
+}
+
+
 
 .slot-button {
 	background: rgba(255, 255, 255, 0.15);
@@ -134,10 +149,6 @@
 	background: rgba(255, 255, 255, 0.25);
 }
 
-.slot-button.cancel-button {
-	margin-left: auto;
-}
-
 .slot-button.slot-shift {
 	background-color: rgba(120, 160, 255, 0.12);
 	color: rgba(220, 235, 255, 0.9);
@@ -151,8 +162,6 @@
 
 
 .slot-button.move-slot {
-	margin-right: auto;
-
 	background-color: rgba(120, 160, 255, 0.12);
 	color: rgba(220, 235, 255, 0.9);
 	border: 1px solid rgba(120, 160, 255, 0.35);

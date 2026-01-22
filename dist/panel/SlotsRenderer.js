@@ -1,4 +1,5 @@
 import { assertNever, isMobile, toSlotName } from "../shared.js";
+import { appendElement } from "../util/ElementHelper.js";
 class DisplaySlot {
     constructor(displayIndex, slotIndex, slot) {
         this.displayIndex = displayIndex;
@@ -70,11 +71,22 @@ export class SlotsRenderer {
 				<div class="slot-name">${toSlotName(slot.id)}</div>
 			</div>
 		`;
-        const slotActionsDiv = document.createElement('div');
+        const actionsEl = document.createElement('div');
+        actionsEl.className = 'slot-actions';
+        const actionsLeftEl = appendElement(actionsEl, 'div', 'slot-actions-left');
+        const actionsRightEl = appendElement(actionsEl, 'div', 'slot-actions-right');
         if (!this.isSlotMinimized(slot)) {
-            this.decorateSlot(container, slotElement, display, slotActionsDiv);
+            const ctx = {
+                scroller: container,
+                displaySlot: display,
+                slotElement,
+                slot: display.slot,
+                actionsLeftEl,
+                actionsRightEl
+            };
+            this.decorateSlot(ctx);
         }
-        slotElement.appendChild(slotActionsDiv);
+        slotElement.appendChild(actionsEl);
         container.appendChild(slotElement);
     }
     isSlotMinimized(slot) {
@@ -84,50 +96,50 @@ export class SlotsRenderer {
             return true;
         return false;
     }
-    decorateSlot(container, slotElement, display, slotActionsDiv) {
-        const slot = display.slot;
-        const disabledClass = slot.isDisabled() ? 'disabled' : '';
-        const noneClass = slot.isEmpty() ? 'none' : '';
-        const valueDiv = document.createElement('div');
-        valueDiv.classList.add('slot-value', ...[disabledClass, noneClass].filter(Boolean));
-        valueDiv.title = slot.value;
-        valueDiv.textContent = slot.value;
-        this.addDoubleTapEventListener(valueDiv, () => this.beginInlineEdit(container, slotElement, display.slot));
-        slotElement.appendChild(valueDiv);
+    decorateSlot(ctx) {
+        const disabledClass = ctx.slot.isDisabled() ? 'disabled' : '';
+        const noneClass = ctx.slot.isEmpty() ? 'none' : '';
+        const valueEl = document.createElement('div');
+        const beginInlineEdit = () => this.beginInlineEdit(ctx, valueEl);
+        valueEl.classList.add('slot-value', ...[disabledClass, noneClass].filter(Boolean));
+        valueEl.title = ctx.slot.value;
+        valueEl.textContent = ctx.slot.value;
+        this.addDoubleTapEventListener(valueEl, beginInlineEdit);
+        ctx.slotElement.appendChild(valueEl);
         const toggleBtn = document.createElement('button');
         toggleBtn.className = 'slot-button slot-toggle';
-        const enabled = display.slot.isEnabled();
+        const enabled = ctx.slot.isEnabled();
         toggleBtn.classList.add(enabled ? 'is-enabled' : 'is-disabled');
         toggleBtn.textContent = enabled ? 'Disable' : 'Enable';
         toggleBtn.addEventListener('click', () => {
-            this.outfitView.toggleSlot(display.slot.id);
-            this.outfitManager.updateOutfitValue(display.slot.id);
+            this.outfitView.toggleSlot(ctx.slot.id);
+            this.outfitManager.updateOutfitValue(ctx.slot.id);
             this.panel.saveAndRenderContent();
         });
-        slotActionsDiv.appendChild(toggleBtn);
+        ctx.actionsLeftEl.appendChild(toggleBtn);
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'slot-button delete-slot';
         deleteBtn.textContent = 'Delete';
-        deleteBtn.addEventListener('click', () => this.askDeleteSlot(slotElement, display.slot));
-        slotActionsDiv.appendChild(deleteBtn);
+        deleteBtn.addEventListener('click', () => this.askDeleteSlot(ctx.slotElement, ctx.slot));
+        ctx.actionsLeftEl.appendChild(deleteBtn);
         const shiftBtn = document.createElement('button');
         shiftBtn.className = 'slot-button slot-shift';
         shiftBtn.textContent = 'Shift';
         shiftBtn.addEventListener('click', () => {
-            this.beginSlotShift(slotElement, display);
+            this.beginSlotShift(ctx.slotElement, ctx.displaySlot);
         });
-        slotActionsDiv.appendChild(shiftBtn);
+        ctx.actionsLeftEl.appendChild(shiftBtn);
         const moveBtn = document.createElement('button');
         moveBtn.classList.add('slot-button', 'move-slot');
         moveBtn.textContent = 'Move';
-        moveBtn.addEventListener('click', () => this.moveSlot(display.slot));
-        slotActionsDiv.appendChild(moveBtn);
+        moveBtn.addEventListener('click', () => this.moveSlot(ctx.slot));
+        ctx.actionsLeftEl.appendChild(moveBtn);
         const changeSlotBtn = document.createElement('button');
         changeSlotBtn.classList.add('slot-button', 'slot-change');
         changeSlotBtn.textContent = '✏️';
-        changeSlotBtn.addEventListener('click', () => this.beginInlineEdit(container, slotElement, display.slot));
-        slotActionsDiv.appendChild(changeSlotBtn);
-        this.addDoubleTapEventListener(slotElement.querySelector('.slot-name'), () => this.beginRename(slotElement, display.slot));
+        changeSlotBtn.addEventListener('click', beginInlineEdit);
+        ctx.actionsRightEl.appendChild(changeSlotBtn);
+        this.addDoubleTapEventListener(ctx.slotElement.querySelector('.slot-name'), () => this.beginRename(ctx.slotElement, ctx.slot));
     }
     removeActionButtons(slotElement) {
         const selectors = ['.slot-toggle', '.delete-slot', '.slot-shift', '.slot-change', '.move-slot'];
@@ -319,22 +331,21 @@ export class SlotsRenderer {
         this.panel.renderContent();
     }
     /* --------------------------- Slot Value Editing --------------------------- */
-    beginInlineEdit(scroller, slotElement, slot) {
-        const valueEl = slotElement.querySelector('.slot-value');
-        const actionsEl = slotElement.querySelector('.slot-actions');
-        const scrollTop = scroller.scrollTop;
+    beginInlineEdit(ctx, valueEl) {
+        const scrollTop = ctx.scroller.scrollTop;
         const rect = valueEl.getBoundingClientRect();
         const originalValue = valueEl.innerText.trim();
+        const empty = originalValue === 'None';
         // Create editable textarea
         const textarea = document.createElement('textarea');
         textarea.className = 'slot-editbox';
         textarea.rows = 1;
-        textarea.value = originalValue === 'None' || originalValue === 'Disabled' ? '' : originalValue;
+        textarea.value = empty ? '' : originalValue;
         textarea.style.width = `${rect.width}px`;
         textarea.style.height = `${rect.height}px`;
         // Swap value box with editor
         valueEl.replaceWith(textarea);
-        scroller.scrollTop = scrollTop;
+        ctx.scroller.scrollTop = scrollTop;
         const autoResize = () => {
             textarea.style.height = 'auto'; // reset
             textarea.style.height = `${textarea.scrollHeight}px`;
@@ -342,39 +353,39 @@ export class SlotsRenderer {
         autoResize();
         textarea.focus({ preventScroll: true });
         textarea.addEventListener('input', autoResize);
-        this.removeActionButtons(slotElement);
+        this.removeActionButtons(ctx.slotElement);
         textarea.addEventListener('keydown', (e) => {
             if (e.isComposing)
                 return;
             if (!isMobile() && e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                this.commitValueEdit(textarea, slot);
+                this.commitValueEdit(textarea, ctx.displaySlot.slot);
             }
             else if (e.key === 'Escape') {
                 e.preventDefault();
                 this.cancelValueEdit();
             }
         });
-        if (originalValue !== 'None') {
+        if (!empty) {
             const clearBtn = document.createElement('button');
             clearBtn.classList.add('slot-button', 'clear-button');
             clearBtn.textContent = 'Clear';
-            actionsEl.appendChild(clearBtn);
+            ctx.actionsLeftEl.appendChild(clearBtn);
             clearBtn.addEventListener('click', async () => {
-                await this.outfitManager.setOutfitItem(slot.id, 'None');
+                await this.outfitManager.setOutfitItem(ctx.slot.id, 'None');
                 this.panel.renderContent();
             });
         }
         const cancelBtn = document.createElement('button');
         cancelBtn.classList.add('slot-button', 'cancel-button');
         cancelBtn.textContent = 'Cancel';
-        actionsEl.appendChild(cancelBtn);
+        ctx.actionsRightEl.appendChild(cancelBtn);
         cancelBtn.addEventListener('click', () => this.cancelValueEdit());
         const saveBtn = document.createElement('button');
         saveBtn.classList.add('slot-button', 'save-button');
         saveBtn.textContent = 'Save';
-        actionsEl.appendChild(saveBtn);
-        saveBtn.addEventListener('click', async () => this.commitValueEdit(textarea, slot));
+        ctx.actionsRightEl.appendChild(saveBtn);
+        saveBtn.addEventListener('click', async () => this.commitValueEdit(textarea, ctx.slot));
     }
     async commitValueEdit(textarea, slot) {
         const newValue = textarea.value.trim() === ''

@@ -1,4 +1,4 @@
-import { ensureObject, asObject, asStringRecord } from "../ObjectHelper.js";
+import { ensureObject, asObject, asStringRecord, asBoolean } from "../ObjectHelper.js";
 import { OutfitCollection, Outfit, OutfitSlot, SlotKind } from "./model/Outfit.js";
 
 
@@ -24,7 +24,9 @@ export function validatePresets(raw: any): void {
 export function normalizeOutfitCollection(value: any): OutfitCollection {
 	const raw = ensureObject<OutfitCollection>(value, {
 		outfits: asObject<Record<string, any>>({}),
-		autoOutfit: normalizeOutfit
+		autoOutfit: normalizeOutfit,
+		hideDisabled: asBoolean(false),
+		hideEmpty: asBoolean(false)
 	});
 
 	const outfits: Record<string, Outfit> = {};
@@ -37,7 +39,9 @@ export function normalizeOutfitCollection(value: any): OutfitCollection {
 
 	return {
 		outfits,
-		autoOutfit: raw.autoOutfit
+		autoOutfit: raw.autoOutfit,
+		hideDisabled: raw.hideDisabled,
+		hideEmpty: raw.hideEmpty
 	};
 }
 

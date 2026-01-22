@@ -46,3 +46,6 @@ export const asStringArray = () =>
 
 export const asString = (v: any): string | undefined =>
 	typeof v === 'string' && v.trim() !== '' ? v.trim() : undefined;
+
+export const asBoolean = (fallback: boolean) =>
+	(v: any): boolean => (typeof v === 'boolean' ? v : fallback);

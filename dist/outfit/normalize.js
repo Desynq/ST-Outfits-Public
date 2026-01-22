@@ -1,4 +1,4 @@
-import { ensureObject, asObject, asStringRecord } from "../ObjectHelper.js";
+import { ensureObject, asObject, asStringRecord, asBoolean } from "../ObjectHelper.js";
 export function validatePresets(raw) {
     if (!raw || typeof raw !== 'object')
         return;
@@ -16,7 +16,9 @@ export function validatePresets(raw) {
 export function normalizeOutfitCollection(value) {
     const raw = ensureObject(value, {
         outfits: asObject({}),
-        autoOutfit: normalizeOutfit
+        autoOutfit: normalizeOutfit,
+        hideDisabled: asBoolean(false),
+        hideEmpty: asBoolean(false)
     });
     const outfits = {};
     for (const [name, v] of Object.entries(raw.outfits)) {
@@ -26,7 +28,9 @@ export function normalizeOutfitCollection(value) {
     }
     return {
         outfits,
-        autoOutfit: raw.autoOutfit
+        autoOutfit: raw.autoOutfit,
+        hideDisabled: raw.hideDisabled,
+        hideEmpty: raw.hideEmpty
     };
 }
 function normalizePresetCollection(value) {

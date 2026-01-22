@@ -81,7 +81,7 @@ export class BotOutfitManager extends OutfitManager {
         const outfits = OutfitTracker.characterOutfits(this.character).getSavedOutfitNames();
         return outfits;
     }
-    getOutfitView() {
-        return OutfitTracker.characterOutfits(this.character).getOrCreateAutosaved();
+    getOutfitCollection() {
+        return OutfitTracker.characterOutfits(this.character);
     }
 }

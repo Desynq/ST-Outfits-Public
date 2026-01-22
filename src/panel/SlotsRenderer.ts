@@ -40,10 +40,6 @@ export class SlotsRenderer {
 				continue;
 			}
 
-			if (slot.isDisabled() && this.panel.areDisabledSlotsHidden()) continue;
-
-			if (slot.isEmpty() && this.panel.areEmptySlotsHidden()) continue;
-
 			const slotIndex = this.outfitView.getIndexById(slot.id)!;
 
 			const displaySlot = new DisplaySlot(displayIndex, slotIndex, slot);
@@ -91,63 +87,95 @@ export class SlotsRenderer {
 		slotElement.className = 'outfit-slot';
 		slotElement.dataset.slot = display.slot.id;
 
-		const disabledClass = display.slot.isDisabled() ? 'disabled' : '';
-		const noneClass = display.slot.isEmpty() ? 'none' : '';
+		const slot = display.slot;
+		const disabledClass = slot.isDisabled() ? 'disabled' : '';
+		const noneClass = slot.isEmpty() ? 'none' : '';
 
 		/*html*/
 		slotElement.innerHTML = `
 			<div class="slot-label">
 				<div class="slot-ordinal">${display.displayIndex}</div>
-				<div class="slot-name">${toSlotName(display.slot.id)}</div>
-			</div>
-			<div class="slot-value ${disabledClass} ${noneClass}" title="${display.slot.value}">${display.slot.value}</div>
-			<div class="slot-actions">
-				<button class="slot-button slot-toggle"></button>
-				<button class="slot-button delete-slot">Delete</button>
-				<button class="slot-button slot-shift">Shift</button>
+				<div class="slot-name">${toSlotName(slot.id)}</div>
 			</div>
 		`;
 
-		const toggleButton = slotElement.querySelector<HTMLButtonElement>('.slot-toggle')!;
-		const enabled = display.slot.isEnabled();
-		toggleButton.textContent = enabled ? 'Disable' : 'Enable';
-		toggleButton.classList.add(enabled ? 'is-enabled' : 'is-disabled');
+		const slotActionsDiv = document.createElement('div');
 
-		toggleButton.addEventListener('click', () => {
+		if (!this.isSlotMinimized(slot)) {
+			this.decorateSlot(container, slotElement, display, slotActionsDiv);
+		}
+
+		slotElement.appendChild(slotActionsDiv);
+
+		container.appendChild(slotElement);
+	}
+
+	private isSlotMinimized(slot: ResolvedOutfitSlot): boolean {
+		if (slot.isDisabled() && this.panel.areDisabledSlotsHidden()) return true;
+
+		if (slot.isEmpty() && this.panel.areEmptySlotsHidden()) return true;
+
+		return false;
+	}
+
+	private decorateSlot(container: HTMLDivElement, slotElement: HTMLDivElement, display: DisplaySlot, slotActionsDiv: HTMLDivElement): void {
+		const slot = display.slot;
+		const disabledClass = slot.isDisabled() ? 'disabled' : '';
+		const noneClass = slot.isEmpty() ? 'none' : '';
+
+		const valueDiv = document.createElement('div');
+		valueDiv.classList.add(
+			'slot-value',
+			...[disabledClass, noneClass].filter(Boolean)
+		);
+		valueDiv.title = slot.value;
+		valueDiv.textContent = slot.value;
+		this.addDoubleTapEventListener(
+			valueDiv,
+			() => this.beginInlineEdit(container, slotElement, display.slot)
+		);
+		slotElement.appendChild(valueDiv);
+
+		const toggleBtn = document.createElement('button');
+		toggleBtn.className = 'slot-button slot-toggle';
+
+		const enabled = display.slot.isEnabled();
+		toggleBtn.classList.add(enabled ? 'is-enabled' : 'is-disabled');
+		toggleBtn.textContent = enabled ? 'Disable' : 'Enable';
+
+		toggleBtn.addEventListener('click', () => {
 			this.outfitView.toggleSlot(display.slot.id);
 			this.outfitManager.updateOutfitValue(display.slot.id);
 			this.panel.saveAndRenderContent();
 		});
 
-		slotElement.querySelector<HTMLButtonElement>('.slot-shift')!.addEventListener('click', () => {
+		slotActionsDiv.appendChild(toggleBtn);
+
+
+		const deleteBtn = document.createElement('button');
+		deleteBtn.className = 'slot-button delete-slot';
+		deleteBtn.textContent = 'Delete';
+		deleteBtn.addEventListener('click', () => this.askDeleteSlot(slotElement, display.slot));
+		slotActionsDiv.appendChild(deleteBtn);
+
+
+		const shiftBtn = document.createElement('button');
+		shiftBtn.className = 'slot-button slot-shift';
+		shiftBtn.textContent = 'Shift';
+		shiftBtn.addEventListener('click', () => {
 			this.beginSlotShift(slotElement, display);
 		});
-
-		this.addDoubleTapEventListener(
-			slotElement.querySelector<HTMLDivElement>('.slot-name')!,
-			() => this.beginRename(slotElement, display.slot)
-		);
-
-		this.addDoubleTapEventListener(
-			slotElement.querySelector<HTMLDivElement>('.slot-value')!,
-			() => this.beginInlineEdit(slotElement, display.slot)
-		);
-
-		slotElement.querySelector<HTMLButtonElement>('.delete-slot')!
-			.addEventListener('click', () => this.askDeleteSlot(slotElement, display.slot));
+		slotActionsDiv.appendChild(shiftBtn);
 
 
-		const slotActionsDiv = slotElement.querySelector<HTMLDivElement>('.slot-actions')!;
-
-
-		const moveSlotBtn = document.createElement('button');
-		moveSlotBtn.classList.add('slot-button', 'move-slot');
-		moveSlotBtn.textContent = 'Move';
-		moveSlotBtn.addEventListener(
+		const moveBtn = document.createElement('button');
+		moveBtn.classList.add('slot-button', 'move-slot');
+		moveBtn.textContent = 'Move';
+		moveBtn.addEventListener(
 			'click',
 			() => this.moveSlot(display.slot)
 		);
-		slotActionsDiv.appendChild(moveSlotBtn);
+		slotActionsDiv.appendChild(moveBtn);
 
 
 		const changeSlotBtn = document.createElement('button');
@@ -155,12 +183,15 @@ export class SlotsRenderer {
 		changeSlotBtn.textContent = '✏️';
 		changeSlotBtn.addEventListener(
 			'click',
-			() => this.beginInlineEdit(slotElement, display.slot)
+			() => this.beginInlineEdit(container, slotElement, display.slot)
 		);
 		slotActionsDiv.appendChild(changeSlotBtn);
 
 
-		container.appendChild(slotElement);
+		this.addDoubleTapEventListener(
+			slotElement.querySelector<HTMLDivElement>('.slot-name')!,
+			() => this.beginRename(slotElement, display.slot)
+		);
 	}
 
 	private removeActionButtons(slotElement: HTMLDivElement): void {
@@ -406,9 +437,12 @@ export class SlotsRenderer {
 
 	/* --------------------------- Slot Value Editing --------------------------- */
 
-	private beginInlineEdit(slotElement: HTMLDivElement, slot: ResolvedOutfitSlot): void {
+	private beginInlineEdit(scroller: HTMLElement, slotElement: HTMLDivElement, slot: ResolvedOutfitSlot) {
 		const valueEl = slotElement.querySelector('.slot-value') as HTMLDivElement;
 		const actionsEl = slotElement.querySelector('.slot-actions') as HTMLDivElement;
+
+		const scrollTop = scroller.scrollTop;
+		const rect = valueEl.getBoundingClientRect();
 
 		const originalValue = valueEl.innerText.trim();
 
@@ -418,9 +452,12 @@ export class SlotsRenderer {
 		textarea.rows = 1;
 		textarea.value = originalValue === 'None' || originalValue === 'Disabled' ? '' : originalValue;
 
+		textarea.style.width = `${rect.width}px`;
+		textarea.style.height = `${rect.height}px`;
+
 		// Swap value box with editor
 		valueEl.replaceWith(textarea);
-		textarea.focus();
+		scroller.scrollTop = scrollTop;
 
 		const autoResize = () => {
 			textarea.style.height = 'auto'; // reset
@@ -428,6 +465,7 @@ export class SlotsRenderer {
 		};
 
 		autoResize();
+		textarea.focus({ preventScroll: true });
 
 		textarea.addEventListener('input', autoResize);
 

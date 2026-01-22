@@ -1,14 +1,16 @@
 export class VisibilityTab {
-    constructor(outfitManager, formatKind) {
-        this.outfitManager = outfitManager;
+    constructor(panel, formatKind) {
+        this.panel = panel;
         this.formatKind = formatKind;
+        this.outfitManager = this.panel.getOutfitManager();
     }
     render(contentArea) {
         this.renderPreviewButton(contentArea);
+        this.renderVisibilityButtons(contentArea);
     }
     renderPreviewButton(contentArea) {
         const previewButton = document.createElement('button');
-        previewButton.className = 'save-outfit-btn';
+        previewButton.className = 'system-tab-button save-outfit-btn';
         previewButton.textContent = 'Preview Outfit (LLM)';
         previewButton.addEventListener('click', () => {
             this.showOutfitPreview();
@@ -65,5 +67,18 @@ export class VisibilityTab {
         section.appendChild(code);
         section.appendChild(details);
         return section;
+    }
+    renderVisibilityButtons(contentArea) {
+        const createButton = (className, text, click) => {
+            const btn = document.createElement('button');
+            btn.className = className;
+            btn.textContent = text;
+            if (click)
+                btn.addEventListener('click', click);
+            return btn;
+        };
+        const hideDisabledButton = createButton('system-tab-button hide-disabled-button', this.panel.areDisabledSlotsHidden() ? 'Show Disabled Slots' : 'Hide Disabled Slots', () => this.panel.toggleHideDisabled());
+        const hideEmptyButton = createButton('system-tab-button hide-empty-button', this.panel.areEmptySlotsHidden() ? 'Show Empty Slots' : 'Hide Empty Slots', () => this.panel.toggleHideEmpty());
+        contentArea.append(hideDisabledButton, hideEmptyButton);
     }
 }

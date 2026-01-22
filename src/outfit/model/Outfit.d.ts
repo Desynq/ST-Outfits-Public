@@ -18,6 +18,8 @@ export interface Outfit {
 export interface OutfitCollection {
 	outfits: Record<string, Outfit | undefined>;
 	autoOutfit: Outfit;
+	hideDisabled: boolean;
+	hideEmpty: boolean;
 }
 
 export type CharacterOutfitMap = Record<string, OutfitCollection | undefined>;

@@ -26,10 +26,6 @@ export class SlotsRenderer {
                 console.warn(`Slot ${slot.id} failed to resolve`);
                 continue;
             }
-            if (slot.isDisabled() && this.panel.areDisabledSlotsHidden())
-                continue;
-            if (slot.isEmpty() && this.panel.areEmptySlotsHidden())
-                continue;
             const slotIndex = this.outfitView.getIndexById(slot.id);
             const displaySlot = new DisplaySlot(displayIndex, slotIndex, slot);
             displaySlots.push(displaySlot);
@@ -64,49 +60,74 @@ export class SlotsRenderer {
         const slotElement = document.createElement('div');
         slotElement.className = 'outfit-slot';
         slotElement.dataset.slot = display.slot.id;
-        const disabledClass = display.slot.isDisabled() ? 'disabled' : '';
-        const noneClass = display.slot.isEmpty() ? 'none' : '';
+        const slot = display.slot;
+        const disabledClass = slot.isDisabled() ? 'disabled' : '';
+        const noneClass = slot.isEmpty() ? 'none' : '';
         /*html*/
         slotElement.innerHTML = `
 			<div class="slot-label">
 				<div class="slot-ordinal">${display.displayIndex}</div>
-				<div class="slot-name">${toSlotName(display.slot.id)}</div>
-			</div>
-			<div class="slot-value ${disabledClass} ${noneClass}" title="${display.slot.value}">${display.slot.value}</div>
-			<div class="slot-actions">
-				<button class="slot-button slot-toggle"></button>
-				<button class="slot-button delete-slot">Delete</button>
-				<button class="slot-button slot-shift">Shift</button>
+				<div class="slot-name">${toSlotName(slot.id)}</div>
 			</div>
 		`;
-        const toggleButton = slotElement.querySelector('.slot-toggle');
+        const slotActionsDiv = document.createElement('div');
+        if (!this.isSlotMinimized(slot)) {
+            this.decorateSlot(container, slotElement, display, slotActionsDiv);
+        }
+        slotElement.appendChild(slotActionsDiv);
+        container.appendChild(slotElement);
+    }
+    isSlotMinimized(slot) {
+        if (slot.isDisabled() && this.panel.areDisabledSlotsHidden())
+            return true;
+        if (slot.isEmpty() && this.panel.areEmptySlotsHidden())
+            return true;
+        return false;
+    }
+    decorateSlot(container, slotElement, display, slotActionsDiv) {
+        const slot = display.slot;
+        const disabledClass = slot.isDisabled() ? 'disabled' : '';
+        const noneClass = slot.isEmpty() ? 'none' : '';
+        const valueDiv = document.createElement('div');
+        valueDiv.classList.add('slot-value', ...[disabledClass, noneClass].filter(Boolean));
+        valueDiv.title = slot.value;
+        valueDiv.textContent = slot.value;
+        this.addDoubleTapEventListener(valueDiv, () => this.beginInlineEdit(container, slotElement, display.slot));
+        slotElement.appendChild(valueDiv);
+        const toggleBtn = document.createElement('button');
+        toggleBtn.className = 'slot-button slot-toggle';
         const enabled = display.slot.isEnabled();
-        toggleButton.textContent = enabled ? 'Disable' : 'Enable';
-        toggleButton.classList.add(enabled ? 'is-enabled' : 'is-disabled');
-        toggleButton.addEventListener('click', () => {
+        toggleBtn.classList.add(enabled ? 'is-enabled' : 'is-disabled');
+        toggleBtn.textContent = enabled ? 'Disable' : 'Enable';
+        toggleBtn.addEventListener('click', () => {
             this.outfitView.toggleSlot(display.slot.id);
             this.outfitManager.updateOutfitValue(display.slot.id);
             this.panel.saveAndRenderContent();
         });
-        slotElement.querySelector('.slot-shift').addEventListener('click', () => {
+        slotActionsDiv.appendChild(toggleBtn);
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'slot-button delete-slot';
+        deleteBtn.textContent = 'Delete';
+        deleteBtn.addEventListener('click', () => this.askDeleteSlot(slotElement, display.slot));
+        slotActionsDiv.appendChild(deleteBtn);
+        const shiftBtn = document.createElement('button');
+        shiftBtn.className = 'slot-button slot-shift';
+        shiftBtn.textContent = 'Shift';
+        shiftBtn.addEventListener('click', () => {
             this.beginSlotShift(slotElement, display);
         });
-        this.addDoubleTapEventListener(slotElement.querySelector('.slot-name'), () => this.beginRename(slotElement, display.slot));
-        this.addDoubleTapEventListener(slotElement.querySelector('.slot-value'), () => this.beginInlineEdit(slotElement, display.slot));
-        slotElement.querySelector('.delete-slot')
-            .addEventListener('click', () => this.askDeleteSlot(slotElement, display.slot));
-        const slotActionsDiv = slotElement.querySelector('.slot-actions');
-        const moveSlotBtn = document.createElement('button');
-        moveSlotBtn.classList.add('slot-button', 'move-slot');
-        moveSlotBtn.textContent = 'Move';
-        moveSlotBtn.addEventListener('click', () => this.moveSlot(display.slot));
-        slotActionsDiv.appendChild(moveSlotBtn);
+        slotActionsDiv.appendChild(shiftBtn);
+        const moveBtn = document.createElement('button');
+        moveBtn.classList.add('slot-button', 'move-slot');
+        moveBtn.textContent = 'Move';
+        moveBtn.addEventListener('click', () => this.moveSlot(display.slot));
+        slotActionsDiv.appendChild(moveBtn);
         const changeSlotBtn = document.createElement('button');
         changeSlotBtn.classList.add('slot-button', 'slot-change');
         changeSlotBtn.textContent = '✏️';
-        changeSlotBtn.addEventListener('click', () => this.beginInlineEdit(slotElement, display.slot));
+        changeSlotBtn.addEventListener('click', () => this.beginInlineEdit(container, slotElement, display.slot));
         slotActionsDiv.appendChild(changeSlotBtn);
-        container.appendChild(slotElement);
+        this.addDoubleTapEventListener(slotElement.querySelector('.slot-name'), () => this.beginRename(slotElement, display.slot));
     }
     removeActionButtons(slotElement) {
         const selectors = ['.slot-toggle', '.delete-slot', '.slot-shift', '.slot-change', '.move-slot'];
@@ -298,23 +319,28 @@ export class SlotsRenderer {
         this.panel.renderContent();
     }
     /* --------------------------- Slot Value Editing --------------------------- */
-    beginInlineEdit(slotElement, slot) {
+    beginInlineEdit(scroller, slotElement, slot) {
         const valueEl = slotElement.querySelector('.slot-value');
         const actionsEl = slotElement.querySelector('.slot-actions');
+        const scrollTop = scroller.scrollTop;
+        const rect = valueEl.getBoundingClientRect();
         const originalValue = valueEl.innerText.trim();
         // Create editable textarea
         const textarea = document.createElement('textarea');
         textarea.className = 'slot-editbox';
         textarea.rows = 1;
         textarea.value = originalValue === 'None' || originalValue === 'Disabled' ? '' : originalValue;
+        textarea.style.width = `${rect.width}px`;
+        textarea.style.height = `${rect.height}px`;
         // Swap value box with editor
         valueEl.replaceWith(textarea);
-        textarea.focus();
+        scroller.scrollTop = scrollTop;
         const autoResize = () => {
             textarea.style.height = 'auto'; // reset
             textarea.style.height = `${textarea.scrollHeight}px`;
         };
         autoResize();
+        textarea.focus({ preventScroll: true });
         textarea.addEventListener('input', autoResize);
         this.removeActionButtons(slotElement);
         textarea.addEventListener('keydown', (e) => {

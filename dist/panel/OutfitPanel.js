@@ -7,8 +7,6 @@ export class OutfitPanel {
         this.outfitManager = outfitManager;
         this.domElement = null;
         this.minimized = false;
-        this.hideDisabled = false;
-        this.hideEmpty = false;
         this.isVisible = false;
         this.slotsRenderer = new SlotsRenderer(this);
         this.tabsRenderer = new TabsRenderer(this);
@@ -16,11 +14,22 @@ export class OutfitPanel {
     isMinimized() {
         return this.minimized;
     }
+    get collection() {
+        return this.outfitManager.getOutfitCollection();
+    }
     areDisabledSlotsHidden() {
-        return this.hideDisabled;
+        return this.collection.areDisabledSlotsHidden();
+    }
+    toggleHideDisabled() {
+        this.collection.hideDisabledSlots(!this.areDisabledSlotsHidden());
+        this.saveAndRenderContent();
     }
     areEmptySlotsHidden() {
-        return this.hideEmpty;
+        return this.collection.areEmptySlotsHidden();
+    }
+    toggleHideEmpty() {
+        this.collection.hideEmptySlots(!this.areEmptySlotsHidden());
+        this.saveAndRenderContent();
     }
     getOutfitManager() {
         return this.outfitManager;
@@ -160,14 +169,6 @@ export class OutfitPanel {
             }
             dragging = false;
         });
-    }
-    toggleHideDisabled() {
-        this.hideDisabled = !this.hideDisabled;
-        this.renderContent();
-    }
-    toggleHideEmpty() {
-        this.hideEmpty = !this.hideEmpty;
-        this.renderContent();
     }
     createOutfitActions() {
         const div = document.createElement('div');

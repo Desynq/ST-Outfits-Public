@@ -1,7 +1,7 @@
 import { OutfitManager } from "../manager/OutfitManager.js";
-import { OutfitTracker } from "../outfit/tracker.js";
+import { IOutfitCollectionView, OutfitTracker } from "../outfit/tracker.js";
 import { isMobile } from "../shared.js";
-import { createConfiguredElements } from "../util/ElementHelper.js";
+import { createConfiguredElements, queryOrThrow } from "../util/ElementHelper.js";
 import { OutfitSlotsHost } from "./OutfitSlotsHost.js";
 import { OutfitTabsHost } from "./OutfitTabsHost.js";
 import { SlotsRenderer } from "./SlotsRenderer.js";
@@ -11,8 +11,6 @@ export abstract class OutfitPanel<T extends OutfitManager> implements OutfitSlot
 
 	protected domElement: HTMLDivElement | null = null;
 	protected minimized: boolean = false;
-	protected hideDisabled: boolean = false;
-	protected hideEmpty: boolean = false;
 	protected isVisible: boolean = false;
 
 	protected slotsRenderer: SlotsRenderer = new SlotsRenderer(this);
@@ -26,13 +24,30 @@ export abstract class OutfitPanel<T extends OutfitManager> implements OutfitSlot
 		return this.minimized;
 	}
 
-	public areDisabledSlotsHidden(): boolean {
-		return this.hideDisabled;
+	protected get collection(): IOutfitCollectionView {
+		return this.outfitManager.getOutfitCollection();
 	}
 
-	public areEmptySlotsHidden(): boolean {
-		return this.hideEmpty;
+	public areDisabledSlotsHidden(): boolean {
+		return this.collection.areDisabledSlotsHidden();
 	}
+
+	public toggleHideDisabled(): void {
+		this.collection.hideDisabledSlots(!this.areDisabledSlotsHidden());
+		this.saveAndRenderContent();
+	}
+
+
+	public areEmptySlotsHidden(): boolean {
+		return this.collection.areEmptySlotsHidden();
+	}
+
+	public toggleHideEmpty(): void {
+		this.collection.hideEmptySlots(!this.areEmptySlotsHidden());
+		this.saveAndRenderContent();
+	}
+
+
 
 	public getOutfitManager(): T {
 		return this.outfitManager;
@@ -200,16 +215,6 @@ export abstract class OutfitPanel<T extends OutfitManager> implements OutfitSlot
 			}
 			dragging = false;
 		});
-	}
-
-	protected toggleHideDisabled(): void {
-		this.hideDisabled = !this.hideDisabled;
-		this.renderContent();
-	}
-
-	protected toggleHideEmpty(): void {
-		this.hideEmpty = !this.hideEmpty;
-		this.renderContent();
 	}
 
 

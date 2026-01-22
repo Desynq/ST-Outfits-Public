@@ -31,23 +31,55 @@ class Tracker {
 	}
 }
 
-abstract class OutfitCollectionView {
+export interface IOutfitCollectionView {
+	getOrCreateAutosaved(): MutableOutfitView;
+
+	areDisabledSlotsHidden(): boolean;
+	hideDisabledSlots(hide: boolean): void;
+
+	areEmptySlotsHidden(): boolean;
+	hideEmptySlots(hide: boolean): void;
+}
+
+abstract class OutfitCollectionView implements IOutfitCollectionView {
 
 	public constructor() { }
 
 	protected abstract getOrCreateCollection(): OutfitCollection;
 
-	public getOrCreateAutosaved(): MutableOutfitView {
+	protected withCollection<T>(fn: (c: OutfitCollection) => T): T {
 		const collection = this.getOrCreateCollection();
-		collection.autoOutfit ??= this.createDefaultOutfit();
+		return fn(collection);
+	}
 
-		return new MutableOutfitView('auto', collection.autoOutfit);
+	public getOrCreateAutosaved(): MutableOutfitView {
+		const c = this.getOrCreateCollection();
+
+		c.autoOutfit ??= this.createDefaultOutfit();
+		return new MutableOutfitView('auto', c.autoOutfit);
 	}
 
 	protected createDefaultOutfit(): Outfit {
 		return {
 			slots: [...DEFAULT_SLOTS]
 		};
+	}
+
+	public areDisabledSlotsHidden(): boolean {
+		return this.withCollection(c => c.hideDisabled);
+	}
+
+	public hideDisabledSlots(hide: boolean): void {
+		this.withCollection(c => c.hideDisabled = hide);
+	}
+
+
+	public areEmptySlotsHidden(): boolean {
+		return this.withCollection(c => c.hideEmpty);
+	}
+
+	public hideEmptySlots(hide: boolean): void {
+		this.withCollection(c => c.hideEmpty = hide);
 	}
 }
 

@@ -66,7 +66,7 @@ export class UserOutfitManager extends OutfitManager {
     getPresets() {
         return OutfitTracker.userOutfits().getOutfitNames();
     }
-    getOutfitView() {
-        return OutfitTracker.userOutfits().getOrCreateAutosaved();
+    getOutfitCollection() {
+        return OutfitTracker.userOutfits();
     }
 }

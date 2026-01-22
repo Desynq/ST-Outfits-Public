@@ -13,7 +13,7 @@ export class OutfitTabsRenderer {
             kind: 'Clothing'
         };
         this.draggedTab = null;
-        this.visibilityTab = new VisibilityTab(this.outfitManager, formatKind);
+        this.visibilityTab = new VisibilityTab(this.panel, formatKind);
     }
     get outfitManager() {
         return this.panel.getOutfitManager();
@@ -347,7 +347,7 @@ export class OutfitTabsRenderer {
             }
         }
         const saveButton = document.createElement('button');
-        saveButton.className = 'save-outfit-btn';
+        saveButton.className = 'system-tab-button save-outfit-btn';
         saveButton.textContent = 'Save Current Outfit';
         saveButton.addEventListener('click', async () => {
             const presetName = prompt('Name this outfit:');
@@ -364,7 +364,7 @@ export class OutfitTabsRenderer {
     }
     renderExportButton(container) {
         const exportButton = document.createElement('button');
-        exportButton.className = 'export-outfit-btn';
+        exportButton.className = 'system-tab-button export-outfit-btn';
         exportButton.textContent = 'Export Current Outfit';
         exportButton.addEventListener('click', this.panel.exportButtonClickListener.bind(this));
         container.appendChild(exportButton);

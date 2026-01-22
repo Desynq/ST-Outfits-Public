@@ -1,5 +1,5 @@
 import { DEFAULT_SLOTS } from "../Constants.js";
-import { OutfitTracker } from "../outfit/tracker.js";
+import { IOutfitCollectionView, OutfitTracker } from "../outfit/tracker.js";
 import { MutableOutfitView } from "../outfit/view/MutableOutfitView.js";
 import { Outfit, OutfitSlot } from "../outfit/model/Outfit.js";
 import { deleteGlobalVariable, filterRecord, formatAccessorySlotName, toSlotName, getGlobalVariable, pruneRecord, serializeRecord, setGlobalVariable } from "../shared.js";
@@ -171,7 +171,11 @@ Cancel to keep the current value.`,
 		return this.getOutfitView().values;
 	}
 
-	public abstract getOutfitView(): MutableOutfitView;
+	public abstract getOutfitCollection(): IOutfitCollectionView;
+
+	public getOutfitView(): MutableOutfitView {
+		return this.getOutfitCollection().getOrCreateAutosaved();
+	}
 
 	public renameSlot(slotId: string, newId: string): RenameSlotResult {
 		const view = this.getOutfitView();

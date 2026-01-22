@@ -26,3 +26,4 @@ export const asStringRecord = () => (v) => {
 };
 export const asStringArray = () => (v) => Array.isArray(v) ? v.filter(x => typeof x === 'string') : [];
 export const asString = (v) => typeof v === 'string' && v.trim() !== '' ? v.trim() : undefined;
+export const asBoolean = (fallback) => (v) => (typeof v === 'boolean' ? v : fallback);

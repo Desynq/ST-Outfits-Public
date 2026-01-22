@@ -15,4 +15,15 @@ export interface OutfitTabsHost {
 	public sendSystemMessage(message: string): void;
 
 	public exportButtonClickListener(): Promise<void>;
+
+
+
+	public areDisabledSlotsHidden(): boolean;
+
+	public toggleHideDisabled(): void;
+
+
+	public areEmptySlotsHidden(): boolean;
+
+	public toggleHideEmpty(): void;
 }

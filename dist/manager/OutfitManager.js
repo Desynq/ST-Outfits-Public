@@ -109,6 +109,9 @@ Cancel to keep the current value.`, currentValue);
     getValues() {
         return this.getOutfitView().values;
     }
+    getOutfitView() {
+        return this.getOutfitCollection().getOrCreateAutosaved();
+    }
     renameSlot(slotId, newId) {
         const view = this.getOutfitView();
         const oldSlot = view.getSlotById(slotId);

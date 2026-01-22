@@ -23,15 +23,31 @@ class Tracker {
 }
 class OutfitCollectionView {
     constructor() { }
-    getOrCreateAutosaved() {
+    withCollection(fn) {
         const collection = this.getOrCreateCollection();
-        collection.autoOutfit ?? (collection.autoOutfit = this.createDefaultOutfit());
-        return new MutableOutfitView('auto', collection.autoOutfit);
+        return fn(collection);
+    }
+    getOrCreateAutosaved() {
+        const c = this.getOrCreateCollection();
+        c.autoOutfit ?? (c.autoOutfit = this.createDefaultOutfit());
+        return new MutableOutfitView('auto', c.autoOutfit);
     }
     createDefaultOutfit() {
         return {
             slots: [...DEFAULT_SLOTS]
         };
+    }
+    areDisabledSlotsHidden() {
+        return this.withCollection(c => c.hideDisabled);
+    }
+    hideDisabledSlots(hide) {
+        this.withCollection(c => c.hideDisabled = hide);
+    }
+    areEmptySlotsHidden() {
+        return this.withCollection(c => c.hideEmpty);
+    }
+    hideEmptySlots(hide) {
+        this.withCollection(c => c.hideEmpty = hide);
     }
 }
 class UserOutfitCollectionView extends OutfitCollectionView {

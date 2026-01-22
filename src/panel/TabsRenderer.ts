@@ -57,7 +57,7 @@ export class OutfitTabsRenderer {
 		return this.outfitManager.getOutfitView();
 	}
 
-	private visibilityTab: VisibilityTab = new VisibilityTab(this.outfitManager, formatKind);
+	private visibilityTab: VisibilityTab = new VisibilityTab(this.panel, formatKind);
 
 	public renderTabs(tabsContainer: HTMLDivElement, contentArea: HTMLDivElement): void {
 		this.recreateTabs(tabsContainer);
@@ -453,7 +453,7 @@ export class OutfitTabsRenderer {
 		}
 
 		const saveButton = document.createElement('button');
-		saveButton.className = 'save-outfit-btn';
+		saveButton.className = 'system-tab-button save-outfit-btn';
 		saveButton.textContent = 'Save Current Outfit';
 		saveButton.addEventListener('click', async () => {
 			const presetName = prompt('Name this outfit:');
@@ -473,7 +473,7 @@ export class OutfitTabsRenderer {
 
 	private renderExportButton(container: HTMLDivElement): void {
 		const exportButton = document.createElement('button');
-		exportButton.className = 'export-outfit-btn';
+		exportButton.className = 'system-tab-button export-outfit-btn';
 		exportButton.textContent = 'Export Current Outfit';
 
 		exportButton.addEventListener('click', this.panel.exportButtonClickListener.bind(this));

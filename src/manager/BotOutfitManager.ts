@@ -1,5 +1,5 @@
 import { OutfitManager } from "./OutfitManager.js";
-import { OutfitTracker } from "../outfit/tracker.js";
+import { IOutfitCollectionView, OutfitTracker } from "../outfit/tracker.js";
 import { MutableOutfitView } from "../outfit/view/MutableOutfitView.js";
 import { areOutfitSnapshotsEqual } from "../outfit/model/OutfitSnapshots.js";
 
@@ -109,7 +109,7 @@ export class BotOutfitManager extends OutfitManager {
         return outfits;
     }
 
-    public override getOutfitView(): MutableOutfitView {
-        return OutfitTracker.characterOutfits(this.character).getOrCreateAutosaved();
+    public override getOutfitCollection(): IOutfitCollectionView {
+        return OutfitTracker.characterOutfits(this.character);
     }
 }

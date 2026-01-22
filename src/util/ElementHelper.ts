@@ -111,13 +111,20 @@ function describeContainer(container: ParentNode): string {
 	return "Unknown ParentNode";
 }
 
-export function queryOrThrow<T extends Element>(container: ParentNode, ctor: abstract new (...args: any[]) => T, selectors: string): T {
+export function queryOrThrow<T extends Element>(container: ParentNode | null | undefined, ctor: abstract new (...args: any[]) => T, selectors: string): T {
+	if (container === null || container === undefined) {
+		throw new Error(
+			`queryOrThrow: Container does not exist`
+		);
+	}
+
 	const element = container.querySelector(selectors);
 	if (element == null) {
 		throw new Error(
 			`queryOrThrow: No element found for selector "${selectors}" inside ${describeContainer(container)}`
 		);
 	}
+
 	if (!(element instanceof ctor)) {
 		throw new Error(
 			`queryOrThrow: Element matching "${selectors}" is a ${element.constructor.name}, expected ${ctor.name}`

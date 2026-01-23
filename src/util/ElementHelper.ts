@@ -98,10 +98,13 @@ export function createConfiguredElements<T extends HTMLElement>(creator: () => T
 export function appendElement<K extends keyof HTMLElementTagNameMap>(
 	container: HTMLElement,
 	tag: K,
-	className: string
+	className: string,
+	text?: string
 ): HTMLElementTagNameMap[K] {
 	const el = document.createElement(tag);
 	el.className = className;
+	if (text !== undefined) el.textContent = text;
+
 	container.appendChild(el);
 	return el;
 }

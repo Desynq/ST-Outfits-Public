@@ -34,8 +34,30 @@
 .slot-label {
 	display: flex;
 	align-items: center;
+	gap: 8px;
 
 	margin-bottom: 6px;
+}
+
+.slot-label.minimized {
+	margin-bottom: 0px;
+}
+
+.slot-label-left {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+
+	flex: 1 1 auto;
+	min-width: 0;
+	/* CRITICAL for ellipsis to work */
+}
+
+.slot-label-right {
+	display: flex;
+	align-items: center;
+	flex: 0 0 auto;
+	gap: 6px;
 }
 
 .slot-label .slot-ordinal {
@@ -61,6 +83,10 @@
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
+}
+
+.slot-label .slot-name {
+	cursor: pointer;
 }
 
 .slot-label .label-editbox {
@@ -93,6 +119,10 @@
 	border-color: rgba(255, 255, 255, 0.25);
 	font-weight: bold;
 	margin-bottom: 8px;
+}
+
+.slot-value {
+	cursor: pointer;
 }
 
 .slot-value.disabled {
@@ -149,6 +179,7 @@
 	background: rgba(255, 255, 255, 0.25);
 }
 
+
 .slot-button.slot-shift {
 	background-color: rgba(120, 160, 255, 0.12);
 	color: rgba(220, 235, 255, 0.9);
@@ -190,6 +221,7 @@
 	box-shadow: 0 0 0 2px rgba(220, 60, 60, 0.35);
 }
 
+
 .slot-button.slot-toggle {
 	font-weight: 600;
 	transition:
@@ -217,5 +249,9 @@
 }
 
 .slot-button.slot-toggle.is-disabled:hover {
+	background-color: rgba(255, 255, 255, 0.25);
+}
+
+.slot-button.edit-slot:hover {
 	background-color: rgba(255, 255, 255, 0.25);
 }

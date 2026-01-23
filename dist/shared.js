@@ -98,3 +98,18 @@ export function isMobile() {
 export function assertNever(x) {
     throw new Error(`Unexpected value: ${x}`);
 }
+export function scrollIntoViewAboveKeyboard(scroller, el, pad = 12) {
+    const vv = window.visualViewport;
+    const scrollerRect = scroller.getBoundingClientRect();
+    const elRect = el.getBoundingClientRect();
+    const visibleTop = vv ? vv.offsetTop : 0;
+    const visibleBottom = vv ? (vv.offsetTop + vv.height) : window.innerHeight;
+    const clipTop = Math.max(scrollerRect.top, visibleTop);
+    const clipBottom = Math.min(scrollerRect.bottom, visibleBottom);
+    if (elRect.bottom > clipBottom - pad) {
+        scroller.scrollTop += (elRect.bottom - (clipBottom - pad));
+    }
+    if (elRect.top < clipTop + pad) {
+        scroller.scrollTop -= ((clipTop + pad) - elRect.top);
+    }
+}

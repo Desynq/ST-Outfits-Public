@@ -71,9 +71,11 @@ export function createConfiguredElements(creator, ...configures) {
     }
     return elements;
 }
-export function appendElement(container, tag, className) {
+export function appendElement(container, tag, className, text) {
     const el = document.createElement(tag);
     el.className = className;
+    if (text !== undefined)
+        el.textContent = text;
     container.appendChild(el);
     return el;
 }

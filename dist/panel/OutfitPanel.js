@@ -5,7 +5,7 @@ import { OutfitTabsRenderer as TabsRenderer } from "./TabsRenderer.js";
 export class OutfitPanel {
     constructor(outfitManager) {
         this.outfitManager = outfitManager;
-        this.domElement = null;
+        this.panelEl = null;
         this.minimized = false;
         this.isVisible = false;
         this.slotsRenderer = new SlotsRenderer(this);
@@ -31,6 +31,22 @@ export class OutfitPanel {
         this.collection.hideEmptySlots(!this.areEmptySlotsHidden());
         this.saveAndRenderContent();
     }
+    refresh() {
+        this.outfitManager.initializeOutfit();
+        this.resetPanel();
+        this.renderContent();
+    }
+    resetPanel(setDefaultX = true, setDefaultY = true) {
+        if (!this.panelEl)
+            return;
+        const isWide = window.matchMedia('(min-width: 1024px)').matches;
+        this.panelEl.style.height = '80vh';
+        this.panelEl.style.width = isWide ? '24svw' : '90svw';
+        if (setDefaultX)
+            this.panelEl.style.left = `${this.getDefaultX()}px`;
+        if (setDefaultY)
+            this.panelEl.style.top = `${this.getDefaultY()}px`;
+    }
     getOutfitManager() {
         return this.outfitManager;
     }
@@ -47,12 +63,12 @@ export class OutfitPanel {
         }
     }
     renderContent() {
-        if (!this.domElement || this.minimized)
+        if (!this.panelEl || this.minimized)
             return;
-        const tabsContainer = this.domElement.querySelector('.outfit-tabs');
+        const tabsContainer = this.panelEl.querySelector('.outfit-tabs');
         if (!tabsContainer)
             return;
-        const contentArea = this.domElement.querySelector('.outfit-content');
+        const contentArea = this.panelEl.querySelector('.outfit-content');
         if (!contentArea)
             return;
         this.tabsRenderer.renderTabs(tabsContainer, contentArea);
@@ -62,37 +78,37 @@ export class OutfitPanel {
         this.renderContent();
     }
     makePanelDraggable() {
-        if (!this.domElement)
+        if (!this.panelEl)
             return;
-        const handle = this.domElement.querySelector(".outfit-header");
+        const handle = this.panelEl.querySelector(".outfit-header");
         if (!handle)
             return;
         let offsetX = 0;
         let offsetY = 0;
         const start = (e) => {
             var _a;
-            if (!this.domElement)
+            if (!this.panelEl)
                 return;
             handle.setPointerCapture(e.pointerId);
-            const rect = this.domElement.getBoundingClientRect();
+            const rect = this.panelEl.getBoundingClientRect();
             offsetX = e.clientX - rect.left;
             offsetY = e.clientY - rect.top;
-            (_a = this.domElement.style).position || (_a.position = 'absolute');
-            this.domElement.style.right = "auto";
-            this.domElement.style.left = rect.left + "px";
-            this.domElement.style.top = rect.top + "px";
+            (_a = this.panelEl.style).position || (_a.position = 'absolute');
+            this.panelEl.style.right = "auto";
+            this.panelEl.style.left = rect.left + "px";
+            this.panelEl.style.top = rect.top + "px";
             handle.addEventListener("pointermove", move);
             handle.addEventListener("pointerup", stop);
             handle.addEventListener("pointercancel", stop);
         };
         const move = (e) => {
-            if (!this.domElement)
+            if (!this.panelEl)
                 return;
             if (e.pointerType === 'touch') {
                 e.preventDefault(); // stops scrolling
             }
-            this.domElement.style.left = `${e.clientX - offsetX}px`;
-            this.domElement.style.top = `${e.clientY - offsetY}px`;
+            this.panelEl.style.left = `${e.clientX - offsetX}px`;
+            this.panelEl.style.top = `${e.clientY - offsetY}px`;
         };
         const stop = (e) => {
             if (handle.hasPointerCapture(e.pointerId)) {
@@ -109,7 +125,7 @@ export class OutfitPanel {
         });
     }
     beginDragFromEvent(e) {
-        const handle = this.domElement?.querySelector(".outfit-header");
+        const handle = this.panelEl?.querySelector(".outfit-header");
         if (!handle)
             return;
         // Simulate a pointerdown on the handle
@@ -117,9 +133,9 @@ export class OutfitPanel {
         handle.dispatchEvent(new PointerEvent("pointerdown", e));
     }
     makeHeaderMinimizable() {
-        if (!this.domElement)
+        if (!this.panelEl)
             return;
-        const title = this.domElement.querySelector(".outfit-header h3");
+        const title = this.panelEl.querySelector(".outfit-header h3");
         if (!title)
             return;
         let startX = 0;
@@ -182,8 +198,7 @@ export class OutfitPanel {
             refreshBtn.classList.add('refresh-button');
             refreshBtn.textContent = '↻';
             refreshBtn.addEventListener('click', () => {
-                this.outfitManager.initializeOutfit();
-                this.renderContent();
+                this.refresh();
             });
         }, (closeBtn) => {
             closeBtn.classList.add('close-button');
@@ -199,16 +214,16 @@ export class OutfitPanel {
         return div;
     }
     expandHeader() {
-        if (!this.domElement)
+        if (!this.panelEl)
             return;
-        const titleElement = this.domElement.querySelector(".outfit-header h3");
+        const titleElement = this.panelEl.querySelector(".outfit-header h3");
         if (titleElement)
             titleElement.textContent = this.getHeaderTitle();
     }
     collapseHeader() {
-        if (!this.domElement)
+        if (!this.panelEl)
             return;
-        const titleEl = this.domElement.querySelector('.outfit-header h3');
+        const titleEl = this.panelEl.querySelector('.outfit-header h3');
         if (titleEl)
             titleEl.textContent = "";
     }
@@ -217,39 +232,42 @@ export class OutfitPanel {
         this.updateMinimizeState();
     }
     updateMinimizeState() {
-        if (!this.domElement)
+        if (!this.panelEl)
             return;
-        const minimizeBtn = this.domElement.querySelector('.minimize-button');
+        const minimizeBtn = this.panelEl.querySelector('.minimize-button');
         if (this.minimized) {
-            this.domElement.classList.add("minimized");
+            this.panelEl.classList.add("minimized");
             minimizeBtn.textContent = '+';
             this.collapseHeader();
         }
         else {
-            this.domElement.classList.remove("minimized");
+            this.panelEl.classList.remove("minimized");
             minimizeBtn.textContent = '−';
             this.expandHeader();
             this.renderContent();
         }
     }
     autoOpen(x, y) {
-        this.show();
+        this.show(x === undefined, y === undefined);
         this.toggleMinimize();
-        if (!this.domElement)
+        if (!this.panelEl)
             return;
-        this.domElement.style.left = `${x}px`;
-        this.domElement.style.top = `${y}px`;
-        this.domElement.style.right = "auto"; // ensure right doesn't override left positioning
+        this.panelEl.style.left = `${x}px`;
+        this.panelEl.style.top = `${y}px`;
     }
-    show() {
-        this.initializePanel();
-        this.renderContent();
-        this.domElement.style.display = 'flex';
+    show(setDefaultX = false, setDefaultY = false) {
+        if (this.initializePanel()) {
+            this.resetPanel(setDefaultX, setDefaultY);
+        }
+        if (this.panelEl) {
+            this.panelEl.hidden = false;
+        }
         this.isVisible = true;
+        this.renderContent();
     }
     hide() {
-        if (this.domElement) {
-            this.domElement.style.display = 'none';
+        if (this.panelEl) {
+            this.panelEl.hidden = true;
         }
         this.isVisible = false;
         this.minimized = false;

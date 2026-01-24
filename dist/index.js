@@ -264,12 +264,12 @@ async function initializeExtension() {
     createSettingsUI();
     if (extension_settings[MODULE_NAME].autoOpenBot) {
         setTimeout(() => {
-            botPanel.autoOpen(20, 50 + 60);
+            botPanel.autoOpen();
         }, 1000);
     }
     if (extension_settings[MODULE_NAME].autoOpenUser) {
         setTimeout(() => {
-            userPanel.autoOpen(20, 50);
+            userPanel.autoOpen();
         }, 1000);
     }
 }

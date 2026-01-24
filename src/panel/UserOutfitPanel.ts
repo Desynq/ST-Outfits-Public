@@ -11,11 +11,11 @@ export class UserOutfitPanel extends OutfitPanel<UserOutfitManager> {
         super(outfitManager);
         this.isVisible = false;
         this.minimized = false;
-        this.domElement = null;
+        this.panelEl = null;
     }
 
-    protected override initializePanel(): void {
-        if (this.domElement) return;
+    protected override initializePanel(): boolean {
+        if (this.panelEl) return false;
 
         const panel = document.createElement('div');
         panel.id = 'user-outfit-panel';
@@ -31,15 +31,16 @@ export class UserOutfitPanel extends OutfitPanel<UserOutfitManager> {
         `;
 
         document.body.appendChild(panel);
-        this.domElement = panel;
+        this.panelEl = panel;
 
         this.makePanelDraggable();
         this.makeHeaderMinimizable();
 
-        const outfitHeaderDiv = queryOrThrow(this.domElement, HTMLDivElement, '.outfit-header');
+        const outfitHeaderDiv = queryOrThrow(this.panelEl, HTMLDivElement, '.outfit-header');
         const outfitActionsDiv = this.createOutfitActions();
 
         outfitHeaderDiv.appendChild(outfitActionsDiv);
+        return true;
     }
 
     public override async exportButtonClickListener(): Promise<void> {
@@ -70,5 +71,13 @@ export class UserOutfitPanel extends OutfitPanel<UserOutfitManager> {
 
     protected override getHeaderTitle(): string {
         return 'Your Outfit';
+    }
+
+    protected override getDefaultX(): number {
+        return 20;
+    }
+
+    protected override getDefaultY(): number {
+        return 50;
     }
 }

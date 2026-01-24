@@ -6,11 +6,11 @@ export class UserOutfitPanel extends OutfitPanel {
         super(outfitManager);
         this.isVisible = false;
         this.minimized = false;
-        this.domElement = null;
+        this.panelEl = null;
     }
     initializePanel() {
-        if (this.domElement)
-            return;
+        if (this.panelEl)
+            return false;
         const panel = document.createElement('div');
         panel.id = 'user-outfit-panel';
         panel.className = 'outfit-panel';
@@ -23,12 +23,13 @@ export class UserOutfitPanel extends OutfitPanel {
             <div class="outfit-content" id="user-outfit-tab-content"></div>
         `;
         document.body.appendChild(panel);
-        this.domElement = panel;
+        this.panelEl = panel;
         this.makePanelDraggable();
         this.makeHeaderMinimizable();
-        const outfitHeaderDiv = queryOrThrow(this.domElement, HTMLDivElement, '.outfit-header');
+        const outfitHeaderDiv = queryOrThrow(this.panelEl, HTMLDivElement, '.outfit-header');
         const outfitActionsDiv = this.createOutfitActions();
         outfitHeaderDiv.appendChild(outfitActionsDiv);
+        return true;
     }
     async exportButtonClickListener() {
         const presetName = prompt('Name this export:');
@@ -51,5 +52,11 @@ export class UserOutfitPanel extends OutfitPanel {
     }
     getHeaderTitle() {
         return 'Your Outfit';
+    }
+    getDefaultX() {
+        return 20;
+    }
+    getDefaultY() {
+        return 50;
     }
 }

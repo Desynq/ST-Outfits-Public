@@ -2,32 +2,28 @@
 @import "./outfit-slot.css";
 @import "./outfit-tabs.css";
 
-#bot-outfit-panel,
-#user-outfit-panel {
+.outfit-panel {
     position: fixed;
-    top: 20vh;
-    right: 20px;
-    width: 90svw;
     border-radius: 10px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     padding: 12px;
-    z-index: 10000;
+    z-index: 100;
     /* Only one display property */
-    display: none;
+    display: flex;
     color: #ffffff;
     user-select: none;
     font-size: 0.9em;
-    /* Constrain height */
-    max-height: 80vh;
     /* Now we only have one display property */
     flex-direction: column;
     overflow-y: auto;
+
+    resize: both;
+    overflow: auto;
 }
 
 @media (min-width: 1024px) {
 
-    #bot-outfit-panel,
-    #user-outfit-panel {
+    .outfit-panel {
         width: 24vw;
     }
 }
@@ -203,8 +199,6 @@
     height: 48px !important;
     padding: 0 !important;
     border-radius: 12px;
-    /* optional rounded rectangle */
-    display: flex !important;
     justify-content: center;
     align-items: center;
 }
@@ -323,4 +317,8 @@
     /* old Edge */
     user-select: none;
     /* spec */
+}
+
+[hidden] {
+    display: none !important;
 }

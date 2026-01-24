@@ -9,7 +9,7 @@ import { OutfitTabsRenderer as TabsRenderer } from "./TabsRenderer.js";
 
 export abstract class OutfitPanel<T extends OutfitManager> implements OutfitSlotsHost, OutfitTabsHost {
 
-	protected domElement: HTMLDivElement | null = null;
+	protected panelEl: HTMLDivElement | null = null;
 	protected minimized: boolean = false;
 	protected isVisible: boolean = false;
 
@@ -49,6 +49,25 @@ export abstract class OutfitPanel<T extends OutfitManager> implements OutfitSlot
 
 
 
+	private refresh(): void {
+		this.outfitManager.initializeOutfit();
+		this.resetPanel();
+		this.renderContent();
+	}
+
+	private resetPanel(setDefaultX: boolean = true, setDefaultY: boolean = true): void {
+		if (!this.panelEl) return;
+		const isWide = window.matchMedia('(min-width: 1024px)').matches;
+
+		this.panelEl.style.height = '80vh';
+		this.panelEl.style.width = isWide ? '24svw' : '90svw';
+
+		if (setDefaultX) this.panelEl.style.left = `${this.getDefaultX()}px`;
+		if (setDefaultY) this.panelEl.style.top = `${this.getDefaultY()}px`;
+	}
+
+
+
 	public getOutfitManager(): T {
 		return this.outfitManager;
 	}
@@ -70,12 +89,12 @@ export abstract class OutfitPanel<T extends OutfitManager> implements OutfitSlot
 
 
 	public renderContent(): void {
-		if (!this.domElement || this.minimized) return;
+		if (!this.panelEl || this.minimized) return;
 
-		const tabsContainer = this.domElement.querySelector('.outfit-tabs') as HTMLDivElement | undefined;
+		const tabsContainer = this.panelEl.querySelector('.outfit-tabs') as HTMLDivElement | undefined;
 		if (!tabsContainer) return;
 
-		const contentArea = this.domElement.querySelector('.outfit-content') as HTMLDivElement | undefined;
+		const contentArea = this.panelEl.querySelector('.outfit-content') as HTMLDivElement | undefined;
 		if (!contentArea) return;
 
 		this.tabsRenderer.renderTabs(tabsContainer, contentArea);
@@ -90,26 +109,26 @@ export abstract class OutfitPanel<T extends OutfitManager> implements OutfitSlot
 
 
 	protected makePanelDraggable() {
-		if (!this.domElement) return;
+		if (!this.panelEl) return;
 
-		const handle = this.domElement.querySelector(".outfit-header") as HTMLElement;
+		const handle = this.panelEl.querySelector(".outfit-header") as HTMLElement;
 		if (!handle) return;
 
 		let offsetX = 0;
 		let offsetY = 0;
 
 		const start = (e: PointerEvent) => {
-			if (!this.domElement) return;
+			if (!this.panelEl) return;
 			handle.setPointerCapture(e.pointerId);
 
-			const rect = this.domElement.getBoundingClientRect();
+			const rect = this.panelEl.getBoundingClientRect();
 			offsetX = e.clientX - rect.left;
 			offsetY = e.clientY - rect.top;
 
-			this.domElement.style.position ||= 'absolute';
-			this.domElement.style.right = "auto";
-			this.domElement.style.left = rect.left + "px";
-			this.domElement.style.top = rect.top + "px";
+			this.panelEl.style.position ||= 'absolute';
+			this.panelEl.style.right = "auto";
+			this.panelEl.style.left = rect.left + "px";
+			this.panelEl.style.top = rect.top + "px";
 
 			handle.addEventListener("pointermove", move);
 			handle.addEventListener("pointerup", stop);
@@ -117,14 +136,14 @@ export abstract class OutfitPanel<T extends OutfitManager> implements OutfitSlot
 		};
 
 		const move = (e: PointerEvent) => {
-			if (!this.domElement) return;
+			if (!this.panelEl) return;
 
 			if (e.pointerType === 'touch') {
 				e.preventDefault(); // stops scrolling
 			}
 
-			this.domElement.style.left = `${e.clientX - offsetX}px`;
-			this.domElement.style.top = `${e.clientY - offsetY}px`;
+			this.panelEl.style.left = `${e.clientX - offsetX}px`;
+			this.panelEl.style.top = `${e.clientY - offsetY}px`;
 		};
 
 		const stop = (e: PointerEvent) => {
@@ -143,7 +162,7 @@ export abstract class OutfitPanel<T extends OutfitManager> implements OutfitSlot
 	}
 
 	protected beginDragFromEvent(e: PointerEvent) {
-		const handle = this.domElement?.querySelector(".outfit-header") as HTMLElement;
+		const handle = this.panelEl?.querySelector(".outfit-header") as HTMLElement;
 
 		if (!handle) return;
 
@@ -154,9 +173,9 @@ export abstract class OutfitPanel<T extends OutfitManager> implements OutfitSlot
 
 
 	protected makeHeaderMinimizable(): void {
-		if (!this.domElement) return;
+		if (!this.panelEl) return;
 
-		const title = this.domElement.querySelector(".outfit-header h3") as HTMLElement;
+		const title = this.panelEl.querySelector(".outfit-header h3") as HTMLElement;
 		if (!title) return;
 
 		let startX = 0;
@@ -238,8 +257,7 @@ export abstract class OutfitPanel<T extends OutfitManager> implements OutfitSlot
 				refreshBtn.classList.add('refresh-button');
 				refreshBtn.textContent = '↻';
 				refreshBtn.addEventListener('click', () => {
-					this.outfitManager.initializeOutfit();
-					this.renderContent();
+					this.refresh();
 				});
 			},
 			(closeBtn) => {
@@ -261,14 +279,14 @@ export abstract class OutfitPanel<T extends OutfitManager> implements OutfitSlot
 	}
 
 	private expandHeader(): void {
-		if (!this.domElement) return;
-		const titleElement = this.domElement.querySelector(".outfit-header h3");
+		if (!this.panelEl) return;
+		const titleElement = this.panelEl.querySelector(".outfit-header h3");
 		if (titleElement) titleElement.textContent = this.getHeaderTitle();
 	}
 
 	private collapseHeader(): void {
-		if (!this.domElement) return;
-		const titleEl = this.domElement.querySelector('.outfit-header h3') as HTMLElement;
+		if (!this.panelEl) return;
+		const titleEl = this.panelEl.querySelector('.outfit-header h3') as HTMLElement;
 		if (titleEl) titleEl.textContent = "";
 	}
 
@@ -279,51 +297,57 @@ export abstract class OutfitPanel<T extends OutfitManager> implements OutfitSlot
 	}
 
 	private updateMinimizeState(): void {
-		if (!this.domElement) return;
+		if (!this.panelEl) return;
 
-		const minimizeBtn = this.domElement.querySelector('.minimize-button') as HTMLElement;
+		const minimizeBtn = this.panelEl.querySelector('.minimize-button') as HTMLElement;
 
 		if (this.minimized) {
-			this.domElement.classList.add("minimized");
+			this.panelEl.classList.add("minimized");
 			minimizeBtn.textContent = '+';
 			this.collapseHeader();
 		}
 		else {
-			this.domElement.classList.remove("minimized");
+			this.panelEl.classList.remove("minimized");
 			minimizeBtn.textContent = '−';
 			this.expandHeader();
 			this.renderContent();
 		}
 	}
 
-	public autoOpen(x: number, y: number): void {
-		this.show();
+	protected abstract getDefaultX(): number;
+	protected abstract getDefaultY(): number;
+
+	public autoOpen(x?: number, y?: number): void {
+		this.show(x === undefined, y === undefined);
 		this.toggleMinimize();
 
-		if (!this.domElement) return;
-
-		this.domElement.style.left = `${x}px`;
-		this.domElement.style.top = `${y}px`;
-		this.domElement.style.right = "auto"; // ensure right doesn't override left positioning
+		if (!this.panelEl) return;
+		this.panelEl.style.left = `${x}px`;
+		this.panelEl.style.top = `${y}px`;
 	}
 
 
 
 	public abstract exportButtonClickListener(): Promise<void>;
 
-	protected abstract initializePanel(): void;
+	protected abstract initializePanel(): boolean;
 
-	public show() {
-		this.initializePanel();
+	public show(setDefaultX: boolean = false, setDefaultY: boolean = false) {
+		if (this.initializePanel()) {
+			this.resetPanel(setDefaultX, setDefaultY);
+		}
 
-		this.renderContent();
-		this.domElement!.style.display = 'flex';
+		if (this.panelEl) {
+			this.panelEl.hidden = false;
+		}
+
 		this.isVisible = true;
+		this.renderContent();
 	}
 
 	public hide() {
-		if (this.domElement) {
-			this.domElement.style.display = 'none';
+		if (this.panelEl) {
+			this.panelEl.hidden = true;
 		}
 		this.isVisible = false;
 		this.minimized = false;

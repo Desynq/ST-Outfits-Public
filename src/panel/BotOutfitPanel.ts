@@ -86,7 +86,7 @@ export class BotOutfitPanel extends OutfitPanel<'bot'> {
         this.render();
     }
 
-    public override getPanelType(): PanelType {
+    public override getPanelType(): 'bot' {
         return 'bot';
     }
 }

@@ -92,8 +92,8 @@ export function serializeRecord(record, slotFormatter, category) {
 function isTouchEvent(e) {
     return "touches" in e;
 }
-export function isMobile() {
-    return /Android|iPhone|iPad|iPod|Mobile|Tablet/i.test(navigator.userAgent);
+export function isWideScreen() {
+    return window.matchMedia('(min-width: 1024px)').matches;
 }
 export function assertNever(x) {
     throw new Error(`Unexpected value: ${x}`);

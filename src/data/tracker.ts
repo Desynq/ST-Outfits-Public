@@ -1,15 +1,21 @@
 // @ts-ignore
 import { extension_settings } from "../../../../../extensions.js";
 import { DEFAULT_SLOTS } from "../Constants.js";
-import { assertNever } from "../shared.js";
 import type { PanelType } from "../types/maps.js";
 import { normalizePanelSettings } from "./mappings/PanelSettings.js";
-import { CharactersOutfitMap, ExtensionSettingsAugment, Outfit, OutfitCollection, OutfitTrackerModel, PanelSettings } from "./model/Outfit.js";
+import { CharactersOutfitMap, ExtensionSettingsAugment, Outfit, OutfitCollection, OutfitTrackerModel } from "./model/Outfit.js";
 import { OutfitSnapshot } from "./model/OutfitSnapshots.js";
 import { normalizeOutfitCollection, validatePresets } from "./normalize.js";
 import { MutableOutfitView } from "./view/MutableOutfitView.js";
 import { OutfitView } from "./view/OutfitView.js";
-import { BotPanelSettingsView, PanelSettingsViewMap, UserPanelSettingsView } from "./view/PanelViews.js";
+import { BotPanelSettingsView, defaultBotPanelSettings, defaultUserPanelSettings, PanelSettingsMap, PanelSettingsViewMap, UserPanelSettingsView } from "./view/PanelViews.js";
+
+const PANEL_SETTINGS_FACTORIES = {
+	user: (s: PanelSettingsMap) => new UserPanelSettingsView(s.userPanel),
+	bot: (s: PanelSettingsMap) => new BotPanelSettingsView(s.botPanel)
+} satisfies {
+	[K in PanelType]: (s: PanelSettingsMap) => PanelSettingsViewMap[K];
+};
 
 class Tracker {
 
@@ -34,14 +40,11 @@ class Tracker {
 	}
 
 	public panelSettings<T extends PanelType>(type: T): PanelSettingsViewMap[T] {
-		switch (type) {
-			case 'user':
-				return new UserPanelSettingsView(this.settings.userPanel);
-			case 'bot':
-				return new BotPanelSettingsView(this.settings.botPanel);
-			default:
-				assertNever(type);
-		}
+		const factory = PANEL_SETTINGS_FACTORIES[type] as (
+			s: PanelSettingsMap
+		) => PanelSettingsViewMap[T];
+
+		return factory(this.settings);
 	}
 }
 
@@ -215,18 +218,6 @@ function loadTracker(): Tracker {
 
 	raw.enableSysMessages ??= false;
 	validatePresets(raw);
-
-
-	const defaultUserPanelSettings: PanelSettings = {
-		desktopXY: [20, 50],
-		mobileXY: [20, 50],
-		saveXY: false
-	};
-	const defaultBotPanelSettings: PanelSettings = {
-		...defaultUserPanelSettings,
-		desktopXY: [20, 110],
-		mobileXY: [20, 110]
-	};
 
 	normalizePanelSettings(raw, 'userPanel', defaultUserPanelSettings);
 	normalizePanelSettings(raw, 'botPanel', defaultBotPanelSettings);

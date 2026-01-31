@@ -1,6 +1,6 @@
 import { OutfitManager } from "../manager/OutfitManager.js";
 import { IOutfitCollectionView, OutfitTracker } from "../data/tracker.js";
-import { isMobile } from "../shared.js";
+import { isWideScreen } from "../shared.js";
 import { createConfiguredElements, queryOrThrow } from "../util/ElementHelper.js";
 import { OutfitSlotsHost } from "./OutfitSlotsHost.js";
 import { OutfitTabsHost } from "./OutfitTabsHost.js";
@@ -50,22 +50,28 @@ export abstract class OutfitPanel<T extends PanelType> implements OutfitSlotsHos
 		this.saveAndRenderContent();
 	}
 
-
+	public getLayoutMode(): LayoutMode {
+		return isWideScreen() ? 'desktop' : 'mobile';
+	}
 
 	private reinitialize(): void {
 		this.outfitManager.initializeOutfit();
-		this.resetPanel();
+
+		this.getPanelSettings().resetXY(this.getLayoutMode());
+		this.outfitManager.saveSettings();
+		this.resetSizeAndPos();
+
 		this.render();
 	}
 
-	private resetPanel(setDefaultX: boolean = true, setDefaultY: boolean = true): void {
+	private resetSizeAndPos(setDefaultX: boolean = true, setDefaultY: boolean = true): void {
 		if (!this.panelEl) return;
-		const isWide = window.matchMedia('(min-width: 1024px)').matches;
+		const isWide = isWideScreen();
 
 		this.panelEl.style.height = '80vh';
 		this.panelEl.style.width = isWide ? '24svw' : '90svw';
 
-		const [x, y] = this.getDefaultXY(isWide ? 'desktop' : 'mobile');
+		const [x, y] = this.getSavedXY(this.getLayoutMode());
 		if (setDefaultX) this.panelEl.style.left = `${x}px`;
 		if (setDefaultY) this.panelEl.style.top = `${y}px`;
 	}
@@ -157,6 +163,17 @@ export abstract class OutfitPanel<T extends PanelType> implements OutfitSlotsHos
 			handle.removeEventListener("pointermove", move);
 			handle.removeEventListener("pointerup", stop);
 			handle.removeEventListener("pointercancel", stop);
+
+			if (!this.panelEl) return;
+			const left = parseFloat(this.panelEl.style.left);
+			const top = parseFloat(this.panelEl.style.top);
+
+			const panelSettings = this.getPanelSettings();
+			if (panelSettings.isXYSaved()) {
+				const mode = isWideScreen() ? 'desktop' : 'mobile';
+				panelSettings.setXY(mode, left, top);
+				this.outfitManager.saveSettings();
+			}
 		};
 
 		handle.addEventListener("pointerdown", (e) => {
@@ -318,14 +335,20 @@ export abstract class OutfitPanel<T extends PanelType> implements OutfitSlotsHos
 		}
 	}
 
-	public abstract getPanelType(): PanelType;
+	public abstract getPanelType(): T;
 
 	public getPanelSettings(): PanelSettingsViewMap[T] {
 		return OutfitTracker.panelSettings(this.getPanelType());
 	}
 
-	public getDefaultXY(mode: LayoutMode): XY {
-		return OutfitTracker.panelSettings(this.getPanelType()).getXY(mode);
+	public getSavedXY(mode: LayoutMode): XY {
+		const panelSettings = this.getPanelSettings();
+		if (panelSettings.isXYSaved()) {
+			return panelSettings.getXY(mode);
+		}
+		else {
+			return panelSettings.getDefaultXY(mode);
+		}
 	}
 
 	public autoOpen(x?: number, y?: number): void {
@@ -345,7 +368,7 @@ export abstract class OutfitPanel<T extends PanelType> implements OutfitSlotsHos
 
 	public show(setDefaultX: boolean = false, setDefaultY: boolean = false) {
 		if (this.initializePanel()) {
-			this.resetPanel(setDefaultX, setDefaultY);
+			this.resetSizeAndPos(setDefaultX, setDefaultY);
 		}
 
 		if (this.panelEl) {

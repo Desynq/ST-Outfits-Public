@@ -2,7 +2,7 @@ import { OutfitManager } from "../manager/OutfitManager.js";
 import { OutfitSlot, SlotKind } from "../data/model/Outfit.js";
 import { ResolvedOutfitSlot } from "../data/model/OutfitSnapshots.js";
 import { MutableOutfitView } from "../data/view/MutableOutfitView.js";
-import { assertNever, isMobile, scrollIntoViewAboveKeyboard, toSlotName } from "../shared.js";
+import { assertNever, isWideScreen, scrollIntoViewAboveKeyboard, toSlotName } from "../shared.js";
 import { appendElement } from "../util/ElementHelper.js";
 import { OutfitSlotsHost } from "./OutfitSlotsHost.js";
 
@@ -566,7 +566,7 @@ export class SlotsRenderer {
 		textarea.addEventListener('keydown', (e) => {
 			if (e.isComposing) return;
 
-			if (!isMobile() && e.key === 'Enter' && !e.shiftKey) {
+			if (isWideScreen() && e.key === 'Enter' && !e.shiftKey) {
 				e.preventDefault();
 				this.commitValueEdit(textarea, ctx.displaySlot.slot);
 			}

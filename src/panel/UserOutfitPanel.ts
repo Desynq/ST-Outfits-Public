@@ -73,7 +73,7 @@ export class UserOutfitPanel extends OutfitPanel<'user'> {
         return 'Your Outfit';
     }
 
-    public override getPanelType(): PanelType {
+    public override getPanelType(): 'user' {
         return 'user';
     }
 }

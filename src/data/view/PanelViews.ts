@@ -9,10 +9,29 @@ export type PanelSettingsViewMap = {
 	bot: BotPanelSettingsView;
 };
 
+export const defaultUserPanelSettings: PanelSettings = {
+	desktopXY: [20, 50],
+	mobileXY: [20, 50],
+	saveXY: false
+};
+
+export const defaultBotPanelSettings: PanelSettings = {
+	...defaultUserPanelSettings,
+	desktopXY: [20, 110],
+	mobileXY: [20, 110]
+};
+
+export type PanelSettingsMap = {
+	userPanel: PanelSettings;
+	botPanel: PanelSettings;
+};
+
 export abstract class PanelSettingsView<T extends PanelType> {
 	public constructor(
 		protected panelSettings: PanelSettings
 	) { }
+
+	protected abstract getDefaultSettings(): PanelSettings;
 
 	protected accessXY(mode: LayoutMode): 'desktopXY' | 'mobileXY' {
 		switch (mode) {
@@ -25,12 +44,20 @@ export abstract class PanelSettingsView<T extends PanelType> {
 		}
 	}
 
+	public getDefaultXY(mode: LayoutMode): XY {
+		return this.getDefaultSettings()[this.accessXY(mode)];
+	}
+
 	public getXY(mode: LayoutMode): XY {
 		return this.panelSettings[this.accessXY(mode)];
 	}
 
 	public setXY(mode: LayoutMode, x: number, y: number): void {
 		this.panelSettings[this.accessXY(mode)] = [x, y];
+	}
+
+	public resetXY(mode: LayoutMode): void {
+		this.setXY(mode, ...this.getDefaultXY(mode));
 	}
 
 	public isXYSaved(): boolean {
@@ -42,6 +69,14 @@ export abstract class PanelSettingsView<T extends PanelType> {
 	}
 }
 
-export class UserPanelSettingsView extends PanelSettingsView<'user'> { }
+export class UserPanelSettingsView extends PanelSettingsView<'user'> {
+	protected override getDefaultSettings(): PanelSettings {
+		return defaultUserPanelSettings;
+	}
+}
 
-export class BotPanelSettingsView extends PanelSettingsView<'bot'> { }
+export class BotPanelSettingsView extends PanelSettingsView<'bot'> {
+	protected override getDefaultSettings(): PanelSettings {
+		return defaultBotPanelSettings;
+	}
+}

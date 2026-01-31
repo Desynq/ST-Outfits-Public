@@ -116,8 +116,8 @@ function isTouchEvent(e: MouseEvent | TouchEvent): e is TouchEvent {
 	return "touches" in e;
 }
 
-export function isMobile() {
-	return /Android|iPhone|iPad|iPod|Mobile|Tablet/i.test(navigator.userAgent);
+export function isWideScreen() {
+	return window.matchMedia('(min-width: 1024px)').matches;
 }
 
 

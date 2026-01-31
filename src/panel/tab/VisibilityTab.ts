@@ -138,7 +138,7 @@ export class VisibilityTab {
 				: 'Enable Saving XY',
 			(enabled) => {
 				panelSettings.setXYSaving(!enabled);
-				this.panel.saveAndRenderContent();
+				this.panel.saveAndRender();
 			}
 		);
 

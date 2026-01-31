@@ -48,7 +48,7 @@ export class UserOutfitPanel extends OutfitPanel {
         if (message && OutfitTracker.areSystemMessagesEnabled()) {
             this.sendSystemMessage(message);
         }
-        this.saveAndRenderContent();
+        this.saveAndRender();
     }
     getHeaderTitle() {
         return 'Your Outfit';

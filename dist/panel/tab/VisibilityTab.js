@@ -80,7 +80,7 @@ export class VisibilityTab {
             ? 'Disable Saving XY'
             : 'Enable Saving XY', (enabled) => {
             panelSettings.setXYSaving(!enabled);
-            this.panel.saveAndRenderContent();
+            this.panel.saveAndRender();
         });
         contentArea.append(toggleSavingXYButton);
     }

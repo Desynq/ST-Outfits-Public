@@ -23,14 +23,14 @@ export class OutfitPanel {
     }
     toggleHideDisabled() {
         this.collection.hideDisabledSlots(!this.areDisabledSlotsHidden());
-        this.saveAndRenderContent();
+        this.saveAndRender();
     }
     areEmptySlotsHidden() {
         return this.collection.areEmptySlotsHidden();
     }
     toggleHideEmpty() {
         this.collection.hideEmptySlots(!this.areEmptySlotsHidden());
-        this.saveAndRenderContent();
+        this.saveAndRender();
     }
     getLayoutMode() {
         return isWideScreen() ? 'desktop' : 'mobile';
@@ -80,7 +80,7 @@ export class OutfitPanel {
             return;
         this.tabsRenderer.renderTabs(tabsContainer, contentArea);
     }
-    saveAndRenderContent() {
+    saveAndRender() {
         this.outfitManager.saveSettings();
         this.render();
     }

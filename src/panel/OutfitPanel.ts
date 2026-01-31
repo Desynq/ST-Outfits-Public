@@ -37,7 +37,7 @@ export abstract class OutfitPanel<T extends PanelType> implements OutfitSlotsHos
 
 	public toggleHideDisabled(): void {
 		this.collection.hideDisabledSlots(!this.areDisabledSlotsHidden());
-		this.saveAndRenderContent();
+		this.saveAndRender();
 	}
 
 
@@ -47,7 +47,7 @@ export abstract class OutfitPanel<T extends PanelType> implements OutfitSlotsHos
 
 	public toggleHideEmpty(): void {
 		this.collection.hideEmptySlots(!this.areEmptySlotsHidden());
-		this.saveAndRenderContent();
+		this.saveAndRender();
 	}
 
 	public getLayoutMode(): LayoutMode {
@@ -110,7 +110,7 @@ export abstract class OutfitPanel<T extends PanelType> implements OutfitSlotsHos
 		this.tabsRenderer.renderTabs(tabsContainer, contentArea);
 	}
 
-	public saveAndRenderContent(): void {
+	public saveAndRender(): void {
 		this.outfitManager.saveSettings();
 		this.render();
 	}

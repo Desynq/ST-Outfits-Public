@@ -12,7 +12,7 @@ export interface OutfitTabsHost<T extends PanelType> {
 
 	public render(): void;
 
-	public saveAndRenderContent(): void;
+	public saveAndRender(): void;
 
 	public sendSystemMessage(message: string): void;
 

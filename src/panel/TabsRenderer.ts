@@ -196,7 +196,7 @@ export class OutfitTabsRenderer {
 				type: 'kind',
 				kind: result.newName
 			};
-			this.panel.saveAndRenderContent();
+			this.panel.saveAndRender();
 		}
 	}
 
@@ -275,7 +275,7 @@ export class OutfitTabsRenderer {
 			.getOutfitView()
 			.sortByKind(kindOrder);
 
-		this.panel.saveAndRenderContent();
+		this.panel.saveAndRender();
 	}
 
 	private createTab(tab: OutfitTab): HTMLButtonElement {
@@ -405,7 +405,7 @@ export class OutfitTabsRenderer {
 				this.panel.sendSystemMessage(`Make sure no pre-existing slots are named ${kind}.`);
 				return;
 			case 'added':
-				this.panel.saveAndRenderContent();
+				this.panel.saveAndRender();
 				return;
 		}
 	}
@@ -436,7 +436,7 @@ export class OutfitTabsRenderer {
 					if (message) {
 						this.panel.sendSystemMessage(message);
 					}
-					this.panel.saveAndRenderContent();
+					this.panel.saveAndRender();
 				});
 
 				presetElement.querySelector('.delete-preset')!.addEventListener('click', () => {
@@ -445,7 +445,7 @@ export class OutfitTabsRenderer {
 						if (message) {
 							this.panel.sendSystemMessage(message);
 						}
-						this.panel.saveAndRenderContent();
+						this.panel.saveAndRender();
 					}
 				});
 
@@ -463,7 +463,7 @@ export class OutfitTabsRenderer {
 				if (message) {
 					this.panel.sendSystemMessage(message);
 				}
-				this.panel.saveAndRenderContent();
+				this.panel.saveAndRender();
 			}
 		});
 

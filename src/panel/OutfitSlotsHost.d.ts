@@ -11,7 +11,7 @@ export interface OutfitSlotsHost {
 
 	public render(): void;
 
-	public saveAndRenderContent(): void;
+	public saveAndRender(): void;
 
 	public sendSystemMessage(message: string): void;
 }

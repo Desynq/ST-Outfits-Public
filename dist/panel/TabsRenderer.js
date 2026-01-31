@@ -126,7 +126,7 @@ export class OutfitTabsRenderer {
                 type: 'kind',
                 kind: result.newName
             };
-            this.panel.saveAndRenderContent();
+            this.panel.saveAndRender();
         }
     }
     renameTab(tabElement) {
@@ -193,7 +193,7 @@ export class OutfitTabsRenderer {
         this.outfitManager
             .getOutfitView()
             .sortByKind(kindOrder);
-        this.panel.saveAndRenderContent();
+        this.panel.saveAndRender();
     }
     createTab(tab) {
         const element = document.createElement('button');
@@ -307,7 +307,7 @@ export class OutfitTabsRenderer {
                 this.panel.sendSystemMessage(`Make sure no pre-existing slots are named ${kind}.`);
                 return;
             case 'added':
-                this.panel.saveAndRenderContent();
+                this.panel.saveAndRender();
                 return;
         }
     }
@@ -332,7 +332,7 @@ export class OutfitTabsRenderer {
                     if (message) {
                         this.panel.sendSystemMessage(message);
                     }
-                    this.panel.saveAndRenderContent();
+                    this.panel.saveAndRender();
                 });
                 presetElement.querySelector('.delete-preset').addEventListener('click', () => {
                     if (confirm(`Delete "${preset}" outfit?`)) {
@@ -340,7 +340,7 @@ export class OutfitTabsRenderer {
                         if (message) {
                             this.panel.sendSystemMessage(message);
                         }
-                        this.panel.saveAndRenderContent();
+                        this.panel.saveAndRender();
                     }
                 });
                 container.appendChild(presetElement);
@@ -356,7 +356,7 @@ export class OutfitTabsRenderer {
                 if (message) {
                     this.panel.sendSystemMessage(message);
                 }
-                this.panel.saveAndRenderContent();
+                this.panel.saveAndRender();
             }
         });
         container.appendChild(saveButton);

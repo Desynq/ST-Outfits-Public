@@ -91,7 +91,7 @@ export class SlotsRenderer {
 		}
 
 		this.outfitManager.updateOutfitValue(id);
-		this.panel.saveAndRenderContent();
+		this.panel.saveAndRender();
 	}
 
 	private renderSlot(
@@ -252,7 +252,7 @@ export class SlotsRenderer {
 		toggleBtn.addEventListener('click', () => {
 			this.outfitView.toggleSlot(slot.id);
 			this.outfitManager.updateOutfitValue(slot.id);
-			this.panel.saveAndRenderContent();
+			this.panel.saveAndRender();
 		});
 
 		container.appendChild(toggleBtn);
@@ -318,7 +318,7 @@ export class SlotsRenderer {
 			case "noop":
 				return;
 			case "moved":
-				this.panel.saveAndRenderContent();
+				this.panel.saveAndRender();
 				return;
 			default: assertNever(result);
 		}
@@ -333,7 +333,7 @@ export class SlotsRenderer {
 			this.outfitManager.deleteOutfitSlot(slot.id);
 		}
 
-		this.panel.saveAndRenderContent();
+		this.panel.saveAndRender();
 	}
 
 	/* ------------------------------ Slot Shifting ----------------------------- */
@@ -431,7 +431,7 @@ export class SlotsRenderer {
 			default: assertNever(result);
 		}
 
-		this.panel.saveAndRenderContent();
+		this.panel.saveAndRender();
 	}
 
 	/* --------------------------- Slot Label Renaming -------------------------- */
@@ -501,7 +501,7 @@ export class SlotsRenderer {
 			default: assertNever(result);
 		}
 
-		this.panel.saveAndRenderContent();
+		this.panel.saveAndRender();
 	}
 
 	private cancelRename(): void {
@@ -634,7 +634,7 @@ export class SlotsRenderer {
 			: textarea.value.trim();
 
 		await this.outfitManager.setOutfitItem(slot.id, newValue);
-		this.panel.saveAndRenderContent();
+		this.panel.saveAndRender();
 	}
 
 	private cancelValueEdit(): void {

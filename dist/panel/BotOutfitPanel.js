@@ -52,7 +52,7 @@ export class BotOutfitPanel extends OutfitPanel {
         if (message && OutfitTracker.areSystemMessagesEnabled()) {
             this.sendSystemMessage(message);
         }
-        this.saveAndRenderContent();
+        this.saveAndRender();
     }
     getHeaderTitle() {
         return `${this.outfitManager.character}'s Outfit`;

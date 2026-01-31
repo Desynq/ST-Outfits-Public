@@ -70,7 +70,7 @@ export class BotOutfitPanel extends OutfitPanel<'bot'> {
             this.sendSystemMessage(message);
         }
 
-        this.saveAndRenderContent();
+        this.saveAndRender();
     }
 
     protected override getHeaderTitle(): string {

@@ -55,7 +55,7 @@ export class SlotsRenderer {
             return;
         }
         this.outfitManager.updateOutfitValue(id);
-        this.panel.saveAndRenderContent();
+        this.panel.saveAndRender();
     }
     renderSlot(container, display) {
         const slot = display.slot;
@@ -168,7 +168,7 @@ export class SlotsRenderer {
         toggleBtn.addEventListener('click', () => {
             this.outfitView.toggleSlot(slot.id);
             this.outfitManager.updateOutfitValue(slot.id);
-            this.panel.saveAndRenderContent();
+            this.panel.saveAndRender();
         });
         container.appendChild(toggleBtn);
         return toggleBtn;
@@ -219,7 +219,7 @@ export class SlotsRenderer {
             case "noop":
                 return;
             case "moved":
-                this.panel.saveAndRenderContent();
+                this.panel.saveAndRender();
                 return;
             default: assertNever(result);
         }
@@ -230,7 +230,7 @@ export class SlotsRenderer {
         if (confirmed) {
             this.outfitManager.deleteOutfitSlot(slot.id);
         }
-        this.panel.saveAndRenderContent();
+        this.panel.saveAndRender();
     }
     /* ------------------------------ Slot Shifting ----------------------------- */
     beginSlotShift(slotElement, display) {
@@ -307,7 +307,7 @@ export class SlotsRenderer {
                 break;
             default: assertNever(result);
         }
-        this.panel.saveAndRenderContent();
+        this.panel.saveAndRender();
     }
     /* --------------------------- Slot Label Renaming -------------------------- */
     beginRename(slotNameEl, slotElement, slot) {
@@ -362,7 +362,7 @@ export class SlotsRenderer {
                 break;
             default: assertNever(result);
         }
-        this.panel.saveAndRenderContent();
+        this.panel.saveAndRender();
     }
     cancelRename() {
         this.panel.render();
@@ -457,7 +457,7 @@ export class SlotsRenderer {
             ? 'None'
             : textarea.value.trim();
         await this.outfitManager.setOutfitItem(slot.id, newValue);
-        this.panel.saveAndRenderContent();
+        this.panel.saveAndRender();
     }
     cancelValueEdit() {
         this.panel.render();

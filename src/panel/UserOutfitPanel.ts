@@ -66,7 +66,7 @@ export class UserOutfitPanel extends OutfitPanel<'user'> {
             this.sendSystemMessage(message);
         }
 
-        this.saveAndRenderContent();
+        this.saveAndRender();
     }
 
     protected override getHeaderTitle(): string {

@@ -1,7 +1,7 @@
 import { DEFAULT_SLOTS } from "../Constants.js";
-import { IOutfitCollectionView, OutfitTracker } from "../outfit/tracker.js";
-import { MutableOutfitView } from "../outfit/view/MutableOutfitView.js";
-import { Outfit, OutfitSlot } from "../outfit/model/Outfit.js";
+import { IOutfitCollectionView, OutfitTracker } from "../data/tracker.js";
+import { MutableOutfitView } from "../data/view/MutableOutfitView.js";
+import { Outfit, OutfitSlot } from "../data/model/Outfit.js";
 import { deleteGlobalVariable, filterRecord, formatAccessorySlotName, toSlotName, getGlobalVariable, pruneRecord, serializeRecord, setGlobalVariable } from "../shared.js";
 import { StringHelper } from "../util/StringHelper.js";
 

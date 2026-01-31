@@ -1,7 +1,7 @@
 import { OutfitManager } from "./OutfitManager.js";
-import { IOutfitCollectionView, OutfitTracker } from "../outfit/tracker.js";
-import { MutableOutfitView } from "../outfit/view/MutableOutfitView.js";
-import { areOutfitSnapshotsEqual } from "../outfit/model/OutfitSnapshots.js";
+import { IOutfitCollectionView, OutfitTracker } from "../data/tracker.js";
+import { MutableOutfitView } from "../data/view/MutableOutfitView.js";
+import { areOutfitSnapshotsEqual } from "../data/model/OutfitSnapshots.js";
 
 export class UserOutfitManager extends OutfitManager {
     constructor(

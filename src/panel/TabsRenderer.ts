@@ -1,6 +1,6 @@
 import { OutfitManager } from "../manager/OutfitManager.js";
-import { SlotKind } from "../outfit/model/Outfit.js";
-import { MutableOutfitView } from "../outfit/view/MutableOutfitView.js";
+import { SlotKind } from "../data/model/Outfit.js";
+import { MutableOutfitView } from "../data/view/MutableOutfitView.js";
 import { assertNever } from "../shared.js";
 import { addContextActionListener, configureSharedElements, createConfiguredElements } from "../util/ElementHelper.js";
 import { OutfitTabsHost } from "./OutfitTabsHost.js";

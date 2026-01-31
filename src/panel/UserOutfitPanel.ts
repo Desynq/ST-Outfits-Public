@@ -1,5 +1,5 @@
 import { UserOutfitManager } from '../manager/UserOutfitManager.js';
-import { OutfitTracker } from '../outfit/tracker.js';
+import { OutfitTracker } from '../data/tracker.js';
 import { queryOrThrow } from '../util/ElementHelper.js';
 import { OutfitPanel } from './OutfitPanel.js';
 

@@ -1,5 +1,5 @@
 import { OutfitManager } from "../manager/OutfitManager.js";
-import { IOutfitCollectionView, OutfitTracker } from "../outfit/tracker.js";
+import { IOutfitCollectionView, OutfitTracker } from "../data/tracker.js";
 import { isMobile } from "../shared.js";
 import { createConfiguredElements, queryOrThrow } from "../util/ElementHelper.js";
 import { OutfitSlotsHost } from "./OutfitSlotsHost.js";

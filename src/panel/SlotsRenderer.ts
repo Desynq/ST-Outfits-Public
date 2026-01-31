@@ -1,7 +1,7 @@
 import { OutfitManager } from "../manager/OutfitManager.js";
-import { OutfitSlot, SlotKind } from "../outfit/model/Outfit.js";
-import { ResolvedOutfitSlot } from "../outfit/model/OutfitSnapshots.js";
-import { MutableOutfitView } from "../outfit/view/MutableOutfitView.js";
+import { OutfitSlot, SlotKind } from "../data/model/Outfit.js";
+import { ResolvedOutfitSlot } from "../data/model/OutfitSnapshots.js";
+import { MutableOutfitView } from "../data/view/MutableOutfitView.js";
 import { assertNever, isMobile, scrollIntoViewAboveKeyboard, toSlotName } from "../shared.js";
 import { appendElement } from "../util/ElementHelper.js";
 import { OutfitSlotsHost } from "./OutfitSlotsHost.js";

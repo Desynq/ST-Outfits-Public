@@ -1,4 +1,4 @@
-import { OutfitSlot, SlotKind } from "./outfit/model/Outfit";
+import { OutfitSlot, SlotKind } from "./data/model/Outfit";
 
 export const DEFAULT_CLOTHING_SLOTS = [
 	'headwear',

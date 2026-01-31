@@ -380,7 +380,7 @@ Important: Always use the exact slot names listed above. Never invent new slot n
             setTimeout(() => {
                 try {
                     window.botOutfitPanel.outfitManager.loadOutfit();
-                    window.botOutfitPanel.renderContent();
+                    window.botOutfitPanel.render();
                     console.log('[AutoOutfitSystem] Outfit panel updated');
                 } catch (error) {
                     console.error('Failed to update outfit panel:', error);

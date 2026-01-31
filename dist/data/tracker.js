@@ -1,9 +1,12 @@
 // @ts-ignore
 import { extension_settings } from "../../../../../extensions.js";
+import { DEFAULT_SLOTS } from "../Constants.js";
+import { assertNever } from "../shared.js";
+import { normalizePanelSettings } from "./mappings/PanelSettings.js";
+import { normalizeOutfitCollection, validatePresets } from "./normalize.js";
 import { MutableOutfitView } from "./view/MutableOutfitView.js";
 import { OutfitView } from "./view/OutfitView.js";
-import { normalizeOutfitCollection, validatePresets } from "./normalize.js";
-import { DEFAULT_SLOTS } from "../Constants.js";
+import { BotPanelSettingsView, UserPanelSettingsView } from "./view/PanelViews.js";
 class Tracker {
     constructor(settings) {
         this.settings = settings;
@@ -19,6 +22,16 @@ class Tracker {
     }
     userOutfits() {
         return new UserOutfitCollectionView(this.settings.presets.user);
+    }
+    panelSettings(type) {
+        switch (type) {
+            case 'user':
+                return new UserPanelSettingsView(this.settings.userPanel);
+            case 'bot':
+                return new BotPanelSettingsView(this.settings.botPanel);
+            default:
+                assertNever(type);
+        }
     }
 }
 class OutfitCollectionView {
@@ -142,8 +155,20 @@ class CharacterOutfitCollectionView extends OutfitCollectionView {
 const settings = extension_settings;
 function loadTracker() {
     const raw = settings.outfit_tracker ?? (settings.outfit_tracker = {});
-    validatePresets(raw);
     raw.enableSysMessages ?? (raw.enableSysMessages = false);
+    validatePresets(raw);
+    const defaultUserPanelSettings = {
+        desktopXY: [20, 50],
+        mobileXY: [20, 50],
+        saveXY: false
+    };
+    const defaultBotPanelSettings = {
+        ...defaultUserPanelSettings,
+        desktopXY: [20, 110],
+        mobileXY: [20, 110]
+    };
+    normalizePanelSettings(raw, 'userPanel', defaultUserPanelSettings);
+    normalizePanelSettings(raw, 'botPanel', defaultBotPanelSettings);
     return new Tracker(raw);
 }
 export const OutfitTracker = loadTracker();

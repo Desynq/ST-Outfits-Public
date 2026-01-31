@@ -5,6 +5,7 @@ export class VisibilityTab {
         this.outfitManager = this.panel.getOutfitManager();
     }
     render(contentArea) {
+        this.renderPositionButtons(contentArea);
         this.renderPreviewButton(contentArea);
         this.renderVisibilityButtons(contentArea);
     }
@@ -69,16 +70,37 @@ export class VisibilityTab {
         return section;
     }
     renderVisibilityButtons(contentArea) {
-        const createButton = (className, text, click) => {
-            const btn = document.createElement('button');
-            btn.className = className;
-            btn.textContent = text;
-            if (click)
-                btn.addEventListener('click', click);
-            return btn;
-        };
         const hideDisabledButton = createButton('system-tab-button hide-disabled-button', this.panel.areDisabledSlotsHidden() ? 'Show Disabled Slots' : 'Hide Disabled Slots', () => this.panel.toggleHideDisabled());
         const hideEmptyButton = createButton('system-tab-button hide-empty-button', this.panel.areEmptySlotsHidden() ? 'Show Empty Slots' : 'Hide Empty Slots', () => this.panel.toggleHideEmpty());
         contentArea.append(hideDisabledButton, hideEmptyButton);
     }
+    renderPositionButtons(contentArea) {
+        const panelSettings = this.panel.getPanelSettings();
+        const toggleSavingXYButton = createDerivedToggleButton('visibility-tab-button toggle-saving-xy-button', () => panelSettings.isXYSaved(), (enabled) => enabled
+            ? 'Disable Saving XY'
+            : 'Enable Saving XY', (enabled) => {
+            panelSettings.setXYSaving(!enabled);
+            this.panel.saveAndRenderContent();
+        });
+        contentArea.append(toggleSavingXYButton);
+    }
+}
+function createButton(className, text, click) {
+    const btn = document.createElement('button');
+    btn.className = className;
+    btn.textContent = text;
+    if (click)
+        btn.addEventListener('click', click);
+    return btn;
+}
+function createDerivedToggleButton(className, predicate, getText, click) {
+    const btn = document.createElement('button');
+    btn.className = className;
+    btn.textContent = getText(predicate());
+    btn.addEventListener('click', (e) => {
+        const enabled = predicate();
+        click(enabled, e);
+        btn.textContent = getText(enabled);
+    });
+    return btn;
 }

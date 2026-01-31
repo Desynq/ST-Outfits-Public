@@ -22,16 +22,26 @@ export interface OutfitCollection {
 	hideEmpty: boolean;
 }
 
-export type CharacterOutfitMap = Record<string, OutfitCollection | undefined>;
+export type CharactersOutfitMap = Record<string, OutfitCollection | undefined>;
 
 export interface GlobalOutfitMap {
-	bot: CharacterOutfitMap;
-	user: OutfitCollection;
+	bot: CharactersOutfitMap; // each character has their own OutfitCollection
+	user: OutfitCollection; // there is only one OutfitCollection for the user
+}
+
+export type XY = readonly [number, number];
+
+export interface PanelSettings {
+	desktopXY: XY;
+	mobileXY: XY;
+	saveXY: boolean;
 }
 
 export interface OutfitTrackerModel {
 	presets: GlobalOutfitMap;
 	enableSysMessages: boolean;
+	botPanel: PanelSettings;
+	userPanel: PanelSettings;
 }
 
 export interface ExtensionSettingsAugment {

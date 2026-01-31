@@ -46,7 +46,7 @@ export class SlotsRenderer {
     addSlot(container, kind) {
         const id = prompt('Name?')?.trim();
         if (!id) {
-            this.panel.renderContent();
+            this.panel.render();
             return;
         }
         const duplicate = !this.outfitView.addSlot(id, kind);
@@ -272,7 +272,7 @@ export class SlotsRenderer {
         select.focus();
         select.addEventListener('change', () => this.shiftSlot(select, display));
         select.addEventListener('blur', () => {
-            this.panel.renderContent();
+            this.panel.render();
         });
     }
     shiftSlot(select, display) {
@@ -365,7 +365,7 @@ export class SlotsRenderer {
         this.panel.saveAndRenderContent();
     }
     cancelRename() {
-        this.panel.renderContent();
+        this.panel.render();
     }
     /* --------------------------- Slot Value Editing --------------------------- */
     beginInlineEdit(ctx, valueEl) {
@@ -428,7 +428,7 @@ export class SlotsRenderer {
             clearBtn.addEventListener('click', async () => {
                 await this.outfitManager.setOutfitItem(ctx.slot.id, 'None');
                 cleanup();
-                this.panel.renderContent();
+                this.panel.render();
             });
             preventBlur(clearBtn);
             ctx.actionsLeftEl.appendChild(clearBtn);
@@ -460,6 +460,6 @@ export class SlotsRenderer {
         this.panel.saveAndRenderContent();
     }
     cancelValueEdit() {
-        this.panel.renderContent();
+        this.panel.render();
     }
 }

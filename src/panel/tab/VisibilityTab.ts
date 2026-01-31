@@ -1,4 +1,5 @@
 import { OutfitManager } from "../../manager/OutfitManager";
+import { PanelType } from "../../types/maps";
 import { createConfiguredElements } from "../../util/ElementHelper";
 import { OutfitTabsHost } from "../OutfitTabsHost";
 
@@ -9,11 +10,12 @@ export class VisibilityTab {
 	private outfitManager: OutfitManager = this.panel.getOutfitManager();
 
 	public constructor(
-		private panel: OutfitTabsHost,
+		private panel: OutfitTabsHost<PanelType>,
 		private formatKind: (k: string) => string
 	) { }
 
 	public render(contentArea: HTMLDivElement): void {
+		this.renderPositionButtons(contentArea);
 		this.renderPreviewButton(contentArea);
 		this.renderVisibilityButtons(contentArea);
 	}
@@ -106,14 +108,6 @@ export class VisibilityTab {
 
 
 	private renderVisibilityButtons(contentArea: HTMLDivElement): void {
-		const createButton = (className: string, text: string, click?: (e?: PointerEvent) => void): HTMLButtonElement => {
-			const btn = document.createElement('button');
-			btn.className = className;
-			btn.textContent = text;
-			if (click) btn.addEventListener('click', click);
-			return btn;
-		};
-
 		const hideDisabledButton = createButton(
 			'system-tab-button hide-disabled-button',
 			this.panel.areDisabledSlotsHidden() ? 'Show Disabled Slots' : 'Hide Disabled Slots',
@@ -132,4 +126,51 @@ export class VisibilityTab {
 			hideEmptyButton
 		);
 	}
+
+	private renderPositionButtons(contentArea: HTMLDivElement): void {
+		const panelSettings = this.panel.getPanelSettings();
+
+		const toggleSavingXYButton = createDerivedToggleButton(
+			'visibility-tab-button toggle-saving-xy-button',
+			() => panelSettings.isXYSaved(),
+			(enabled) => enabled
+				? 'Disable Saving XY'
+				: 'Enable Saving XY',
+			(enabled) => {
+				panelSettings.setXYSaving(!enabled);
+				this.panel.saveAndRenderContent();
+			}
+		);
+
+		contentArea.append(
+			toggleSavingXYButton
+		);
+	}
+}
+
+function createButton(className: string, text: string, click?: (e: PointerEvent) => void): HTMLButtonElement {
+	const btn = document.createElement('button');
+	btn.className = className;
+	btn.textContent = text;
+	if (click) btn.addEventListener('click', click);
+	return btn;
+}
+
+function createDerivedToggleButton(
+	className: string,
+	predicate: () => boolean,
+	getText: (enabled: boolean) => string,
+	click: (enabled: boolean, e: PointerEvent) => void
+): HTMLButtonElement {
+	const btn = document.createElement('button');
+	btn.className = className;
+	btn.textContent = getText(predicate());
+
+	btn.addEventListener('click', (e) => {
+		const enabled = predicate();
+		click(enabled, e);
+		btn.textContent = getText(enabled);
+	});
+
+	return btn;
 }

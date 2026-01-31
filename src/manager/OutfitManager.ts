@@ -1,8 +1,6 @@
-import { DEFAULT_SLOTS } from "../Constants.js";
 import { IOutfitCollectionView, OutfitTracker } from "../data/tracker.js";
 import { MutableOutfitView } from "../data/view/MutableOutfitView.js";
-import { Outfit, OutfitSlot } from "../data/model/Outfit.js";
-import { deleteGlobalVariable, filterRecord, formatAccessorySlotName, toSlotName, getGlobalVariable, pruneRecord, serializeRecord, setGlobalVariable } from "../shared.js";
+import { deleteGlobalVariable, formatAccessorySlotName, getGlobalVariable, serializeRecord, setGlobalVariable, toSlotName } from "../shared.js";
 import { StringHelper } from "../util/StringHelper.js";
 
 type RenameSlotResult =

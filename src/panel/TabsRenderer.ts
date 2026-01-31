@@ -5,6 +5,7 @@ import { assertNever } from "../shared.js";
 import { addContextActionListener, configureSharedElements, createConfiguredElements } from "../util/ElementHelper.js";
 import { OutfitTabsHost } from "./OutfitTabsHost.js";
 import { VisibilityTab } from "./tab/VisibilityTab.js";
+import { PanelType } from "../types/maps.js";
 
 const OUTFIT_SYSTEM_TAB_IDS = ['outfits', 'visibility'] as const;
 type OutfitSystemTabId = typeof OUTFIT_SYSTEM_TAB_IDS[number];
@@ -46,7 +47,7 @@ export class OutfitTabsRenderer {
 	private draggedTab: HTMLButtonElement | null = null;
 
 	public constructor(
-		private panel: OutfitTabsHost
+		private panel: OutfitTabsHost<PanelType>
 	) { }
 
 	private get outfitManager(): OutfitManager {
@@ -103,7 +104,7 @@ export class OutfitTabsRenderer {
 			this.currentTab = { type: 'system', id: 'outfits' };
 		}
 
-		this.panel.renderContent();
+		this.panel.render();
 	}
 
 	private recreateTabs(tabsContainer: HTMLDivElement): void {
@@ -179,7 +180,7 @@ export class OutfitTabsRenderer {
 
 		this.currentTab = tab;
 
-		this.panel.renderContent();
+		this.panel.render();
 
 		for (const t of allTabs) {
 			t.classList.remove('active');

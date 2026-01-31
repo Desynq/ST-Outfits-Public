@@ -1,7 +1,6 @@
-import { OutfitManager } from "./OutfitManager.js";
-import { IOutfitCollectionView, OutfitTracker } from "../data/tracker.js";
-import { MutableOutfitView } from "../data/view/MutableOutfitView.js";
 import { areOutfitSnapshotsEqual } from "../data/model/OutfitSnapshots.js";
+import { IOutfitCollectionView, OutfitTracker } from "../data/tracker.js";
+import { OutfitManager } from "./OutfitManager.js";
 
 export class BotOutfitManager extends OutfitManager {
     public character!: string;

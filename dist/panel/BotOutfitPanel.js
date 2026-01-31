@@ -1,6 +1,6 @@
-import { OutfitPanel } from './OutfitPanel.js';
-import { OutfitTracker } from '../outfit/tracker.js';
+import { OutfitTracker } from '../data/tracker.js';
 import { queryOrThrow } from '../util/ElementHelper.js';
+import { OutfitPanel } from './OutfitPanel.js';
 export class BotOutfitPanel extends OutfitPanel {
     constructor(outfitManager) {
         super(outfitManager);
@@ -64,12 +64,9 @@ export class BotOutfitPanel extends OutfitPanel {
             if (header)
                 header.textContent = `${name}'s Outfit`;
         }
-        this.renderContent();
+        this.render();
     }
-    getDefaultX() {
-        return 20;
-    }
-    getDefaultY() {
-        return 50 + 60;
+    getPanelType() {
+        return 'bot';
     }
 }

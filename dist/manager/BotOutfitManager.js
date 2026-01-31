@@ -1,6 +1,6 @@
+import { areOutfitSnapshotsEqual } from "../data/model/OutfitSnapshots.js";
+import { OutfitTracker } from "../data/tracker.js";
 import { OutfitManager } from "./OutfitManager.js";
-import { OutfitTracker } from "../outfit/tracker.js";
-import { areOutfitSnapshotsEqual } from "../outfit/model/OutfitSnapshots.js";
 export class BotOutfitManager extends OutfitManager {
     constructor(settingsSaver) {
         super(settingsSaver);

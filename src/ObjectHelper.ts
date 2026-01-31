@@ -49,3 +49,18 @@ export const asString = (v: any): string | undefined =>
 
 export const asBoolean = (fallback: boolean) =>
 	(v: any): boolean => (typeof v === 'boolean' ? v : fallback);
+
+
+
+export function normalizeXY(value: unknown): [number, number] | undefined {
+	if (
+		Array.isArray(value) &&
+		value.length === 2 &&
+		typeof value[0] === 'number' &&
+		typeof value[1] === 'number'
+	) {
+		return value as [number, number];
+	}
+
+	return undefined;
+}

@@ -1,12 +1,15 @@
 // @ts-ignore
 import { extension_settings } from "../../../../../extensions.js";
-import { ExtensionSettingsAugment, Outfit } from "./model/Outfit.js";
+import { DEFAULT_SLOTS } from "../Constants.js";
+import { assertNever } from "../shared.js";
+import type { PanelType } from "../types/maps.js";
+import { normalizePanelSettings } from "./mappings/PanelSettings.js";
+import { CharactersOutfitMap, ExtensionSettingsAugment, Outfit, OutfitCollection, OutfitTrackerModel, PanelSettings } from "./model/Outfit.js";
 import { OutfitSnapshot } from "./model/OutfitSnapshots.js";
-import { CharacterOutfitMap, OutfitCollection, OutfitTrackerModel } from "./model/Outfit.js";
+import { normalizeOutfitCollection, validatePresets } from "./normalize.js";
 import { MutableOutfitView } from "./view/MutableOutfitView.js";
 import { OutfitView } from "./view/OutfitView.js";
-import { normalizeOutfitCollection, validatePresets } from "./normalize.js";
-import { DEFAULT_SLOTS } from "../Constants.js";
+import { BotPanelSettingsView, PanelSettingsViewMap, UserPanelSettingsView } from "./view/PanelViews.js";
 
 class Tracker {
 
@@ -28,6 +31,17 @@ class Tracker {
 
 	public userOutfits(): UserOutfitCollectionView {
 		return new UserOutfitCollectionView(this.settings.presets.user);
+	}
+
+	public panelSettings<T extends PanelType>(type: T): PanelSettingsViewMap[T] {
+		switch (type) {
+			case 'user':
+				return new UserPanelSettingsView(this.settings.userPanel);
+			case 'bot':
+				return new BotPanelSettingsView(this.settings.botPanel);
+			default:
+				assertNever(type);
+		}
 	}
 }
 
@@ -121,7 +135,7 @@ class UserOutfitCollectionView extends OutfitCollectionView {
 
 class CharacterOutfitMapView {
 	public constructor(
-		private map: CharacterOutfitMap
+		private map: CharactersOutfitMap
 	) { }
 
 	public outfits(character: string): CharacterOutfitCollectionView {
@@ -135,7 +149,7 @@ class CharacterOutfitMapView {
 
 class CharacterOutfitCollectionView extends OutfitCollectionView {
 	public constructor(
-		private map: CharacterOutfitMap,
+		private map: CharactersOutfitMap,
 		private character: string
 	) {
 		super();
@@ -197,11 +211,25 @@ class CharacterOutfitCollectionView extends OutfitCollectionView {
 const settings = extension_settings as typeof extension_settings & ExtensionSettingsAugment;
 
 function loadTracker(): Tracker {
-	const raw = settings.outfit_tracker ??= {};
-
-	validatePresets(raw);
+	const raw: Partial<OutfitTrackerModel> = settings.outfit_tracker ??= {};
 
 	raw.enableSysMessages ??= false;
+	validatePresets(raw);
+
+
+	const defaultUserPanelSettings: PanelSettings = {
+		desktopXY: [20, 50],
+		mobileXY: [20, 50],
+		saveXY: false
+	};
+	const defaultBotPanelSettings: PanelSettings = {
+		...defaultUserPanelSettings,
+		desktopXY: [20, 110],
+		mobileXY: [20, 110]
+	};
+
+	normalizePanelSettings(raw, 'userPanel', defaultUserPanelSettings);
+	normalizePanelSettings(raw, 'botPanel', defaultBotPanelSettings);
 
 	return new Tracker(raw as OutfitTrackerModel);
 }

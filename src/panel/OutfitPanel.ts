@@ -6,8 +6,11 @@ import { OutfitSlotsHost } from "./OutfitSlotsHost.js";
 import { OutfitTabsHost } from "./OutfitTabsHost.js";
 import { SlotsRenderer } from "./SlotsRenderer.js";
 import { OutfitTabsRenderer as TabsRenderer } from "./TabsRenderer.js";
+import { LayoutMode, PanelSettingsViewMap } from "../data/view/PanelViews.js";
+import { XY } from "../data/model/Outfit.js";
+import type { OutfitManagerMap, PanelType } from "../types/maps.js";
 
-export abstract class OutfitPanel<T extends OutfitManager> implements OutfitSlotsHost, OutfitTabsHost {
+export abstract class OutfitPanel<T extends PanelType> implements OutfitSlotsHost, OutfitTabsHost<T> {
 
 	protected panelEl: HTMLDivElement | null = null;
 	protected minimized: boolean = false;
@@ -17,7 +20,7 @@ export abstract class OutfitPanel<T extends OutfitManager> implements OutfitSlot
 	protected tabsRenderer: TabsRenderer = new TabsRenderer(this);
 
 	public constructor(
-		protected outfitManager: T
+		protected outfitManager: OutfitManagerMap[T]
 	) { }
 
 	public isMinimized(): boolean {
@@ -49,10 +52,10 @@ export abstract class OutfitPanel<T extends OutfitManager> implements OutfitSlot
 
 
 
-	private refresh(): void {
+	private reinitialize(): void {
 		this.outfitManager.initializeOutfit();
 		this.resetPanel();
-		this.renderContent();
+		this.render();
 	}
 
 	private resetPanel(setDefaultX: boolean = true, setDefaultY: boolean = true): void {
@@ -62,13 +65,14 @@ export abstract class OutfitPanel<T extends OutfitManager> implements OutfitSlot
 		this.panelEl.style.height = '80vh';
 		this.panelEl.style.width = isWide ? '24svw' : '90svw';
 
-		if (setDefaultX) this.panelEl.style.left = `${this.getDefaultX()}px`;
-		if (setDefaultY) this.panelEl.style.top = `${this.getDefaultY()}px`;
+		const [x, y] = this.getDefaultXY(isWide ? 'desktop' : 'mobile');
+		if (setDefaultX) this.panelEl.style.left = `${x}px`;
+		if (setDefaultY) this.panelEl.style.top = `${y}px`;
 	}
 
 
 
-	public getOutfitManager(): T {
+	public getOutfitManager(): OutfitManagerMap[T] {
 		return this.outfitManager;
 	}
 
@@ -88,7 +92,7 @@ export abstract class OutfitPanel<T extends OutfitManager> implements OutfitSlot
 
 
 
-	public renderContent(): void {
+	public render(): void {
 		if (!this.panelEl || this.minimized) return;
 
 		const tabsContainer = this.panelEl.querySelector('.outfit-tabs') as HTMLDivElement | undefined;
@@ -102,7 +106,7 @@ export abstract class OutfitPanel<T extends OutfitManager> implements OutfitSlot
 
 	public saveAndRenderContent(): void {
 		this.outfitManager.saveSettings();
-		this.renderContent();
+		this.render();
 	}
 
 
@@ -257,7 +261,7 @@ export abstract class OutfitPanel<T extends OutfitManager> implements OutfitSlot
 				refreshBtn.classList.add('refresh-button');
 				refreshBtn.textContent = '↻';
 				refreshBtn.addEventListener('click', () => {
-					this.refresh();
+					this.reinitialize();
 				});
 			},
 			(closeBtn) => {
@@ -310,12 +314,19 @@ export abstract class OutfitPanel<T extends OutfitManager> implements OutfitSlot
 			this.panelEl.classList.remove("minimized");
 			minimizeBtn.textContent = '−';
 			this.expandHeader();
-			this.renderContent();
+			this.render();
 		}
 	}
 
-	protected abstract getDefaultX(): number;
-	protected abstract getDefaultY(): number;
+	public abstract getPanelType(): PanelType;
+
+	public getPanelSettings(): PanelSettingsViewMap[T] {
+		return OutfitTracker.panelSettings(this.getPanelType());
+	}
+
+	public getDefaultXY(mode: LayoutMode): XY {
+		return OutfitTracker.panelSettings(this.getPanelType()).getXY(mode);
+	}
 
 	public autoOpen(x?: number, y?: number): void {
 		this.show(x === undefined, y === undefined);
@@ -342,7 +353,7 @@ export abstract class OutfitPanel<T extends OutfitManager> implements OutfitSlot
 		}
 
 		this.isVisible = true;
-		this.renderContent();
+		this.render();
 	}
 
 	public hide() {

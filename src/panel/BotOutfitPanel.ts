@@ -2,8 +2,9 @@ import { BotOutfitManager } from '../manager/BotOutfitManager.js';
 import { OutfitTracker } from '../data/tracker.js';
 import { queryOrThrow } from '../util/ElementHelper.js';
 import { OutfitPanel } from './OutfitPanel.js';
+import type { PanelType } from '../types/maps.js';
 
-export class BotOutfitPanel extends OutfitPanel<BotOutfitManager> {
+export class BotOutfitPanel extends OutfitPanel<'bot'> {
     public constructor(
         outfitManager: BotOutfitManager
     ) {
@@ -82,14 +83,10 @@ export class BotOutfitPanel extends OutfitPanel<BotOutfitManager> {
             const header = this.panelEl.querySelector('.outfit-header h3');
             if (header) header.textContent = `${name}'s Outfit`;
         }
-        this.renderContent();
+        this.render();
     }
 
-    protected override getDefaultX(): number {
-        return 20;
-    }
-
-    protected override getDefaultY(): number {
-        return 50 + 60;
+    public override getPanelType(): PanelType {
+        return 'bot';
     }
 }

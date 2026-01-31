@@ -1,17 +1,17 @@
-import { ensureObject, asObject, asStringRecord, asBoolean } from "../ObjectHelper.js";
-export function validatePresets(raw) {
-    if (!raw || typeof raw !== 'object')
+import { asBoolean, asObject, asStringRecord, ensureObject } from "../ObjectHelper.js";
+export function validatePresets(holder) {
+    if (!holder || typeof holder !== 'object')
         return;
-    raw.presets ?? (raw.presets = {});
-    raw.presets.user = normalizePresetCollection(raw.presets.user);
+    holder.presets ?? (holder.presets = {});
+    holder.presets.user = normalizePresetCollection(holder.presets.user);
     const botOut = {};
-    const botRaw = raw.presets.bot;
+    const botRaw = holder.presets.bot;
     if (botRaw && typeof botRaw === 'object') {
         for (const [character, charRaw] of Object.entries(botRaw)) {
             botOut[character] = normalizePresetCollection(charRaw);
         }
     }
-    raw.presets.bot = botOut;
+    holder.presets.bot = botOut;
 }
 export function normalizeOutfitCollection(value) {
     const raw = ensureObject(value, {

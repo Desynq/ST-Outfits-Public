@@ -1,4 +1,4 @@
-import { OutfitTracker } from "../outfit/tracker.js";
+import { OutfitTracker } from "../data/tracker.js";
 import { createConfiguredElements } from "../util/ElementHelper.js";
 import { SlotsRenderer } from "./SlotsRenderer.js";
 import { OutfitTabsRenderer as TabsRenderer } from "./TabsRenderer.js";
@@ -31,10 +31,10 @@ export class OutfitPanel {
         this.collection.hideEmptySlots(!this.areEmptySlotsHidden());
         this.saveAndRenderContent();
     }
-    refresh() {
+    reinitialize() {
         this.outfitManager.initializeOutfit();
         this.resetPanel();
-        this.renderContent();
+        this.render();
     }
     resetPanel(setDefaultX = true, setDefaultY = true) {
         if (!this.panelEl)
@@ -42,10 +42,11 @@ export class OutfitPanel {
         const isWide = window.matchMedia('(min-width: 1024px)').matches;
         this.panelEl.style.height = '80vh';
         this.panelEl.style.width = isWide ? '24svw' : '90svw';
+        const [x, y] = this.getDefaultXY(isWide ? 'desktop' : 'mobile');
         if (setDefaultX)
-            this.panelEl.style.left = `${this.getDefaultX()}px`;
+            this.panelEl.style.left = `${x}px`;
         if (setDefaultY)
-            this.panelEl.style.top = `${this.getDefaultY()}px`;
+            this.panelEl.style.top = `${y}px`;
     }
     getOutfitManager() {
         return this.outfitManager;
@@ -62,7 +63,7 @@ export class OutfitPanel {
             });
         }
     }
-    renderContent() {
+    render() {
         if (!this.panelEl || this.minimized)
             return;
         const tabsContainer = this.panelEl.querySelector('.outfit-tabs');
@@ -75,7 +76,7 @@ export class OutfitPanel {
     }
     saveAndRenderContent() {
         this.outfitManager.saveSettings();
-        this.renderContent();
+        this.render();
     }
     makePanelDraggable() {
         if (!this.panelEl)
@@ -198,7 +199,7 @@ export class OutfitPanel {
             refreshBtn.classList.add('refresh-button');
             refreshBtn.textContent = '↻';
             refreshBtn.addEventListener('click', () => {
-                this.refresh();
+                this.reinitialize();
             });
         }, (closeBtn) => {
             closeBtn.classList.add('close-button');
@@ -244,8 +245,14 @@ export class OutfitPanel {
             this.panelEl.classList.remove("minimized");
             minimizeBtn.textContent = '−';
             this.expandHeader();
-            this.renderContent();
+            this.render();
         }
+    }
+    getPanelSettings() {
+        return OutfitTracker.panelSettings(this.getPanelType());
+    }
+    getDefaultXY(mode) {
+        return OutfitTracker.panelSettings(this.getPanelType()).getXY(mode);
     }
     autoOpen(x, y) {
         this.show(x === undefined, y === undefined);
@@ -263,7 +270,7 @@ export class OutfitPanel {
             this.panelEl.hidden = false;
         }
         this.isVisible = true;
-        this.renderContent();
+        this.render();
     }
     hide() {
         if (this.panelEl) {

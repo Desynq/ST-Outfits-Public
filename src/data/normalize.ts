@@ -1,16 +1,16 @@
-import { ensureObject, asObject, asStringRecord, asBoolean } from "../ObjectHelper.js";
-import { OutfitCollection, Outfit, OutfitSlot, SlotKind } from "./model/Outfit.js";
+import { asBoolean, asObject, asStringRecord, ensureObject } from "../ObjectHelper.js";
+import { Outfit, OutfitCollection, OutfitSlot, SlotKind } from "./model/Outfit.js";
 
 
-export function validatePresets(raw: any): void {
-	if (!raw || typeof raw !== 'object') return;
+export function validatePresets(holder: any): void {
+	if (!holder || typeof holder !== 'object') return;
 
-	raw.presets ??= {};
+	holder.presets ??= {};
 
-	raw.presets.user = normalizePresetCollection(raw.presets.user);
+	holder.presets.user = normalizePresetCollection(holder.presets.user);
 
 	const botOut: Record<string, OutfitCollection> = {};
-	const botRaw = raw.presets.bot;
+	const botRaw = holder.presets.bot;
 
 	if (botRaw && typeof botRaw === 'object') {
 		for (const [character, charRaw] of Object.entries(botRaw)) {
@@ -18,7 +18,7 @@ export function validatePresets(raw: any): void {
 		}
 	}
 
-	raw.presets.bot = botOut;
+	holder.presets.bot = botOut;
 }
 
 export function normalizeOutfitCollection(value: any): OutfitCollection {

@@ -80,7 +80,7 @@ export class SlotsRenderer {
 	private addSlot(container: HTMLDivElement, kind: SlotKind): void {
 		const id = prompt('Name?')?.trim();
 		if (!id) {
-			this.panel.renderContent();
+			this.panel.render();
 			return;
 		}
 
@@ -386,7 +386,7 @@ export class SlotsRenderer {
 		select.addEventListener('change', () => this.shiftSlot(select, display));
 
 		select.addEventListener('blur', () => {
-			this.panel.renderContent();
+			this.panel.render();
 		});
 	}
 
@@ -505,7 +505,7 @@ export class SlotsRenderer {
 	}
 
 	private cancelRename(): void {
-		this.panel.renderContent();
+		this.panel.render();
 	}
 
 
@@ -594,7 +594,7 @@ export class SlotsRenderer {
 			clearBtn.addEventListener('click', async () => {
 				await this.outfitManager.setOutfitItem(ctx.slot.id, 'None');
 				cleanup();
-				this.panel.renderContent();
+				this.panel.render();
 			});
 			preventBlur(clearBtn);
 
@@ -638,6 +638,6 @@ export class SlotsRenderer {
 	}
 
 	private cancelValueEdit(): void {
-		this.panel.renderContent();
+		this.panel.render();
 	}
 }

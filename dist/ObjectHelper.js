@@ -27,3 +27,12 @@ export const asStringRecord = () => (v) => {
 export const asStringArray = () => (v) => Array.isArray(v) ? v.filter(x => typeof x === 'string') : [];
 export const asString = (v) => typeof v === 'string' && v.trim() !== '' ? v.trim() : undefined;
 export const asBoolean = (fallback) => (v) => (typeof v === 'boolean' ? v : fallback);
+export function normalizeXY(value) {
+    if (Array.isArray(value) &&
+        value.length === 2 &&
+        typeof value[0] === 'number' &&
+        typeof value[1] === 'number') {
+        return value;
+    }
+    return undefined;
+}

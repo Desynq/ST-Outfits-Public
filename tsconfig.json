@@ -4,9 +4,6 @@
     "module": "ESNext",
     "rootDir": "src",
     "outDir": "dist",
-    "typeRoots": [
-      "./node_modules/@types"
-    ],
     "allowJs": false,
     "checkJs": false,
     "noEmit": false,
@@ -24,8 +21,7 @@
     "exactOptionalPropertyTypes": true
   },
   "include": [
-    "src",
-    "src/.types",
+    "src"
   ],
   "exclude": [
     "node_modules",

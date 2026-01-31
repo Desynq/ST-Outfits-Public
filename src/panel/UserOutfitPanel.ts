@@ -2,8 +2,9 @@ import { UserOutfitManager } from '../manager/UserOutfitManager.js';
 import { OutfitTracker } from '../data/tracker.js';
 import { queryOrThrow } from '../util/ElementHelper.js';
 import { OutfitPanel } from './OutfitPanel.js';
+import type { PanelType } from '../types/maps.js';
 
-export class UserOutfitPanel extends OutfitPanel<UserOutfitManager> {
+export class UserOutfitPanel extends OutfitPanel<'user'> {
     public constructor(
         outfitManager: UserOutfitManager
     ) {
@@ -72,11 +73,7 @@ export class UserOutfitPanel extends OutfitPanel<UserOutfitManager> {
         return 'Your Outfit';
     }
 
-    protected override getDefaultX(): number {
-        return 20;
-    }
-
-    protected override getDefaultY(): number {
-        return 50;
+    public override getPanelType(): PanelType {
+        return 'user';
     }
 }

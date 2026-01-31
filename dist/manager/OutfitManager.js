@@ -1,5 +1,5 @@
-import { OutfitTracker } from "../outfit/tracker.js";
-import { deleteGlobalVariable, formatAccessorySlotName, toSlotName, getGlobalVariable, serializeRecord, setGlobalVariable } from "../shared.js";
+import { OutfitTracker } from "../data/tracker.js";
+import { deleteGlobalVariable, formatAccessorySlotName, getGlobalVariable, serializeRecord, setGlobalVariable, toSlotName } from "../shared.js";
 import { StringHelper } from "../util/StringHelper.js";
 export class OutfitManager {
     constructor(settingsSaver) {

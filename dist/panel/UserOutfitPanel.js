@@ -1,6 +1,6 @@
-import { OutfitPanel } from './OutfitPanel.js';
-import { OutfitTracker } from '../outfit/tracker.js';
+import { OutfitTracker } from '../data/tracker.js';
 import { queryOrThrow } from '../util/ElementHelper.js';
+import { OutfitPanel } from './OutfitPanel.js';
 export class UserOutfitPanel extends OutfitPanel {
     constructor(outfitManager) {
         super(outfitManager);
@@ -53,10 +53,7 @@ export class UserOutfitPanel extends OutfitPanel {
     getHeaderTitle() {
         return 'Your Outfit';
     }
-    getDefaultX() {
-        return 20;
-    }
-    getDefaultY() {
-        return 50;
+    getPanelType() {
+        return 'user';
     }
 }

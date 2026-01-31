@@ -9,7 +9,7 @@ export interface OutfitSlotsHost {
 
 	public getOutfitManager(): OutfitManager;
 
-	public renderContent(): void;
+	public render(): void;
 
 	public saveAndRenderContent(): void;
 

@@ -1,8 +1,7 @@
-import { OutfitPanel } from './OutfitPanel.js';
-import { mouseDragElement } from '../shared.js';
 import { UserOutfitManager } from '../manager/UserOutfitManager.js';
 import { OutfitTracker } from '../outfit/tracker.js';
 import { queryOrThrow } from '../util/ElementHelper.js';
+import { OutfitPanel } from './OutfitPanel.js';
 
 export class UserOutfitPanel extends OutfitPanel<UserOutfitManager> {
     public constructor(

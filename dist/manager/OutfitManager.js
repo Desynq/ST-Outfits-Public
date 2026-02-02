@@ -43,7 +43,7 @@ Cancel to keep the current value.`, currentValue);
         return this.getOutfitView().getSlotRecords(s => s.kind === kind && s.enabled);
     }
     updateSummaries() {
-        let fullSummary = '<outfit character=${this.getNameMacro()}>';
+        let fullSummary = `<outfit character=${this.getNameMacro()}>`;
         for (const kind of this.getOutfitView().getSlotKinds()) {
             const value = serializeRecord(this.getVisibleRecordsByType(kind), kind === 'accessory' ? formatAccessorySlotName : toSlotName, kind);
             this.setSummary(kind + '_summary', value);

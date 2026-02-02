@@ -89,7 +89,7 @@ Cancel to keep the current value.`,
 	public abstract getNameMacro(): string;
 
 	protected updateSummaries(): void {
-		let fullSummary = '<outfit character=${this.getNameMacro()}>';
+		let fullSummary = `<outfit character=${this.getNameMacro()}>`;
 		for (const kind of this.getOutfitView().getSlotKinds()) {
 			const value = serializeRecord(
 				this.getVisibleRecordsByType(kind),

@@ -12,14 +12,17 @@ export class BotOutfitManager extends OutfitManager {
     isUser() {
         return false;
     }
+    getNameMacro() {
+        return '{{char}}';
+    }
+    getVarName(namespace) {
+        return `${this.character.replace(/\s+/g, '_')}_${namespace}`;
+    }
     setCharacter(name) {
         if (name === this.character)
             return;
         this.character = name;
         this.onActiveOutfitChanged();
-    }
-    getVarName(namespace) {
-        return `${this.character.replace(/\s+/g, '_')}_${namespace}`;
     }
     async setOutfitItem(slotId, value) {
         const previousValue = this.getValue(slotId);

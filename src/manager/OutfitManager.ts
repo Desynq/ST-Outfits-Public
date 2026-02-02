@@ -83,6 +83,11 @@ Cancel to keep the current value.`,
 
 	public abstract getVarName(namespace: string): string;
 
+	/**
+	 * Returns a macro that can be used in prompts to resolve the manager owner's name
+	 */
+	public abstract getNameMacro(): string;
+
 	protected updateSummaries(): void {
 		let fullSummary = '<outfit>';
 		for (const kind of this.getOutfitView().getSlotKinds()) {
@@ -98,7 +103,7 @@ Cancel to keep the current value.`,
 			}
 		}
 
-		fullSummary += '\n</outfit>';
+		fullSummary += `\n</outfit character=${this.getNameMacro()}>`;
 		this.setSummary('summary', fullSummary);
 	}
 

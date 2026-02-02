@@ -51,7 +51,7 @@ Cancel to keep the current value.`, currentValue);
                 fullSummary += `\n${StringHelper.indent(value)}`;
             }
         }
-        fullSummary += '\n</outfit>';
+        fullSummary += `\n</outfit character=${this.getNameMacro()}>`;
         this.setSummary('summary', fullSummary);
     }
     getSummary(namespace) {

@@ -12,6 +12,9 @@ export class UserOutfitManager extends OutfitManager {
     isUser() {
         return true;
     }
+    getNameMacro() {
+        return '{{user}}';
+    }
     getVarName(namespace) {
         return `User_${namespace}`;
     }

@@ -19,6 +19,10 @@ export class UserOutfitManager extends OutfitManager {
         return true;
     }
 
+    public override getNameMacro(): string {
+        return '{{user}}';
+    }
+
     public override getVarName(namespace: string) {
         return `User_${namespace}`;
     }

@@ -20,14 +20,18 @@ export class BotOutfitManager extends OutfitManager {
         return false;
     }
 
-    public setCharacter(name: string) {
-        if (name === this.character) return;
-        this.character = name;
-        this.onActiveOutfitChanged();
+    public override getNameMacro(): string {
+        return '{{char}}';
     }
 
     public override getVarName(namespace: string) {
         return `${this.character.replace(/\s+/g, '_')}_${namespace}`;
+    }
+
+    public setCharacter(name: string) {
+        if (name === this.character) return;
+        this.character = name;
+        this.onActiveOutfitChanged();
     }
 
     public async setOutfitItem(slotId: string, value: string): Promise<string> {

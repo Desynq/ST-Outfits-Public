@@ -46,9 +46,13 @@ export class OutfitTabsRenderer {
 	};
 	private draggedTab: HTMLButtonElement | null = null;
 
+	private readonly visibilityTab: VisibilityTab;
+
 	public constructor(
 		private panel: OutfitTabsHost<PanelType>
-	) { }
+	) {
+		this.visibilityTab = new VisibilityTab(this.panel, formatKind);
+	}
 
 	private get outfitManager(): OutfitManager {
 		return this.panel.getOutfitManager();
@@ -57,8 +61,6 @@ export class OutfitTabsRenderer {
 	private get outfitView(): MutableOutfitView {
 		return this.outfitManager.getOutfitView();
 	}
-
-	private visibilityTab: VisibilityTab = new VisibilityTab(this.panel, formatKind);
 
 	public renderTabs(tabsContainer: HTMLDivElement, contentArea: HTMLDivElement): void {
 		this.recreateTabs(tabsContainer);

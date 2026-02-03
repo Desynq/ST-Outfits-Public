@@ -7,12 +7,14 @@ import { OutfitTabsHost } from "../OutfitTabsHost";
 
 export class VisibilityTab {
 
-	private outfitManager: OutfitManager = this.panel.getOutfitManager();
+	private readonly outfitManager: OutfitManager;
 
 	public constructor(
 		private panel: OutfitTabsHost<PanelType>,
 		private formatKind: (k: string) => string
-	) { }
+	) {
+		this.outfitManager = this.panel.getOutfitManager();
+	}
 
 	public render(contentArea: HTMLDivElement): void {
 		this.renderPositionButtons(contentArea);

@@ -255,3 +255,17 @@
 .slot-button.edit-slot:hover {
 	background-color: rgba(255, 255, 255, 0.25);
 }
+
+
+
+.slot-inline-code {
+	font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+	color: #3ccfcf;
+	background: rgba(60, 207, 207, 0.12);
+
+	padding: 0.1em 0.35em;
+	border-radius: 4px;
+	font-size: 0.9em;
+	white-space: nowrap;
+}

@@ -2,9 +2,10 @@ import { OutfitManager } from "../manager/OutfitManager.js";
 import { OutfitSlot, SlotKind } from "../data/model/Outfit.js";
 import { ResolvedOutfitSlot } from "../data/model/OutfitSnapshots.js";
 import { MutableOutfitView } from "../data/view/MutableOutfitView.js";
-import { assertNever, isWideScreen, scrollIntoViewAboveKeyboard, toSlotName } from "../shared.js";
-import { appendElement } from "../util/ElementHelper.js";
+import { assertNever, escapeHTML, getOutletPrompt, isWideScreen, scrollIntoViewAboveKeyboard, toSlotName } from "../shared.js";
+import { addLongPressAction, appendElement } from "../util/ElementHelper.js";
 import { OutfitSlotsHost } from "./OutfitSlotsHost.js";
+import { html } from "../util/lint.js";
 
 interface SlotContext {
 	scroller: HTMLElement;
@@ -231,14 +232,56 @@ export class SlotsRenderer {
 			'slot-value',
 			...[disabledClass, noneClass].filter(Boolean)
 		);
-		valueEl.title = ctx.slot.value;
-		valueEl.textContent = ctx.slot.value;
+
+		valueEl.innerHTML = this.renderInlineCode(ctx.slot.value);
+
+		this.applyOutletTooltips(valueEl);
+		this.enableOutletLongPress(valueEl);
+
 		this.addDoubleTapEventListener(
 			valueEl,
 			() => this.beginInlineEdit(ctx, valueEl)
 		);
+
 		container.appendChild(valueEl);
 		return valueEl;
+	}
+
+	private renderInlineCode(value: string): string {
+		const escaped = escapeHTML(value);
+
+		const replacer = (_: string, content: string): string => {
+			if (content.startsWith('outlet::')) {
+				const key = content.slice('outlet::'.length);
+				return html`<span class="slot-inline-code slot-outlet" data-outlet-key="${key}">{{${content}}</span>`;
+			}
+			return html`<span class="slot-inline-code">{{${content}}</span>`;
+		};
+
+		return escaped.replace(
+			/\{\{([^}]+)\}\}/g,
+			replacer
+		);
+	}
+
+	private applyOutletTooltips(root: HTMLElement): void {
+		const outletSpans = root.querySelectorAll<HTMLElement>('.slot-outlet[data-outlet-key]');
+
+		for (const span of outletSpans) {
+			const key = span.dataset.outletKey!;
+			span.title = getOutletPrompt(key);
+		}
+	}
+
+	private enableOutletLongPress(root: HTMLElement): void {
+		const spans = root.querySelectorAll<HTMLElement>('.slot-outlet');
+
+		for (const span of spans) {
+			addLongPressAction(span, 500, () => {
+				const key = span.dataset.outletKey!;
+				alert(getOutletPrompt(key));
+			});
+		}
 	}
 
 	private appendToggleBtn(container: HTMLDivElement, slot: ResolvedOutfitSlot): HTMLButtonElement {

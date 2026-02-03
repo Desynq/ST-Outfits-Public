@@ -41,7 +41,37 @@ export function addLeftClickListener(element: HTMLElement, listener: () => void)
 	});
 }
 
+export function addLongPressAction(
+	el: HTMLElement,
+	delay: number | (() => number),
+	fun: () => void
+): void {
+	let timer: number | null = null;
 
+	const getDelay = () =>
+		typeof delay === 'function' ? delay() : delay;
+
+	const start = () => {
+		if (timer !== null) return;
+
+		timer = window.setTimeout(() => {
+			timer = null;
+			fun();
+		}, getDelay());
+	};
+
+	const cancel = () => {
+		if (timer !== null) {
+			clearTimeout(timer);
+			timer = null;
+		}
+	};
+
+	el.addEventListener('touchstart', start, { passive: true });
+	el.addEventListener('touchend', cancel);
+	el.addEventListener('touchmove', cancel);
+	el.addEventListener('touchcancel', cancel);
+}
 
 
 

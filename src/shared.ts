@@ -1,5 +1,9 @@
 // @ts-expect-error
 import { extension_settings } from "../../../../extensions.js";
+// @ts-expect-error
+import { extension_prompts } from "../../../../../script.js";
+// @ts-expect-error
+import { inject_ids } from '../../../../constants.js';
 
 export function mouseDragElement(element: JQuery<any>) {
 	let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
@@ -146,4 +150,19 @@ export function scrollIntoViewAboveKeyboard(scroller: HTMLElement, el: HTMLEleme
 	if (elRect.top < clipTop + pad) {
 		scroller.scrollTop -= ((clipTop + pad) - elRect.top);
 	}
+}
+
+export function escapeHTML(str: string): string {
+	return str
+		.replace(/&/g, '&amp')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;')
+		.replace(/'/g, '&#039;');
+}
+
+
+export function getOutletPrompt(key: string): string {
+	const value = extension_prompts[inject_ids.CUSTOM_WI_OUTLET(key)]?.value;
+	return value || '';
 }

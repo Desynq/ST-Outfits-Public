@@ -1,5 +1,6 @@
-import { assertNever, isWideScreen, scrollIntoViewAboveKeyboard, toSlotName } from "../shared.js";
-import { appendElement } from "../util/ElementHelper.js";
+import { assertNever, escapeHTML, getOutletPrompt, isWideScreen, scrollIntoViewAboveKeyboard, toSlotName } from "../shared.js";
+import { addLongPressAction, appendElement } from "../util/ElementHelper.js";
+import { html } from "../util/lint.js";
 class DisplaySlot {
     constructor(displayIndex, slotIndex, slot) {
         this.displayIndex = displayIndex;
@@ -153,11 +154,39 @@ export class SlotsRenderer {
         const noneClass = ctx.slot.isEmpty() ? 'none' : '';
         const valueEl = document.createElement('div');
         valueEl.classList.add('slot-value', ...[disabledClass, noneClass].filter(Boolean));
-        valueEl.title = ctx.slot.value;
-        valueEl.textContent = ctx.slot.value;
+        valueEl.innerHTML = this.renderInlineCode(ctx.slot.value);
+        this.applyOutletTooltips(valueEl);
+        this.enableOutletLongPress(valueEl);
         this.addDoubleTapEventListener(valueEl, () => this.beginInlineEdit(ctx, valueEl));
         container.appendChild(valueEl);
         return valueEl;
+    }
+    renderInlineCode(value) {
+        const escaped = escapeHTML(value);
+        const replacer = (_, content) => {
+            if (content.startsWith('outlet::')) {
+                const key = content.slice('outlet::'.length);
+                return html `<span class="slot-inline-code slot-outlet" data-outlet-key="${key}">{{${content}}</span>`;
+            }
+            return html `<span class="slot-inline-code">{{${content}}</span>`;
+        };
+        return escaped.replace(/\{\{([^}]+)\}\}/g, replacer);
+    }
+    applyOutletTooltips(root) {
+        const outletSpans = root.querySelectorAll('.slot-outlet[data-outlet-key]');
+        for (const span of outletSpans) {
+            const key = span.dataset.outletKey;
+            span.title = getOutletPrompt(key);
+        }
+    }
+    enableOutletLongPress(root) {
+        const spans = root.querySelectorAll('.slot-outlet');
+        for (const span of spans) {
+            addLongPressAction(span, 500, () => {
+                const key = span.dataset.outletKey;
+                alert(getOutletPrompt(key));
+            });
+        }
     }
     appendToggleBtn(container, slot) {
         const toggleBtn = document.createElement('button');

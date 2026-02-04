@@ -1,3 +1,4 @@
+import { toSummaryKey } from "../../util/SummaryHelper.js";
 export class VisibilityTab {
     constructor(panel, formatKind) {
         this.panel = panel;
@@ -33,7 +34,7 @@ export class VisibilityTab {
 		`;
         const previewBody = modal.querySelector('.outfit-preview-body');
         for (const kind of this.outfitManager.getOutfitView().getSlotKinds()) {
-            const section = this.createPreviewSection(this.formatKind(kind), kind + '_summary');
+            const section = this.createPreviewSection(this.formatKind(kind), toSummaryKey(kind));
             previewBody.appendChild(section);
         }
         const fullSummarySection = this.createPreviewSection('Full Summary', 'summary');
@@ -48,20 +49,20 @@ export class VisibilityTab {
                 overlay.remove();
         });
     }
-    createPreviewSection(header, namespace) {
+    createPreviewSection(header, summaryKey) {
         const section = document.createElement('div');
         section.classList.add('outfit-preview-section');
         const h4 = document.createElement('h4');
         h4.textContent = header;
         const code = document.createElement('code');
-        code.textContent = `{{getglobalvar::${this.outfitManager.getVarName(namespace)}}}`;
+        code.textContent = `{{getglobalvar::${this.outfitManager.getVarName(summaryKey)}}}`;
         const details = document.createElement('details');
         details.classList.add('outfit-preview-details');
         const summary = document.createElement('summary');
         summary.textContent = 'Show summary';
         const pre = document.createElement('pre');
         pre.classList.add('outfit-preview-text');
-        pre.textContent = this.outfitManager.getSummary(namespace);
+        pre.textContent = this.outfitManager.getSummary(summaryKey);
         details.appendChild(summary);
         details.appendChild(pre);
         section.appendChild(h4);

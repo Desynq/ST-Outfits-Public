@@ -4,6 +4,8 @@ import { extension_settings } from "../../../../extensions.js";
 import { extension_prompts } from "../../../../../script.js";
 // @ts-expect-error
 import { inject_ids } from '../../../../constants.js';
+import { html } from "./util/lint.js";
+import { indentString, toKebabCase, toSnakeCase } from "./util/StringHelper.js";
 
 export function mouseDragElement(element: JQuery<any>) {
 	let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
@@ -111,7 +113,10 @@ export function formatAccessorySlotName(name: string): string {
 
 export function serializeRecord(record: Record<string, string>, slotFormatter: (slot: string) => string, category: string): string {
 	return Object.entries(record)
-		.map(([slot, value]) => `<${category} slot="${slotFormatter(slot)}">\n${value}\n</${category}>`)
+		.map(([slot, value]) => {
+			const tag = toKebabCase(slotFormatter(slot));
+			return `<${tag} category="${category}">\n${indentString(value)}\n</${tag}>`;
+		})
 		.join("\n\n");
 }
 

@@ -44,9 +44,10 @@ export function addLeftClickListener(element: HTMLElement, listener: () => void)
 export function addLongPressAction(
 	el: HTMLElement,
 	delay: number | (() => number),
-	fun: () => void
+	onLongPress: () => void,
 ): void {
 	let timer: number | null = null;
+	let longPressTriggered = false;
 
 	const getDelay = () =>
 		typeof delay === 'function' ? delay() : delay;
@@ -54,9 +55,12 @@ export function addLongPressAction(
 	const start = () => {
 		if (timer !== null) return;
 
+		longPressTriggered = false;
+
 		timer = window.setTimeout(() => {
 			timer = null;
-			fun();
+			longPressTriggered = true;
+			onLongPress();
 		}, getDelay());
 	};
 
@@ -71,6 +75,10 @@ export function addLongPressAction(
 	el.addEventListener('touchend', cancel);
 	el.addEventListener('touchmove', cancel);
 	el.addEventListener('touchcancel', cancel);
+
+	el.addEventListener('mousedown', start);
+	el.addEventListener('mouseup', cancel);
+	el.addEventListener('mouseleave', cancel);
 }
 
 

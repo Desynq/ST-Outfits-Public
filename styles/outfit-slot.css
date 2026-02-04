@@ -269,3 +269,9 @@
 	font-size: 0.9em;
 	white-space: nowrap;
 }
+
+.slot-outlet-missing {
+	color: #c77;
+	text-decoration: underline dotted;
+	cursor: help;
+}

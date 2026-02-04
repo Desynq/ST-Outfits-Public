@@ -182,17 +182,7 @@ export class SlotsRenderer {
             if (macro.index > lastIndex) {
                 frag.append(document.createTextNode(value.slice(lastIndex, macro.index)));
             }
-            const span = createElement('span', 'slot-inline-code', macro.full);
-            if (macro.content.startsWith('outlet::')) {
-                const key = macro.content.slice('outlet::'.length);
-                span.classList.add('slot-outlet');
-                span.dataset.outletKey = key;
-                span.title = getOutletPrompt(key);
-                addLongPressAction(span, 500, () => {
-                    const key = span.dataset.outletKey;
-                    alert(getOutletPrompt(key));
-                });
-            }
+            const span = this.createMacroSpan(macro);
             frag.append(span);
             lastIndex = macro.end;
         }
@@ -201,6 +191,36 @@ export class SlotsRenderer {
             frag.append(document.createTextNode(value.slice(lastIndex)));
         }
         return frag;
+    }
+    createMacroSpan(macro) {
+        const span = createElement('span', 'slot-inline-code', macro.full);
+        if (macro.content.startsWith('outlet::')) {
+            const key = macro.content.slice('outlet::'.length);
+            span.classList.add('slot-outlet');
+            span.dataset.outletKey = key;
+            const updateFromPrompt = () => {
+                const key = span.dataset.outletKey;
+                const prompt = getOutletPrompt(key)?.trim() ?? '';
+                if (!prompt) {
+                    span.title = 'Error: No Prompt Found';
+                    span.classList.add('slot-outlet-missing');
+                    return null;
+                }
+                span.title = prompt;
+                span.classList.remove('slot-outlet-missing');
+                return prompt;
+            };
+            updateFromPrompt();
+            const showPrompt = (text) => alert(text);
+            addLongPressAction(span, 500, () => {
+                const prompt = updateFromPrompt();
+                if (!prompt)
+                    showPrompt('No Prompt Found!');
+                else
+                    showPrompt(prompt);
+            });
+        }
+        return span;
     }
     appendToggleBtn(container, slot) {
         const toggleBtn = document.createElement('button');

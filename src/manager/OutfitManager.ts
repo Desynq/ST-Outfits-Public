@@ -1,7 +1,8 @@
 import { IOutfitCollectionView, OutfitTracker } from "../data/tracker.js";
 import { MutableOutfitView } from "../data/view/MutableOutfitView.js";
 import { deleteGlobalVariable, formatAccessorySlotName, getGlobalVariable, serializeRecord, setGlobalVariable, toSlotName } from "../shared.js";
-import { StringHelper } from "../util/StringHelper.js";
+import { indentString, toKebabCase } from "../util/StringHelper.js";
+import { toSummaryKey } from "../util/SummaryHelper.js";
 
 type RenameSlotResult =
 	| 'slot-not-found'
@@ -94,12 +95,12 @@ Cancel to keep the current value.`,
 			const value = serializeRecord(
 				this.getVisibleRecordsByType(kind),
 				kind === 'accessory' ? formatAccessorySlotName : toSlotName,
-				kind
+				toKebabCase(kind)
 			);
 
-			this.setSummary(kind + '_summary', value);
+			this.setSummary(toSummaryKey(kind), value);
 			if (value !== '') {
-				fullSummary += `\n${StringHelper.indent(value)}`;
+				fullSummary += `\n\n${indentString(value)}`;
 			}
 		}
 

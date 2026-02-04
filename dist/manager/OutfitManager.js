@@ -1,6 +1,7 @@
 import { OutfitTracker } from "../data/tracker.js";
 import { deleteGlobalVariable, formatAccessorySlotName, getGlobalVariable, serializeRecord, setGlobalVariable, toSlotName } from "../shared.js";
-import { StringHelper } from "../util/StringHelper.js";
+import { indentString, toKebabCase } from "../util/StringHelper.js";
+import { toSummaryKey } from "../util/SummaryHelper.js";
 export class OutfitManager {
     constructor(settingsSaver) {
         this.settingsSaver = settingsSaver;
@@ -45,10 +46,10 @@ Cancel to keep the current value.`, currentValue);
     updateSummaries() {
         let fullSummary = `<outfit character=${this.getNameMacro()}>`;
         for (const kind of this.getOutfitView().getSlotKinds()) {
-            const value = serializeRecord(this.getVisibleRecordsByType(kind), kind === 'accessory' ? formatAccessorySlotName : toSlotName, kind);
-            this.setSummary(kind + '_summary', value);
+            const value = serializeRecord(this.getVisibleRecordsByType(kind), kind === 'accessory' ? formatAccessorySlotName : toSlotName, toKebabCase(kind));
+            this.setSummary(toSummaryKey(kind), value);
             if (value !== '') {
-                fullSummary += `\n${StringHelper.indent(value)}`;
+                fullSummary += `\n\n${indentString(value)}`;
             }
         }
         fullSummary += `\n</outfit>`;

@@ -1,7 +1,7 @@
-import { OutfitManager } from "../../manager/OutfitManager";
-import { PanelType } from "../../types/maps";
-import { createConfiguredElements } from "../../util/ElementHelper";
-import { OutfitTabsHost } from "../OutfitTabsHost";
+import { OutfitManager } from "../../manager/OutfitManager.js";
+import { PanelType } from "../../types/maps.js";
+import { toSummaryKey } from "../../util/SummaryHelper.js";
+import { OutfitTabsHost } from "../OutfitTabsHost.js";
 
 
 
@@ -54,7 +54,7 @@ export class VisibilityTab {
 		for (const kind of this.outfitManager.getOutfitView().getSlotKinds()) {
 			const section = this.createPreviewSection(
 				this.formatKind(kind),
-				kind + '_summary'
+				toSummaryKey(kind)
 			);
 			previewBody.appendChild(section);
 		}
@@ -77,7 +77,7 @@ export class VisibilityTab {
 		});
 	}
 
-	private createPreviewSection(header: string, namespace: string): HTMLDivElement {
+	private createPreviewSection(header: string, summaryKey: string): HTMLDivElement {
 		const section = document.createElement('div');
 		section.classList.add('outfit-preview-section');
 
@@ -85,7 +85,7 @@ export class VisibilityTab {
 		h4.textContent = header;
 
 		const code = document.createElement('code');
-		code.textContent = `{{getglobalvar::${this.outfitManager.getVarName(namespace)}}}`;
+		code.textContent = `{{getglobalvar::${this.outfitManager.getVarName(summaryKey)}}}`;
 
 		const details = document.createElement('details');
 		details.classList.add('outfit-preview-details');
@@ -95,7 +95,7 @@ export class VisibilityTab {
 
 		const pre = document.createElement('pre');
 		pre.classList.add('outfit-preview-text');
-		pre.textContent = this.outfitManager.getSummary(namespace);
+		pre.textContent = this.outfitManager.getSummary(summaryKey);
 
 		details.appendChild(summary);
 		details.appendChild(pre);

@@ -31,15 +31,18 @@ export function addLeftClickListener(element, listener) {
         listener();
     });
 }
-export function addLongPressAction(el, delay, fun) {
+export function addLongPressAction(el, delay, onLongPress) {
     let timer = null;
+    let longPressTriggered = false;
     const getDelay = () => typeof delay === 'function' ? delay() : delay;
     const start = () => {
         if (timer !== null)
             return;
+        longPressTriggered = false;
         timer = window.setTimeout(() => {
             timer = null;
-            fun();
+            longPressTriggered = true;
+            onLongPress();
         }, getDelay());
     };
     const cancel = () => {
@@ -52,6 +55,9 @@ export function addLongPressAction(el, delay, fun) {
     el.addEventListener('touchend', cancel);
     el.addEventListener('touchmove', cancel);
     el.addEventListener('touchcancel', cancel);
+    el.addEventListener('mousedown', start);
+    el.addEventListener('mouseup', cancel);
+    el.addEventListener('mouseleave', cancel);
 }
 export function append(container, factory) {
     const element = factory();

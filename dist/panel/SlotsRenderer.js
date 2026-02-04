@@ -1,6 +1,21 @@
-import { assertNever, escapeHTML, getOutletPrompt, isWideScreen, scrollIntoViewAboveKeyboard, toSlotName } from "../shared.js";
-import { addLongPressAction, appendElement } from "../util/ElementHelper.js";
-import { html } from "../util/lint.js";
+import { assertNever, getOutletPrompt, isWideScreen, scrollIntoViewAboveKeyboard, toSlotName } from "../shared.js";
+import { addLongPressAction, appendElement, createElement } from "../util/ElementHelper.js";
+function iterateMacros(value) {
+    const regex = /\{\{(.+?)\}\}/g;
+    return (function* () {
+        for (const match of value.matchAll(regex)) {
+            const full = match[0];
+            const content = match[1];
+            const index = match.index;
+            yield {
+                full,
+                content,
+                index,
+                end: index + full.length
+            };
+        }
+    })();
+}
 class DisplaySlot {
     constructor(displayIndex, slotIndex, slot) {
         this.displayIndex = displayIndex;
@@ -154,39 +169,38 @@ export class SlotsRenderer {
         const noneClass = ctx.slot.isEmpty() ? 'none' : '';
         const valueEl = document.createElement('div');
         valueEl.classList.add('slot-value', ...[disabledClass, noneClass].filter(Boolean));
-        valueEl.innerHTML = this.renderInlineCode(ctx.slot.value);
-        this.applyOutletTooltips(valueEl);
-        this.enableOutletLongPress(valueEl);
+        valueEl.replaceChildren(this.renderInlineCode(ctx.slot.value));
         this.addDoubleTapEventListener(valueEl, () => this.beginInlineEdit(ctx, valueEl));
         container.appendChild(valueEl);
         return valueEl;
     }
     renderInlineCode(value) {
-        const escaped = escapeHTML(value);
-        const replacer = (_, content) => {
-            if (content.startsWith('outlet::')) {
-                const key = content.slice('outlet::'.length);
-                return html `<span class="slot-inline-code slot-outlet" data-outlet-key="${key}">{{${content}}</span>`;
+        const frag = document.createDocumentFragment();
+        let lastIndex = 0;
+        for (const macro of iterateMacros(value)) {
+            // Plain text before token
+            if (macro.index > lastIndex) {
+                frag.append(document.createTextNode(value.slice(lastIndex, macro.index)));
             }
-            return html `<span class="slot-inline-code">{{${content}}</span>`;
-        };
-        return escaped.replace(/\{\{([^}]+)\}\}/g, replacer);
-    }
-    applyOutletTooltips(root) {
-        const outletSpans = root.querySelectorAll('.slot-outlet[data-outlet-key]');
-        for (const span of outletSpans) {
-            const key = span.dataset.outletKey;
-            span.title = getOutletPrompt(key);
+            const span = createElement('span', 'slot-inline-code', macro.full);
+            if (macro.content.startsWith('outlet::')) {
+                const key = macro.content.slice('outlet::'.length);
+                span.classList.add('slot-outlet');
+                span.dataset.outletKey = key;
+                span.title = getOutletPrompt(key);
+                addLongPressAction(span, 500, () => {
+                    const key = span.dataset.outletKey;
+                    alert(getOutletPrompt(key));
+                });
+            }
+            frag.append(span);
+            lastIndex = macro.end;
         }
-    }
-    enableOutletLongPress(root) {
-        const spans = root.querySelectorAll('.slot-outlet');
-        for (const span of spans) {
-            addLongPressAction(span, 500, () => {
-                const key = span.dataset.outletKey;
-                alert(getOutletPrompt(key));
-            });
+        // Trailing text
+        if (lastIndex < value.length) {
+            frag.append(document.createTextNode(value.slice(lastIndex)));
         }
+        return frag;
     }
     appendToggleBtn(container, slot) {
         const toggleBtn = document.createElement('button');

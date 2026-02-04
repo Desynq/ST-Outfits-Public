@@ -1,3 +1,13 @@
+/**
+ * Tagged template helper used ONLY for editor HTML syntax highlighting.
+ *
+ * This does NOT:
+ * - escape values
+ * - create DOM
+ * - return a TemplateResult
+ *
+ * It simply concatenates strings and values into a plain string.
+ */
 export function html(
 	strings: TemplateStringsArray,
 	...values: unknown[]

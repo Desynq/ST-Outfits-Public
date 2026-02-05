@@ -1,0 +1,319 @@
+#bot-outfit-panel,
+#user-outfit-panel {
+    position: fixed;
+    top: 100px;
+    right: 20px;
+    width: 300px;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    padding: 12px;
+    z-index: 10000;
+    display: none; /* Only one display property */
+    color: #ffffff;
+    user-select: none;
+    font-size: 0.9em;
+    max-height: 80vh; /* Constrain height */
+    flex-direction: column; /* Now we only have one display property */
+}
+
+#bot-outfit-panel {
+    background: linear-gradient(135deg, #7a57d1 0%, #6559e0 100%);
+    border: 1px solid #8783e1;
+}
+
+#user-outfit-panel {
+    background: linear-gradient(135deg, #1e88e5 0%, #3d5afe 100%);
+    border: 1px solid #64b5f6;
+}
+
+/* Header Styles */
+.outfit-header {
+    cursor: move;
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255,255,255,0.3);
+    flex-shrink: 0;
+}
+
+.outfit-header h3 {
+    margin: 0;
+    font-size: 1.3em;
+    font-weight: 700;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+/* Tabs Navigation */
+.outfit-tabs {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+    padding: 3px;
+    flex-shrink: 0;
+}
+
+.outfit-tab {
+    flex: 1;
+    text-align: center;
+    padding: 6px 4px;
+    border: none;
+    border-radius: 6px;
+    background: none;
+    color: rgba(255,255,255,0.8);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.7em;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-shadow: 0 1px 1px rgba(0,0,0,0.1);
+}
+
+.outfit-tab:hover {
+    background: rgba(255,255,255,0.15);
+}
+
+.outfit-tab.active {
+    background: rgba(255,255,255,0.25) !important;
+    color: #fff;
+}
+
+/* Main Content Area - Scrollable */
+.outfit-content {
+    flex: 1;  /* Takes remaining space */
+    overflow-y: auto; /* ACTIVE scrollbar */
+    padding-right: 4px;
+    min-height: 0;
+}
+
+/* Slots Styling */
+.outfit-slots {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+}
+
+.outfit-slot {
+    padding: 10px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 8px;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.slot-label {
+    font-weight: 600;
+    margin-bottom: 6px;
+    font-size: 0.9em;
+    color: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+}
+
+.slot-label:before {
+    content: "•";
+    margin-right: 5px;
+    font-size: 1.2em;
+}
+
+.slot-value {
+    min-height: 30px;
+    padding: 6px;
+    border-radius: 5px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255,255,255,0.05);
+    word-wrap: break-word;
+    overflow: hidden;
+    font-size: 0.85em;
+    line-height: 1.3;
+    margin-bottom: 8px;
+}
+
+.slot-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.slot-actions button {
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 4px 10px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.75em;
+}
+
+.slot-actions button:hover {
+    background: rgba(255,255,255,0.25);
+}
+
+/* Presets Styling */
+.outfit-preset {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 10px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 6px;
+    margin-bottom: 6px;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.preset-name {
+    font-weight: 500;
+    font-size: 0.85em;
+    text-shadow: 0 1px 1px rgba(0,0,0,0.1);
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding-right: 8px;
+}
+
+.preset-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.preset-actions button {
+    padding: 4px 8px;
+    border: none;
+    border-radius: 5px;
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.7em;
+    text-shadow: 0 1px 1px rgba(0,0,0,0.1);
+    min-width: 40px;
+}
+
+.preset-actions button:hover {
+    background: rgba(255,255,255,0.25);
+}
+
+.load-preset {
+    background: rgba(102, 187, 106, 0.25) !important;
+}
+
+.delete-preset {
+    background: rgba(229, 115, 115, 0.25) !important;
+}
+
+.save-outfit-btn {
+    width: 100%;
+    margin-top: 10px;
+    padding: 8px;
+    border: none;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.8em;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.save-outfit-btn:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+/* Icons styling */
+.outfit-actions span {
+    cursor: pointer;
+    font-size: 1.1em;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.outfit-actions span:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+/* Scrollbar styling */
+.outfit-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.outfit-content::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+}
+
+.outfit-content::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.2);
+    border-radius: 3px;
+}
+
+.outfit-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(255,255,255,0.3);
+}
+
+/* Hover effects */
+.outfit-slot:hover, .outfit-preset:hover {
+    background: rgba(255,255,255,0.15);
+}
+
+/* Minimized state styles */
+.outfit-panel.minimized .outfit-content,
+.outfit-panel.minimized .outfit-tabs {
+    display: none !important;
+}
+
+.outfit-panel.minimized {
+    height: auto !important;
+    min-height: auto !important;
+}
+
+/* Ensure outfits page has proper scroll */
+#bot-outfit-tab-content,
+#user-outfit-tab-content {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 4px;
+    min-height: 0;
+    max-height: 300px; /* Limit height for scroll */
+}
+
+/* Outfits list styling */
+.outfit-presets-list {
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+/* Minimize button styling */
+#bot-outfit-minimize,
+#user-outfit-minimize {
+    font-weight: bold;
+    font-size: 1.2em;
+}
+
+/* Ensure proper spacing in header */
+.outfit-actions span {
+    margin: 0 2px;
+}
+
+/* Better scrollbar for outfits */
+.outfit-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.outfit-content::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+}
+
+.outfit-content::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.2);
+    border-radius: 3px;
+}
+
+.outfit-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(255,255,255,0.3);
+}

@@ -3,7 +3,7 @@
     "author": "Lucanna",
     "version": "1.0.0",
     "homePage": "https://github.com/lannashelton/ST-Outfits",
-    "js": "dist/index.js",
-    "css": "./styles/base.css",
+    "js": "index.js",
+    "css": "style.css",
     "loading_order": 15
 }

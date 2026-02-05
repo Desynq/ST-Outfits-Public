@@ -25,7 +25,9 @@ export class BotOutfitManager {
     }
 
     getVarName(slot) {
-        return `${this.character.replace(/\s+/g, '_')}_${slot}`;
+        // FIX: Do not replace spaces with underscores. 
+        // This ensures compatibility with ST macros like {{getglobalvar::<BOT>_slot}}
+        return `${this.character}_${slot}`;
     }
 
     loadOutfit() {

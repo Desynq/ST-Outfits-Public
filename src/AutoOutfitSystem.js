@@ -22,32 +22,9 @@ export class AutoOutfitSystem {
     }
 
     getDefaultPrompt() {
+        // NOTE: We removed the {{getglobalvar}} calls from here.
+        // The current outfit is now injected dynamically in executeGenCommand
         return `Analyze the character's actions in the recent messages. If the character puts on, wears, removes, or changes any clothing items, output the appropriate outfit commands.
-
-Here is what character is currently wearing:
-
-**<BOT>'s Current Outfit**
-Headwear: {{getglobalvar::<BOT>_headwear}}
-Topwear: {{getglobalvar::<BOT>_topwear}}
-Top Underwear: {{getglobalvar::<BOT>_topunderwear}}
-Bottomwear: {{getglobalvar::<BOT>_bottomwear}}
-Bottom Underwear: {{getglobalvar::<BOT>_bottomunderwear}}
-Footwear: {{getglobalvar::<BOT>_footwear}}
-Foot Underwear: {{getglobalvar::<BOT>_footunderwear}}
-
-**<BOT>'s Accessories**
-Head Accessory: {{getglobalvar::<BOT>_head-accessory}}
-Ears Accessory: {{getglobalvar::<BOT>_ears-accessory}}
-Eyes Accessory: {{getglobalvar::<BOT>_eyes-accessory}}
-Mouth Accessory: {{getglobalvar::<BOT>_mouth-accessory}}
-Neck Accessory: {{getglobalvar::<BOT>_neck-accessory}}
-Body Accessory: {{getglobalvar::<BOT>_body-accessory}}
-Arms Accessory: {{getglobalvar::<BOT>_arms-accessory}}
-Hands Accessory: {{getglobalvar::<BOT>_hands-accessory}}
-Waist Accessory: {{getglobalvar::<BOT>_waist-accessory}}
-Bottom Accessory: {{getglobalvar::<BOT>_bottom-accessory}}
-Legs Accessory: {{getglobalvar::<BOT>_legs-accessory}}
-Foot Accessory: {{getglobalvar::<BOT>_foot-accessory}}
 
 IMPORTANT: Output commands as plain text, NOT as JSON. Use this format:
 outfit-system_wear_headwear("Red Baseball Cap")
@@ -181,6 +158,35 @@ Important: Always use the exact slot names listed above. Never invent new slot n
             }
         }
     }
+    
+    getOutfitStateString() {
+        // Dynamically build the outfit string. This avoids regex issues with macros in prompt templates
+        // and ensures the LLM sees exactly what we have in memory.
+        let output = `Here is what character is currently wearing:\n\n**<BOT>'s Current Outfit**\n`;
+        
+        // Add Clothing
+        const clothingSlots = ['headwear', 'topwear', 'topunderwear', 'bottomwear', 'bottomunderwear', 'footwear', 'footunderwear'];
+        clothingSlots.forEach(slot => {
+            // Find the current value directly from manager, no macros needed
+            const val = this.outfitManager.currentValues[slot] || 'None';
+            // Format slot name for display (optional, but keeping key matches format)
+            const displaySlot = slot.replace('underwear', ' Underwear').replace(/^./, c => c.toUpperCase());
+            output += `${displaySlot}: ${val}\n`;
+        });
+
+        output += `\n**<BOT>'s Accessories**\n`;
+        
+        // Add Accessories
+        const accessorySlots = this.outfitManager.slots.filter(s => !clothingSlots.includes(s));
+        accessorySlots.forEach(slot => {
+            const val = this.outfitManager.currentValues[slot] || 'None';
+            // Simple formatting for keys like "head-accessory" to "Head Accessory"
+            const displaySlot = slot.replace('-', ' ').replace('_', ' ').replace(/^./, c => c.toUpperCase());
+            output += `${displaySlot}: ${val}\n`;
+        });
+        
+        return output;
+    }
 
     async executeGenCommand() {
         const recentMessages = this.getLastMessages(3);
@@ -190,7 +196,10 @@ Important: Always use the exact slot names listed above. Never invent new slot n
 
         const { generateRaw } = getContext();
         
-        const promptText = `${this.systemPrompt}\n\nRecent Messages:\n${recentMessages}\n\nOutput:`;
+        // Generate the current outfit block dynamically
+        const currentOutfitBlock = this.getOutfitStateString();
+        
+        const promptText = `${this.systemPrompt}\n\n${currentOutfitBlock}\n\nRecent Messages:\n${recentMessages}\n\nOutput:`;
         
         console.log('[AutoOutfitSystem] Generating outfit commands with generateRaw...');
         

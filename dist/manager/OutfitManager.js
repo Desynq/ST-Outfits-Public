@@ -1,7 +1,8 @@
 import { OutfitTracker } from "../data/tracker.js";
-import { deleteGlobalVariable, formatAccessorySlotName, getGlobalVariable, serializeRecord, setGlobalVariable, toSlotName } from "../shared.js";
+import { formatAccessorySlotName, serializeRecord, toSlotName } from "../shared.js";
 import { indentString, toKebabCase } from "../util/StringHelper.js";
 import { toSummaryKey } from "../util/SummaryHelper.js";
+import { deleteGlobalVariable, getGlobalVariable, setGlobalVariable } from "./GlobalVarManager.js";
 export class OutfitManager {
     constructor(settingsSaver) {
         this.settingsSaver = settingsSaver;
@@ -17,6 +18,9 @@ export class OutfitManager {
             return `Exported "${outfitName}" outfit to ${character}.`;
         }
         return '';
+    }
+    getSnapshotsView() {
+        return this.getOutfitCollection().getSnapshotView();
     }
     async changeOutfitItem(slotId) {
         const currentValue = this.getValue(slotId);
@@ -43,17 +47,33 @@ Cancel to keep the current value.`, currentValue);
     getVisibleRecordsByType(kind) {
         return this.getOutfitView().getSlotRecords(s => s.kind === kind && s.enabled);
     }
+    getVisibleSlotMap() {
+        return this.getOutfitView().getSlotRecords(s => s.enabled);
+    }
+    /**
+     *
+     * @param namespace where the full summary will be stored—defaults to `'summary'`
+     * @param updateKindSummaries whether each individual slot type should have its own separate summary updated—defaults to `true`
+     * @returns the full summary of the outfit in XML-format
+     */
     updateSummaries() {
+        const fullSummary = this.createOutfitSummary((kind, value) => {
+            this.setSummary(toSummaryKey(kind), value);
+        });
+        this.setSummary('summary', fullSummary);
+    }
+    createOutfitSummary(kindSummaryCb) {
         let fullSummary = `<outfit character=${this.getNameMacro()}>`;
         for (const kind of this.getOutfitView().getSlotKinds()) {
             const value = serializeRecord(this.getVisibleRecordsByType(kind), kind === 'accessory' ? formatAccessorySlotName : toSlotName, toKebabCase(kind));
-            this.setSummary(toSummaryKey(kind), value);
+            if (kindSummaryCb)
+                kindSummaryCb(kind, value);
             if (value !== '') {
                 fullSummary += `\n\n${indentString(value)}`;
             }
         }
         fullSummary += `\n</outfit>`;
-        this.setSummary('summary', fullSummary);
+        return fullSummary;
     }
     getSummary(namespace) {
         const varName = this.getVarName(namespace);

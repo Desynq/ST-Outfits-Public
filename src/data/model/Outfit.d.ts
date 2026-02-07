@@ -20,11 +20,14 @@ export interface OutfitCollection {
 	autoOutfit: Outfit;
 	hideDisabled: boolean;
 	hideEmpty: boolean;
+	snapshots: Record<string, OutfitCachedSnapshot>;
+	diffs: Record<string, OutfitCachedDiff>;
+	// TODO: move snapshots and diffs to here
 }
 
 export type CharactersOutfitMap = Record<string, OutfitCollection | undefined>;
 
-export interface GlobalOutfitMap {
+export interface OutfitPresetsTree {
 	bot: CharactersOutfitMap; // each character has their own OutfitCollection
 	user: OutfitCollection; // there is only one OutfitCollection for the user
 }
@@ -37,8 +40,24 @@ export interface PanelSettings {
 	saveXY: boolean;
 }
 
+
+
+export interface OutfitCachedSnapshot {
+	namespace: string;
+	slots: Record<string, string>;
+	createdAt: number;
+}
+
+export interface OutfitCachedDiff {
+	namespace: string;
+	added: Record<string, string>;
+	removed: string[];
+	changed: Record<string, { from: string, to: string; }>;
+	createdAt: number;
+}
+
 export interface OutfitTrackerModel {
-	presets: GlobalOutfitMap;
+	presets: OutfitPresetsTree;
 	enableSysMessages: boolean;
 	botPanel: PanelSettings;
 	userPanel: PanelSettings;

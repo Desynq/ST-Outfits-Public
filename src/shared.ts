@@ -51,30 +51,6 @@ export function makeVarStrings(token: string, keys: string[]): string[] {
 }
 
 
-function getGlobalVars(): Record<string, string> {
-	const vars = extension_settings.variables ??= { global: {} };
-	const globalVars = vars.global ??= {};
-	return globalVars;
-}
-
-/**
- * @returns `None` if global variable does not exist
- */
-export function getGlobalVariable(name: string) {
-	return getGlobalVars()[name] ?? window[name as any] ?? 'None';
-}
-
-export function setGlobalVariable(name: string, value: string) {
-	window[name as any] = value as any;
-	getGlobalVars()[name] = value;
-}
-
-export function deleteGlobalVariable(name: string): void {
-	delete window[name as any];
-	delete getGlobalVars()[name];
-}
-
-
 
 
 

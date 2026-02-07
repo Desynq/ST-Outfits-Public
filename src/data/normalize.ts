@@ -1,4 +1,5 @@
 import { asBoolean, asObject, asStringRecord, ensureObject } from "../ObjectHelper.js";
+import { normalizeOutfitSnapshots } from "./mappings/OutfitCache.js";
 import { Outfit, OutfitCollection, OutfitSlot, SlotKind } from "./model/Outfit.js";
 
 
@@ -26,7 +27,9 @@ export function normalizeOutfitCollection(value: any): OutfitCollection {
 		outfits: asObject<Record<string, any>>({}),
 		autoOutfit: normalizeOutfit,
 		hideDisabled: asBoolean(false),
-		hideEmpty: asBoolean(false)
+		hideEmpty: asBoolean(false),
+		snapshots: asObject<Record<string, any>>({}),
+		diffs: asObject<Record<string, any>>({})
 	});
 
 	const outfits: Record<string, Outfit> = {};
@@ -37,11 +40,15 @@ export function normalizeOutfitCollection(value: any): OutfitCollection {
 			: normalizeOutfit(v);
 	}
 
+	normalizeOutfitSnapshots(raw.snapshots);
+
 	return {
 		outfits,
 		autoOutfit: raw.autoOutfit,
 		hideDisabled: raw.hideDisabled,
-		hideEmpty: raw.hideEmpty
+		hideEmpty: raw.hideEmpty,
+		snapshots: raw.snapshots,
+		diffs: raw.diffs
 	};
 }
 

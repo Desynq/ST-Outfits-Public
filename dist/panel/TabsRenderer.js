@@ -1,7 +1,9 @@
 import { assertNever } from "../shared.js";
 import { addContextActionListener } from "../util/ElementHelper.js";
+import { CacheTab } from "./tab/CacheTab.js";
+import { OutfitsTab } from "./tab/OutfitsTab.js";
 import { VisibilityTab } from "./tab/VisibilityTab.js";
-const OUTFIT_SYSTEM_TAB_IDS = ['outfits', 'visibility'];
+const OUTFIT_SYSTEM_TAB_IDS = ['outfits', 'cache', 'visibility'];
 function formatKind(kind) {
     return kind;
 }
@@ -13,6 +15,8 @@ export class OutfitTabsRenderer {
             kind: 'Clothing'
         };
         this.draggedTab = null;
+        this.outfitsTab = new OutfitsTab(this.panel);
+        this.cacheTab = new CacheTab(this.panel);
         this.visibilityTab = new VisibilityTab(this.panel, formatKind);
     }
     get outfitManager() {
@@ -28,7 +32,10 @@ export class OutfitTabsRenderer {
             case 'system':
                 switch (this.currentTab.id) {
                     case 'outfits':
-                        this.renderOutfitsTab(contentArea);
+                        this.outfitsTab.render(contentArea);
+                        break;
+                    case 'cache':
+                        this.cacheTab.render(contentArea);
                         break;
                     case 'visibility':
                         this.visibilityTab.render(contentArea);
@@ -80,6 +87,7 @@ export class OutfitTabsRenderer {
             systemTabEls.push(el);
         };
         createSystemTabEl('outfits');
+        createSystemTabEl('cache');
         createSystemTabEl('visibility');
         for (const tabEl of tabEls) {
             tabEl.addEventListener('click', () => this.changeTab(tabEls, tabEl));
@@ -222,6 +230,10 @@ export class OutfitTabsRenderer {
                 element.textContent = 'Outfits';
                 element.classList.add('outfits-tab');
                 break;
+            case 'cache':
+                element.textContent = 'Cache';
+                element.classList.add('cache-tab');
+                break;
             case 'visibility':
                 element.textContent = 'Visibility';
                 element.classList.add('visibility-tab');
@@ -310,63 +322,5 @@ export class OutfitTabsRenderer {
                 this.panel.saveAndRender();
                 return;
         }
-    }
-    renderOutfitsTab(container) {
-        const presets = this.outfitManager.getPresets();
-        if (presets.length === 0) {
-            container.innerHTML = '<div>No saved outfits.</div>';
-        }
-        else {
-            for (const preset of presets) {
-                const presetElement = document.createElement('div');
-                presetElement.className = 'outfit-preset';
-                presetElement.innerHTML = `
-								<div class="preset-name">${preset}</div>
-								<div class="preset-actions">
-									<button class="load-preset" data-preset="${preset}">Wear</button>
-									<button class="delete-preset" data-preset="${preset}">×</button>
-								</div>
-							`;
-                presetElement.querySelector('.load-preset').addEventListener('click', async () => {
-                    const message = await this.outfitManager.loadPreset(preset);
-                    if (message) {
-                        this.panel.sendSystemMessage(message);
-                    }
-                    this.panel.saveAndRender();
-                });
-                presetElement.querySelector('.delete-preset').addEventListener('click', () => {
-                    if (confirm(`Delete "${preset}" outfit?`)) {
-                        const message = this.outfitManager.deletePreset(preset);
-                        if (message) {
-                            this.panel.sendSystemMessage(message);
-                        }
-                        this.panel.saveAndRender();
-                    }
-                });
-                container.appendChild(presetElement);
-            }
-        }
-        const saveButton = document.createElement('button');
-        saveButton.className = 'system-tab-button save-outfit-btn';
-        saveButton.textContent = 'Save Current Outfit';
-        saveButton.addEventListener('click', async () => {
-            const presetName = prompt('Name this outfit:');
-            if (presetName) {
-                const message = await this.outfitManager.savePreset(presetName.trim());
-                if (message) {
-                    this.panel.sendSystemMessage(message);
-                }
-                this.panel.saveAndRender();
-            }
-        });
-        container.appendChild(saveButton);
-        this.renderExportButton(container);
-    }
-    renderExportButton(container) {
-        const exportButton = document.createElement('button');
-        exportButton.className = 'system-tab-button export-outfit-btn';
-        exportButton.textContent = 'Export Current Outfit';
-        exportButton.addEventListener('click', this.panel.exportButtonClickListener.bind(this));
-        container.appendChild(exportButton);
     }
 }

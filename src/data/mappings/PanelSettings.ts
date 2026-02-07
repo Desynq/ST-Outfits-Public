@@ -1,4 +1,5 @@
-import { PanelSettings, XY } from "../model/Outfit";
+import { assertRecord, ensureRecordProperty, isRecord } from "../../util/narrowing.js";
+import { OutfitTrackerModel, PanelSettings, XY } from "../model/Outfit.js";
 
 export function normalizeXY(value: unknown, fallback: XY): XY {
 	if (
@@ -14,23 +15,15 @@ export function normalizeXY(value: unknown, fallback: XY): XY {
 }
 
 export function normalizePanelSettings(
-	holder: any,
+	holder: Partial<OutfitTrackerModel>,
 	key: 'userPanel' | 'botPanel',
 	fallback: PanelSettings
 ): void {
-	if (!holder || typeof holder !== 'object') return;
+	const target = ensureRecordProperty(holder, key);
 
-	holder[key] ??= {};
-	const panel = holder[key];
-
-	if (!panel || typeof panel !== 'object') {
-		holder[key] = {};
-	}
-
-	const target = holder[key];
 	target.desktopXY = normalizeXY(target.desktopXY, fallback.desktopXY);
 	target.mobileXY = normalizeXY(target.mobileXY, fallback.mobileXY);
-	target.saveXY = typeof target.saveXY === 'boolean' ? target.saveXY : fallback.saveXY;
+	target.saveXY = typeof target.saveXY === 'boolean'
+		? target.saveXY
+		: fallback.saveXY;
 }
-
-

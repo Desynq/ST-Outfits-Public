@@ -1,9 +1,10 @@
+import { createButton, createDerivedToggleButton } from "../../util/element/ButtonHelper.js";
 import { toSummaryKey } from "../../util/SummaryHelper.js";
-export class VisibilityTab {
+import { PanelTab } from "./PanelTab.js";
+export class VisibilityTab extends PanelTab {
     constructor(panel, formatKind) {
-        this.panel = panel;
+        super(panel);
         this.formatKind = formatKind;
-        this.outfitManager = this.panel.getOutfitManager();
     }
     render(contentArea) {
         this.renderPositionButtons(contentArea);
@@ -85,23 +86,4 @@ export class VisibilityTab {
         });
         contentArea.append(toggleSavingXYButton);
     }
-}
-function createButton(className, text, click) {
-    const btn = document.createElement('button');
-    btn.className = className;
-    btn.textContent = text;
-    if (click)
-        btn.addEventListener('click', click);
-    return btn;
-}
-function createDerivedToggleButton(className, predicate, getText, click) {
-    const btn = document.createElement('button');
-    btn.className = className;
-    btn.textContent = getText(predicate());
-    btn.addEventListener('click', (e) => {
-        const enabled = predicate();
-        click(enabled, e);
-        btn.textContent = getText(enabled);
-    });
-    return btn;
 }

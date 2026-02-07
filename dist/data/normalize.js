@@ -1,4 +1,5 @@
 import { asBoolean, asObject, asStringRecord, ensureObject } from "../ObjectHelper.js";
+import { normalizeOutfitSnapshots } from "./mappings/OutfitCache.js";
 export function validatePresets(holder) {
     if (!holder || typeof holder !== 'object')
         return;
@@ -18,7 +19,9 @@ export function normalizeOutfitCollection(value) {
         outfits: asObject({}),
         autoOutfit: normalizeOutfit,
         hideDisabled: asBoolean(false),
-        hideEmpty: asBoolean(false)
+        hideEmpty: asBoolean(false),
+        snapshots: asObject({}),
+        diffs: asObject({})
     });
     const outfits = {};
     for (const [name, v] of Object.entries(raw.outfits)) {
@@ -26,11 +29,14 @@ export function normalizeOutfitCollection(value) {
             ? normalizeLegacyOutfit(v)
             : normalizeOutfit(v);
     }
+    normalizeOutfitSnapshots(raw.snapshots);
     return {
         outfits,
         autoOutfit: raw.autoOutfit,
         hideDisabled: raw.hideDisabled,
-        hideEmpty: raw.hideEmpty
+        hideEmpty: raw.hideEmpty,
+        snapshots: raw.snapshots,
+        diffs: raw.diffs
     };
 }
 function normalizePresetCollection(value) {

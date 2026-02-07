@@ -1,6 +1,4 @@
 // @ts-expect-error
-import { extension_settings } from "../../../../extensions.js";
-// @ts-expect-error
 import { extension_prompts } from "../../../../../script.js";
 // @ts-expect-error
 import { inject_ids } from '../../../../constants.js';
@@ -40,25 +38,6 @@ export function makeVarString(token, key) {
 }
 export function makeVarStrings(token, keys) {
     return keys.map(key => makeVarString(token, key));
-}
-function getGlobalVars() {
-    const vars = extension_settings.variables ?? (extension_settings.variables = { global: {} });
-    const globalVars = vars.global ?? (vars.global = {});
-    return globalVars;
-}
-/**
- * @returns `None` if global variable does not exist
- */
-export function getGlobalVariable(name) {
-    return getGlobalVars()[name] ?? window[name] ?? 'None';
-}
-export function setGlobalVariable(name, value) {
-    window[name] = value;
-    getGlobalVars()[name] = value;
-}
-export function deleteGlobalVariable(name) {
-    delete window[name];
-    delete getGlobalVars()[name];
 }
 export function filterRecord(record, keys) {
     const out = {};

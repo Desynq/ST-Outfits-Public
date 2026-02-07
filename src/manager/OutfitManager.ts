@@ -1,8 +1,12 @@
-import { IOutfitCollectionView, OutfitTracker } from "../data/tracker.js";
+import { SlotKind } from "../data/model/Outfit.js";
+import { OutfitTracker } from "../data/tracker.js";
+import { IOutfitCollectionView } from "../data/view/OutfitCollectionView.js";
 import { MutableOutfitView } from "../data/view/MutableOutfitView.js";
-import { deleteGlobalVariable, formatAccessorySlotName, getGlobalVariable, serializeRecord, setGlobalVariable, toSlotName } from "../shared.js";
+import { OutfitSnapshotsView } from "../data/view/OutfitSnapshotsView.js";
+import { formatAccessorySlotName, serializeRecord, toSlotName } from "../shared.js";
 import { indentString, toKebabCase } from "../util/StringHelper.js";
 import { toSummaryKey } from "../util/SummaryHelper.js";
+import { deleteGlobalVariable, getGlobalVariable, setGlobalVariable } from "./GlobalVarManager.js";
 
 type RenameSlotResult =
 	| 'slot-not-found'
@@ -37,6 +41,15 @@ export abstract class OutfitManager {
 	public abstract getName(): string;
 
 	public abstract isUser(): boolean;
+
+
+
+	public getSnapshotsView(): OutfitSnapshotsView {
+		return this.getOutfitCollection().getSnapshotView();
+	}
+
+
+
 
 	public async changeOutfitItem(slotId: string): Promise<string | null> {
 		const currentValue = this.getValue(slotId);
@@ -82,6 +95,10 @@ Cancel to keep the current value.`,
 		return this.getOutfitView().getSlotRecords(s => s.kind === kind && s.enabled);
 	}
 
+	public getVisibleSlotMap(): Record<string, string> {
+		return this.getOutfitView().getSlotRecords(s => s.enabled);
+	}
+
 	public abstract getVarName(namespace: string): string;
 
 	/**
@@ -89,7 +106,21 @@ Cancel to keep the current value.`,
 	 */
 	public abstract getNameMacro(): string;
 
+	/**
+	 * 
+	 * @param namespace where the full summary will be stored—defaults to `'summary'`
+	 * @param updateKindSummaries whether each individual slot type should have its own separate summary updated—defaults to `true`
+	 * @returns the full summary of the outfit in XML-format
+	 */
 	protected updateSummaries(): void {
+		const fullSummary = this.createOutfitSummary((kind, value) => {
+			this.setSummary(toSummaryKey(kind), value);
+		});
+
+		this.setSummary('summary', fullSummary);
+	}
+
+	public createOutfitSummary(kindSummaryCb?: (kind: SlotKind, value: string) => void): string {
 		let fullSummary = `<outfit character=${this.getNameMacro()}>`;
 		for (const kind of this.getOutfitView().getSlotKinds()) {
 			const value = serializeRecord(
@@ -98,14 +129,15 @@ Cancel to keep the current value.`,
 				toKebabCase(kind)
 			);
 
-			this.setSummary(toSummaryKey(kind), value);
+			if (kindSummaryCb) kindSummaryCb(kind, value);
+
 			if (value !== '') {
 				fullSummary += `\n\n${indentString(value)}`;
 			}
 		}
 
 		fullSummary += `\n</outfit>`;
-		this.setSummary('summary', fullSummary);
+		return fullSummary;
 	}
 
 	public getSummary(namespace: string): string {

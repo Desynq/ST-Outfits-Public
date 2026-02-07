@@ -1,14 +1,14 @@
-import { OutfitManager } from "../manager/OutfitManager.js";
-import { IOutfitCollectionView, OutfitTracker } from "../data/tracker.js";
+import { XY } from "../data/model/Outfit.js";
+import { OutfitTracker } from "../data/tracker.js";
+import { IOutfitCollectionView } from "../data/view/OutfitCollectionView.js";
+import { LayoutMode, PanelSettingsViewMap } from "../data/view/PanelViews.js";
 import { isWideScreen } from "../shared.js";
-import { createConfiguredElements, queryOrThrow } from "../util/ElementHelper.js";
+import type { OutfitManagerMap, PanelType } from "../types/maps.js";
+import { createConfiguredElements } from "../util/ElementHelper.js";
 import { OutfitSlotsHost } from "./OutfitSlotsHost.js";
 import { OutfitTabsHost } from "./OutfitTabsHost.js";
 import { SlotsRenderer } from "./SlotsRenderer.js";
 import { OutfitTabsRenderer as TabsRenderer } from "./TabsRenderer.js";
-import { LayoutMode, PanelSettingsViewMap } from "../data/view/PanelViews.js";
-import { XY } from "../data/model/Outfit.js";
-import type { OutfitManagerMap, PanelType } from "../types/maps.js";
 
 export abstract class OutfitPanel<T extends PanelType> implements OutfitSlotsHost, OutfitTabsHost<T> {
 

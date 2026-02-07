@@ -1,22 +1,21 @@
-import { OutfitManager } from "../../manager/OutfitManager.js";
 import { PanelType } from "../../types/maps.js";
+import { createButton, createDerivedToggleButton } from "../../util/element/ButtonHelper.js";
 import { toSummaryKey } from "../../util/SummaryHelper.js";
 import { OutfitTabsHost } from "../OutfitTabsHost.js";
+import { PanelTab } from "./PanelTab.js";
 
 
 
-export class VisibilityTab {
-
-	private readonly outfitManager: OutfitManager;
+export class VisibilityTab extends PanelTab {
 
 	public constructor(
-		private panel: OutfitTabsHost<PanelType>,
+		panel: OutfitTabsHost<PanelType>,
 		private formatKind: (k: string) => string
 	) {
-		this.outfitManager = this.panel.getOutfitManager();
+		super(panel);
 	}
 
-	public render(contentArea: HTMLDivElement): void {
+	public override render(contentArea: HTMLDivElement): void {
 		this.renderPositionButtons(contentArea);
 		this.renderPreviewButton(contentArea);
 		this.renderVisibilityButtons(contentArea);
@@ -148,31 +147,4 @@ export class VisibilityTab {
 			toggleSavingXYButton
 		);
 	}
-}
-
-function createButton(className: string, text: string, click?: (e: PointerEvent) => void): HTMLButtonElement {
-	const btn = document.createElement('button');
-	btn.className = className;
-	btn.textContent = text;
-	if (click) btn.addEventListener('click', click);
-	return btn;
-}
-
-function createDerivedToggleButton(
-	className: string,
-	predicate: () => boolean,
-	getText: (enabled: boolean) => string,
-	click: (enabled: boolean, e: PointerEvent) => void
-): HTMLButtonElement {
-	const btn = document.createElement('button');
-	btn.className = className;
-	btn.textContent = getText(predicate());
-
-	btn.addEventListener('click', (e) => {
-		const enabled = predicate();
-		click(enabled, e);
-		btn.textContent = getText(enabled);
-	});
-
-	return btn;
 }

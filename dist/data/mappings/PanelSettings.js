@@ -1,3 +1,4 @@
+import { ensureRecordProperty } from "../../util/narrowing.js";
 export function normalizeXY(value, fallback) {
     if (Array.isArray(value) &&
         value.length === 2 &&
@@ -8,15 +9,10 @@ export function normalizeXY(value, fallback) {
     return fallback;
 }
 export function normalizePanelSettings(holder, key, fallback) {
-    if (!holder || typeof holder !== 'object')
-        return;
-    holder[key] ?? (holder[key] = {});
-    const panel = holder[key];
-    if (!panel || typeof panel !== 'object') {
-        holder[key] = {};
-    }
-    const target = holder[key];
+    const target = ensureRecordProperty(holder, key);
     target.desktopXY = normalizeXY(target.desktopXY, fallback.desktopXY);
     target.mobileXY = normalizeXY(target.mobileXY, fallback.mobileXY);
-    target.saveXY = typeof target.saveXY === 'boolean' ? target.saveXY : fallback.saveXY;
+    target.saveXY = typeof target.saveXY === 'boolean'
+        ? target.saveXY
+        : fallback.saveXY;
 }

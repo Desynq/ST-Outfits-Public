@@ -6,6 +6,7 @@ import { assertNever, escapeHTML, getOutletPrompt, isWideScreen, scrollIntoViewA
 import { addLongPressAction, appendElement, createElement } from "../util/ElementHelper.js";
 import { OutfitSlotsHost } from "./OutfitSlotsHost.js";
 import { html } from "../util/lint.js";
+import { addDoubleTapListener } from "../util/element/click-actions.js";
 
 interface SlotContext {
 	scroller: HTMLElement;
@@ -239,7 +240,7 @@ export class SlotsRenderer {
 
 	private appendSlotNameEl(container: HTMLDivElement, slotElement: HTMLDivElement, slot: ResolvedOutfitSlot): HTMLDivElement {
 		const slotNameEl = appendElement(container, 'div', 'slot-name', toSlotName(slot.id));
-		this.addDoubleTapEventListener(
+		addDoubleTapListener(
 			slotNameEl,
 			() => this.beginRename(slotNameEl, slotElement, slot)
 		);
@@ -261,7 +262,7 @@ export class SlotsRenderer {
 			this.renderInlineCode(ctx.slot.value)
 		);
 
-		this.addDoubleTapEventListener(
+		addDoubleTapListener(
 			valueEl,
 			() => this.beginInlineEdit(ctx, valueEl)
 		);
@@ -380,26 +381,6 @@ export class SlotsRenderer {
 			.replace(/[^a-z0-9\s-]/g, '') // drop punctation/symbols
 			.replace(/\s+/g, '-') // space → hyphens
 			.replace(/-+/g, '-'); // collapse repeat hyphens
-	}
-
-
-	private addDoubleTapEventListener(element: HTMLElement, listener: () => void): void {
-		const DOUBLE_TAP_MS = 300;
-		let lastTapTime = 0;
-
-		element.addEventListener('click', () => {
-			const now = performance.now();
-			const delta = now - lastTapTime;
-
-			if (delta > 0 && delta < DOUBLE_TAP_MS) {
-				navigator.vibrate?.(20);
-				listener();
-				lastTapTime = 0; // reset so triple-tap doesn't retrigger
-				return;
-			}
-
-			lastTapTime = now;
-		});
 	}
 
 	/* ------------------------------- Slot Moving ------------------------------ */

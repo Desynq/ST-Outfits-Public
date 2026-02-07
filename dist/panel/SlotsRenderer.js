@@ -1,5 +1,6 @@
 import { assertNever, getOutletPrompt, isWideScreen, scrollIntoViewAboveKeyboard, toSlotName } from "../shared.js";
 import { addLongPressAction, appendElement, createElement } from "../util/ElementHelper.js";
+import { addDoubleTapListener } from "../util/element/click-actions.js";
 function iterateMacros(value) {
     const regex = /\{\{(.+?)\}\}/g;
     return (function* () {
@@ -161,7 +162,7 @@ export class SlotsRenderer {
     }
     appendSlotNameEl(container, slotElement, slot) {
         const slotNameEl = appendElement(container, 'div', 'slot-name', toSlotName(slot.id));
-        this.addDoubleTapEventListener(slotNameEl, () => this.beginRename(slotNameEl, slotElement, slot));
+        addDoubleTapListener(slotNameEl, () => this.beginRename(slotNameEl, slotElement, slot));
         return slotNameEl;
     }
     appendValueDiv(container, ctx) {
@@ -170,7 +171,7 @@ export class SlotsRenderer {
         const valueEl = document.createElement('div');
         valueEl.classList.add('slot-value', ...[disabledClass, noneClass].filter(Boolean));
         valueEl.replaceChildren(this.renderInlineCode(ctx.slot.value));
-        this.addDoubleTapEventListener(valueEl, () => this.beginInlineEdit(ctx, valueEl));
+        addDoubleTapListener(valueEl, () => this.beginInlineEdit(ctx, valueEl));
         container.appendChild(valueEl);
         return valueEl;
     }
@@ -254,21 +255,6 @@ export class SlotsRenderer {
             .replace(/[^a-z0-9\s-]/g, '') // drop punctation/symbols
             .replace(/\s+/g, '-') // space → hyphens
             .replace(/-+/g, '-'); // collapse repeat hyphens
-    }
-    addDoubleTapEventListener(element, listener) {
-        const DOUBLE_TAP_MS = 300;
-        let lastTapTime = 0;
-        element.addEventListener('click', () => {
-            const now = performance.now();
-            const delta = now - lastTapTime;
-            if (delta > 0 && delta < DOUBLE_TAP_MS) {
-                navigator.vibrate?.(20);
-                listener();
-                lastTapTime = 0; // reset so triple-tap doesn't retrigger
-                return;
-            }
-            lastTapTime = now;
-        });
     }
     /* ------------------------------- Slot Moving ------------------------------ */
     moveSlot(slot) {

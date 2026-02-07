@@ -1,5 +1,6 @@
 import { setGlobalVariable } from "../../manager/GlobalVarManager.js";
 import { createButton } from "../../util/element/ButtonHelper.js";
+import { createElement } from "../../util/ElementHelper.js";
 import { toastrClipboard } from "../../util/ToastrHelper.js";
 import { PanelTab } from "./PanelTab.js";
 export class CacheTab extends PanelTab {
@@ -7,13 +8,15 @@ export class CacheTab extends PanelTab {
         this.renderCacheButton(contentArea);
     }
     renderCacheButton(contentArea) {
-        const startCacheRename = () => {
+        const startCacheWrite = () => {
+            const box = createElement('div', 'cache-write-container');
             const input = document.createElement('input');
             input.type = 'text';
-            input.className = 'cache-outfit-input';
+            input.className = 'cache-write-input';
             input.value = `last_outfit`;
             input.autocomplete = 'off';
             input.spellcheck = false;
+            box.appendChild(input);
             // live sanitization
             input.addEventListener('input', () => {
                 input.value = input.value.replace(/[^a-zA-Z0-9_.]/g, '');
@@ -41,15 +44,15 @@ export class CacheTab extends PanelTab {
                 else if (e.key === 'Escape')
                     cancel();
             });
-            input.addEventListener('blur', cancel);
+            // input.addEventListener('blur', cancel);
             const restoreButton = () => {
-                input.replaceWith(cacheButton);
+                box.replaceWith(cacheButton);
             };
-            cacheButton.replaceWith(input);
+            cacheButton.replaceWith(box);
             input.focus();
             input.select();
         };
-        const cacheButton = createButton('system-tab-button cache-outfit-btn', 'Cache Current Outfit', startCacheRename);
+        const cacheButton = createButton('system-tab-button cache-outfit-btn', 'Cache Current Outfit', startCacheWrite);
         contentArea.appendChild(cacheButton);
     }
     cacheCurrentOutfit(key) {

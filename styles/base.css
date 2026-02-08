@@ -1,6 +1,7 @@
 @import "./outfit-preview.css";
 @import "./outfit-slot.css";
 @import "./outfit-tabs.css";
+@import "./outfit-cache-tab.css";
 
 .outfit-panel {
     position: fixed;

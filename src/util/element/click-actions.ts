@@ -1,7 +1,10 @@
 
 
 
-export function addDoubleTapListener(element: HTMLElement, listener: () => void): void {
+export function addDoubleTapListener(
+	element: HTMLElement,
+	listener: () => void
+): void {
 	const DOUBLE_TAP_MS = 300;
 	let lastTapTime = 0;
 

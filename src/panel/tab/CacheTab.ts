@@ -1,5 +1,7 @@
+import { OutfitCachedSnapshot } from "../../data/model/Outfit.js";
 import { setGlobalVariable } from "../../manager/GlobalVarManager.js";
 import { createButton } from "../../util/element/ButtonHelper.js";
+import { addDoubleTapListener } from "../../util/element/click-actions.js";
 import { createElement } from "../../util/ElementHelper.js";
 import { toastrClipboard } from "../../util/ToastrHelper.js";
 import { PanelTab } from "./PanelTab.js";
@@ -10,6 +12,7 @@ export class CacheTab extends PanelTab {
 
 	public override render(contentArea: HTMLDivElement): void {
 		this.renderCacheButton(contentArea);
+		this.renderSnapshots(contentArea);
 	}
 
 	private renderCacheButton(contentArea: HTMLDivElement): void {
@@ -45,7 +48,7 @@ export class CacheTab extends PanelTab {
 				const key = normalizeOutfitCacheKey(raw);
 
 				this.cacheCurrentOutfit(key);
-				restoreButton();
+				this.panel.saveAndRender();
 			};
 
 			const cancel = () => {
@@ -83,7 +86,6 @@ export class CacheTab extends PanelTab {
 		const slotMap = this.outfitManager.getVisibleSlotMap();
 		cacheTree.writeSnapshot(key, slotMap);
 		setGlobalVariable(key, summary);
-		this.outfitManager.saveSettings();
 
 		const gvar = `{{getglobalvar::${key}}}`;
 		toastrClipboard(
@@ -92,6 +94,50 @@ export class CacheTab extends PanelTab {
 			`Cached current outfit.<br>Access with:<br>${gvar}.`,
 			'ST Outfits'
 		);
+	}
+
+	private renderSnapshots(contentArea: HTMLDivElement): void {
+		const snapshots = this.outfitManager.getSnapshotsView().getSnapshots();
+		const container = createElement('div', 'outfit-snapshot-container');
+
+		for (const snapshot of snapshots) {
+			this.renderSnapshot(container, snapshot);
+		}
+
+		contentArea.appendChild(container);
+	}
+
+	private renderSnapshot(container: HTMLDivElement, snapshotData: OutfitCachedSnapshot): void {
+		const snapshotEl = createElement('div', 'outfit-snapshot');
+
+		/* --------------------------------- Header --------------------------------- */
+		const header = createElement('div', 'outfit-snapshot-header');
+
+		const title = createElement('div', 'outfit-snapshot-title', snapshotData.namespace);
+
+		const deleteBtn = createElement('button', 'outfit-snapshot-delete', '✕');
+
+		header.append(title, deleteBtn);
+
+		/* -------------------- Body (collapsed readonly textbox) ------------------- */
+		const body = createElement('div', 'outfit-snapshot-body');
+
+		const textarea = createElement('textarea', 'outfit-snapshot-text');
+		textarea.readOnly = true;
+		textarea.rows = 2;
+
+
+		addDoubleTapListener(title, () => {
+			// TODO: Add feature to change a snapshot's namespace
+		});
+
+		deleteBtn.addEventListener('click', () => {
+			this.outfitManager.getSnapshotsView().deleteSnapshot(snapshotData.namespace);
+			snapshotEl.remove();
+		});
+
+		snapshotEl.append(header, body);
+		container.appendChild(snapshotEl);
 	}
 }
 

@@ -7,6 +7,7 @@ import { addLongPressAction, appendElement, createElement } from "../util/Elemen
 import { OutfitSlotsHost } from "./OutfitSlotsHost.js";
 import { html } from "../util/lint.js";
 import { addDoubleTapListener } from "../util/element/click-actions.js";
+import { conditionalList } from "../util/list-utils.js";
 
 interface SlotContext {
 	scroller: HTMLElement;
@@ -368,7 +369,14 @@ export class SlotsRenderer {
 	}
 
 	private removeActionButtons(slotElement: HTMLDivElement): void {
-		const selectors = ['.slot-toggle', '.delete-slot', '.slot-shift', '.edit-slot', '.move-slot'];
+		const selectors = [
+			'.slot-toggle',
+			'.delete-slot',
+			'.slot-shift',
+			'.move-slot',
+			'edit-slot'
+		];
+
 		for (const selector of selectors) {
 			slotElement.querySelector<HTMLButtonElement>(selector)?.remove();
 		}
@@ -524,9 +532,6 @@ export class SlotsRenderer {
 
 		slotNameEl.replaceWith(textarea);
 		textarea.focus();
-
-		slotElement.querySelector('.slot-value')?.remove();
-		this.removeActionButtons(slotElement);
 
 		textarea.addEventListener('keydown', (e) => {
 			if (e.key === 'Enter') {

@@ -243,7 +243,13 @@ export class SlotsRenderer {
         return editBtn;
     }
     removeActionButtons(slotElement) {
-        const selectors = ['.slot-toggle', '.delete-slot', '.slot-shift', '.edit-slot', '.move-slot'];
+        const selectors = [
+            '.slot-toggle',
+            '.delete-slot',
+            '.slot-shift',
+            '.move-slot',
+            'edit-slot'
+        ];
         for (const selector of selectors) {
             slotElement.querySelector(selector)?.remove();
         }
@@ -367,8 +373,6 @@ export class SlotsRenderer {
         textarea.value = originalValue;
         slotNameEl.replaceWith(textarea);
         textarea.focus();
-        slotElement.querySelector('.slot-value')?.remove();
-        this.removeActionButtons(slotElement);
         textarea.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();

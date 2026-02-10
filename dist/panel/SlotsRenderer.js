@@ -83,7 +83,7 @@ export class SlotsRenderer {
         const labelLeftDiv = appendElement(labelDiv, 'div', 'slot-label-left');
         const labelRightDiv = appendElement(labelDiv, 'div', 'slot-label-right');
         appendElement(labelLeftDiv, 'div', 'slot-ordinal', display.displayIndex.toString());
-        const slotNameEl = this.appendSlotNameEl(labelLeftDiv, slotElement, slot);
+        const slotNameEl = appendElement(labelLeftDiv, 'div', 'slot-name', toSlotName(slot.id));
         const actionsEl = document.createElement('div');
         actionsEl.className = 'slot-actions';
         const actionsLeftEl = appendElement(actionsEl, 'div', 'slot-actions-left');
@@ -100,6 +100,7 @@ export class SlotsRenderer {
             slotNameEl
         };
         const mode = this.getSlotRenderMode(slot, this.panel);
+        addDoubleTapListener(slotNameEl, () => this.beginRename(slotNameEl, ctx));
         const appendInlineToggleBtn = () => this.appendToggleBtn(labelRightDiv, slot);
         const appendInlineEdit = () => {
             const valueEl = this.appendValueDiv(slotElement, ctx);
@@ -159,11 +160,6 @@ export class SlotsRenderer {
         moveBtn.textContent = 'Move';
         moveBtn.addEventListener('click', () => this.moveSlot(ctx.slot));
         ctx.actionsLeftEl.appendChild(moveBtn);
-    }
-    appendSlotNameEl(container, slotElement, slot) {
-        const slotNameEl = appendElement(container, 'div', 'slot-name', toSlotName(slot.id));
-        addDoubleTapListener(slotNameEl, () => this.beginRename(slotNameEl, slotElement, slot));
-        return slotNameEl;
     }
     appendValueDiv(container, ctx) {
         const disabledClass = ctx.slot.isDisabled() ? 'disabled' : '';
@@ -365,27 +361,33 @@ export class SlotsRenderer {
         this.panel.saveAndRender();
     }
     /* --------------------------- Slot Label Renaming -------------------------- */
-    beginRename(slotNameEl, slotElement, slot) {
+    beginRename(slotNameEl, ctx) {
         const originalValue = slotNameEl.innerText.trim();
-        const textarea = document.createElement('textarea');
-        textarea.className = 'label-editbox';
+        const textarea = createElement('textarea', 'label-editbox');
         textarea.rows = 1;
         textarea.value = originalValue;
-        slotNameEl.replaceWith(textarea);
-        textarea.focus();
+        const cancelBtn = createElement('button', 'slot-button cancel-button', 'Cancel');
+        const saveBtn = createElement('button', 'slot-button save-button', 'Save');
+        // Wiring
+        const cancelRename = () => {
+            this.panel.render();
+        };
+        cancelBtn.addEventListener('click', cancelRename);
+        saveBtn.addEventListener('click', () => this.commitRename(ctx.slot, textarea));
         textarea.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
-                this.commitRename(slot, textarea);
+                this.commitRename(ctx.slot, textarea);
             }
             else if (e.key === 'Escape') {
                 e.preventDefault();
-                this.cancelRename();
+                cancelRename();
             }
         });
-        textarea.addEventListener('blur', () => {
-            this.cancelRename();
-        });
+        // Insertion
+        ctx.labelRightDiv.replaceChildren(cancelBtn, saveBtn);
+        slotNameEl.replaceWith(textarea);
+        textarea.focus();
     }
     commitRename(slot, textarea) {
         const rawName = textarea.value;
@@ -416,9 +418,6 @@ export class SlotsRenderer {
             default: assertNever(result);
         }
         this.panel.saveAndRender();
-    }
-    cancelRename() {
-        this.panel.render();
     }
     /* --------------------------- Slot Value Editing --------------------------- */
     beginInlineEdit(ctx, valueEl) {
@@ -469,10 +468,6 @@ export class SlotsRenderer {
                 this.cancelValueEdit();
             }
         });
-        textarea.addEventListener('blur', () => {
-            cleanup();
-            this.cancelValueEdit();
-        }, { once: true });
         const preventBlur = (btn) => btn.addEventListener('pointerdown', e => e.preventDefault());
         if (!empty) {
             const clearBtn = document.createElement('button');

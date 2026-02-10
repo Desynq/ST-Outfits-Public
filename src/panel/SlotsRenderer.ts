@@ -6,7 +6,7 @@ import { assertNever, escapeHTML, getOutletPrompt, isWideScreen, scrollIntoViewA
 import { addLongPressAction, appendElement, createElement } from "../util/ElementHelper.js";
 import { OutfitSlotsHost } from "./OutfitSlotsHost.js";
 import { html } from "../util/lint.js";
-import { addDoubleTapListener } from "../util/element/click-actions.js";
+import { addDoubleTapListener, addOnPointerDownOutside } from "../util/element/click-actions.js";
 import { conditionalList } from "../util/list-utils.js";
 
 interface SlotContext {
@@ -136,7 +136,7 @@ export class SlotsRenderer {
 		const labelRightDiv = appendElement(labelDiv, 'div', 'slot-label-right');
 
 		appendElement(labelLeftDiv, 'div', 'slot-ordinal', display.displayIndex.toString());
-		const slotNameEl = this.appendSlotNameEl(labelLeftDiv, slotElement, slot);
+		const slotNameEl = appendElement(labelLeftDiv, 'div', 'slot-name', toSlotName(slot.id));
 
 
 		const actionsEl = document.createElement('div');
@@ -157,6 +157,11 @@ export class SlotsRenderer {
 			slotNameEl
 		};
 		const mode = this.getSlotRenderMode(slot, this.panel);
+
+		addDoubleTapListener(
+			slotNameEl,
+			() => this.beginRename(slotNameEl, ctx)
+		);
 
 		const appendInlineToggleBtn = () =>
 			this.appendToggleBtn(labelRightDiv, slot);
@@ -237,15 +242,6 @@ export class SlotsRenderer {
 			() => this.moveSlot(ctx.slot)
 		);
 		ctx.actionsLeftEl.appendChild(moveBtn);
-	}
-
-	private appendSlotNameEl(container: HTMLDivElement, slotElement: HTMLDivElement, slot: ResolvedOutfitSlot): HTMLDivElement {
-		const slotNameEl = appendElement(container, 'div', 'slot-name', toSlotName(slot.id));
-		addDoubleTapListener(
-			slotNameEl,
-			() => this.beginRename(slotNameEl, slotElement, slot)
-		);
-		return slotNameEl;
 	}
 
 	private appendValueDiv(container: HTMLDivElement, ctx: SlotContext): HTMLDivElement {
@@ -522,31 +518,43 @@ export class SlotsRenderer {
 
 	/* --------------------------- Slot Label Renaming -------------------------- */
 
-	private beginRename(slotNameEl: HTMLDivElement, slotElement: HTMLDivElement, slot: ResolvedOutfitSlot): void {
+	private beginRename(slotNameEl: HTMLDivElement, ctx: SlotContext): void {
 		const originalValue = slotNameEl.innerText.trim();
 
-		const textarea = document.createElement('textarea');
-		textarea.className = 'label-editbox';
+		const textarea = createElement('textarea', 'label-editbox');
 		textarea.rows = 1;
 		textarea.value = originalValue;
 
-		slotNameEl.replaceWith(textarea);
-		textarea.focus();
+		const cancelBtn = createElement('button', 'slot-button cancel-button', 'Cancel');
+		const saveBtn = createElement('button', 'slot-button save-button', 'Save');
+
+		// Wiring
+		const cancelRename = () => {
+			this.panel.render();
+		};
+
+		cancelBtn.addEventListener('click', cancelRename);
+		saveBtn.addEventListener('click', () => this.commitRename(ctx.slot, textarea));
 
 		textarea.addEventListener('keydown', (e) => {
 			if (e.key === 'Enter') {
 				e.preventDefault();
-				this.commitRename(slot, textarea);
+				this.commitRename(ctx.slot, textarea);
 			}
 			else if (e.key === 'Escape') {
 				e.preventDefault();
-				this.cancelRename();
+				cancelRename();
 			}
 		});
 
-		textarea.addEventListener('blur', () => {
-			this.cancelRename();
-		});
+		// Insertion
+		ctx.labelRightDiv.replaceChildren(
+			cancelBtn,
+			saveBtn
+		);
+
+		slotNameEl.replaceWith(textarea);
+		textarea.focus();
 	}
 
 	private commitRename(slot: ResolvedOutfitSlot, textarea: HTMLTextAreaElement): void {
@@ -585,10 +593,6 @@ export class SlotsRenderer {
 		}
 
 		this.panel.saveAndRender();
-	}
-
-	private cancelRename(): void {
-		this.panel.render();
 	}
 
 
@@ -658,13 +662,6 @@ export class SlotsRenderer {
 				this.cancelValueEdit();
 			}
 		});
-
-		textarea.addEventListener('blur', () => {
-			cleanup();
-			this.cancelValueEdit();
-		}, { once: true });
-
-
 
 		const preventBlur = (btn: HTMLButtonElement) =>
 			btn.addEventListener('pointerdown', e => e.preventDefault());

@@ -13,3 +13,32 @@ export function addDoubleTapListener(element, listener) {
         lastTapTime = now;
     });
 }
+export function addOnPointerDownOutside(callback, onExcludedHitOrFirstExcluded, ...restExcluded) {
+    const onExcludedHit = typeof onExcludedHitOrFirstExcluded === 'function'
+        ? onExcludedHitOrFirstExcluded
+        : undefined;
+    const excluded = typeof onExcludedHitOrFirstExcluded === 'function'
+        ? restExcluded
+        : onExcludedHitOrFirstExcluded
+            ? [onExcludedHitOrFirstExcluded, ...restExcluded]
+            : restExcluded;
+    const listener = (e) => {
+        const target = e.target;
+        if (!target)
+            return;
+        if (excluded.length === 0) {
+            callback(e);
+            return;
+        }
+        for (const ex of excluded) {
+            const el = typeof ex === 'function' ? ex() : ex;
+            if (el && el.contains(target)) {
+                onExcludedHit?.(el);
+                return;
+            }
+        }
+        callback(e);
+    };
+    document.addEventListener('pointerdown', listener, true);
+    return () => document.removeEventListener('pointerdown', listener, true);
+}

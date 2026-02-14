@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "module": "ESNext",
+    "module": "esnext",
     "rootDir": "./src",
     "outDir": "./dist",
     "allowJs": false,
@@ -19,12 +19,6 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "exactOptionalPropertyTypes": true,
-    "baseUrl": ".",
-    "paths": {
-      "popup.js": [
-        "../../popup.js"
-      ]
-    }
   },
   "include": [
     "src/**/*",

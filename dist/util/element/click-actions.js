@@ -1,17 +1,31 @@
-export function addDoubleTapListener(element, listener) {
-    const DOUBLE_TAP_MS = 300;
+export function addDoubleTapListener(element, onDouble, delay = 300, onSingle, onFirst) {
     let lastTapTime = 0;
-    element.addEventListener('click', () => {
+    let singleTapTimer = null;
+    const listener = () => {
         const now = performance.now();
         const delta = now - lastTapTime;
-        if (delta > 0 && delta < DOUBLE_TAP_MS) {
+        if (delta > 0 && delta < delay) {
+            // Double tap detected
+            if (singleTapTimer !== null) {
+                clearTimeout(singleTapTimer);
+                singleTapTimer = null;
+            }
             navigator.vibrate?.(20);
-            listener();
-            lastTapTime = 0; // reset so triple-tap doesn't retrigger
+            onDouble();
+            lastTapTime = 0;
             return;
         }
         lastTapTime = now;
-    });
+        onFirst?.(delay);
+        if (onSingle) {
+            singleTapTimer = window.setTimeout(() => {
+                onSingle();
+                singleTapTimer = null;
+            }, delay);
+        }
+    };
+    element.addEventListener('click', listener);
+    return () => element.removeEventListener('click', listener);
 }
 export function addOnPointerDownOutside(callback, onExcludedHitOrFirstExcluded, ...restExcluded) {
     const onExcludedHit = typeof onExcludedHitOrFirstExcluded === 'function'

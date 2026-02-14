@@ -3,24 +3,44 @@
 
 export function addDoubleTapListener(
 	element: HTMLElement,
-	listener: () => void
-): void {
-	const DOUBLE_TAP_MS = 300;
+	onDouble: () => void,
+	delay: number = 300,
+	onSingle?: () => void,
+	onFirst?: (delay: number) => void
+): () => void {
 	let lastTapTime = 0;
+	let singleTapTimer: number | null = null;
 
-	element.addEventListener('click', () => {
+	const listener = () => {
 		const now = performance.now();
 		const delta = now - lastTapTime;
 
-		if (delta > 0 && delta < DOUBLE_TAP_MS) {
+		if (delta > 0 && delta < delay) {
+			// Double tap detected
+			if (singleTapTimer !== null) {
+				clearTimeout(singleTapTimer);
+				singleTapTimer = null;
+			}
+
 			navigator.vibrate?.(20);
-			listener();
-			lastTapTime = 0; // reset so triple-tap doesn't retrigger
+			onDouble();
+			lastTapTime = 0;
 			return;
 		}
 
 		lastTapTime = now;
-	});
+		onFirst?.(delay);
+
+		if (onSingle) {
+			singleTapTimer = window.setTimeout(() => {
+				onSingle();
+				singleTapTimer = null;
+			}, delay);
+		}
+	};
+
+	element.addEventListener('click', listener);
+	return () => element.removeEventListener('click', listener);
 }
 
 type Exclusion = HTMLElement | (() => HTMLElement | null | undefined);

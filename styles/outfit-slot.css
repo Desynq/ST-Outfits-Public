@@ -85,9 +85,44 @@
 	text-overflow: ellipsis;
 }
 
-.slot-label .slot-name {
+.slot-name {
+	position: relative;
+	display: inline-block;
 	cursor: pointer;
+	transition: background-image 100ms ease;
 }
+
+.slot-name::after {
+	content: attr(data-text);
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 0%;
+	overflow: hidden;
+	white-space: nowrap;
+
+	color: rgba(200, 200, 200, 0.6);
+	pointer-events: none;
+}
+
+.slot-name.tap-armed::after {
+	animation: tapSweep var(--tap-delay, 200ms) linear forwards;
+}
+
+@keyframes tapSweep {
+	from {
+		width: 0%;
+	}
+
+	to {
+		width: 100%;
+	}
+}
+
+
+
+
+
 
 .slot-label .label-editbox {
 	white-space: pre-wrap;

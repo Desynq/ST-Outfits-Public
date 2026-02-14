@@ -129,7 +129,6 @@
 	color: rgba(255, 255, 255, 0.75);
 	background: rgba(255, 255, 255, 0.1);
 	border-color: rgba(255, 255, 255, 0.15);
-	font-style: italic;
 	font-weight: normal;
 }
 
@@ -267,11 +266,52 @@
 	padding: 0.1em 0.35em;
 	border-radius: 4px;
 	font-size: 0.9em;
-	white-space: nowrap;
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
 }
 
-.slot-macro-span.error {
+.slot-macro-span.--error {
 	color: #c77;
 	text-decoration: underline dotted;
 	cursor: help;
+}
+
+.slot-macro-span.--char {
+	color: #7dd3fc;
+	background: rgba(125, 211, 252, 0.15);
+	border-left: 2px solid #7dd3fc;
+	border-right: 2px solid #7dd3fc;
+}
+
+.slot-macro-span.--user {
+	color: #fbbf24;
+	background: rgba(251, 191, 36, 0.15);
+	border-left: 2px solid #fbbf24;
+	border-right: 2px solid #fbbf24;
+}
+
+.slot-macro-span.--unknown {
+	color: #c4b5fd;
+	background: rgba(196, 181, 253, 0.12);
+	border-left: 2px solid #c4b5fd;
+	border-right: 2px solid #c4b5fd;
+}
+
+.slot-macro-span.--outlet {
+	display: block;
+	color: #c4b5fd;
+	background: rgba(196, 181, 253, 0.12);
+	border-left: 2px solid #c4b5fd;
+	border-right: 2px solid #c4b5fd;
+}
+
+/* Hide outlets when disabled */
+.slot-value.disabled {
+	opacity: 0.35;
+	transition: opacity 120ms ease;
+}
+
+/* Reveal on hover */
+.slot-value.disabled:is(:hover, :focus-within, .--reveal) {
+	opacity: 1;
 }

@@ -3,6 +3,7 @@ import { addDoubleTapListener } from "../util/element/click-actions.js";
 import { addLongPressAction, appendElement, createElement } from "../util/ElementHelper.js";
 import { substituteParams } from "../util/adapter/script-adapter.js";
 import { popupConfirm } from "../util/adapter/popup-adapter.js";
+import { branch } from "../util/logic.js";
 function iterateMacros(value) {
     const regex = /\{\{(.+?)\}\}/g;
     return (function* () {
@@ -175,6 +176,9 @@ export class SlotsRenderer {
             const prompt = substituteParams(text);
             this.showPromptModal(prompt);
         }, { stopImmediatePropagation: true });
+        valueEl.addEventListener('click', () => {
+            valueEl.classList.toggle('--reveal');
+        });
         container.appendChild(valueEl);
         return valueEl;
     }
@@ -198,24 +202,41 @@ export class SlotsRenderer {
         return frag;
     }
     createMacroSpan(macro) {
+        // macro static content does not change until rerender
         const text = macro.full;
+        const isOutlet = macro.content.startsWith('outlet::');
         const getPrompt = () => {
             const prompt = substituteParams(text);
             return prompt === text ? null : prompt;
         };
         const span = createElement('span', 'slot-macro-span', text);
         const updateFromPrompt = () => {
+            span.classList.remove('--error', '--char', '--user');
+            const addClass = (...tokens) => span.classList.add(...tokens);
             const prompt = getPrompt();
             if (!prompt) {
                 span.title = 'Error: No Prompt Found';
-                span.classList.add('error');
+                addClass('--error');
                 return null;
             }
             span.title = prompt;
-            span.classList.remove('error');
+            if (isOutlet) {
+                span.textContent = prompt;
+                return prompt;
+            }
+            branch(macro.content)
+                .on('char', 'user', () => span.textContent = prompt)
+                .on('char', () => addClass('--char'))
+                .on('user', () => addClass('--user'))
+                .run(() => addClass('--unknown'));
             return prompt;
         };
         updateFromPrompt();
+        if (isOutlet) {
+            const key = macro.content.slice('outlet::'.length);
+            span.classList.add('--outlet');
+            span.dataset.outletKey = key;
+        }
         addLongPressAction(span, 300, () => {
             const prompt = updateFromPrompt();
             if (!prompt)
@@ -223,11 +244,6 @@ export class SlotsRenderer {
             else
                 this.showPromptModal(prompt);
         }, { stopImmediatePropagation: true });
-        if (macro.content.startsWith('outlet::')) {
-            const key = macro.content.slice('outlet::'.length);
-            span.classList.add('slot-outlet');
-            span.dataset.outletKey = key;
-        }
         return span;
     }
     async showPromptModal(promptText) {
@@ -451,7 +467,7 @@ export class SlotsRenderer {
         valueEl.hidden = false;
         const scrollTop = ctx.scroller.scrollTop;
         const rect = valueEl.getBoundingClientRect();
-        const originalValue = valueEl.innerText.trim();
+        const originalValue = ctx.slot.value;
         const empty = originalValue === 'None';
         // Create editable textarea
         const textarea = document.createElement('textarea');

@@ -1,4 +1,4 @@
-
+import { forceArray } from "./list-utils.js";
 
 
 
@@ -200,4 +200,44 @@ export function queryOrThrow<T extends Element>(container: ParentNode | null | u
 	}
 
 	return element;
+}
+
+export function addOrRemoveClass(
+	element: HTMLElement,
+	condition: boolean,
+	positiveTokens: string | string[],
+	negativeTokens?: string | string[]
+): boolean {
+	const positives = forceArray(positiveTokens);
+	const negatives = negativeTokens === undefined
+		? undefined
+		: forceArray(negativeTokens);
+
+	const add = (tokens: string[] | undefined) => {
+		if (tokens) element.classList.add(...tokens);
+	};
+	const remove = (tokens: string[] | undefined) => {
+		if (tokens) element.classList.remove(...tokens);
+	};
+
+	if (condition) {
+		add(positives);
+		remove(negatives);
+	}
+	else {
+		add(negatives);
+		remove(positives);
+	}
+
+	return condition;
+}
+
+export function toggleClasses(
+	element: HTMLElement,
+	condition: boolean,
+	...tokens: string[]
+): boolean {
+	const method = condition ? 'add' : 'remove';
+	element.classList[method](...tokens);
+	return condition;
 }

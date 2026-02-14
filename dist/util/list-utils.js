@@ -12,3 +12,6 @@ export function conditionalList(...items) {
     }
     return list;
 }
+export function forceArray(x) {
+    return Array.isArray(x) ? x : [x];
+}

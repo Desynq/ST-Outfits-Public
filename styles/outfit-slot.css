@@ -305,13 +305,33 @@
 	border-right: 2px solid #c4b5fd;
 }
 
-/* Hide outlets when disabled */
+/* Base disabled */
 .slot-value.disabled {
 	opacity: 0.35;
-	transition: opacity 120ms ease;
+	transition: opacity 120ms ease, box-shadow 120ms ease, background 120ms ease, border-color 120ms ease;
 }
 
-/* Reveal on hover */
-.slot-value.disabled:is(:hover, :focus-within, .--reveal) {
+/* Reveal on hover/focus (temporary attention) */
+.slot-value.disabled:is(:hover, :focus-within) {
 	opacity: 1;
+	box-shadow: 0 0 0 2px rgba(196, 181, 253, 0.25);
+	/* subtle focus ring */
+}
+
+/* Reveal toggled (persistent state, stronger) */
+.slot-value.disabled.--reveal {
+	opacity: 1;
+	background: rgba(196, 181, 253, 0.18);
+	border-left-color: #c4b5fd;
+	border-right-color: #c4b5fd;
+	box-shadow:
+		0 0 0 2px rgba(196, 181, 253, 0.55),
+		0 6px 18px rgba(196, 181, 253, 0.25);
+}
+
+/* If it's both focused and revealed, make it *extra* obvious */
+.slot-value.disabled.--reveal:focus-within {
+	box-shadow:
+		0 0 0 3px rgba(196, 181, 253, 0.8),
+		0 10px 28px rgba(196, 181, 253, 0.28);
 }

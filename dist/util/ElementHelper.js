@@ -1,3 +1,4 @@
+import { forceArray } from "./list-utils.js";
 export function addContextActionListener(element, listener, longPressMs = 550) {
     element.addEventListener('contextmenu', (e) => {
         e.preventDefault();
@@ -141,4 +142,32 @@ export function queryOrThrow(container, ctor, selectors) {
         throw new Error(`queryOrThrow: Element matching "${selectors}" is a ${element.constructor.name}, expected ${ctor.name}`);
     }
     return element;
+}
+export function addOrRemoveClass(element, condition, positiveTokens, negativeTokens) {
+    const positives = forceArray(positiveTokens);
+    const negatives = negativeTokens === undefined
+        ? undefined
+        : forceArray(negativeTokens);
+    const add = (tokens) => {
+        if (tokens)
+            element.classList.add(...tokens);
+    };
+    const remove = (tokens) => {
+        if (tokens)
+            element.classList.remove(...tokens);
+    };
+    if (condition) {
+        add(positives);
+        remove(negatives);
+    }
+    else {
+        add(negatives);
+        remove(positives);
+    }
+    return condition;
+}
+export function toggleClasses(element, condition, ...tokens) {
+    const method = condition ? 'add' : 'remove';
+    element.classList[method](...tokens);
+    return condition;
 }

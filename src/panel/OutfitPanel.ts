@@ -4,7 +4,7 @@ import { IOutfitCollectionView } from "../data/view/OutfitCollectionView.js";
 import { LayoutMode, PanelSettingsViewMap } from "../data/view/PanelViews.js";
 import { isWideScreen } from "../shared.js";
 import type { OutfitManagerMap, PanelType } from "../types/maps.js";
-import { createConfiguredElements } from "../util/ElementHelper.js";
+import { createConfiguredElements, toggleClasses } from "../util/ElementHelper.js";
 import { OutfitSlotsHost } from "./OutfitSlotsHost.js";
 import { OutfitTabsHost } from "./OutfitTabsHost.js";
 import { SlotsRenderer } from "./SlotsRenderer.js";
@@ -25,6 +25,10 @@ export abstract class OutfitPanel<T extends PanelType> implements OutfitSlotsHos
 
 	public isMinimized(): boolean {
 		return this.minimized;
+	}
+
+	public isFullscreen(): boolean {
+		return !this.isMinimized() && !isWideScreen();
 	}
 
 	protected get collection(): IOutfitCollectionView {
@@ -129,6 +133,9 @@ export abstract class OutfitPanel<T extends PanelType> implements OutfitSlotsHos
 
 		const start = (e: PointerEvent) => {
 			if (!this.panelEl) return;
+
+			if (this.isFullscreen()) return;
+
 			handle.setPointerCapture(e.pointerId);
 
 			const rect = this.panelEl.getBoundingClientRect();
@@ -322,14 +329,15 @@ export abstract class OutfitPanel<T extends PanelType> implements OutfitSlotsHos
 
 		const minimizeBtn = this.panelEl.querySelector('.minimize-button') as HTMLElement;
 
+		toggleClasses(this.panelEl, this.minimized, 'minimized');
+		toggleClasses(this.panelEl, this.isFullscreen(), 'fullscreen');
+
+		minimizeBtn.textContent = this.minimized ? '+' : '-';
+
 		if (this.minimized) {
-			this.panelEl.classList.add("minimized");
-			minimizeBtn.textContent = '+';
 			this.collapseHeader();
 		}
 		else {
-			this.panelEl.classList.remove("minimized");
-			minimizeBtn.textContent = '−';
 			this.expandHeader();
 			this.render();
 		}

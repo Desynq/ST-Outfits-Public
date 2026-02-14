@@ -1,6 +1,6 @@
 import { OutfitTracker } from "../data/tracker.js";
 import { isWideScreen } from "../shared.js";
-import { createConfiguredElements } from "../util/ElementHelper.js";
+import { createConfiguredElements, toggleClasses } from "../util/ElementHelper.js";
 import { SlotsRenderer } from "./SlotsRenderer.js";
 import { OutfitTabsRenderer as TabsRenderer } from "./TabsRenderer.js";
 export class OutfitPanel {
@@ -14,6 +14,9 @@ export class OutfitPanel {
     }
     isMinimized() {
         return this.minimized;
+    }
+    isFullscreen() {
+        return !this.isMinimized() && !isWideScreen();
     }
     get collection() {
         return this.outfitManager.getOutfitCollection();
@@ -95,6 +98,8 @@ export class OutfitPanel {
         const start = (e) => {
             var _a;
             if (!this.panelEl)
+                return;
+            if (this.isFullscreen())
                 return;
             handle.setPointerCapture(e.pointerId);
             const rect = this.panelEl.getBoundingClientRect();
@@ -252,14 +257,13 @@ export class OutfitPanel {
         if (!this.panelEl)
             return;
         const minimizeBtn = this.panelEl.querySelector('.minimize-button');
+        toggleClasses(this.panelEl, this.minimized, 'minimized');
+        toggleClasses(this.panelEl, this.isFullscreen(), 'fullscreen');
+        minimizeBtn.textContent = this.minimized ? '+' : '-';
         if (this.minimized) {
-            this.panelEl.classList.add("minimized");
-            minimizeBtn.textContent = '+';
             this.collapseHeader();
         }
         else {
-            this.panelEl.classList.remove("minimized");
-            minimizeBtn.textContent = '−';
             this.expandHeader();
             this.render();
         }

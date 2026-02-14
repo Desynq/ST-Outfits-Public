@@ -1,0 +1,58 @@
+.outfit-preset {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 8px 10px;
+	background: rgba(255, 255, 255, 0.08);
+	border-radius: 6px;
+	margin-bottom: 6px;
+	backdrop-filter: blur(5px);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.preset-name {
+	font-weight: 500;
+	font-size: 0.85em;
+	text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+	flex: 1;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	padding-right: 8px;
+}
+
+.preset-actions {
+	display: flex;
+	gap: 6px;
+}
+
+.preset-actions button {
+	padding: 4px 8px;
+	border: none;
+	border-radius: 5px;
+	background: rgba(255, 255, 255, 0.15);
+	color: #fff;
+	cursor: pointer;
+	font-weight: 600;
+	font-size: 0.7em;
+	text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+	min-width: 40px;
+}
+
+.preset-actions button:hover {
+	background: rgba(255, 255, 255, 0.25);
+}
+
+.load-preset {
+	background: rgba(102, 187, 106, 0.25) !important;
+}
+
+.delete-preset {
+	background: rgba(229, 115, 115, 0.25) !important;
+}
+
+/* Outfits list styling */
+.outfit-presets-list {
+	max-height: 250px;
+	overflow-y: auto;
+}

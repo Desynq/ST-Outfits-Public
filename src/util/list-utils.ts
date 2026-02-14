@@ -20,3 +20,8 @@ export function conditionalList<T>(
 
 	return list;
 }
+
+
+export function forceArray<T>(x: T | T[]): T[] {
+	return Array.isArray(x) ? x : [x];
+}

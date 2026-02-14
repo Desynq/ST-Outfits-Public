@@ -1,6 +1,7 @@
 @import "./outfit-preview.css";
 @import "./outfit-slot.css";
 @import "./outfit-tabs.css";
+@import "./outfit-presets-tab.css";
 @import "./outfit-cache-tab.css";
 
 .outfit-panel {
@@ -21,14 +22,6 @@
     resize: both;
     overflow: auto;
 }
-
-@media (min-width: 1024px) {
-
-    .outfit-panel {
-        width: 24vw;
-    }
-}
-
 
 #bot-outfit-panel {
     background: linear-gradient(135deg, #7a57d1 0%, #6559e0 100%);
@@ -77,59 +70,6 @@
 }
 
 
-/* Presets Styling */
-.outfit-preset {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 10px;
-    background: rgba(255, 255, 255, 0.08);
-    border-radius: 6px;
-    margin-bottom: 6px;
-    backdrop-filter: blur(5px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.preset-name {
-    font-weight: 500;
-    font-size: 0.85em;
-    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    padding-right: 8px;
-}
-
-.preset-actions {
-    display: flex;
-    gap: 6px;
-}
-
-.preset-actions button {
-    padding: 4px 8px;
-    border: none;
-    border-radius: 5px;
-    background: rgba(255, 255, 255, 0.15);
-    color: #fff;
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 0.7em;
-    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
-    min-width: 40px;
-}
-
-.preset-actions button:hover {
-    background: rgba(255, 255, 255, 0.25);
-}
-
-.load-preset {
-    background: rgba(102, 187, 106, 0.25) !important;
-}
-
-.delete-preset {
-    background: rgba(229, 115, 115, 0.25) !important;
-}
 
 .system-tab-button {
     width: 100%;
@@ -202,6 +142,7 @@
     border-radius: 12px;
     justify-content: center;
     align-items: center;
+    resize: none;
 }
 
 .outfit-panel.minimized .outfit-header {
@@ -232,21 +173,6 @@
     min-height: 0;
     max-height: 40vh;
     /* Limit height for scroll */
-}
-
-@media (min-height: 768px) {
-
-    #bot-outfit-tab-content,
-    #user-outfit-tab-content {
-        max-height: 80vh;
-    }
-}
-
-
-/* Outfits list styling */
-.outfit-presets-list {
-    max-height: 250px;
-    overflow-y: auto;
 }
 
 .outfit-actions {
@@ -304,6 +230,27 @@
 
 .outfit-content::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.3);
+}
+
+
+
+.outfit-panel.fullscreen {
+    position: fixed !important;
+    inset: var(--topBarBlockSize) 0 0 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+}
+
+@media (min-height: 1024px) {
+
+    .outfit-panel.minimized {
+        z-index: 99;
+    }
+
+    #bot-outfit-tab-content,
+    #user-outfit-tab-content {
+        max-height: 80vh;
+    }
 }
 
 

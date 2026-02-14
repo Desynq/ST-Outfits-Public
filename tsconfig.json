@@ -2,10 +2,12 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "ESNext",
+    "moduleResolution": "node",
     "rootDir": "./src",
     "outDir": "./dist",
     "allowJs": false,
     "checkJs": false,
+    "maxNodeModuleJsDepth": 0,
     "noEmit": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -17,7 +19,13 @@
     "noImplicitThis": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "exactOptionalPropertyTypes": true
+    "exactOptionalPropertyTypes": true,
+    "baseUrl": ".",
+    "paths": {
+      "popup.js": [
+        "../../popup.js"
+      ]
+    }
   },
   "include": [
     "src/**/*",
@@ -25,6 +33,6 @@
   ],
   "exclude": [
     "node_modules",
-    "dist"
+    "dist",
   ],
 }

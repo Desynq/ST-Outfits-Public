@@ -1,7 +1,3 @@
-// @ts-expect-error
-import { extension_prompts } from "../../../../../script.js";
-// @ts-expect-error
-import { inject_ids } from '../../../../constants.js';
 import { indentString, toKebabCase } from "./util/StringHelper.js";
 export function mouseDragElement(element) {
     let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
@@ -107,8 +103,4 @@ export function escapeHTML(str) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
-}
-export function getOutletPrompt(key) {
-    const value = extension_prompts[inject_ids.CUSTOM_WI_OUTLET(key)]?.value;
-    return value || '';
 }

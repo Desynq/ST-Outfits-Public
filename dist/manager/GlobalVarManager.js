@@ -1,4 +1,3 @@
-// @ts-expect-error
 import { extension_settings } from "../../../../../extensions.js";
 function getGlobalVars() {
     const vars = extension_settings.variables ?? (extension_settings.variables = { global: {} });

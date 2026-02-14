@@ -1,11 +1,4 @@
-// @ts-expect-error
-import { extension_settings } from "../../../../extensions.js";
-// @ts-expect-error
-import { extension_prompts } from "../../../../../script.js";
-// @ts-expect-error
-import { inject_ids } from '../../../../constants.js';
-import { html } from "./util/lint.js";
-import { indentString, toKebabCase, toSnakeCase } from "./util/StringHelper.js";
+import { indentString, toKebabCase } from "./util/StringHelper.js";
 
 export function mouseDragElement(element: JQuery<any>) {
 	let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
@@ -140,10 +133,4 @@ export function escapeHTML(str: string): string {
 		.replace(/>/g, '&gt;')
 		.replace(/"/g, '&quot;')
 		.replace(/'/g, '&#039;');
-}
-
-
-export function getOutletPrompt(key: string): string {
-	const value = extension_prompts[inject_ids.CUSTOM_WI_OUTLET(key)]?.value;
-	return value || '';
 }

@@ -1,13 +1,13 @@
-import { OutfitManager } from "../manager/OutfitManager.js";
 import { OutfitSlot, SlotKind } from "../data/model/Outfit.js";
 import { ResolvedOutfitSlot } from "../data/model/OutfitSnapshots.js";
 import { MutableOutfitView } from "../data/view/MutableOutfitView.js";
-import { assertNever, escapeHTML, getOutletPrompt, isWideScreen, scrollIntoViewAboveKeyboard, toSlotName } from "../shared.js";
+import { OutfitManager } from "../manager/OutfitManager.js";
+import { assertNever, isWideScreen, scrollIntoViewAboveKeyboard, toSlotName } from "../shared.js";
+import { addDoubleTapListener } from "../util/element/click-actions.js";
 import { addLongPressAction, appendElement, createElement } from "../util/ElementHelper.js";
+import { substituteParams } from "../util/adapter/script-adapter.js";
 import { OutfitSlotsHost } from "./OutfitSlotsHost.js";
-import { html } from "../util/lint.js";
-import { addDoubleTapListener, addOnPointerDownOutside } from "../util/element/click-actions.js";
-import { conditionalList } from "../util/list-utils.js";
+import { popupConfirm } from "../util/adapter/popup-adapter.js";
 
 interface SlotContext {
 	scroller: HTMLElement;
@@ -264,21 +264,33 @@ export class SlotsRenderer {
 			() => this.beginInlineEdit(ctx, valueEl)
 		);
 
+		addLongPressAction(
+			valueEl,
+			300,
+			() => {
+				const text = valueEl.textContent;
+				const prompt = substituteParams(text);
+				this.showPromptModal(prompt);
+			},
+			{ stopImmediatePropagation: true }
+		);
+
 		container.appendChild(valueEl);
 		return valueEl;
 	}
 
 	private renderInlineCode(value: string): DocumentFragment {
 		const frag = document.createDocumentFragment();
+		const appendText = (start: number, end?: number) => frag.append(
+			document.createTextNode(value.slice(start, end))
+		);
 
 		let lastIndex = 0;
 
 		for (const macro of iterateMacros(value)) {
 			// Plain text before token
 			if (macro.index > lastIndex) {
-				frag.append(
-					document.createTextNode(value.slice(lastIndex, macro.index))
-				);
+				appendText(lastIndex, macro.index);
 			}
 
 			const span = this.createMacroSpan(macro);
@@ -290,50 +302,75 @@ export class SlotsRenderer {
 
 		// Trailing text
 		if (lastIndex < value.length) {
-			frag.append(
-				document.createTextNode(value.slice(lastIndex))
-			);
+			appendText(lastIndex);
 		}
 
 		return frag;
 	}
 
 	private createMacroSpan(macro: MacroMatch): HTMLSpanElement {
-		const span = createElement('span', 'slot-inline-code', macro.full);
+		const text = macro.full;
+
+		const getPrompt = (): string | null => {
+			const prompt = substituteParams(text);
+			return prompt === text ? null : prompt;
+		};
+
+		const span = createElement('span', 'slot-macro-span', text);
+
+		const updateFromPrompt = (): string | null => {
+			const prompt = getPrompt();
+			if (!prompt) {
+				span.title = 'Error: No Prompt Found';
+				span.classList.add('error');
+				return null;
+			}
+
+			span.title = prompt;
+			span.classList.remove('error');
+			return prompt;
+		};
+
+		updateFromPrompt();
+
+		addLongPressAction(span, 300, () => {
+			const prompt = updateFromPrompt();
+			if (!prompt)
+				this.showPromptModal('No Prompt Found!');
+			else
+				this.showPromptModal(prompt);
+		}, { stopImmediatePropagation: true });
+
 
 		if (macro.content.startsWith('outlet::')) {
 			const key = macro.content.slice('outlet::'.length);
 			span.classList.add('slot-outlet');
 			span.dataset.outletKey = key;
-
-			const updateFromPrompt = () => {
-				const key = span.dataset.outletKey!;
-				const prompt = getOutletPrompt(key)?.trim() ?? '';
-				if (!prompt) {
-					span.title = 'Error: No Prompt Found';
-					span.classList.add('slot-outlet-missing');
-					return null;
-				}
-
-				span.title = prompt;
-				span.classList.remove('slot-outlet-missing');
-				return prompt;
-			};
-
-			updateFromPrompt();
-
-			const showPrompt = (text: string) => alert(text);
-
-			addLongPressAction(span, 500, () => {
-				const prompt = updateFromPrompt();
-				if (!prompt)
-					showPrompt('No Prompt Found!');
-				else
-					showPrompt(prompt);
-			});
 		}
 
 		return span;
+	}
+
+	private async showPromptModal(promptText: string): Promise<void> {
+		const container = createElement('div', 'flex-container flexFlowColumn height100p');
+
+		const textarea = createElement('textarea', 'flex1 monospace textarea_compact');
+		textarea.value = promptText;
+		textarea.readOnly = true;
+		textarea.style.resize = 'none';
+		textarea.style.maxHeight = '90dvh';
+		container.append(textarea);
+
+		await popupConfirm(
+			container,
+			{
+				title: 'Prompt',
+				wide: true,
+				cancelText: false,
+				leftAlign: true,
+				large: true
+			}
+		);
 	}
 
 	private appendToggleBtn(container: HTMLDivElement, slot: ResolvedOutfitSlot): HTMLButtonElement {

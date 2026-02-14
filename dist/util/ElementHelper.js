@@ -31,18 +31,20 @@ export function addLeftClickListener(element, listener) {
         listener();
     });
 }
-export function addLongPressAction(el, delay, onLongPress) {
+export function addLongPressAction(el, delay, onLongPress, options) {
     let timer = null;
     let longPressTriggered = false;
     const getDelay = () => typeof delay === 'function' ? delay() : delay;
-    const start = () => {
+    const start = (e) => {
         if (timer !== null)
             return;
+        if (options?.stopImmediatePropagation)
+            e.stopImmediatePropagation();
         longPressTriggered = false;
         timer = window.setTimeout(() => {
             timer = null;
             longPressTriggered = true;
-            onLongPress();
+            onLongPress(e);
         }, getDelay());
     };
     const cancel = () => {
@@ -101,7 +103,8 @@ export function createConfiguredElements(creator, ...configures) {
 }
 export function createElement(tag, className, text) {
     const el = document.createElement(tag);
-    el.className = className;
+    if (className)
+        el.className = className;
     if (text !== undefined)
         el.textContent = text;
     return el;

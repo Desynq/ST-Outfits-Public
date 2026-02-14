@@ -258,7 +258,7 @@
 
 
 
-.slot-inline-code {
+.slot-macro-span {
 	font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
 	color: #3ccfcf;
@@ -270,7 +270,7 @@
 	white-space: nowrap;
 }
 
-.slot-outlet-missing {
+.slot-macro-span.error {
 	color: #c77;
 	text-decoration: underline dotted;
 	cursor: help;

@@ -44,7 +44,10 @@ export function addLeftClickListener(element: HTMLElement, listener: () => void)
 export function addLongPressAction(
 	el: HTMLElement,
 	delay: number | (() => number),
-	onLongPress: () => void,
+	onLongPress: (e: TouchEvent | MouseEvent) => void,
+	options?: {
+		stopImmediatePropagation?: boolean;
+	}
 ): void {
 	let timer: number | null = null;
 	let longPressTriggered = false;
@@ -52,15 +55,16 @@ export function addLongPressAction(
 	const getDelay = () =>
 		typeof delay === 'function' ? delay() : delay;
 
-	const start = () => {
+	const start = (e: TouchEvent | MouseEvent) => {
 		if (timer !== null) return;
+		if (options?.stopImmediatePropagation) e.stopImmediatePropagation();
 
 		longPressTriggered = false;
 
 		timer = window.setTimeout(() => {
 			timer = null;
 			longPressTriggered = true;
-			onLongPress();
+			onLongPress(e);
 		}, getDelay());
 	};
 
@@ -135,11 +139,11 @@ export function createConfiguredElements<T extends HTMLElement>(creator: () => T
 
 export function createElement<K extends keyof HTMLElementTagNameMap>(
 	tag: K,
-	className: string,
+	className?: string,
 	text?: string
 ): HTMLElementTagNameMap[K] {
 	const el = document.createElement(tag);
-	el.className = className;
+	if (className) el.className = className;
 	if (text !== undefined) el.textContent = text;
 
 	return el;

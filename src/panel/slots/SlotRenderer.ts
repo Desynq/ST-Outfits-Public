@@ -12,7 +12,7 @@ import { OutfitPanel } from "../OutfitPanel.js";
 import { OutfitSlotsHost } from "../OutfitSlotsHost.js";
 import { DisplaySlot } from "./DisplaySlot.js";
 
-interface SlotContext {
+export interface SlotContext {
 	scroller: HTMLElement;
 	slotElement: HTMLDivElement;
 	displaySlot: DisplaySlot;

@@ -243,16 +243,13 @@
     height: 100vh !important;
 }
 
-@media (min-height: 1024px) {
+#bot-outfit-tab-content,
+#user-outfit-tab-content {
+    max-height: 80vh;
+}
 
-    .outfit-panel.minimized {
-        z-index: 99;
-    }
-
-    #bot-outfit-tab-content,
-    #user-outfit-tab-content {
-        max-height: 80vh;
-    }
+.outfit-panel.minimized {
+    z-index: 99;
 }
 
 

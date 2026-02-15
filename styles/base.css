@@ -3,6 +3,7 @@
 @import "./outfit-tabs.css";
 @import "./outfit-presets-tab.css";
 @import "./outfit-cache-tab.css";
+@import "./visibility-tab.css";
 
 .outfit-panel {
     position: fixed;

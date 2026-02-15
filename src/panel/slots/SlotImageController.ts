@@ -3,7 +3,7 @@ import { OutfitTracker } from "../../data/tracker.js";
 import { OutfitImagesView } from "../../data/view/OutfitImagesView.js";
 import { popupConfirm } from "../../util/adapter/popup-adapter.js";
 import { addDoubleTapListener } from "../../util/element/click-actions.js";
-import { addLongPressAction, createElement, onResizeElement } from "../../util/ElementHelper.js";
+import { addLongPressAction, appendElement, createElement, hasAnyClass, onResizeElement } from "../../util/ElementHelper.js";
 import { promptImageUpload, resizeImage } from "../../util/image-utils.js";
 import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
 import { SlotContext } from "./SlotRenderer.js";
@@ -21,48 +21,110 @@ export class SlotImageController extends OutfitPanelContext {
 	 */
 	public create(ctx: SlotContext): {
 		imgWrapper: HTMLDivElement,
-		imgEl: HTMLImageElement;
+		imgEl: HTMLImageElement | null;
 	} {
 		const imgWrapper = createElement('div', 'slot-image-wrapper');
-		const imgEl = createElement('img', 'slot-image');
 
 		const tag = ctx.slot.activeImageTag;
+		let imgEl: HTMLImageElement | null = null;
+		let showImage: (() => void) | undefined;
 
 		if (!tag) {
-			imgEl.src = '';
-			imgEl.classList.add('--empty');
-			imgEl.alt = 'No Image';
+			imgWrapper.classList.add('--empty');
 		}
 		else {
-			this.displayImage(imgWrapper, imgEl, ctx, tag);
+			imgEl = this.createImage(imgWrapper, ctx, tag);
+			if (imgEl) {
+				imgWrapper.append(imgEl);
+
+				const deleteBtn = this.createDeleteBtn(ctx);
+				const toggleBtn = this.createToggleBtn(ctx);
+				const resizeBtn = this.createResizeBtn(imgWrapper, ctx);
+
+				ctx.labelLeftDiv.append(deleteBtn, toggleBtn, resizeBtn);
+			}
+			else {
+				if (imgWrapper.classList.contains('--hidden')) {
+					imgWrapper.textContent = 'Show Image';
+					showImage = () => this.toggleImage(ctx);
+				}
+			}
 		}
 
 
 		addDoubleTapListener(
-			imgEl,
+			imgWrapper,
 			() => this.changeImage(ctx),
 			300,
-			() => this.toggleImage(ctx)
+			showImage
 		);
-
-		addLongPressAction(
-			imgEl,
-			500,
-			() => this.deleteImage(ctx)
-		);
-
-		imgWrapper.append(imgEl);
-
-		this.panel.disposer.add(onResizeElement(
-			imgWrapper,
-			(width, height) => this.saveImageResize(ctx, width, height)
-		));
 
 		return {
 			imgWrapper,
 			imgEl
 		};
 	}
+
+	private createToggleBtn(ctx: SlotContext): HTMLButtonElement {
+		const btn = createElement('button', 'slot-button');
+		btn.textContent = 'Hide Image';
+
+		btn.addEventListener('click', () => this.toggleImage(ctx));
+
+		return btn;
+	}
+
+	private createDeleteBtn(ctx: SlotContext): HTMLButtonElement {
+		const btn = createElement('button', 'slot-button'); // lazy with css
+		btn.textContent = 'Delete Image';
+
+		btn.addEventListener('click', () => this.deleteImage(ctx));
+
+		return btn;
+	}
+
+	private createResizeBtn(imgWrapper: HTMLDivElement, ctx: SlotContext): HTMLButtonElement {
+		const btn = createElement('button', 'slot-button');
+		btn.textContent = 'Resize Image';
+
+		btn.addEventListener('click', () => this.promptResize(imgWrapper, ctx));
+
+		return btn;
+	}
+
+	private async promptResize(imgWrapper: HTMLDivElement, ctx: SlotContext): Promise<void> {
+		const container = createElement('div', 'resize-prompt');
+
+		const createInput = (value: number) => {
+			const input = createElement('input');
+			input.type = 'number';
+			input.value = value.toString();
+			input.min = '1';
+			return input;
+		};
+
+		const widthInput = createInput(imgWrapper.offsetWidth);
+		const heightInput = createInput(imgWrapper.offsetHeight);
+
+		container.append(widthInput, heightInput);
+
+		const confirmed = await popupConfirm(container, {
+			title: 'Resize Image',
+			okText: 'Apply'
+		});
+
+		if (!confirmed) return;
+
+		const width = Number(widthInput.value);
+		const height = Number(heightInput.value);
+
+		if (!width || !height) return;
+
+		await this.saveImageResize(ctx, width, height);
+		this.panel.render();
+	}
+
+
 
 	private async saveImageResize(ctx: SlotContext, width: number, height: number): Promise<void> {
 		const tag = ctx.slot.activeImageTag;
@@ -72,33 +134,42 @@ export class SlotImageController extends OutfitPanelContext {
 		this.outfitManager.saveSettings();
 	}
 
-	private displayImage(imgWrapper: HTMLDivElement, imgEl: HTMLImageElement, ctx: SlotContext, tag: string): boolean {
-		const displayError = (message: string): false => {
-			imgEl.src = '';
-			imgEl.classList.add('--add');
-			imgEl.alt = 'Error';
+	private createImage(imgWrapper: HTMLDivElement, ctx: SlotContext, tag: string): HTMLImageElement | null {
+
+		const displayError = (message: string): null => {
+			imgWrapper.classList.add('--error');
 			console.error(message);
-			return false;
+			return null;
 		};
 
 		const image = ctx.slot.images[tag];
 		if (!image) return displayError(`Active image tag '${tag}' is not stored`);
 
 		if (image.hidden) {
-			imgEl.src = '';
-			imgEl.classList.add('--hidden');
-			imgEl.alt = 'Image Hidden';
-			return true;
+			imgWrapper.classList.add('--hidden');
+			return null;
 		}
 
 		const key = image.key;
 		const blob = this.imagesView.getImage(key);
 		if (!blob) return displayError(`Blob key '${key}' from image tag '${tag}' does not point to an image blob`);
 
+
+		const imgEl = createElement('img', 'slot-image');
+
 		imgEl.src = blob.base64;
 		for (const x of ['width', 'height'] as const) imgWrapper.style[x] = `${image[x]}px`;
 
-		return true;
+		imgEl.addEventListener('error', () => {
+			imgWrapper.classList.add('--error');
+		});
+
+		this.panel.disposer.add(onResizeElement(
+			imgWrapper,
+			(width, height) => this.saveImageResize(ctx, width, height)
+		));
+
+		return imgEl;
 	}
 
 	// add a new image or change to a pre-existing image

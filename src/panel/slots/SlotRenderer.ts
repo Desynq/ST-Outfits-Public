@@ -39,6 +39,10 @@ export class SlotRenderer extends OutfitPanelContext {
 		this.slotImageControl = new SlotImageController(this.panel);
 	}
 
+	private isValueHidden(mode: SlotRenderMode): boolean {
+		return mode !== 'normal';
+	}
+
 	public render(
 		container: HTMLDivElement,
 		display: DisplaySlot
@@ -53,9 +57,10 @@ export class SlotRenderer extends OutfitPanelContext {
 		const labelLeftDiv = appendElement(labelDiv, 'div', 'slot-label-left');
 		const labelRightDiv = appendElement(labelDiv, 'div', 'slot-label-right');
 
-		appendElement(labelLeftDiv, 'div', 'slot-ordinal', display.displayIndex.toString());
+		const titleRow = appendElement(labelLeftDiv, 'div', 'slot-label-row');
+		appendElement(titleRow, 'div', 'slot-ordinal', display.displayIndex.toString());
 		const name = toSlotName(slot.id);
-		const slotNameEl = appendElement(labelLeftDiv, 'div', 'slot-name', name);
+		const slotNameEl = appendElement(titleRow, 'div', 'slot-name', name);
 		slotNameEl.dataset.text = name;
 
 
@@ -93,9 +98,10 @@ export class SlotRenderer extends OutfitPanelContext {
 			armTap
 		);
 
-
-		const { imgWrapper } = this.slotImageControl.create(ctx);
-		slotElement.append(imgWrapper);
+		if (!this.isValueHidden(mode)) {
+			const { imgWrapper } = this.slotImageControl.create(ctx);
+			ctx.labelRightDiv.append(imgWrapper);
+		}
 
 
 		const appendInlineToggleBtn = () =>

@@ -175,6 +175,13 @@ export function toggleClasses(element, condition, ...tokens) {
     element.classList[method](...tokens);
     return condition;
 }
+export function hasAnyClass(element, ...tokens) {
+    for (const token of tokens) {
+        if (element.classList.contains(token))
+            return true;
+    }
+    return false;
+}
 export function onResizeElement(element, cb) {
     let lastWidth = 0;
     let lastHeight = 0;

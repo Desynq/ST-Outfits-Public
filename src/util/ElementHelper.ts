@@ -248,6 +248,17 @@ export function toggleClasses(
 	return condition;
 }
 
+export function hasAnyClass(
+	element: HTMLElement,
+	...tokens: string[]
+): boolean {
+	for (const token of tokens) {
+		if (element.classList.contains(token)) return true;
+	}
+
+	return false;
+}
+
 
 
 export function onResizeElement(

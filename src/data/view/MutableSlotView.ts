@@ -208,7 +208,7 @@ export class MutableSlotView {
 
 		if (image.hidden === hidden) return 'already-set-to-state';
 
-		image.hidden = !hidden;
+		image.hidden = hidden;
 		return 'toggled';
 	}
 

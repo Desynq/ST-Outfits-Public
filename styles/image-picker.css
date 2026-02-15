@@ -16,3 +16,28 @@
 .image-picker-item.selected {
 	border-color: #fff;
 }
+
+
+
+.resize-prompt {
+	display: flex;
+	gap: 8px;
+}
+
+.resize-prompt input[type="number"] {
+	width: 100px;
+
+	padding: 6px 8px;
+
+	background: rgba(255, 255, 255, 0.08);
+	border: 1px solid rgba(255, 255, 255, 0.15);
+	border-radius: 6px;
+
+	color: #ffffff;
+	font-size: 0.9rem;
+
+	outline: none;
+	transition:
+		border-color 0.15s ease,
+		box-shadow 0.15s ease;
+}

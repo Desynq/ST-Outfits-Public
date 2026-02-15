@@ -123,7 +123,7 @@ export class MutableSlotView {
             return 'tag-does-not-exist';
         if (image.hidden === hidden)
             return 'already-set-to-state';
-        image.hidden = !hidden;
+        image.hidden = hidden;
         return 'toggled';
     }
     resizeImage(id, tag, width, height) {

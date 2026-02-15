@@ -1,4 +1,4 @@
-import { createElement } from "./ElementHelper";
+import { createElement } from "./ElementHelper.js";
 export function promptImageUpload() {
     return new Promise(resolve => {
         const input = createElement('input');
@@ -27,5 +27,10 @@ export async function resizeImage(file, maxWidth = 512) {
     canvas.height = img.height * scale;
     const ctx = canvas.getContext('2d');
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    return canvas.toDataURL('image/webp', 0.85);
+    const base64 = canvas.toDataURL('image/webp', 0.85);
+    return {
+        base64: base64,
+        height: canvas.height,
+        width: canvas.width
+    };
 }

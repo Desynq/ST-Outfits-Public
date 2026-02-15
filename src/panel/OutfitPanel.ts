@@ -5,6 +5,7 @@ import { LayoutMode, PanelSettingsViewMap } from "../data/view/PanelViews.js";
 import { isWideScreen } from "../shared.js";
 import type { OutfitManagerMap, PanelType } from "../types/maps.js";
 import { createConfiguredElements, toggleClasses } from "../util/ElementHelper.js";
+import { Disposer } from "./Disposer.js";
 import { OutfitSlotsHost } from "./OutfitSlotsHost.js";
 import { OutfitTabsHost } from "./OutfitTabsHost.js";
 import { SlotsRenderer } from "./SlotsRenderer.js";
@@ -18,6 +19,8 @@ export abstract class OutfitPanel<T extends PanelType> implements OutfitSlotsHos
 
 	protected slotsRenderer: SlotsRenderer = new SlotsRenderer(this);
 	protected tabsRenderer: TabsRenderer = new TabsRenderer(this);
+
+	public readonly disposer: Disposer = new Disposer();
 
 	public constructor(
 		protected outfitManager: OutfitManagerMap[T]
@@ -103,6 +106,7 @@ export abstract class OutfitPanel<T extends PanelType> implements OutfitSlotsHos
 
 
 	public render(): void {
+		this.disposer.dispose();
 		if (!this.panelEl || this.minimized) return;
 
 		const tabsContainer = this.panelEl.querySelector('.outfit-tabs') as HTMLDivElement | undefined;

@@ -1,6 +1,6 @@
 import { asBoolean, asObject, asStringRecord, ensureObject } from "../ObjectHelper.js";
 import { normalizeOutfitSnapshots } from "./mappings/OutfitCache.js";
-import { Outfit, OutfitCollection, OutfitSlot, SlotKind } from "./model/Outfit.js";
+import { ImageBlob, Outfit, OutfitCollection, OutfitImage, OutfitSlot, OutfitTrackerModel, SlotKind } from "./model/Outfit.js";
 
 
 export function validatePresets(holder: any): void {
@@ -88,7 +88,9 @@ function normalizeLegacyOutfit(value: any): Outfit {
 			id,
 			kind: inferKindFromId(id),
 			enabled: true,
-			value: v
+			value: v,
+			images: {},
+			activeImageTag: null
 		})
 	);
 
@@ -125,7 +127,9 @@ function normalizeOutfit(value: any): Outfit {
 			id: s.id,
 			kind: normalizeKind(s.kind),
 			enabled: typeof s.enabled === 'boolean' ? s.enabled : true,
-			value: typeof s.value === 'string' ? s.value : raw.values[s.id] ?? 'None'
+			value: typeof s.value === 'string' ? s.value : raw.values[s.id] ?? 'None',
+			images: normalizeImages(s.images),
+			activeImageTag: typeof s.activeImageTag === 'string' ? s.activeImageTag : null
 		});
 	}
 
@@ -136,9 +140,71 @@ function normalizeOutfit(value: any): Outfit {
 			id,
 			kind: inferKindFromId(id),
 			enabled: true,
-			value: v
+			value: v,
+			images: {},
+			activeImageTag: null
 		});
 	}
 
 	return { slots };
+}
+
+function normalizeImages(
+	input: unknown
+): Record<string, OutfitImage> {
+	if (!input || typeof input !== 'object') {
+		return {};
+	}
+
+	const result: Record<string, OutfitImage> = {};
+
+	for (const [key, value] of Object.entries(input as Record<string, unknown>)) {
+		if (!value || typeof value !== 'object') continue;
+		const o = value as any;
+
+		if (typeof o.key !== 'string') continue;
+
+		if (typeof o.width !== 'number') continue;
+
+		if (typeof o.height !== 'number') continue;
+
+		if (typeof o.hidden !== 'boolean') o.hidden = false;
+
+		result[key] = {
+			key: o.key,
+			width: o.width,
+			height: o.height,
+			hidden: o.hidden
+		};
+	}
+
+	return result;
+}
+
+
+export function normalizeImageBlobs(
+	holder: Partial<OutfitTrackerModel>
+): void {
+	if (!holder.images || typeof holder.images !== 'object') {
+		holder.images = {};
+		return;
+	}
+
+	for (const k of Object.keys(holder.images)) {
+		if (!isValidImageBlob(holder.images[k])) {
+			delete holder.images[k];
+		}
+	}
+}
+
+function isValidImageBlob(v: unknown): v is ImageBlob {
+	if (!v || typeof v !== 'object') return false;
+
+	const blob = v as Record<string, unknown>;
+
+	return (
+		typeof blob.base64 === 'string' &&
+		typeof blob.width === 'number' &&
+		typeof blob.height === 'number'
+	);
 }

@@ -8,6 +8,7 @@ import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
 import { OutfitPanel } from "../OutfitPanel.js";
 import { OutfitSlotsHost } from "../OutfitSlotsHost.js";
 import { DisplaySlot } from "./DisplaySlot.js";
+import { SlotImageController } from "./SlotImageController.js";
 import { SlotValueController } from "./SlotValueController.js";
 
 export interface SlotContext {
@@ -27,6 +28,7 @@ type SlotRenderMode = 'hidden-empty' | 'hidden-disabled' | 'disabled-empty' | 'n
 export class SlotRenderer extends OutfitPanelContext {
 
 	private readonly slotValControl: SlotValueController;
+	private readonly slotImageControl: SlotImageController;
 
 	public constructor(
 		panel: OutfitPanel<PanelType>,
@@ -34,6 +36,7 @@ export class SlotRenderer extends OutfitPanelContext {
 	) {
 		super(panel);
 		this.slotValControl = new SlotValueController(this.panel, this.removeActionButtons.bind(this));
+		this.slotImageControl = new SlotImageController(this.panel);
 	}
 
 	public render(
@@ -89,6 +92,11 @@ export class SlotRenderer extends OutfitPanelContext {
 			() => { disarmTap(); this.toggle(ctx.slot); },
 			armTap
 		);
+
+
+		const { imgWrapper } = this.slotImageControl.create(ctx);
+		slotElement.append(imgWrapper);
+
 
 		const appendInlineToggleBtn = () =>
 			this.appendToggleBtn(labelRightDiv, slot);

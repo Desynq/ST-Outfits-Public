@@ -2,12 +2,14 @@ import { assertNever, toSlotName } from "../../shared.js";
 import { addDoubleTapListener } from "../../util/element/click-actions.js";
 import { appendElement, createElement } from "../../util/ElementHelper.js";
 import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
+import { SlotImageController } from "./SlotImageController.js";
 import { SlotValueController } from "./SlotValueController.js";
 export class SlotRenderer extends OutfitPanelContext {
     constructor(panel, getDisplaySlots) {
         super(panel);
         this.getDisplaySlots = getDisplaySlots;
         this.slotValControl = new SlotValueController(this.panel, this.removeActionButtons.bind(this));
+        this.slotImageControl = new SlotImageController(this.panel);
     }
     render(container, display) {
         const slot = display.slot;
@@ -44,6 +46,8 @@ export class SlotRenderer extends OutfitPanelContext {
         };
         const disarmTap = () => slotNameEl.classList.remove('tap-armed');
         addDoubleTapListener(slotNameEl, () => { disarmTap(); this.beginRename(slotNameEl, ctx); }, 300, () => { disarmTap(); this.toggle(ctx.slot); }, armTap);
+        const { imgWrapper } = this.slotImageControl.create(ctx);
+        slotElement.append(imgWrapper);
         const appendInlineToggleBtn = () => this.appendToggleBtn(labelRightDiv, slot);
         const appendInlineEdit = () => {
             const valueEl = this.slotValControl.render(slotElement, ctx);

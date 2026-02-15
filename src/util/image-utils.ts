@@ -1,4 +1,5 @@
-import { createElement } from "./ElementHelper";
+import { ImageBlob } from "../data/model/Outfit.js";
+import { createElement } from "./ElementHelper.js";
 
 
 export function promptImageUpload(): Promise<File | null> {
@@ -23,7 +24,7 @@ export function fileToBase64(file: File): Promise<string> {
 	});
 }
 
-export async function resizeImage(file: File, maxWidth: number = 512): Promise<string> {
+export async function resizeImage(file: File, maxWidth: number = 512): Promise<ImageBlob> {
 	const img = new Image();
 	img.src = URL.createObjectURL(file);
 
@@ -37,5 +38,10 @@ export async function resizeImage(file: File, maxWidth: number = 512): Promise<s
 	const ctx = canvas.getContext('2d')!;
 	ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-	return canvas.toDataURL('image/webp', 0.85);
+	const base64 = canvas.toDataURL('image/webp', 0.85);
+	return {
+		base64: base64,
+		height: canvas.height,
+		width: canvas.width
+	};
 }

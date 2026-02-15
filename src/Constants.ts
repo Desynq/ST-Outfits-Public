@@ -1,4 +1,4 @@
-import { OutfitSlot, SlotKind } from "./data/model/Outfit";
+import { OutfitSlot, SlotKind } from "./data/model/Outfit.js";
 
 export const DEFAULT_CLOTHING_SLOTS = [
 	'headwear',
@@ -32,7 +32,9 @@ function slot(id: string, kind: SlotKind): OutfitSlot {
 		id,
 		value: 'None',
 		kind,
-		enabled: true
+		enabled: true,
+		images: {},
+		activeImageTag: null
 	};
 }
 

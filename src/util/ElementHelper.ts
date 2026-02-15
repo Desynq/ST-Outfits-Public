@@ -47,6 +47,7 @@ export function addLongPressAction(
 	onLongPress: (e: TouchEvent | MouseEvent) => void,
 	options?: {
 		stopImmediatePropagation?: boolean;
+		onReleaseAfterLongPress?: (e: TouchEvent | MouseEvent) => void;
 	}
 ): void {
 	let timer: number | null = null;
@@ -68,10 +69,15 @@ export function addLongPressAction(
 		}, getDelay());
 	};
 
-	const cancel = () => {
+	const cancel = (e: TouchEvent | MouseEvent) => {
 		if (timer !== null) {
 			clearTimeout(timer);
 			timer = null;
+		}
+
+		if (longPressTriggered) {
+			options?.onReleaseAfterLongPress?.(e);
+			longPressTriggered = false;
 		}
 	};
 
@@ -240,4 +246,27 @@ export function toggleClasses(
 	const method = condition ? 'add' : 'remove';
 	element.classList[method](...tokens);
 	return condition;
+}
+
+
+
+export function onResizeElement(
+	element: HTMLElement,
+	cb: (width: number, height: number) => void
+): () => void {
+	let lastWidth = 0;
+	let lastHeight = 0;
+
+	const observer = new ResizeObserver(([entry]) => {
+		const { width, height } = entry.contentRect;
+
+		if (width !== lastWidth || height !== lastHeight) {
+			cb(width, height);
+			lastWidth = width;
+			lastHeight = height;
+		}
+	});
+
+	observer.observe(element);
+	return () => observer.disconnect();
 }

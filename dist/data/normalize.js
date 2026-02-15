@@ -65,7 +65,9 @@ function normalizeLegacyOutfit(value) {
         id,
         kind: inferKindFromId(id),
         enabled: true,
-        value: v
+        value: v,
+        images: {},
+        activeImageTag: null
     }));
     return { slots };
 }
@@ -95,7 +97,9 @@ function normalizeOutfit(value) {
             id: s.id,
             kind: normalizeKind(s.kind),
             enabled: typeof s.enabled === 'boolean' ? s.enabled : true,
-            value: typeof s.value === 'string' ? s.value : raw.values[s.id] ?? 'None'
+            value: typeof s.value === 'string' ? s.value : raw.values[s.id] ?? 'None',
+            images: normalizeImages(s.images),
+            activeImageTag: typeof s.activeImageTag === 'string' ? s.activeImageTag : null
         });
     }
     for (const [id, v] of Object.entries(raw.values)) {
@@ -105,8 +109,55 @@ function normalizeOutfit(value) {
             id,
             kind: inferKindFromId(id),
             enabled: true,
-            value: v
+            value: v,
+            images: {},
+            activeImageTag: null
         });
     }
     return { slots };
+}
+function normalizeImages(input) {
+    if (!input || typeof input !== 'object') {
+        return {};
+    }
+    const result = {};
+    for (const [key, value] of Object.entries(input)) {
+        if (!value || typeof value !== 'object')
+            continue;
+        const o = value;
+        if (typeof o.key !== 'string')
+            continue;
+        if (typeof o.width !== 'number')
+            continue;
+        if (typeof o.height !== 'number')
+            continue;
+        if (typeof o.hidden !== 'boolean')
+            o.hidden = false;
+        result[key] = {
+            key: o.key,
+            width: o.width,
+            height: o.height,
+            hidden: o.hidden
+        };
+    }
+    return result;
+}
+export function normalizeImageBlobs(holder) {
+    if (!holder.images || typeof holder.images !== 'object') {
+        holder.images = {};
+        return;
+    }
+    for (const k of Object.keys(holder.images)) {
+        if (!isValidImageBlob(holder.images[k])) {
+            delete holder.images[k];
+        }
+    }
+}
+function isValidImageBlob(v) {
+    if (!v || typeof v !== 'object')
+        return false;
+    const blob = v;
+    return (typeof blob.base64 === 'string' &&
+        typeof blob.width === 'number' &&
+        typeof blob.height === 'number');
 }

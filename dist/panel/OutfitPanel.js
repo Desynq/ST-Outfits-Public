@@ -1,6 +1,7 @@
 import { OutfitTracker } from "../data/tracker.js";
 import { isWideScreen } from "../shared.js";
 import { createConfiguredElements, toggleClasses } from "../util/ElementHelper.js";
+import { Disposer } from "./Disposer.js";
 import { SlotsRenderer } from "./SlotsRenderer.js";
 import { OutfitTabsRenderer as TabsRenderer } from "./TabsRenderer.js";
 export class OutfitPanel {
@@ -11,6 +12,7 @@ export class OutfitPanel {
         this.isVisible = false;
         this.slotsRenderer = new SlotsRenderer(this);
         this.tabsRenderer = new TabsRenderer(this);
+        this.disposer = new Disposer();
     }
     isMinimized() {
         return this.minimized;
@@ -73,6 +75,7 @@ export class OutfitPanel {
         }
     }
     render() {
+        this.disposer.dispose();
         if (!this.panelEl || this.minimized)
             return;
         const tabsContainer = this.panelEl.querySelector('.outfit-tabs');

@@ -1,4 +1,5 @@
-import { Outfit, OutfitSlot, SlotKind } from "../model/Outfit.js";
+import { OutfitSlot, SlotKind } from "../model/Outfit.js";
+import { OutfitTracker } from "../tracker.js";
 
 
 export type MoveSlotResult =
@@ -25,6 +26,34 @@ export type MoveToKindResult =
 	| 'slot-not-found'
 	| 'noop'
 	| 'moved';
+
+export type SetActiveImageResult =
+	| 'slot-not-found'
+	| 'image-does-not-exist'
+	| 'image-already-active'
+	| 'set-active-image';
+
+export type AttachImageResult =
+	| 'slot-not-found'
+	| 'blob-does-not-exist'
+	| 'attached-image';
+
+export type DeleteImageResponse =
+	| { status: 'slot-not-found'; }
+	| { status: 'image-does-not-exist'; }
+	| { status: 'deleted-image'; blobKey: string; };
+
+export type ToggleImageResult =
+	| 'slot-not-found'
+	| 'tag-does-not-exist'
+	| 'already-set-to-state'
+	| 'toggled';
+
+export type ResizeImageResult =
+	| 'slot-not-found'
+	| 'tag-does-not-exist'
+	| 'noop'
+	| 'resized';
 
 export class MutableSlotView {
 
@@ -56,9 +85,13 @@ export class MutableSlotView {
 		return [...new Set(this.slots.map(s => s.kind))];
 	}
 
-	public getSlotById(id: string): Readonly<OutfitSlot> | undefined {
+	private getMutSlotById(id: string): OutfitSlot | undefined {
 		const i = this.indexById[id];
 		return i === undefined ? undefined : this._slots[i];
+	}
+
+	public getSlotById(id: string): Readonly<OutfitSlot> | undefined {
+		return this.getMutSlotById(id);
 	}
 
 	public getSlotAt(index: number): Readonly<OutfitSlot> | undefined {
@@ -108,6 +141,93 @@ export class MutableSlotView {
 		return true;
 	}
 
+
+
+	public attachImage(id: string, tag: string, blobKey: string): AttachImageResult {
+		const i = this.indexById[id];
+		if (i === undefined) return 'slot-not-found';
+
+		const blob = OutfitTracker.images().getImage(blobKey);
+		if (blob === undefined) return 'blob-does-not-exist';
+
+		this._slots[i].images[tag] = {
+			key: blobKey,
+			width: blob.width,
+			height: blob.height,
+			hidden: false
+		};
+
+		return 'attached-image';
+	}
+
+	public deleteImage(id: string, tag: string): DeleteImageResponse {
+		const i = this.indexById[id];
+		if (i === undefined) return {
+			status: 'slot-not-found'
+		};
+
+		const slot = this._slots[i];
+
+		const image = slot.images[tag];
+		if (image === undefined) return {
+			status: 'image-does-not-exist'
+		};
+
+		if (slot.activeImageTag === tag) slot.activeImageTag = null;
+
+		const blobKey = image.key;
+
+		delete slot.images[tag];
+
+		return {
+			status: 'deleted-image',
+			blobKey
+		};
+	}
+
+	public setActiveImage(id: string, tag: string): SetActiveImageResult {
+		const slot = this.getMutSlotById(id);
+		if (!slot) return 'slot-not-found';
+
+		if (slot.activeImageTag === tag) return 'image-already-active';
+
+		slot.activeImageTag = tag;
+
+		const image = slot.images[tag];
+		if (!image) return 'image-does-not-exist';
+
+		return 'set-active-image';
+	}
+
+	public toggleImage(id: string, tag: string, hidden: boolean): ToggleImageResult {
+		const slot = this.getMutSlotById(id);
+		if (!slot) return 'slot-not-found';
+
+		const image = slot.images[tag];
+		if (!image) return 'tag-does-not-exist';
+
+		if (image.hidden === hidden) return 'already-set-to-state';
+
+		image.hidden = !hidden;
+		return 'toggled';
+	}
+
+	public resizeImage(id: string, tag: string, width: number, height: number): ResizeImageResult {
+		const slot = this.getMutSlotById(id);
+		if (!slot) return 'slot-not-found';
+
+		const image = slot.images[tag];
+		if (!image) return 'tag-does-not-exist';
+
+		if (image.width === width && image.height === height) return 'noop';
+
+		image.width = width;
+		image.height = height;
+		return 'resized';
+	}
+
+
+
 	public addSlot(id: string, kind: SlotKind): AddSlotResult {
 		const i = this.indexById[id];
 		if (i !== undefined) return 'slot-already-exists';
@@ -116,7 +236,9 @@ export class MutableSlotView {
 			id,
 			kind,
 			value: 'None',
-			enabled: true
+			enabled: true,
+			images: {},
+			activeImageTag: null
 		});
 
 		this.indexById[id] = this._slots.length - 1; // append to index

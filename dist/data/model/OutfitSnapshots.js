@@ -4,15 +4,17 @@ class OutfitSlotBase {
     }
 }
 export class ResolvedOutfitSlot extends OutfitSlotBase {
-    constructor(id, kind, value, enabled) {
+    constructor(id, kind, value, enabled, images, activeImageTag) {
         super(id);
         this.kind = kind;
         this.value = value;
         this.enabled = enabled;
+        this.images = images;
+        this.activeImageTag = activeImageTag;
         this.resolved = true;
     }
     static fromSlot(slot, value) {
-        return new ResolvedOutfitSlot(slot.id, slot.kind, value, slot.enabled);
+        return new ResolvedOutfitSlot(slot.id, slot.kind, value, slot.enabled, slot.images, slot.activeImageTag);
     }
     isEnabled() {
         return this.enabled;

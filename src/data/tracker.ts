@@ -1,10 +1,12 @@
 // @ts-ignore
 import { extension_settings } from "../../../../../extensions.js";
 import type { PanelType } from "../types/maps.js";
+import { ensureRecordProperty } from "../util/narrowing.js";
 import { normalizePanelSettings } from "./mappings/PanelSettings.js";
 import { CharactersOutfitMap, ExtensionSettingsAugment, OutfitTrackerModel } from "./model/Outfit.js";
-import { validatePresets } from "./normalize.js";
+import { normalizeImageBlobs, validatePresets } from "./normalize.js";
 import { CharacterOutfitCollectionView, UserOutfitCollectionView } from "./view/OutfitCollectionView.js";
+import { OutfitImagesView } from "./view/OutfitImagesView.js";
 import { BotPanelSettingsView, defaultBotPanelSettings, defaultUserPanelSettings, PanelSettingsMap, PanelSettingsViewMap, UserPanelSettingsView } from "./view/PanelViews.js";
 
 const PANEL_SETTINGS_FACTORIES = {
@@ -43,6 +45,10 @@ class Tracker {
 
 		return factory(this.settings);
 	}
+
+	public images(): OutfitImagesView {
+		return new OutfitImagesView(this.settings.images);
+	}
 }
 
 class CharacterOutfitMapView {
@@ -52,6 +58,10 @@ class CharacterOutfitMapView {
 
 	public outfits(character: string): CharacterOutfitCollectionView {
 		return new CharacterOutfitCollectionView(this.map, character);
+	}
+
+	public characters(): string[] {
+		return Object.keys(this.map);
 	}
 
 	public clearOutfits(character: string): void {
@@ -65,6 +75,7 @@ function loadTracker(): Tracker {
 	const raw: Partial<OutfitTrackerModel> = settings.outfit_tracker ??= {};
 
 	raw.enableSysMessages ??= false;
+	normalizeImageBlobs(raw);
 	validatePresets(raw);
 
 	normalizePanelSettings(raw, 'userPanel', defaultUserPanelSettings);

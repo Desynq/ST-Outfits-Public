@@ -28,4 +28,19 @@ export class MutableOutfitView extends OutfitView {
     moveToKind(id, kind) {
         return this.slotView.moveToKind(id, kind);
     }
+    attachImage(id, tag, blobKey) {
+        return this.slotView.attachImage(id, tag, blobKey);
+    }
+    deleteImage(id, tag) {
+        return this.slotView.deleteImage(id, tag);
+    }
+    setActiveImage(id, tag) {
+        return this.slotView.setActiveImage(id, tag);
+    }
+    toggleImage(id, tag, hidden) {
+        return this.slotView.toggleImage(id, tag, hidden);
+    }
+    resizeImage(id, tag, width, height) {
+        return this.slotView.resizeImage(id, tag, width, height);
+    }
 }

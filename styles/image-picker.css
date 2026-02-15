@@ -1,0 +1,18 @@
+.image-picker {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+	gap: 8px;
+	max-height: 70vh;
+	overflow-y: auto;
+}
+
+.image-picker-item {
+	cursor: pointer;
+	border: 1px solid transparent;
+	padding: 6px;
+	text-align: center;
+}
+
+.image-picker-item.selected {
+	border-color: #fff;
+}

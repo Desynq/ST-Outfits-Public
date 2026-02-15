@@ -1,4 +1,4 @@
-import { OutfitSlot, SlotKind } from "./Outfit.js";
+import { OutfitImage, OutfitSlot, SlotKind } from "./Outfit.js";
 
 
 abstract class OutfitSlotBase {
@@ -17,13 +17,15 @@ export class ResolvedOutfitSlot extends OutfitSlotBase {
 		id: string,
 		public readonly kind: SlotKind,
 		public readonly value: string,
-		public readonly enabled: boolean
+		public readonly enabled: boolean,
+		public readonly images: Record<string, OutfitImage>,
+		public readonly activeImageTag: string | null
 	) {
 		super(id);
 	}
 
 	public static fromSlot(slot: Readonly<OutfitSlot>, value: string): ResolvedOutfitSlot {
-		return new ResolvedOutfitSlot(slot.id, slot.kind, value, slot.enabled);
+		return new ResolvedOutfitSlot(slot.id, slot.kind, value, slot.enabled, slot.images, slot.activeImageTag);
 	}
 
 	public isEnabled(): boolean {

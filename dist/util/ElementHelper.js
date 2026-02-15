@@ -48,10 +48,14 @@ export function addLongPressAction(el, delay, onLongPress, options) {
             onLongPress(e);
         }, getDelay());
     };
-    const cancel = () => {
+    const cancel = (e) => {
         if (timer !== null) {
             clearTimeout(timer);
             timer = null;
+        }
+        if (longPressTriggered) {
+            options?.onReleaseAfterLongPress?.(e);
+            longPressTriggered = false;
         }
     };
     el.addEventListener('touchstart', start, { passive: true });
@@ -170,4 +174,18 @@ export function toggleClasses(element, condition, ...tokens) {
     const method = condition ? 'add' : 'remove';
     element.classList[method](...tokens);
     return condition;
+}
+export function onResizeElement(element, cb) {
+    let lastWidth = 0;
+    let lastHeight = 0;
+    const observer = new ResizeObserver(([entry]) => {
+        const { width, height } = entry.contentRect;
+        if (width !== lastWidth || height !== lastHeight) {
+            cb(width, height);
+            lastWidth = width;
+            lastHeight = height;
+        }
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
 }

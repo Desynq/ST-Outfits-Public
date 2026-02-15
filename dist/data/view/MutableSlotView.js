@@ -1,3 +1,4 @@
+import { OutfitTracker } from "../tracker.js";
 export class MutableSlotView {
     constructor(slots) {
         this._slots = slots;
@@ -19,9 +20,12 @@ export class MutableSlotView {
     getKinds() {
         return [...new Set(this.slots.map(s => s.kind))];
     }
-    getSlotById(id) {
+    getMutSlotById(id) {
         const i = this.indexById[id];
         return i === undefined ? undefined : this._slots[i];
+    }
+    getSlotById(id) {
+        return this.getMutSlotById(id);
     }
     getSlotAt(index) {
         if (index < 0 || index >= this.slots.length)
@@ -62,6 +66,79 @@ export class MutableSlotView {
         this._slots[i].enabled = enabled;
         return true;
     }
+    attachImage(id, tag, blobKey) {
+        const i = this.indexById[id];
+        if (i === undefined)
+            return 'slot-not-found';
+        const blob = OutfitTracker.images().getImage(blobKey);
+        if (blob === undefined)
+            return 'blob-does-not-exist';
+        this._slots[i].images[tag] = {
+            key: blobKey,
+            width: blob.width,
+            height: blob.height,
+            hidden: false
+        };
+        return 'attached-image';
+    }
+    deleteImage(id, tag) {
+        const i = this.indexById[id];
+        if (i === undefined)
+            return {
+                status: 'slot-not-found'
+            };
+        const slot = this._slots[i];
+        const image = slot.images[tag];
+        if (image === undefined)
+            return {
+                status: 'image-does-not-exist'
+            };
+        if (slot.activeImageTag === tag)
+            slot.activeImageTag = null;
+        const blobKey = image.key;
+        delete slot.images[tag];
+        return {
+            status: 'deleted-image',
+            blobKey
+        };
+    }
+    setActiveImage(id, tag) {
+        const slot = this.getMutSlotById(id);
+        if (!slot)
+            return 'slot-not-found';
+        if (slot.activeImageTag === tag)
+            return 'image-already-active';
+        slot.activeImageTag = tag;
+        const image = slot.images[tag];
+        if (!image)
+            return 'image-does-not-exist';
+        return 'set-active-image';
+    }
+    toggleImage(id, tag, hidden) {
+        const slot = this.getMutSlotById(id);
+        if (!slot)
+            return 'slot-not-found';
+        const image = slot.images[tag];
+        if (!image)
+            return 'tag-does-not-exist';
+        if (image.hidden === hidden)
+            return 'already-set-to-state';
+        image.hidden = !hidden;
+        return 'toggled';
+    }
+    resizeImage(id, tag, width, height) {
+        const slot = this.getMutSlotById(id);
+        if (!slot)
+            return 'slot-not-found';
+        const image = slot.images[tag];
+        if (!image)
+            return 'tag-does-not-exist';
+        if (image.width === width && image.height === height)
+            return 'noop';
+        image.width = width;
+        image.height = height;
+        return 'resized';
+    }
     addSlot(id, kind) {
         const i = this.indexById[id];
         if (i !== undefined)
@@ -70,7 +147,9 @@ export class MutableSlotView {
             id,
             kind,
             value: 'None',
-            enabled: true
+            enabled: true,
+            images: {},
+            activeImageTag: null
         });
         this.indexById[id] = this._slots.length - 1; // append to index
         return 'added';

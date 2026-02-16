@@ -3,15 +3,15 @@
 
 export function addDoubleTapListener(
 	element: HTMLElement,
-	onDouble: () => void,
+	onDouble: (e: PointerEvent) => void,
 	delay: number = 300,
-	onSingle?: () => void,
-	onFirst?: (delay: number) => void
+	onSingle?: (e: PointerEvent) => void,
+	onFirst?: (delay: number, e: PointerEvent) => void
 ): () => void {
 	let lastTapTime = 0;
 	let singleTapTimer: number | null = null;
 
-	const listener = () => {
+	const listener = (e: PointerEvent) => {
 		const now = performance.now();
 		const delta = now - lastTapTime;
 
@@ -23,17 +23,17 @@ export function addDoubleTapListener(
 			}
 
 			navigator.vibrate?.(20);
-			onDouble();
+			onDouble(e);
 			lastTapTime = 0;
 			return;
 		}
 
 		lastTapTime = now;
-		onFirst?.(delay);
+		onFirst?.(delay, e);
 
 		if (onSingle) {
 			singleTapTimer = window.setTimeout(() => {
-				onSingle();
+				onSingle(e);
 				singleTapTimer = null;
 			}, delay);
 		}

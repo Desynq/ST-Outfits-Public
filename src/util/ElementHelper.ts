@@ -1,4 +1,4 @@
-import { forceArray } from "./list-utils.js";
+import { conditionalList, forceArray } from "./list-utils.js";
 
 
 
@@ -280,4 +280,17 @@ export function onResizeElement(
 
 	observer.observe(element);
 	return () => observer.disconnect();
+}
+
+export function setElementSize(
+	element: HTMLElement,
+	width?: number,
+	height?: number
+): void {
+	for (const dimension of ['width', 'height'] as const) {
+		const value = { width, height }[dimension];
+		if (value === undefined) continue;
+
+		element.style[dimension] = `${value}px`;
+	}
 }

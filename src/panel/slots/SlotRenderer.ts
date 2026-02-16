@@ -8,7 +8,7 @@ import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
 import { OutfitPanel } from "../OutfitPanel.js";
 import { OutfitSlotsHost } from "../OutfitSlotsHost.js";
 import { DisplaySlot } from "./DisplaySlot.js";
-import { SlotImageController } from "./SlotImageController.js";
+import { SlotImageComposer } from "./SlotImageController.js";
 import { SlotValueController } from "./SlotValueController.js";
 
 export interface SlotContext {
@@ -28,7 +28,6 @@ type SlotRenderMode = 'hidden-empty' | 'hidden-disabled' | 'disabled-empty' | 'n
 export class SlotRenderer extends OutfitPanelContext {
 
 	private readonly slotValControl: SlotValueController;
-	private readonly slotImageControl: SlotImageController;
 
 	public constructor(
 		panel: OutfitPanel<PanelType>,
@@ -36,7 +35,6 @@ export class SlotRenderer extends OutfitPanelContext {
 	) {
 		super(panel);
 		this.slotValControl = new SlotValueController(this.panel, this.removeActionButtons.bind(this));
-		this.slotImageControl = new SlotImageController(this.panel);
 	}
 
 	private isValueHidden(mode: SlotRenderMode): boolean {
@@ -99,8 +97,10 @@ export class SlotRenderer extends OutfitPanelContext {
 		);
 
 		if (!this.isValueHidden(mode)) {
-			const { imgWrapper } = this.slotImageControl.create(ctx);
+			const boundaryWidth = ctx.scroller.getBoundingClientRect().width;
+			const { imgWrapper, appendControls } = SlotImageComposer.create(this.panel, ctx.slot, boundaryWidth);
 			ctx.labelRightDiv.append(imgWrapper);
+			appendControls?.(ctx.labelLeftDiv);
 		}
 
 

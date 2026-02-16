@@ -41,3 +41,92 @@
 		border-color 0.15s ease,
 		box-shadow 0.15s ease;
 }
+
+
+.outfit-slot-image-resize-handle {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+
+	width: 14px;
+	height: 14px;
+
+	cursor: nesw-resize;
+
+	user-select: none;
+	touch-action: none;
+
+	z-index: 2;
+
+	opacity: 0;
+	transition: opacity 120ms;
+}
+
+.outfit-slot-image-resize-handle:hover::before {
+	border-color: rgba(255, 255, 255, 0.9);
+}
+
+.slot-image-wrapper:hover .outfit-slot-image-resize-handle {
+	opacity: 1;
+}
+
+.outfit-slot-image-resize-handle::before {
+	content: '';
+	position: absolute;
+	bottom: 2px;
+	left: 2px;
+
+	width: 10px;
+	height: 10px;
+
+	border-left: 2px solid rgba(255, 255, 255, 0.6);
+	border-bottom: 2px solid rgba(255, 255, 255, 0.6);
+
+	box-sizing: border-box;
+}
+
+
+
+
+
+.outfit-lightbox-overlay {
+	position: fixed;
+	inset: 0;
+
+	display: flex;
+	justify-content: center;
+	align-items: center;
+
+	background: rgba(0, 0, 0, 0.6);
+	backdrop-filter: blur(4px);
+
+	z-index: 9999;
+
+	opacity: 0;
+	transition: opacity 120ms ease;
+}
+
+.outfit-lightbox-overlay.show {
+	opacity: 1;
+}
+
+
+.outfit-lightbox-stage {
+	width: 90vw;
+	height: 90vh;
+
+	display: flex;
+	justify-content: center;
+	align-items: center;
+
+	overflow: hidden;
+	position: relative;
+}
+
+.outfit-lightbox-image {
+	max-width: 100%;
+	max-height: 100%;
+	transform-origin: center center;
+	transition: transform 100ms ease;
+	cursor: zoom-in;
+}

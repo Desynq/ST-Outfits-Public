@@ -196,3 +196,11 @@ export function onResizeElement(element, cb) {
     observer.observe(element);
     return () => observer.disconnect();
 }
+export function setElementSize(element, width, height) {
+    for (const dimension of ['width', 'height']) {
+        const value = { width, height }[dimension];
+        if (value === undefined)
+            continue;
+        element.style[dimension] = `${value}px`;
+    }
+}

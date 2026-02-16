@@ -1,98 +1,220 @@
 import { ImageBlob, OutfitImage } from "../../data/model/Outfit.js";
+import { ResolvedOutfitSlot } from "../../data/model/OutfitSnapshots.js";
 import { OutfitTracker } from "../../data/tracker.js";
 import { OutfitImagesView } from "../../data/view/OutfitImagesView.js";
+import { assertNever } from "../../shared.js";
+import { PanelType } from "../../types/maps.js";
 import { popupConfirm } from "../../util/adapter/popup-adapter.js";
 import { addDoubleTapListener } from "../../util/element/click-actions.js";
-import { addLongPressAction, appendElement, createElement, hasAnyClass, onResizeElement } from "../../util/ElementHelper.js";
+import { addLongPressAction, appendElement, createElement, hasAnyClass, onResizeElement, setElementSize } from "../../util/ElementHelper.js";
 import { promptImageUpload, resizeImage } from "../../util/image-utils.js";
 import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
+import { OutfitPanel } from "../OutfitPanel.js";
 import { SlotContext } from "./SlotRenderer.js";
 
 
+interface ImageContext {
+	imgEl: HTMLImageElement;
+	imgBlob: ImageBlob;
+	imgRecord: OutfitImage;
+	imgTag: string;
+};
 
-export class SlotImageController extends OutfitPanelContext {
+type CreateImageFailReason =
+	| 'active-image-tag-not-stored'
+	| 'image-hidden'
+	| 'image-blob-does-not-exist';
 
-	public get imagesView(): OutfitImagesView {
+type CreateImageResult =
+	| {
+		ok: true;
+		value: ImageContext;
+	}
+	| {
+		ok: false;
+		reason: CreateImageFailReason;
+	};
+
+type RenderImageBundle =
+	| {
+		imgEl: null;
+		onSingleTap?: (e: PointerEvent) => void;
+		appendControls?: undefined;
+	}
+	| {
+		imgEl: HTMLImageElement;
+		onSingleTap: (e: PointerEvent) => void;
+		appendControls: (container: HTMLElement) => void;
+	};
+
+type BuildResult = {
+	imgWrapper: HTMLDivElement;
+	appendControls?: ((container: HTMLElement) => void) | undefined;
+};
+
+
+
+export class SlotImageComposer extends OutfitPanelContext {
+
+	private constructor(
+		panel: OutfitPanel<PanelType>,
+		private slot: ResolvedOutfitSlot,
+		private boundaryWidth: number
+	) {
+		super(panel);
+	}
+
+	public static create(
+		panel: OutfitPanel<PanelType>,
+		slot: ResolvedOutfitSlot,
+		boundaryWidth: number
+	): BuildResult {
+		const factory = new SlotImageComposer(panel, slot, boundaryWidth);
+		return factory.build();
+	}
+
+	private get imagesView(): OutfitImagesView {
 		return OutfitTracker.images();
 	}
 
 	/**
 	 * @invariant Does not mutate ctx DOM
 	 */
-	public create(ctx: SlotContext): {
-		imgWrapper: HTMLDivElement,
-		imgEl: HTMLImageElement | null;
-	} {
+	public build(): BuildResult {
 		const imgWrapper = createElement('div', 'slot-image-wrapper');
 
-		const tag = ctx.slot.activeImageTag;
-		let imgEl: HTMLImageElement | null = null;
-		let showImage: (() => void) | undefined;
-
-		if (!tag) {
-			imgWrapper.classList.add('--empty');
-		}
-		else {
-			imgEl = this.createImage(imgWrapper, ctx, tag);
-			if (imgEl) {
-				imgWrapper.append(imgEl);
-
-				const deleteBtn = this.createDeleteBtn(ctx);
-				const toggleBtn = this.createToggleBtn(ctx);
-				const resizeBtn = this.createResizeBtn(imgWrapper, ctx);
-
-				ctx.labelLeftDiv.append(deleteBtn, toggleBtn, resizeBtn);
-			}
-			else {
-				if (imgWrapper.classList.contains('--hidden')) {
-					imgWrapper.textContent = 'Show Image';
-					showImage = () => this.toggleImage(ctx);
-				}
-			}
-		}
+		const tag = this.slot.activeImageTag;
+		const { imgEl, onSingleTap, appendControls } = this.tryRenderImage(imgWrapper, tag);
 
 
 		addDoubleTapListener(
 			imgWrapper,
-			() => this.changeImage(ctx),
+			() => this.changeImage(),
 			300,
-			showImage
+			onSingleTap
 		);
 
 		return {
 			imgWrapper,
-			imgEl
+			appendControls
 		};
 	}
 
-	private createToggleBtn(ctx: SlotContext): HTMLButtonElement {
+	private tryRenderImage(
+		imgWrapper: HTMLDivElement,
+		tag: string | null
+	): RenderImageBundle {
+		if (!tag) {
+			imgWrapper.classList.add('--empty');
+			return { imgEl: null };
+		}
+
+		const result = this.createImage(imgWrapper, tag);
+		if (!result.ok) {
+			switch (result.reason) {
+				case 'active-image-tag-not-stored':
+				case 'image-blob-does-not-exist':
+					imgWrapper.classList.add('--error');
+					return { imgEl: null };
+				case 'image-hidden':
+					imgWrapper.classList.add('--hidden');
+					imgWrapper.textContent = 'Show Image';
+					return {
+						imgEl: null,
+						onSingleTap: () => this.toggleImage()
+					};
+				default: assertNever(result.reason);
+			}
+		}
+
+		const { imgEl } = result.value;
+		imgWrapper.append(imgEl);
+		const resizeHandle = this.createResizeHandle(imgWrapper);
+		imgWrapper.append(resizeHandle);
+
+		const deleteBtn = this.createDeleteBtn();
+		const toggleBtn = this.createToggleBtn();
+		const resizeBtn = this.createResizeBtn(imgWrapper);
+
+		return {
+			imgEl,
+			onSingleTap: () => this.showRawImage(result.value),
+			appendControls: (c: HTMLElement) => c.append(deleteBtn, toggleBtn, resizeBtn)
+		};
+	}
+
+	private async showRawImage(imgCtx: ImageContext) {
+		const { imgBlob, imgTag } = imgCtx;
+
+		const overlay = createElement('div', 'outfit-lightbox-overlay');
+		const stage = createElement('div', 'outfit-lightbox-stage');
+
+		const img = createElement('img', 'outfit-lightbox-image');
+		img.src = imgBlob.base64;
+		img.alt = imgTag;
+
+		let zoomed = false;
+		img.addEventListener('click', (e) => {
+			e.stopPropagation();
+
+			zoomed = !zoomed;
+
+			if (zoomed) {
+				const rect = img.getBoundingClientRect();
+
+				const x = ((e.clientX - rect.left) / rect.width) * 100;
+				const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+				img.style.transformOrigin = `${x}% ${y}%`;
+				img.style.transform = `scale(2)`;
+				img.style.cursor = 'zoom-out';
+			} else {
+				img.style.transform = 'scale(1)';
+				img.style.transformOrigin = 'center center';
+				img.style.cursor = 'zoom-in';
+			}
+		});
+
+
+
+		overlay.addEventListener('click', () => {
+			overlay.remove();
+		});
+
+		stage.append(img);
+		overlay.append(stage);
+		document.body.append(overlay);
+		requestAnimationFrame(() => overlay.classList.add('show'));
+	}
+
+	private createToggleBtn(): HTMLButtonElement {
 		const btn = createElement('button', 'slot-button');
 		btn.textContent = 'Hide Image';
 
-		btn.addEventListener('click', () => this.toggleImage(ctx));
+		btn.addEventListener('click', () => this.toggleImage());
 
 		return btn;
 	}
 
-	private createDeleteBtn(ctx: SlotContext): HTMLButtonElement {
+	private createDeleteBtn(): HTMLButtonElement {
 		const btn = createElement('button', 'slot-button'); // lazy with css
 		btn.textContent = 'Delete Image';
 
-		btn.addEventListener('click', () => this.deleteImage(ctx));
+		btn.addEventListener('click', () => this.deleteImage());
 
 		return btn;
 	}
 
-	private createResizeBtn(imgWrapper: HTMLDivElement, ctx: SlotContext): HTMLButtonElement {
+	private createResizeBtn(imgWrapper: HTMLDivElement): HTMLButtonElement {
 		const btn = createElement('button', 'slot-button');
 		btn.textContent = 'Resize Image';
 
-		btn.addEventListener('click', () => this.promptResize(imgWrapper, ctx));
+		btn.addEventListener('click', () => this.promptResize(imgWrapper));
 
 		return btn;
 	}
 
-	private async promptResize(imgWrapper: HTMLDivElement, ctx: SlotContext): Promise<void> {
+	private async promptResize(imgWrapper: HTMLDivElement): Promise<void> {
 		const container = createElement('div', 'resize-prompt');
 
 		const createInput = (value: number) => {
@@ -120,76 +242,125 @@ export class SlotImageController extends OutfitPanelContext {
 
 		if (!width || !height) return;
 
-		await this.saveImageResize(ctx, width, height);
+		await this.saveImageResize(width, height);
 		this.panel.render();
 	}
 
 
 
-	private async saveImageResize(ctx: SlotContext, width: number, height: number): Promise<void> {
-		const tag = ctx.slot.activeImageTag;
+	private async saveImageResize(width: number, height: number): Promise<void> {
+		const tag = this.slot.activeImageTag;
 		if (!tag) return;
 
-		this.outfitView.resizeImage(ctx.slot.id, tag, width, height);
+		this.outfitView.resizeImage(this.slot.id, tag, width, height);
 		this.outfitManager.saveSettings();
 	}
 
-	private createImage(imgWrapper: HTMLDivElement, ctx: SlotContext, tag: string): HTMLImageElement | null {
+	private createImage(
+		imgWrapper: HTMLDivElement,
+		tag: string,
+	): CreateImageResult {
 
-		const displayError = (message: string): null => {
-			imgWrapper.classList.add('--error');
-			console.error(message);
-			return null;
-		};
+		const imgRecord = this.slot.images[tag];
+		if (!imgRecord) return { ok: false, reason: 'active-image-tag-not-stored' };
 
-		const image = ctx.slot.images[tag];
-		if (!image) return displayError(`Active image tag '${tag}' is not stored`);
-
-		if (image.hidden) {
+		if (imgRecord.hidden) {
 			imgWrapper.classList.add('--hidden');
-			return null;
+			return { ok: false, reason: 'image-hidden' };
 		}
 
-		const key = image.key;
-		const blob = this.imagesView.getImage(key);
-		if (!blob) return displayError(`Blob key '${key}' from image tag '${tag}' does not point to an image blob`);
+		const key = imgRecord.key;
+		const imgBlob = this.imagesView.getImage(key);
+		if (!imgBlob) return { ok: false, reason: 'image-blob-does-not-exist' };
 
 
 		const imgEl = createElement('img', 'slot-image');
 
-		imgEl.src = blob.base64;
-		for (const x of ['width', 'height'] as const) imgWrapper.style[x] = `${image[x]}px`;
+		imgEl.src = imgBlob.base64;
+		this.clampImage(imgWrapper, imgRecord);
 
 		imgEl.addEventListener('error', () => {
 			imgWrapper.classList.add('--error');
 		});
 
-		this.panel.disposer.add(onResizeElement(
-			imgWrapper,
-			(width, height) => this.saveImageResize(ctx, width, height)
-		));
+		const value: ImageContext = {
+			imgEl,
+			imgBlob,
+			imgRecord,
+			imgTag: tag
+		};
+		return { ok: true, value };
+	}
 
-		return imgEl;
+	private createResizeHandle(imgWrapper: HTMLDivElement): HTMLDivElement {
+		const handle = createElement('div', 'outfit-slot-image-resize-handle');
+
+		// stop resizing from triggering clicks on the imgWrapper
+		handle.addEventListener('click', (e) => {
+			e.stopPropagation();
+		});
+
+		handle.addEventListener('pointerdown', (e) => {
+			e.preventDefault();
+			handle.setPointerCapture(e.pointerId);
+
+			const startRect = imgWrapper.getBoundingClientRect();
+			const startX = e.clientX;
+			const startY = e.clientY;
+
+			let width = startRect.width;
+			let height = startRect.height;
+
+			const onMove = (moveEvent: PointerEvent) => {
+				const dx = moveEvent.clientX - startX;
+				const dy = moveEvent.clientY - startY;
+
+				width = Math.max(24, startRect.width - dx);
+				height = Math.max(24, startRect.height + dy);
+
+				setElementSize(imgWrapper, width, height);
+			};
+
+			const onUp = () => {
+				this.saveImageResize(width, height);
+				handle.releasePointerCapture(e.pointerId);
+				window.removeEventListener('pointermove', onMove);
+				window.removeEventListener('pointerup', onUp);
+			};
+
+			window.addEventListener('pointermove', onMove);
+			window.addEventListener('pointerup', onUp);
+		});
+
+		return handle;
+	}
+
+	private clampImage(imgWrapper: HTMLDivElement, image: OutfitImage): void {
+		const scale = Math.min(this.boundaryWidth / image.width, 1);
+		const newWidth = image.width * scale;
+		const newHeight = image.height * scale;
+
+		setElementSize(imgWrapper, newWidth, newHeight);
 	}
 
 	// add a new image or change to a pre-existing image
 	// image tag must be kebab-case with no special characters
 	// can be cancelled
-	private async changeImage(ctx: SlotContext) {
+	private async changeImage() {
 		const uploading = await popupConfirm('Will you be uploading a new image or choosing a stored image?', {
 			okText: 'Upload',
 			cancelText: 'Choose'
 		});
 
 		if (uploading) {
-			this.uploadImage(ctx);
+			this.uploadImage();
 		}
 		else {
-			this.chooseImage(ctx);
+			this.chooseImage();
 		}
 	}
 
-	private async uploadImage(ctx: SlotContext): Promise<void> {
+	private async uploadImage(): Promise<void> {
 		const file = await promptImageUpload();
 		if (!file) return;
 
@@ -203,7 +374,7 @@ export class SlotImageController extends OutfitPanelContext {
 			return;
 		}
 
-		if (ctx.slot.images[tag] !== undefined) {
+		if (this.slot.images[tag] !== undefined) {
 			toastr.error('Tag already used');
 			return;
 		}
@@ -211,7 +382,7 @@ export class SlotImageController extends OutfitPanelContext {
 		const { base64, height, width } = await resizeImage(file, 768);
 		const key = await this.imagesView.addImage(base64, width, height);
 
-		const slotId = ctx.slot.id;
+		const slotId = this.slot.id;
 
 		const added = this.outfitView.attachImage(slotId, tag, key);
 
@@ -225,8 +396,8 @@ export class SlotImageController extends OutfitPanelContext {
 		this.panel.saveAndRender();
 	}
 
-	private async chooseImage(ctx: SlotContext): Promise<void> {
-		const images = ctx.slot.images;
+	private async chooseImage(): Promise<void> {
+		const images = this.slot.images;
 
 		const tag = await this.promptImages(images);
 		if (tag === null) return;
@@ -239,7 +410,7 @@ export class SlotImageController extends OutfitPanelContext {
 			return;
 		}
 
-		this.outfitView.setActiveImage(ctx.slot.id, tag);
+		this.outfitView.setActiveImage(this.slot.id, tag);
 
 		this.panel.saveAndRender();
 	}
@@ -305,25 +476,23 @@ export class SlotImageController extends OutfitPanelContext {
 			: null;
 	}
 
-	private toggleImage(ctx: SlotContext) {
-		const slot = ctx.slot;
-		const tag = slot.activeImageTag;
+	private toggleImage() {
+		const tag = this.slot.activeImageTag;
 
 		if (!tag) return;
 
-		const image = slot.images[tag];
+		const image = this.slot.images[tag];
 		if (!image) return;
 
-		this.outfitView.toggleImage(ctx.slot.id, tag, !image.hidden);
+		this.outfitView.toggleImage(this.slot.id, tag, !image.hidden);
 
 		this.panel.saveAndRender();
 	}
 
 	// delete active image, setting active image key to null
 	// requires double confirmation
-	private async deleteImage(ctx: SlotContext) {
-		const slot = ctx.slot;
-		const key = slot.activeImageTag;
+	private async deleteImage() {
+		const key = this.slot.activeImageTag;
 
 		if (!key) return;
 
@@ -333,7 +502,7 @@ export class SlotImageController extends OutfitPanelContext {
 		const confirm2 = await popupConfirm('This cannot be undone. Confirm?');
 		if (!confirm2) return;
 
-		const result = this.outfitView.deleteImage(slot.id, key);
+		const result = this.outfitView.deleteImage(this.slot.id, key);
 
 		if (result.status === 'deleted-image') {
 			this.imagesView.tryDeleteImage(result.blobKey);

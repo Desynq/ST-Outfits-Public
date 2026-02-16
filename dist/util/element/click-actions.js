@@ -1,7 +1,7 @@
 export function addDoubleTapListener(element, onDouble, delay = 300, onSingle, onFirst) {
     let lastTapTime = 0;
     let singleTapTimer = null;
-    const listener = () => {
+    const listener = (e) => {
         const now = performance.now();
         const delta = now - lastTapTime;
         if (delta > 0 && delta < delay) {
@@ -11,15 +11,15 @@ export function addDoubleTapListener(element, onDouble, delay = 300, onSingle, o
                 singleTapTimer = null;
             }
             navigator.vibrate?.(20);
-            onDouble();
+            onDouble(e);
             lastTapTime = 0;
             return;
         }
         lastTapTime = now;
-        onFirst?.(delay);
+        onFirst?.(delay, e);
         if (onSingle) {
             singleTapTimer = window.setTimeout(() => {
-                onSingle();
+                onSingle(e);
                 singleTapTimer = null;
             }, delay);
         }

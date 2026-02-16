@@ -389,17 +389,15 @@
 
 
 .slot-image-wrapper {
+	position: relative;
 	display: inline-block;
-	resize: both;
-	overflow: auto;
-	border: 1px solid #ccc;
+	overflow: hidden;
 	max-width: 100%;
 	min-width: 96px;
 	min-height: 24px;
 }
 
 .slot-image-wrapper:not(:has(.slot-image)) {
-	resize: none;
 	width: 96px;
 	height: 24px;
 }

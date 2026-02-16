@@ -2,12 +2,12 @@ import { assertNever, toSlotName } from "../../shared.js";
 import { addDoubleTapListener } from "../../util/element/click-actions.js";
 import { appendElement, createElement } from "../../util/ElementHelper.js";
 import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
-import { SlotImageComposer } from "./SlotImageController.js";
 import { SlotValueController } from "./SlotValueController.js";
 export class SlotRenderer extends OutfitPanelContext {
-    constructor(panel, getDisplaySlots) {
+    constructor(panel, getDisplaySlots, imageElementFactory) {
         super(panel);
         this.getDisplaySlots = getDisplaySlots;
+        this.imageElementFactory = imageElementFactory;
         this.slotValControl = new SlotValueController(this.panel, this.removeActionButtons.bind(this));
     }
     isValueHidden(mode) {
@@ -50,10 +50,9 @@ export class SlotRenderer extends OutfitPanelContext {
         const disarmTap = () => slotNameEl.classList.remove('tap-armed');
         addDoubleTapListener(slotNameEl, () => { disarmTap(); this.beginRename(slotNameEl, ctx); }, 300, () => { disarmTap(); this.toggle(ctx.slot); }, armTap);
         if (!this.isValueHidden(mode)) {
-            const boundaryWidth = ctx.scroller.getBoundingClientRect().width;
-            const { imgWrapper, appendControls } = SlotImageComposer.create(this.panel, ctx.slot, boundaryWidth);
-            ctx.labelRightDiv.append(imgWrapper);
-            appendControls?.(ctx.labelLeftDiv);
+            const imageElement = this.imageElementFactory.build(ctx.slot);
+            imageElement.append(ctx.labelRightDiv);
+            imageElement.appendControls?.(ctx.labelLeftDiv);
         }
         const appendInlineToggleBtn = () => this.appendToggleBtn(labelRightDiv, slot);
         const appendInlineEdit = () => {

@@ -1,5 +1,6 @@
 import { OutfitPanelContext } from "./base/OutfitPanelContext.js";
 import { DisplaySlot } from "./slots/DisplaySlot.js";
+import { SlotImageElementFactory } from "./slots/SlotImageController.js";
 import { SlotRenderer } from "./slots/SlotRenderer.js";
 export class SlotsRenderer extends OutfitPanelContext {
     constructor() {
@@ -21,9 +22,10 @@ export class SlotsRenderer extends OutfitPanelContext {
             displayIndex++;
         }
         this.currentDisplaySlots = displaySlots;
-        const comp = new SlotRenderer(this.panel, () => this.currentDisplaySlots);
+        const imageElementFactory = new SlotImageElementFactory(this.panel, container.getBoundingClientRect().width);
+        const slotElement = new SlotRenderer(this.panel, () => this.currentDisplaySlots, imageElementFactory);
         for (const displaySlot of displaySlots) {
-            comp.render(container, displaySlot);
+            slotElement.render(container, displaySlot);
         }
         this.renderAddSlotButton(container, kind);
     }

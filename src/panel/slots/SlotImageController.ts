@@ -6,11 +6,10 @@ import { assertNever } from "../../shared.js";
 import { PanelType } from "../../types/maps.js";
 import { popupConfirm } from "../../util/adapter/popup-adapter.js";
 import { addDoubleTapListener } from "../../util/element/click-actions.js";
-import { addLongPressAction, appendElement, createElement, hasAnyClass, onResizeElement, setElementSize } from "../../util/ElementHelper.js";
+import { createElement, setElementSize } from "../../util/ElementHelper.js";
 import { promptImageUpload, resizeImage } from "../../util/image-utils.js";
 import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
 import { OutfitPanel } from "../OutfitPanel.js";
-import { SlotContext } from "./SlotRenderer.js";
 
 
 interface ImageContext {
@@ -52,73 +51,70 @@ type BuildResult = {
 	appendControls?: ((container: HTMLElement) => void) | undefined;
 };
 
+export class SlotImageElementFactory extends OutfitPanelContext {
 
-
-export class SlotImageComposer extends OutfitPanelContext {
-
-	private constructor(
+	public constructor(
 		panel: OutfitPanel<PanelType>,
-		private slot: ResolvedOutfitSlot,
 		private boundaryWidth: number
 	) {
 		super(panel);
 	}
 
-	public static create(
+	public build(slot: ResolvedOutfitSlot): SlotImageElement {
+		return new SlotImageElement(this.panel, this.boundaryWidth, slot);
+	}
+}
+
+class SlotImageElement extends OutfitPanelContext {
+
+	private readonly imgWrapper: HTMLDivElement;
+	public readonly appendControls?: ((container: HTMLElement) => void) | undefined;
+
+	public constructor(
 		panel: OutfitPanel<PanelType>,
-		slot: ResolvedOutfitSlot,
-		boundaryWidth: number
-	): BuildResult {
-		const factory = new SlotImageComposer(panel, slot, boundaryWidth);
-		return factory.build();
+		private boundaryWidth: number,
+		private slot: ResolvedOutfitSlot
+	) {
+		super(panel);
+		this.imgWrapper = createElement('div', 'slot-image-wrapper');
+		const tag = this.slot.activeImageTag;
+
+		const { imgEl, onSingleTap, appendControls } = this.renderImageContent(tag);
+
+		addDoubleTapListener(
+			this.imgWrapper,
+			() => this.changeImage(),
+			300,
+			onSingleTap
+		);
+
+		this.appendControls = appendControls;
+	}
+
+	public append(container: HTMLElement): void {
+		container.append(this.imgWrapper);
 	}
 
 	private get imagesView(): OutfitImagesView {
 		return OutfitTracker.images();
 	}
 
-	/**
-	 * @invariant Does not mutate ctx DOM
-	 */
-	public build(): BuildResult {
-		const imgWrapper = createElement('div', 'slot-image-wrapper');
-
-		const tag = this.slot.activeImageTag;
-		const { imgEl, onSingleTap, appendControls } = this.tryRenderImage(imgWrapper, tag);
-
-
-		addDoubleTapListener(
-			imgWrapper,
-			() => this.changeImage(),
-			300,
-			onSingleTap
-		);
-
-		return {
-			imgWrapper,
-			appendControls
-		};
-	}
-
-	private tryRenderImage(
-		imgWrapper: HTMLDivElement,
-		tag: string | null
-	): RenderImageBundle {
+	private renderImageContent(tag: string | null): RenderImageBundle {
 		if (!tag) {
-			imgWrapper.classList.add('--empty');
+			this.imgWrapper.classList.add('--empty');
 			return { imgEl: null };
 		}
 
-		const result = this.createImage(imgWrapper, tag);
+		const result = this.createImage(tag);
 		if (!result.ok) {
 			switch (result.reason) {
 				case 'active-image-tag-not-stored':
 				case 'image-blob-does-not-exist':
-					imgWrapper.classList.add('--error');
+					this.imgWrapper.classList.add('--error');
 					return { imgEl: null };
 				case 'image-hidden':
-					imgWrapper.classList.add('--hidden');
-					imgWrapper.textContent = 'Show Image';
+					this.imgWrapper.classList.add('--hidden');
+					this.imgWrapper.textContent = 'Show Image';
 					return {
 						imgEl: null,
 						onSingleTap: () => this.toggleImage()
@@ -128,13 +124,13 @@ export class SlotImageComposer extends OutfitPanelContext {
 		}
 
 		const { imgEl } = result.value;
-		imgWrapper.append(imgEl);
-		const resizeHandle = this.createResizeHandle(imgWrapper);
-		imgWrapper.append(resizeHandle);
+		this.imgWrapper.append(imgEl);
+		const resizeHandle = this.createResizeHandle();
+		this.imgWrapper.append(resizeHandle);
 
 		const deleteBtn = this.createDeleteBtn();
 		const toggleBtn = this.createToggleBtn();
-		const resizeBtn = this.createResizeBtn(imgWrapper);
+		const resizeBtn = this.createResizeBtn();
 
 		return {
 			imgEl,
@@ -205,16 +201,16 @@ export class SlotImageComposer extends OutfitPanelContext {
 		return btn;
 	}
 
-	private createResizeBtn(imgWrapper: HTMLDivElement): HTMLButtonElement {
+	private createResizeBtn(): HTMLButtonElement {
 		const btn = createElement('button', 'slot-button');
 		btn.textContent = 'Resize Image';
 
-		btn.addEventListener('click', () => this.promptResize(imgWrapper));
+		btn.addEventListener('click', () => this.promptResize());
 
 		return btn;
 	}
 
-	private async promptResize(imgWrapper: HTMLDivElement): Promise<void> {
+	private async promptResize(): Promise<void> {
 		const container = createElement('div', 'resize-prompt');
 
 		const createInput = (value: number) => {
@@ -225,8 +221,8 @@ export class SlotImageComposer extends OutfitPanelContext {
 			return input;
 		};
 
-		const widthInput = createInput(imgWrapper.offsetWidth);
-		const heightInput = createInput(imgWrapper.offsetHeight);
+		const widthInput = createInput(this.imgWrapper.offsetWidth);
+		const heightInput = createInput(this.imgWrapper.offsetHeight);
 
 		container.append(widthInput, heightInput);
 
@@ -256,16 +252,13 @@ export class SlotImageComposer extends OutfitPanelContext {
 		this.outfitManager.saveSettings();
 	}
 
-	private createImage(
-		imgWrapper: HTMLDivElement,
-		tag: string,
-	): CreateImageResult {
+	private createImage(tag: string): CreateImageResult {
 
 		const imgRecord = this.slot.images[tag];
 		if (!imgRecord) return { ok: false, reason: 'active-image-tag-not-stored' };
 
 		if (imgRecord.hidden) {
-			imgWrapper.classList.add('--hidden');
+			this.imgWrapper.classList.add('--hidden');
 			return { ok: false, reason: 'image-hidden' };
 		}
 
@@ -277,10 +270,10 @@ export class SlotImageComposer extends OutfitPanelContext {
 		const imgEl = createElement('img', 'slot-image');
 
 		imgEl.src = imgBlob.base64;
-		this.clampImage(imgWrapper, imgRecord);
+		this.clampImage(imgRecord);
 
 		imgEl.addEventListener('error', () => {
-			imgWrapper.classList.add('--error');
+			this.imgWrapper.classList.add('--error');
 		});
 
 		const value: ImageContext = {
@@ -292,7 +285,7 @@ export class SlotImageComposer extends OutfitPanelContext {
 		return { ok: true, value };
 	}
 
-	private createResizeHandle(imgWrapper: HTMLDivElement): HTMLDivElement {
+	private createResizeHandle(): HTMLDivElement {
 		const handle = createElement('div', 'outfit-slot-image-resize-handle');
 
 		// stop resizing from triggering clicks on the imgWrapper
@@ -304,7 +297,7 @@ export class SlotImageComposer extends OutfitPanelContext {
 			e.preventDefault();
 			handle.setPointerCapture(e.pointerId);
 
-			const startRect = imgWrapper.getBoundingClientRect();
+			const startRect = this.imgWrapper.getBoundingClientRect();
 			const startX = e.clientX;
 			const startY = e.clientY;
 
@@ -318,7 +311,7 @@ export class SlotImageComposer extends OutfitPanelContext {
 				width = Math.max(24, startRect.width - dx);
 				height = Math.max(24, startRect.height + dy);
 
-				setElementSize(imgWrapper, width, height);
+				setElementSize(this.imgWrapper, width, height);
 			};
 
 			const onUp = () => {
@@ -335,12 +328,12 @@ export class SlotImageComposer extends OutfitPanelContext {
 		return handle;
 	}
 
-	private clampImage(imgWrapper: HTMLDivElement, image: OutfitImage): void {
+	private clampImage(image: OutfitImage): void {
 		const scale = Math.min(this.boundaryWidth / image.width, 1);
 		const newWidth = image.width * scale;
 		const newHeight = image.height * scale;
 
-		setElementSize(imgWrapper, newWidth, newHeight);
+		setElementSize(this.imgWrapper, newWidth, newHeight);
 	}
 
 	// add a new image or change to a pre-existing image

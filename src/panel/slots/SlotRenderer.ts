@@ -8,7 +8,7 @@ import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
 import { OutfitPanel } from "../OutfitPanel.js";
 import { OutfitSlotsHost } from "../OutfitSlotsHost.js";
 import { DisplaySlot } from "./DisplaySlot.js";
-import { SlotImageComposer } from "./SlotImageController.js";
+import { SlotImageElementFactory } from "./SlotImageController.js";
 import { SlotValueController } from "./SlotValueController.js";
 
 export interface SlotContext {
@@ -31,7 +31,8 @@ export class SlotRenderer extends OutfitPanelContext {
 
 	public constructor(
 		panel: OutfitPanel<PanelType>,
-		private readonly getDisplaySlots: () => DisplaySlot[]
+		private readonly getDisplaySlots: () => DisplaySlot[],
+		private readonly imageElementFactory: SlotImageElementFactory
 	) {
 		super(panel);
 		this.slotValControl = new SlotValueController(this.panel, this.removeActionButtons.bind(this));
@@ -97,10 +98,9 @@ export class SlotRenderer extends OutfitPanelContext {
 		);
 
 		if (!this.isValueHidden(mode)) {
-			const boundaryWidth = ctx.scroller.getBoundingClientRect().width;
-			const { imgWrapper, appendControls } = SlotImageComposer.create(this.panel, ctx.slot, boundaryWidth);
-			ctx.labelRightDiv.append(imgWrapper);
-			appendControls?.(ctx.labelLeftDiv);
+			const imageElement = this.imageElementFactory.build(ctx.slot);
+			imageElement.append(ctx.labelRightDiv);
+			imageElement.appendControls?.(ctx.labelLeftDiv);
 		}
 
 

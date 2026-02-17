@@ -6,6 +6,7 @@ import { PanelTab } from "./PanelTab.js";
 export class OutfitsTab extends PanelTab {
 
 	public override render(contentArea: HTMLDivElement): void {
+		contentArea.innerHTML = '';
 		const presets = this.outfitManager.getPresets();
 
 		if (presets.length === 0) {

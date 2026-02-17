@@ -3,6 +3,7 @@ import { createElement } from "../../util/ElementHelper.js";
 import { PanelTab } from "./PanelTab.js";
 export class OutfitsTab extends PanelTab {
     render(contentArea) {
+        contentArea.innerHTML = '';
         const presets = this.outfitManager.getPresets();
         if (presets.length === 0) {
             const div = createElement('div', '', 'No saved outfits');

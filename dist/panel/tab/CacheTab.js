@@ -6,6 +6,7 @@ import { toastrClipboard } from "../../util/ToastrHelper.js";
 import { PanelTab } from "./PanelTab.js";
 export class CacheTab extends PanelTab {
     render(contentArea) {
+        contentArea.innerHTML = '';
         this.renderCacheButton(contentArea);
         this.renderSnapshots(contentArea);
     }

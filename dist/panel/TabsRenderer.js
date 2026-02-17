@@ -1,5 +1,4 @@
 import { assertNever } from "../shared.js";
-import { addContextActionListener } from "../util/ElementHelper.js";
 import { CacheTab } from "./tab/CacheTab.js";
 import { OutfitsTab } from "./tab/OutfitsTab.js";
 import { VisibilityTab } from "./tab/VisibilityTab.js";
@@ -27,7 +26,6 @@ export class OutfitTabsRenderer {
     }
     renderTabs(tabsContainer, contentArea) {
         this.recreateTabs(tabsContainer);
-        contentArea.innerHTML = '';
         switch (this.currentTab.type) {
             case 'system':
                 switch (this.currentTab.id) {
@@ -50,7 +48,7 @@ export class OutfitTabsRenderer {
                     .filter(s => s.kind === kind)
                     .map(s => s.id);
                 if (slots.length === 0) {
-                    this.renderFallback(tabsContainer);
+                    this.renderFallback();
                     return;
                 }
                 this.panel.getSlotsRenderer().renderSlots(kind, slots, contentArea);
@@ -59,7 +57,7 @@ export class OutfitTabsRenderer {
                 return assertNever(this.currentTab);
         }
     }
-    renderFallback(tabsContainer) {
+    renderFallback() {
         const kinds = this.outfitView.getSlotKinds();
         if (kinds.length > 0) {
             this.currentTab = { type: 'kind', kind: kinds[0] };
@@ -90,12 +88,15 @@ export class OutfitTabsRenderer {
         createSystemTabEl('cache');
         createSystemTabEl('visibility');
         for (const tabEl of tabEls) {
-            tabEl.addEventListener('click', () => this.changeTab(tabEls, tabEl));
             const kindTab = this.getKindTabFromElement(tabEl);
+            let clickListener = () => this.changeTab(tabEls, tabEl);
             if (kindTab) {
                 this.addDragCapabilityToTab(tabEl);
-                addContextActionListener(tabEl, () => this.tryRenameTab(tabEl));
+                if (this.currentTab.type === 'kind' && this.currentTab.kind === kindTab.kind) {
+                    clickListener = () => this.tryRenameTab(tabEl);
+                }
             }
+            tabEl.addEventListener('click', clickListener);
         }
         const createTabListEl = (token, elements) => {
             const el = document.createElement('div');

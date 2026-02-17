@@ -11,6 +11,7 @@ import { PanelTab } from "./PanelTab.js";
 export class CacheTab extends PanelTab {
 
 	public override render(contentArea: HTMLDivElement): void {
+		contentArea.innerHTML = '';
 		this.renderCacheButton(contentArea);
 		this.renderSnapshots(contentArea);
 	}

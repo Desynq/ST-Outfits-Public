@@ -16,6 +16,7 @@ export class VisibilityTab extends PanelTab {
 	}
 
 	public override render(contentArea: HTMLDivElement): void {
+		contentArea.innerHTML = '';
 		this.renderPositionButtons(contentArea);
 		this.renderPreviewButton(contentArea);
 		this.renderVisibilityButtons(contentArea);

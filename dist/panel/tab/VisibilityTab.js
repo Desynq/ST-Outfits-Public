@@ -7,6 +7,7 @@ export class VisibilityTab extends PanelTab {
         this.formatKind = formatKind;
     }
     render(contentArea) {
+        contentArea.innerHTML = '';
         this.renderPositionButtons(contentArea);
         this.renderPreviewButton(contentArea);
         this.renderVisibilityButtons(contentArea);

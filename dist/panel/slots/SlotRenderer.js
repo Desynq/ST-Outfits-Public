@@ -4,16 +4,16 @@ import { appendElement, createElement } from "../../util/ElementHelper.js";
 import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
 import { SlotValueController } from "./SlotValueController.js";
 export class SlotRenderer extends OutfitPanelContext {
-    constructor(panel, getDisplaySlots, imageElementFactory) {
+    constructor(panel, displaySlots, imageElementFactory) {
         super(panel);
-        this.getDisplaySlots = getDisplaySlots;
+        this.displaySlots = displaySlots;
         this.imageElementFactory = imageElementFactory;
-        this.slotValControl = new SlotValueController(this.panel, this.removeActionButtons.bind(this));
+        this.slotValControl = new SlotValueController(this.panel, (slotElement) => this.removeActionButtons(slotElement));
     }
     isValueHidden(mode) {
         return mode !== 'normal';
     }
-    render(container, display) {
+    createSlotElement(container, display) {
         const slot = display.slot;
         const slotElement = document.createElement('div');
         slotElement.className = 'outfit-slot';
@@ -85,7 +85,7 @@ export class SlotRenderer extends OutfitPanelContext {
             default: assertNever(mode);
         }
         slotElement.appendChild(actionsEl);
-        container.appendChild(slotElement);
+        return slotElement;
     }
     getSlotRenderMode(slot, panel) {
         if (slot.isEmpty() && panel.areEmptySlotsHidden()) {
@@ -146,7 +146,7 @@ export class SlotRenderer extends OutfitPanelContext {
             '.delete-slot',
             '.slot-shift',
             '.move-slot',
-            'edit-slot'
+            '.edit-slot'
         ];
         for (const selector of selectors) {
             slotElement.querySelector(selector)?.remove();
@@ -191,7 +191,7 @@ export class SlotRenderer extends OutfitPanelContext {
         const select = document.createElement('select');
         select.className = 'slot-shift-select';
         const options = [];
-        const displaySlots = this.getDisplaySlots();
+        const displaySlots = this.displaySlots;
         const placeholder = document.createElement('option');
         placeholder.textContent = 'Move slot...';
         placeholder.disabled = true;
@@ -229,7 +229,7 @@ export class SlotRenderer extends OutfitPanelContext {
         });
     }
     shiftSlot(select, display) {
-        const displaySlots = this.getDisplaySlots();
+        const displaySlots = this.displaySlots;
         const value = select.value;
         const sourceSlotIndex = display.slotIndex;
         let targetSlotIndex;

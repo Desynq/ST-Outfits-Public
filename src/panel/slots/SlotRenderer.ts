@@ -31,21 +31,24 @@ export class SlotRenderer extends OutfitPanelContext {
 
 	public constructor(
 		panel: OutfitPanel<PanelType>,
-		private readonly getDisplaySlots: () => DisplaySlot[],
+		private readonly displaySlots: DisplaySlot[],
 		private readonly imageElementFactory: SlotImageElementFactory
 	) {
 		super(panel);
-		this.slotValControl = new SlotValueController(this.panel, this.removeActionButtons.bind(this));
+		this.slotValControl = new SlotValueController(
+			this.panel,
+			(slotElement: HTMLDivElement) => this.removeActionButtons(slotElement)
+		);
 	}
 
 	private isValueHidden(mode: SlotRenderMode): boolean {
 		return mode !== 'normal';
 	}
 
-	public render(
+	public createSlotElement(
 		container: HTMLDivElement,
 		display: DisplaySlot
-	): void {
+	): HTMLDivElement {
 		const slot = display.slot;
 
 		const slotElement = document.createElement('div');
@@ -140,7 +143,7 @@ export class SlotRenderer extends OutfitPanelContext {
 
 
 		slotElement.appendChild(actionsEl);
-		container.appendChild(slotElement);
+		return slotElement;
 	}
 
 	private getSlotRenderMode(slot: ResolvedOutfitSlot, panel: OutfitSlotsHost): SlotRenderMode {
@@ -227,7 +230,7 @@ export class SlotRenderer extends OutfitPanelContext {
 			'.delete-slot',
 			'.slot-shift',
 			'.move-slot',
-			'edit-slot'
+			'.edit-slot'
 		];
 
 		for (const selector of selectors) {
@@ -284,7 +287,7 @@ export class SlotRenderer extends OutfitPanelContext {
 		select.className = 'slot-shift-select';
 
 		const options: { label: string; targetDisplayIndex: number | null; }[] = [];
-		const displaySlots = this.getDisplaySlots();
+		const displaySlots = this.displaySlots;
 
 		const placeholder = document.createElement('option');
 		placeholder.textContent = 'Move slot...';
@@ -330,7 +333,7 @@ export class SlotRenderer extends OutfitPanelContext {
 	}
 
 	private shiftSlot(select: HTMLSelectElement, display: DisplaySlot): void {
-		const displaySlots = this.getDisplaySlots();
+		const displaySlots = this.displaySlots;
 		const value = select.value;
 
 		const sourceSlotIndex = display.slotIndex;

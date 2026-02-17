@@ -1,4 +1,5 @@
 import { assertNever } from "../shared.js";
+import { createElement } from "../util/ElementHelper.js";
 import { CacheTab } from "./tab/CacheTab.js";
 import { OutfitsTab } from "./tab/OutfitsTab.js";
 import { VisibilityTab } from "./tab/VisibilityTab.js";
@@ -99,17 +100,40 @@ export class OutfitTabsRenderer {
             tabEl.addEventListener('click', clickListener);
         }
         const createTabListEl = (token, elements) => {
-            const el = document.createElement('div');
-            el.classList.add(token);
+            const el = createElement('div', token);
+            el.tabIndex = 0;
             el.append(...elements);
             return el;
         };
         const systemTabListEl = createTabListEl('system-tab-list', systemTabEls);
         const outfitTabListEl = createTabListEl('outfit-tab-list', kindTabEls);
+        this.setupDissipateBehavior(outfitTabListEl, tabEls);
         systemTabListEl.append(this.createAddTabButton());
         tabsContainer.append(systemTabListEl, outfitTabListEl);
         requestAnimationFrame(() => {
             outfitTabListEl.scrollLeft = preservedTabScroll;
+        });
+    }
+    setupDissipateBehavior(tabList, tabEls) {
+        tabList.addEventListener('focusin', () => {
+            tabList.classList.remove('collapsed');
+            tabList.classList.remove('fading');
+            for (const tab of tabEls) {
+                tab.style.display = '';
+            }
+        });
+        tabList.addEventListener('focusout', (e) => {
+            if (tabList.contains(e.relatedTarget))
+                return;
+            tabList.classList.add('fading');
+            const onTransitionEnd = (ev) => {
+                if (ev.propertyName !== 'opacity')
+                    return;
+                tabList.classList.remove('fading');
+                tabList.classList.add('collapsed');
+                tabList.removeEventListener('transitionend', onTransitionEnd);
+            };
+            tabList.addEventListener('transitionend', onTransitionEnd);
         });
     }
     getTabScroll(tabsContainer) {

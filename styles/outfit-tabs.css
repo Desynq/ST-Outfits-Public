@@ -53,6 +53,20 @@
 	cursor: pointer;
 
 	border: 2px solid transparent;
+
+	transition: opacity 500ms ease, transform 1000ms ease;
+}
+
+/* Fading phase */
+.outfit-tab-list.fading .outfit-tab:not(.active) {
+	opacity: 0;
+	transform: translateY(-6px);
+	pointer-events: none;
+}
+
+/* Final collapsed state */
+.outfit-tab-list.collapsed .outfit-tab:not(.active) {
+	display: none;
 }
 
 

@@ -4,7 +4,7 @@ import { OutfitManager } from "../manager/OutfitManager.js";
 import { assertNever } from "../shared.js";
 import { PanelType } from "../types/maps.js";
 import { addDoubleTapListener } from "../util/element/click-actions.js";
-import { addContextActionListener } from "../util/ElementHelper.js";
+import { addContextActionListener, createElement } from "../util/ElementHelper.js";
 import { OutfitTabsHost } from "./OutfitTabsHost.js";
 import { CacheTab } from "./tab/CacheTab.js";
 import { OutfitsTab } from "./tab/OutfitsTab.js";
@@ -165,14 +165,16 @@ export class OutfitTabsRenderer {
 		}
 
 		const createTabListEl = (token: string, elements: readonly HTMLButtonElement[]): HTMLDivElement => {
-			const el = document.createElement('div');
-			el.classList.add(token);
+			const el = createElement('div', token);
+			el.tabIndex = 0;
 			el.append(...elements);
 			return el;
 		};
 
 		const systemTabListEl = createTabListEl('system-tab-list', systemTabEls);
+
 		const outfitTabListEl = createTabListEl('outfit-tab-list', kindTabEls);
+		this.setupDissipateBehavior(outfitTabListEl, tabEls);
 
 		systemTabListEl.append(this.createAddTabButton());
 
@@ -182,6 +184,34 @@ export class OutfitTabsRenderer {
 		);
 		requestAnimationFrame(() => {
 			outfitTabListEl.scrollLeft = preservedTabScroll;
+		});
+	}
+
+	private setupDissipateBehavior(tabList: HTMLDivElement, tabEls: HTMLButtonElement[]): void {
+		tabList.addEventListener('focusin', () => {
+			tabList.classList.remove('collapsed');
+			tabList.classList.remove('fading');
+
+			for (const tab of tabEls) {
+				tab.style.display = '';
+			}
+		});
+
+		tabList.addEventListener('focusout', (e) => {
+			if (tabList.contains(e.relatedTarget as Node)) return;
+
+			tabList.classList.add('fading');
+
+			const onTransitionEnd = (ev: TransitionEvent) => {
+				if (ev.propertyName !== 'opacity') return;
+
+				tabList.classList.remove('fading');
+				tabList.classList.add('collapsed');
+
+				tabList.removeEventListener('transitionend', onTransitionEnd);
+			};
+
+			tabList.addEventListener('transitionend', onTransitionEnd);
 		});
 	}
 

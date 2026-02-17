@@ -77,10 +77,26 @@ export class SlotValueController extends OutfitPanelContext {
 
 		valueEl.addEventListener('click', () => {
 			valueEl.classList.toggle('--reveal');
+			this.updateOverflowState(valueEl);
 		});
 
 		container.appendChild(valueEl);
+		this.updateOverflowState(valueEl);
 		return valueEl;
+	}
+
+	private updateOverflowState(el: HTMLElement): void {
+		requestAnimationFrame(() => {
+			const wasRevealed = el.classList.contains('--reveal');
+
+			if (wasRevealed) {
+				el.classList.remove('--overflowing');
+				return;
+			}
+
+			const isOverflowing = el.scrollHeight > el.clientHeight;
+			el.classList.toggle('--overflowing', isOverflowing);
+		});
 	}
 
 	private renderInlineCode(value: string): DocumentFragment {

@@ -174,10 +174,11 @@ export class OutfitTabsRenderer {
 		const systemTabListEl = createTabListEl('system-tab-list', systemTabEls);
 		const outfitTabListEl = createTabListEl('outfit-tab-list', kindTabEls);
 
+		systemTabListEl.append(this.createAddTabButton());
+
 		tabsContainer.append(
-			outfitTabListEl,
 			systemTabListEl,
-			this.createAddTabButton()
+			outfitTabListEl,
 		);
 		requestAnimationFrame(() => {
 			outfitTabListEl.scrollLeft = preservedTabScroll;

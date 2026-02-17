@@ -63,12 +63,16 @@
 
 /* Main Content Area - Scrollable */
 .outfit-content {
+    display: flex;
     flex: 1;
+    flex-direction: column;
     /* Takes remaining space */
     overflow-y: auto;
     /* ACTIVE scrollbar */
     padding-right: 4px;
     min-height: 0;
+
+    gap: 6px;
 }
 
 
@@ -240,7 +244,7 @@
     position: fixed !important;
     inset: var(--topBarBlockSize) 0 0 0 !important;
     width: 100vw !important;
-    height: 100vh !important;
+    height: calc(100vh - var(--topBarBlockSize)) !important;
 }
 
 #bot-outfit-tab-content,

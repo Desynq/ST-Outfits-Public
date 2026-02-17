@@ -119,6 +119,7 @@ export class SlotRenderer extends OutfitPanelContext {
         moveBtn.textContent = 'Move';
         moveBtn.addEventListener('click', () => this.moveSlot(ctx.slot));
         ctx.actionsLeftEl.appendChild(moveBtn);
+        // const editBtn = this.appendEditBtn(ctx.actionsRightEl, ctx, valueEl);
     }
     appendToggleBtn(container, slot) {
         const toggleBtn = document.createElement('button');

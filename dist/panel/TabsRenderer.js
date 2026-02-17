@@ -106,7 +106,8 @@ export class OutfitTabsRenderer {
         };
         const systemTabListEl = createTabListEl('system-tab-list', systemTabEls);
         const outfitTabListEl = createTabListEl('outfit-tab-list', kindTabEls);
-        tabsContainer.append(outfitTabListEl, systemTabListEl, this.createAddTabButton());
+        systemTabListEl.append(this.createAddTabButton());
+        tabsContainer.append(systemTabListEl, outfitTabListEl);
         requestAnimationFrame(() => {
             outfitTabListEl.scrollLeft = preservedTabScroll;
         });

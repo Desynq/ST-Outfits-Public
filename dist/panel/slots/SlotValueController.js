@@ -40,9 +40,22 @@ export class SlotValueController extends OutfitPanelContext {
         }, { stopImmediatePropagation: true });
         valueEl.addEventListener('click', () => {
             valueEl.classList.toggle('--reveal');
+            this.updateOverflowState(valueEl);
         });
         container.appendChild(valueEl);
+        this.updateOverflowState(valueEl);
         return valueEl;
+    }
+    updateOverflowState(el) {
+        requestAnimationFrame(() => {
+            const wasRevealed = el.classList.contains('--reveal');
+            if (wasRevealed) {
+                el.classList.remove('--overflowing');
+                return;
+            }
+            const isOverflowing = el.scrollHeight > el.clientHeight;
+            el.classList.toggle('--overflowing', isOverflowing);
+        });
     }
     renderInlineCode(value) {
         const frag = document.createDocumentFragment();

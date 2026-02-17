@@ -25,7 +25,6 @@
 
 .outfit-tab-list {
 	grid-column: 1 / span 2;
-	grid-row: 2;
 
 	display: flex;
 	flex-wrap: wrap;
@@ -45,7 +44,7 @@
 	border: none;
 	padding: 6px 3px;
 
-	font-size: 1.2em;
+	font-size: 1.2rem;
 	font-weight: 600;
 	text-transform: none;
 	letter-spacing: normal;
@@ -101,10 +100,7 @@
 
 
 .add-tab {
-	grid-column: 3;
-	grid-row: 2;
-	align-self: center;
-	justify-self: end;
+	margin-left: auto;
 	width: 4em;
 
 	padding: 4px 8px;

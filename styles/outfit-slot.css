@@ -43,6 +43,10 @@
 	margin-bottom: 0px;
 }
 
+.slot-label:has(.slot-image-wrapper) {
+	align-items: flex-start;
+}
+
 .slot-label-left {
 	display: flex;
 	flex-direction: column;

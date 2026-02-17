@@ -1,5 +1,6 @@
 import { OutfitTracker } from "../../data/tracker.js";
 import { assertNever } from "../../shared.js";
+import { ImageLightbox } from "../../ui/components/ImageLightbox.js";
 import { popupConfirm } from "../../util/adapter/popup-adapter.js";
 import { addDoubleTapListener } from "../../util/element/click-actions.js";
 import { createElement, setElementSize } from "../../util/ElementHelper.js";
@@ -22,8 +23,13 @@ class SlotImageElement extends OutfitPanelContext {
         this.slot = slot;
         this.imgWrapper = createElement('div', 'slot-image-wrapper');
         const tag = this.slot.activeImageTag;
-        const { imgEl, onSingleTap, appendControls } = this.renderImageContent(tag);
-        addDoubleTapListener(this.imgWrapper, () => this.changeImage(), 300, onSingleTap);
+        const { onSingleTap, appendControls, noDoubleTap } = this.renderImageContent(tag);
+        if (noDoubleTap) {
+            this.imgWrapper.addEventListener('click', () => this.changeImage());
+        }
+        else {
+            addDoubleTapListener(this.imgWrapper, () => this.changeImage(), 300, onSingleTap);
+        }
         this.appendControls = appendControls;
     }
     append(container) {
@@ -35,7 +41,11 @@ class SlotImageElement extends OutfitPanelContext {
     renderImageContent(tag) {
         if (!tag) {
             this.imgWrapper.classList.add('--empty');
-            return { imgEl: null };
+            this.imgWrapper.textContent = 'Add Image';
+            return {
+                imgEl: null,
+                noDoubleTap: true
+            };
         }
         const result = this.createImage(tag);
         if (!result.ok) {
@@ -43,6 +53,7 @@ class SlotImageElement extends OutfitPanelContext {
                 case 'active-image-tag-not-stored':
                 case 'image-blob-does-not-exist':
                     this.imgWrapper.classList.add('--error');
+                    this.imgWrapper.textContent = 'Error';
                     return { imgEl: null };
                 case 'image-hidden':
                     this.imgWrapper.classList.add('--hidden');
@@ -54,7 +65,7 @@ class SlotImageElement extends OutfitPanelContext {
                 default: assertNever(result.reason);
             }
         }
-        const { imgEl } = result.value;
+        const { imgEl, imgBlob, imgTag } = result.value;
         this.imgWrapper.append(imgEl);
         const resizeHandle = this.createResizeHandle();
         this.imgWrapper.append(resizeHandle);
@@ -63,42 +74,9 @@ class SlotImageElement extends OutfitPanelContext {
         const resizeBtn = this.createResizeBtn();
         return {
             imgEl,
-            onSingleTap: () => this.showRawImage(result.value),
+            onSingleTap: () => ImageLightbox.show(imgBlob, imgTag),
             appendControls: (c) => c.append(deleteBtn, toggleBtn, resizeBtn)
         };
-    }
-    async showRawImage(imgCtx) {
-        const { imgBlob, imgTag } = imgCtx;
-        const overlay = createElement('div', 'outfit-lightbox-overlay');
-        const stage = createElement('div', 'outfit-lightbox-stage');
-        const img = createElement('img', 'outfit-lightbox-image');
-        img.src = imgBlob.base64;
-        img.alt = imgTag;
-        let zoomed = false;
-        img.addEventListener('click', (e) => {
-            e.stopPropagation();
-            zoomed = !zoomed;
-            if (zoomed) {
-                const rect = img.getBoundingClientRect();
-                const x = ((e.clientX - rect.left) / rect.width) * 100;
-                const y = ((e.clientY - rect.top) / rect.height) * 100;
-                img.style.transformOrigin = `${x}% ${y}%`;
-                img.style.transform = `scale(2)`;
-                img.style.cursor = 'zoom-out';
-            }
-            else {
-                img.style.transform = 'scale(1)';
-                img.style.transformOrigin = 'center center';
-                img.style.cursor = 'zoom-in';
-            }
-        });
-        overlay.addEventListener('click', () => {
-            overlay.remove();
-        });
-        stage.append(img);
-        overlay.append(stage);
-        document.body.append(overlay);
-        requestAnimationFrame(() => overlay.classList.add('show'));
     }
     createToggleBtn() {
         const btn = createElement('button', 'slot-button');

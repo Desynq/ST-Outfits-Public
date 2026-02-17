@@ -4,6 +4,7 @@ import { OutfitTracker } from "../../data/tracker.js";
 import { OutfitImagesView } from "../../data/view/OutfitImagesView.js";
 import { assertNever } from "../../shared.js";
 import { PanelType } from "../../types/maps.js";
+import { ImageLightbox } from "../../ui/components/ImageLightbox.js";
 import { popupConfirm } from "../../util/adapter/popup-adapter.js";
 import { addDoubleTapListener } from "../../util/element/click-actions.js";
 import { createElement, setElementSize } from "../../util/ElementHelper.js";
@@ -37,19 +38,19 @@ type CreateImageResult =
 type RenderImageBundle =
 	| {
 		imgEl: null;
-		onSingleTap?: (e: PointerEvent) => void;
 		appendControls?: undefined;
+		onSingleTap?: (e: PointerEvent) => void;
+		noDoubleTap?: true;
 	}
 	| {
 		imgEl: HTMLImageElement;
 		onSingleTap: (e: PointerEvent) => void;
 		appendControls: (container: HTMLElement) => void;
+		noDoubleTap?: never;
 	};
 
-type BuildResult = {
-	imgWrapper: HTMLDivElement;
-	appendControls?: ((container: HTMLElement) => void) | undefined;
-};
+type PEC = (e: PointerEvent) => void;
+type TapGestureType = 'change-image' | 'toggle-image' | 'lightbox';
 
 export class SlotImageElementFactory extends OutfitPanelContext {
 
@@ -79,14 +80,19 @@ class SlotImageElement extends OutfitPanelContext {
 		this.imgWrapper = createElement('div', 'slot-image-wrapper');
 		const tag = this.slot.activeImageTag;
 
-		const { imgEl, onSingleTap, appendControls } = this.renderImageContent(tag);
+		const { onSingleTap, appendControls, noDoubleTap } = this.renderImageContent(tag);
 
-		addDoubleTapListener(
-			this.imgWrapper,
-			() => this.changeImage(),
-			300,
-			onSingleTap
-		);
+		if (noDoubleTap) {
+			this.imgWrapper.addEventListener('click', () => this.changeImage());
+		}
+		else {
+			addDoubleTapListener(
+				this.imgWrapper,
+				() => this.changeImage(),
+				300,
+				onSingleTap
+			);
+		}
 
 		this.appendControls = appendControls;
 	}
@@ -102,7 +108,11 @@ class SlotImageElement extends OutfitPanelContext {
 	private renderImageContent(tag: string | null): RenderImageBundle {
 		if (!tag) {
 			this.imgWrapper.classList.add('--empty');
-			return { imgEl: null };
+			this.imgWrapper.textContent = 'Add Image';
+			return {
+				imgEl: null,
+				noDoubleTap: true
+			};
 		}
 
 		const result = this.createImage(tag);
@@ -111,6 +121,7 @@ class SlotImageElement extends OutfitPanelContext {
 				case 'active-image-tag-not-stored':
 				case 'image-blob-does-not-exist':
 					this.imgWrapper.classList.add('--error');
+					this.imgWrapper.textContent = 'Error';
 					return { imgEl: null };
 				case 'image-hidden':
 					this.imgWrapper.classList.add('--hidden');
@@ -123,7 +134,7 @@ class SlotImageElement extends OutfitPanelContext {
 			}
 		}
 
-		const { imgEl } = result.value;
+		const { imgEl, imgBlob, imgTag } = result.value;
 		this.imgWrapper.append(imgEl);
 		const resizeHandle = this.createResizeHandle();
 		this.imgWrapper.append(resizeHandle);
@@ -134,53 +145,9 @@ class SlotImageElement extends OutfitPanelContext {
 
 		return {
 			imgEl,
-			onSingleTap: () => this.showRawImage(result.value),
+			onSingleTap: () => ImageLightbox.show(imgBlob, imgTag),
 			appendControls: (c: HTMLElement) => c.append(deleteBtn, toggleBtn, resizeBtn)
 		};
-	}
-
-	private async showRawImage(imgCtx: ImageContext) {
-		const { imgBlob, imgTag } = imgCtx;
-
-		const overlay = createElement('div', 'outfit-lightbox-overlay');
-		const stage = createElement('div', 'outfit-lightbox-stage');
-
-		const img = createElement('img', 'outfit-lightbox-image');
-		img.src = imgBlob.base64;
-		img.alt = imgTag;
-
-		let zoomed = false;
-		img.addEventListener('click', (e) => {
-			e.stopPropagation();
-
-			zoomed = !zoomed;
-
-			if (zoomed) {
-				const rect = img.getBoundingClientRect();
-
-				const x = ((e.clientX - rect.left) / rect.width) * 100;
-				const y = ((e.clientY - rect.top) / rect.height) * 100;
-
-				img.style.transformOrigin = `${x}% ${y}%`;
-				img.style.transform = `scale(2)`;
-				img.style.cursor = 'zoom-out';
-			} else {
-				img.style.transform = 'scale(1)';
-				img.style.transformOrigin = 'center center';
-				img.style.cursor = 'zoom-in';
-			}
-		});
-
-
-
-		overlay.addEventListener('click', () => {
-			overlay.remove();
-		});
-
-		stage.append(img);
-		overlay.append(stage);
-		document.body.append(overlay);
-		requestAnimationFrame(() => overlay.classList.add('show'));
 	}
 
 	private createToggleBtn(): HTMLButtonElement {

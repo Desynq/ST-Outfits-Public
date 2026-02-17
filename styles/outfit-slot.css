@@ -33,7 +33,7 @@
 
 .slot-label {
 	display: flex;
-	align-items: flex-start;
+	align-items: center;
 	gap: 8px;
 
 	margin-bottom: 6px;
@@ -55,17 +55,16 @@
 	/* CRITICAL for ellipsis to work */
 }
 
-.slot-label-row {
-	display: flex;
-	align-items: flex-start;
-	gap: 12px;
-}
-
 .slot-label-right {
 	display: flex;
 	align-items: center;
 	flex: 0 0 auto;
 	gap: 6px;
+}
+
+.slot-label-row {
+	display: flex;
+	align-items: center;
 }
 
 
@@ -353,7 +352,7 @@
 
 /* Base disabled */
 .slot-value.disabled {
-	opacity: 0.35;
+	opacity: 0.5;
 	transition:
 		opacity 120ms ease,
 		box-shadow 120ms ease,
@@ -384,32 +383,4 @@
 	box-shadow:
 		0 0 0 3px rgba(196, 181, 253, 0.8),
 		0 10px 28px rgba(196, 181, 253, 0.28);
-}
-
-
-
-.slot-image-wrapper {
-	position: relative;
-	display: inline-block;
-	overflow: hidden;
-	max-width: 100%;
-	min-width: 96px;
-	min-height: 24px;
-}
-
-.slot-image-wrapper:not(:has(.slot-image)) {
-	width: 96px;
-	height: 24px;
-}
-
-.slot-image {
-	width: 100%;
-	height: 100%;
-	object-fit: fill;
-	display: block;
-	border-radius: 5px;
-}
-
-.slot-image.--error {
-	display: none;
 }

@@ -19,3 +19,11 @@ export async function popupConfirm(content, options = {}) {
     const result = await popup.show();
     return result === POPUP_RESULT.AFFIRMATIVE;
 }
+export async function multiConfirm(...messages) {
+    for (const message of messages) {
+        const confirm = await popupConfirm(message);
+        if (!confirm)
+            return false;
+    }
+    return true;
+}

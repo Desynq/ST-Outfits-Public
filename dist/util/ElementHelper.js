@@ -52,10 +52,15 @@ export function addLongPressAction(el, delay, onLongPress, options) {
         if (timer !== null) {
             clearTimeout(timer);
             timer = null;
+            options?.onReleaseAfterNormalPress?.(e);
+            return;
         }
         if (longPressTriggered) {
             options?.onReleaseAfterLongPress?.(e);
-            longPressTriggered = false;
+            // Delay reset so synthetic click (if any) can be suppressed
+            setTimeout(() => {
+                longPressTriggered = false;
+            }, 0);
         }
     };
     el.addEventListener('touchstart', start, { passive: true });
@@ -65,6 +70,13 @@ export function addLongPressAction(el, delay, onLongPress, options) {
     el.addEventListener('mousedown', start);
     el.addEventListener('mouseup', cancel);
     el.addEventListener('mouseleave', cancel);
+    el.addEventListener('click', (e) => {
+        if (longPressTriggered) {
+            e.preventDefault();
+            e.stopPropagation();
+            longPressTriggered = false;
+        }
+    });
 }
 export function addHorizontalScroll(el, scale = 1.0) {
     const listener = (e) => {

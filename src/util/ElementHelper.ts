@@ -48,6 +48,7 @@ export function addLongPressAction(
 	options?: {
 		stopImmediatePropagation?: boolean;
 		onReleaseAfterLongPress?: (e: TouchEvent | MouseEvent) => void;
+		onReleaseAfterNormalPress?: (e: TouchEvent | MouseEvent) => void;
 	}
 ): void {
 	let timer: number | null = null;
@@ -73,11 +74,18 @@ export function addLongPressAction(
 		if (timer !== null) {
 			clearTimeout(timer);
 			timer = null;
+
+			options?.onReleaseAfterNormalPress?.(e);
+			return;
 		}
 
 		if (longPressTriggered) {
 			options?.onReleaseAfterLongPress?.(e);
-			longPressTriggered = false;
+
+			// Delay reset so synthetic click (if any) can be suppressed
+			setTimeout(() => {
+				longPressTriggered = false;
+			}, 0);
 		}
 	};
 
@@ -89,6 +97,14 @@ export function addLongPressAction(
 	el.addEventListener('mousedown', start);
 	el.addEventListener('mouseup', cancel);
 	el.addEventListener('mouseleave', cancel);
+
+	el.addEventListener('click', (e) => {
+		if (longPressTriggered) {
+			e.preventDefault();
+			e.stopPropagation();
+			longPressTriggered = false;
+		}
+	});
 }
 
 

@@ -3,14 +3,7 @@
     "author": "Lucanna",
     "version": "1.0.0",
     "homePage": "https://github.com/lannashelton/ST-Outfits",
-<<<<<<< HEAD
-    "js": "index.js",
-    "css": "style.css",
-    "loading_order": 15
-}
-=======
     "js": "dist/index.js",
     "css": "./styles/base.css",
     "loading_order": 15
 }
->>>>>>> e19dcd3 (Initial commit (history squashed up to a36d074))

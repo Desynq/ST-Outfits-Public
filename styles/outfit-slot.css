@@ -1,0 +1,146 @@
+.outfit-slots {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 8px;
+}
+
+.outfit-slot {
+	padding: 10px;
+	background: rgba(255, 255, 255, 0.08);
+	border-radius: 8px;
+	backdrop-filter: blur(5px);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.add-slot-button {
+	padding: 10px;
+	background: rgba(255, 255, 255, 0.08);
+	border-radius: 8px;
+	backdrop-filter: blur(5px);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	margin-top: 12px;
+
+	width: 100%;
+	display: block;
+}
+
+.add-slot-button:hover {
+	background: rgba(255, 255, 255, 0.15);
+}
+
+
+
+
+.slot-label {
+	display: flex;
+	align-items: center;
+
+	margin-bottom: 6px;
+}
+
+.slot-label .slot-ordinal {
+	min-width: 1.8em;
+	text-align: center;
+
+	font-size: 0.75em;
+	font-weight: 600;
+
+	color: rgba(255, 255, 255, 0.5);
+
+	user-select: none;
+}
+
+.slot-label .label-editbox,
+.slot-label .slot-name {
+	font-weight: 600;
+	font-size: 1.0em;
+
+	color: rgba(240, 240, 240, 0.9);
+
+	line-height: 1.2;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.slot-label .label-editbox {
+	white-space: pre-wrap;
+}
+
+
+.outfit-slot:hover .slot-ordinal {
+	color: rgba(255, 255, 255, 1.0);
+}
+
+
+
+
+
+.slot-editbox,
+.slot-value {
+	font-size: 0.8em;
+	line-height: 1.2;
+	min-height: calc(3lh + 12px);
+	box-sizing: border-box;
+
+	padding: 6px;
+	border-radius: 5px;
+	white-space: pre-wrap;
+	word-break: break-word;
+	overflow: hidden;
+
+	background: rgba(0, 0, 0, 0.5);
+	border-color: rgba(255, 255, 255, 0.25);
+	font-weight: bold;
+	margin-bottom: 8px;
+}
+
+.slot-value.disabled {
+	color: rgba(255, 255, 255, 0.75);
+	background: rgba(255, 255, 255, 0.1);
+	border-color: rgba(255, 255, 255, 0.15);
+	font-style: italic;
+	font-weight: normal;
+}
+
+.slot-value.none {
+	background: rgba(0, 0, 0, 0.25);
+	border: 1px solid rgba(255, 255, 255, 0.05);
+	font-weight: normal;
+}
+
+
+
+.slot-actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 8px;
+}
+
+.slot-button {
+	background: rgba(255, 255, 255, 0.15);
+	color: #fff;
+	border: none;
+	border-radius: 5px;
+	padding: 4px 10px;
+	cursor: pointer;
+	font-weight: 600;
+	font-size: 1.0em;
+	min-width: 15%;
+}
+
+.slot-button button:hover {
+	background: rgba(255, 255, 255, 0.25);
+}
+
+.slot-button.cancel-button {
+	margin-left: auto;
+}
+
+.slot-button.slot-shift {
+	margin-right: auto;
+}
+
+.slot-button.delete-slot {
+	background: rgba(255, 128, 128, 0.25);
+}

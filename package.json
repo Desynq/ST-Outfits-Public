@@ -1,0 +1,14 @@
+{
+  "devDependencies": {
+    "@types/jquery": "^3.5.33",
+    "@types/toastr": "^2.1.43",
+    "typescript": "^5.9.3"
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch"
+  },
+  "dependencies": {
+    "toastr": "^2.1.4"
+  }
+}

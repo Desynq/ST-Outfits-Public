@@ -1,0 +1,3 @@
+# Force JS files to LF in repo and working tree
+*.js text eol=lf
+*.ts text eol=lf

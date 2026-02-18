@@ -4,7 +4,7 @@ import { OutfitManager } from "../manager/OutfitManager.js";
 import { assertNever } from "../shared.js";
 import { PanelType } from "../types/maps.js";
 import { addDoubleTapListener } from "../util/element/click-actions.js";
-import { addContextActionListener, createElement } from "../util/ElementHelper.js";
+import { addContextActionListener, addHorizontalScroll, createElement } from "../util/ElementHelper.js";
 import { OutfitTabsHost } from "./OutfitTabsHost.js";
 import { CacheTab } from "./tab/CacheTab.js";
 import { OutfitsTab } from "./tab/OutfitsTab.js";
@@ -174,6 +174,7 @@ export class OutfitTabsRenderer {
 		const systemTabListEl = createTabListEl('system-tab-list', systemTabEls);
 
 		const outfitTabListEl = createTabListEl('outfit-tab-list', kindTabEls);
+		addHorizontalScroll(outfitTabListEl, 0.5);
 
 		systemTabListEl.append(this.createAddTabButton());
 

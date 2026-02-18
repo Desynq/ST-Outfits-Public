@@ -66,6 +66,16 @@ export function addLongPressAction(el, delay, onLongPress, options) {
     el.addEventListener('mouseup', cancel);
     el.addEventListener('mouseleave', cancel);
 }
+export function addHorizontalScroll(el, scale = 1.0) {
+    const listener = (e) => {
+        if (el.scrollWidth <= el.clientWidth)
+            return;
+        e.preventDefault();
+        el.scrollLeft += e.deltaY * scale;
+    };
+    el.addEventListener('wheel', listener, { passive: false });
+    return () => el.removeEventListener('wheel', listener);
+}
 export function append(container, factory) {
     const element = factory();
     container.appendChild(element);

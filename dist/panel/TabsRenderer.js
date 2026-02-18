@@ -1,5 +1,5 @@
 import { assertNever } from "../shared.js";
-import { createElement } from "../util/ElementHelper.js";
+import { addHorizontalScroll, createElement } from "../util/ElementHelper.js";
 import { CacheTab } from "./tab/CacheTab.js";
 import { OutfitsTab } from "./tab/OutfitsTab.js";
 import { VisibilityTab } from "./tab/VisibilityTab.js";
@@ -107,6 +107,7 @@ export class OutfitTabsRenderer {
         };
         const systemTabListEl = createTabListEl('system-tab-list', systemTabEls);
         const outfitTabListEl = createTabListEl('outfit-tab-list', kindTabEls);
+        addHorizontalScroll(outfitTabListEl, 0.5);
         systemTabListEl.append(this.createAddTabButton());
         tabsContainer.append(systemTabListEl, outfitTabListEl);
         restoreScroll?.(outfitTabListEl);

@@ -92,6 +92,23 @@ export function addLongPressAction(
 }
 
 
+export function addHorizontalScroll(el: HTMLElement, scale: number = 1.0) {
+	const listener = (e: WheelEvent) => {
+		if (el.scrollWidth <= el.clientWidth) return;
+
+		e.preventDefault();
+
+		el.scrollLeft += e.deltaY * scale;
+	};
+
+	el.addEventListener('wheel', listener, { passive: false });
+	return () => el.removeEventListener('wheel', listener);
+}
+
+
+
+
+
 
 export function append<T extends HTMLElement>(container: ParentNode, factory: () => T): T {
 	const element = factory();

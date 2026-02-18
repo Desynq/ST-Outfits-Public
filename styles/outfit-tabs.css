@@ -27,19 +27,40 @@
 	grid-column: 1 / span 2;
 
 	display: flex;
-	flex-wrap: wrap;
+	flex-wrap: nowrap;
 	gap: 12px;
-
-	overflow-x: visible;
 
 	margin-top: 4px;
 	border-top: 2px solid rgba(255, 255, 255, 0.2);
+
+	overflow-x: auto;
+	overflow-y: hidden;
+	padding-bottom: 10px; /* 6px scrollbar + 4px breathing room */
+}
+
+.outfit-tab-list::-webkit-scrollbar {
+	height: 6px;
+}
+
+.outfit-tab-list::-webkit-scrollbar-track {
+	background: rgba(0, 0, 0, 0.1);
+	border-radius: 3px;
+}
+
+.outfit-tab-list::-webkit-scrollbar-thumb {
+	background: rgba(255, 255, 255, 0.2);
+	border-radius: 3px;
+}
+
+.outfit-tab-list::-webkit-scrollbar-thumb:hover {
+	background: rgba(255, 255, 255, 0.3);
 }
 
 
 
 
 .outfit-tab {
+	flex: 0 0 auto;
 	background: none;
 	border: none;
 	padding: 6px 3px;
@@ -53,22 +74,7 @@
 	cursor: pointer;
 
 	border: 2px solid transparent;
-
-	transition: opacity 500ms ease, transform 1000ms ease;
 }
-
-/* Fading phase */
-.outfit-tab-list.fading .outfit-tab:not(.active) {
-	opacity: 0;
-	transform: translateY(-6px);
-	pointer-events: none;
-}
-
-/* Final collapsed state */
-.outfit-tab-list.collapsed .outfit-tab:not(.active) {
-	display: none;
-}
-
 
 .outfit-tab.active {
 	color: #fff

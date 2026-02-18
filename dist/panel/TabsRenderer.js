@@ -69,7 +69,7 @@ export class OutfitTabsRenderer {
         this.panel.render();
     }
     recreateTabs(tabsContainer) {
-        const preservedTabScroll = this.getTabScroll(tabsContainer);
+        const restoreScroll = this.captureScroll(tabsContainer);
         tabsContainer.innerHTML = '';
         const tabEls = [];
         const kindTabEls = [];
@@ -107,12 +107,9 @@ export class OutfitTabsRenderer {
         };
         const systemTabListEl = createTabListEl('system-tab-list', systemTabEls);
         const outfitTabListEl = createTabListEl('outfit-tab-list', kindTabEls);
-        this.setupDissipateBehavior(outfitTabListEl, tabEls);
         systemTabListEl.append(this.createAddTabButton());
         tabsContainer.append(systemTabListEl, outfitTabListEl);
-        requestAnimationFrame(() => {
-            outfitTabListEl.scrollLeft = preservedTabScroll;
-        });
+        restoreScroll?.(outfitTabListEl);
     }
     setupDissipateBehavior(tabList, tabEls) {
         tabList.addEventListener('focusin', () => {
@@ -136,9 +133,15 @@ export class OutfitTabsRenderer {
             tabList.addEventListener('transitionend', onTransitionEnd);
         });
     }
-    getTabScroll(tabsContainer) {
+    captureScroll(tabsContainer) {
         const tabList = tabsContainer.querySelector('.outfit-tab-list');
-        return tabList ? tabList.scrollLeft : 0;
+        if (tabList) {
+            const prevScroll = tabList.scrollLeft;
+            return (el) => requestAnimationFrame(() => {
+                el.scrollLeft = prevScroll;
+            });
+        }
+        return null;
     }
     changeTab(allTabs, clickedTab) {
         const tab = this.getTabFromElement(clickedTab);

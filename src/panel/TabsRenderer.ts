@@ -119,7 +119,7 @@ export class OutfitTabsRenderer {
 	}
 
 	private recreateTabs(tabsContainer: HTMLDivElement): void {
-		const preservedTabScroll = this.getTabScroll(tabsContainer);
+		const restoreScroll = this.captureScroll(tabsContainer);
 
 		tabsContainer.innerHTML = '';
 		const tabEls: HTMLButtonElement[] = [];
@@ -174,7 +174,6 @@ export class OutfitTabsRenderer {
 		const systemTabListEl = createTabListEl('system-tab-list', systemTabEls);
 
 		const outfitTabListEl = createTabListEl('outfit-tab-list', kindTabEls);
-		this.setupDissipateBehavior(outfitTabListEl, tabEls);
 
 		systemTabListEl.append(this.createAddTabButton());
 
@@ -182,9 +181,8 @@ export class OutfitTabsRenderer {
 			systemTabListEl,
 			outfitTabListEl,
 		);
-		requestAnimationFrame(() => {
-			outfitTabListEl.scrollLeft = preservedTabScroll;
-		});
+
+		restoreScroll?.(outfitTabListEl);
 	}
 
 	private setupDissipateBehavior(tabList: HTMLDivElement, tabEls: HTMLButtonElement[]): void {
@@ -215,9 +213,16 @@ export class OutfitTabsRenderer {
 		});
 	}
 
-	private getTabScroll(tabsContainer: HTMLDivElement): number {
+	private captureScroll(tabsContainer: HTMLDivElement): ((el: HTMLElement) => void) | null {
 		const tabList = tabsContainer.querySelector<HTMLDivElement>('.outfit-tab-list');
-		return tabList ? tabList.scrollLeft : 0;
+		if (tabList) {
+			const prevScroll = tabList.scrollLeft;
+			return (el: HTMLElement) => requestAnimationFrame(() => {
+				el.scrollLeft = prevScroll;
+			});
+		}
+
+		return null;
 	}
 
 	private changeTab<T extends HTMLButtonElement>(allTabs: readonly T[], clickedTab: T): void {

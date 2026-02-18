@@ -1,4 +1,5 @@
 import { assertNever, toSlotName } from "../../shared.js";
+import { SlotPresetsModal } from "../../ui/components/SlotPresetsModal.js";
 import { addDoubleTapListener } from "../../util/element/click-actions.js";
 import { appendElement, createElement } from "../../util/ElementHelper.js";
 import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
@@ -119,6 +120,9 @@ export class SlotRenderer extends OutfitPanelContext {
         moveBtn.textContent = 'Move';
         moveBtn.addEventListener('click', () => this.moveSlot(ctx.slot));
         ctx.actionsLeftEl.appendChild(moveBtn);
+        const presetsBtn = createElement('button', 'slot-button slot-presets-button', 'Presets');
+        presetsBtn.addEventListener('click', () => SlotPresetsModal.show(ctx.slot, this.outfitManager, () => this.panel.saveAndRender()));
+        ctx.actionsRightEl.append(presetsBtn);
         // const editBtn = this.appendEditBtn(ctx.actionsRightEl, ctx, valueEl);
     }
     appendToggleBtn(container, slot) {

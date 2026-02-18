@@ -1,7 +1,8 @@
 import { OutfitSlot } from "../../data/model/Outfit.js";
-import { ResolvedOutfitSlot } from "../../data/model/OutfitSnapshots.js";
+import { OutfitSlotState } from "../../data/model/OutfitSnapshots.js";
 import { assertNever, toSlotName } from "../../shared.js";
 import { PanelType } from "../../types/maps.js";
+import { SlotPresetsModal } from "../../ui/components/SlotPresetsModal.js";
 import { addDoubleTapListener } from "../../util/element/click-actions.js";
 import { appendElement, createElement } from "../../util/ElementHelper.js";
 import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
@@ -15,7 +16,7 @@ export interface SlotContext {
 	scroller: HTMLElement;
 	slotElement: HTMLDivElement;
 	displaySlot: DisplaySlot;
-	slot: ResolvedOutfitSlot;
+	slot: OutfitSlotState;
 	actionsLeftEl: HTMLDivElement;
 	actionsRightEl: HTMLDivElement;
 	labelLeftDiv: HTMLDivElement;
@@ -146,7 +147,7 @@ export class SlotRenderer extends OutfitPanelContext {
 		return slotElement;
 	}
 
-	private getSlotRenderMode(slot: ResolvedOutfitSlot, panel: OutfitSlotsHost): SlotRenderMode {
+	private getSlotRenderMode(slot: OutfitSlotState, panel: OutfitSlotsHost): SlotRenderMode {
 		if (slot.isEmpty() && panel.areEmptySlotsHidden()) {
 			return 'hidden-empty';
 		}
@@ -193,10 +194,21 @@ export class SlotRenderer extends OutfitPanelContext {
 		);
 		ctx.actionsLeftEl.appendChild(moveBtn);
 
+		const presetsBtn = createElement('button', 'slot-button slot-presets-button', 'Presets');
+		presetsBtn.addEventListener(
+			'click',
+			() => SlotPresetsModal.show(
+				ctx.slot,
+				this.outfitManager,
+				() => this.panel.saveAndRender()
+			)
+		);
+		ctx.actionsRightEl.append(presetsBtn);
+
 		// const editBtn = this.appendEditBtn(ctx.actionsRightEl, ctx, valueEl);
 	}
 
-	private appendToggleBtn(container: HTMLDivElement, slot: ResolvedOutfitSlot): HTMLButtonElement {
+	private appendToggleBtn(container: HTMLDivElement, slot: OutfitSlotState): HTMLButtonElement {
 		const toggleBtn = document.createElement('button');
 		toggleBtn.className = 'slot-button slot-toggle';
 
@@ -210,7 +222,7 @@ export class SlotRenderer extends OutfitPanelContext {
 		return toggleBtn;
 	}
 
-	private toggle(slot: ResolvedOutfitSlot): void {
+	private toggle(slot: OutfitSlotState): void {
 		this.outfitView.toggleSlot(slot.id);
 		this.outfitManager.updateOutfitValue(slot.id);
 		this.panel.saveAndRender();
@@ -270,7 +282,7 @@ export class SlotRenderer extends OutfitPanelContext {
 
 	/* ------------------------------ Slot Deletion ----------------------------- */
 
-	private askDeleteSlot(slotElement: HTMLDivElement, slot: ResolvedOutfitSlot): void {
+	private askDeleteSlot(slotElement: HTMLDivElement, slot: OutfitSlotState): void {
 		const confirmed = window.confirm('Are you sure you want to delete this slot?');
 
 		if (confirmed) {
@@ -419,7 +431,7 @@ export class SlotRenderer extends OutfitPanelContext {
 		textarea.focus();
 	}
 
-	private commitRename(slot: ResolvedOutfitSlot, textarea: HTMLTextAreaElement): void {
+	private commitRename(slot: OutfitSlotState, textarea: HTMLTextAreaElement): void {
 		const rawName = textarea.value;
 		const newSlotId = this.toSlotId(rawName);
 

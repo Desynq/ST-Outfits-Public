@@ -1,10 +1,11 @@
 // @ts-ignore
 import { extension_settings } from "../../../../../extensions.js";
 import { normalizePanelSettings } from "./mappings/PanelSettings.js";
-import { normalizeImageBlobs, validatePresets } from "./normalize.js";
+import { normalizeImageBlobs, normalizeSlotPresets, validatePresets } from "./normalize.js";
 import { CharacterOutfitCollectionView, UserOutfitCollectionView } from "./view/OutfitCollectionView.js";
 import { OutfitImagesView } from "./view/OutfitImagesView.js";
 import { BotPanelSettingsView, defaultBotPanelSettings, defaultUserPanelSettings, UserPanelSettingsView } from "./view/PanelViews.js";
+import { SlotPresetRegistry } from "./view/SlotPresetsView.js";
 const PANEL_SETTINGS_FACTORIES = {
     user: (s) => new UserPanelSettingsView(s.userPanel),
     bot: (s) => new BotPanelSettingsView(s.botPanel)
@@ -32,6 +33,9 @@ class Tracker {
     images() {
         return new OutfitImagesView(this.settings.images);
     }
+    slotPresets() {
+        return new SlotPresetRegistry(this.settings.slotPresets);
+    }
 }
 class CharacterOutfitMapView {
     constructor(map) {
@@ -52,6 +56,7 @@ function loadTracker() {
     const raw = settings.outfit_tracker ?? (settings.outfit_tracker = {});
     raw.enableSysMessages ?? (raw.enableSysMessages = false);
     normalizeImageBlobs(raw);
+    normalizeSlotPresets(raw);
     validatePresets(raw);
     normalizePanelSettings(raw, 'userPanel', defaultUserPanelSettings);
     normalizePanelSettings(raw, 'botPanel', defaultBotPanelSettings);

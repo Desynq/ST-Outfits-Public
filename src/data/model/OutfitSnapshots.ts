@@ -1,4 +1,5 @@
 import { OutfitImage, OutfitSlot, SlotKind } from "./Outfit.js";
+import { KeyedSlotPreset } from "./SlotPreset.js";
 
 
 abstract class OutfitSlotBase {
@@ -9,7 +10,7 @@ abstract class OutfitSlotBase {
 	abstract readonly resolved: boolean;
 }
 
-export class ResolvedOutfitSlot extends OutfitSlotBase {
+export class OutfitSlotState extends OutfitSlotBase {
 
 	readonly resolved = true as const;
 
@@ -24,8 +25,8 @@ export class ResolvedOutfitSlot extends OutfitSlotBase {
 		super(id);
 	}
 
-	public static fromSlot(slot: Readonly<OutfitSlot>, value: string): ResolvedOutfitSlot {
-		return new ResolvedOutfitSlot(slot.id, slot.kind, value, slot.enabled, slot.images, slot.activeImageTag);
+	public static fromSlot(slot: Readonly<OutfitSlot>, value: string): OutfitSlotState {
+		return new OutfitSlotState(slot.id, slot.kind, value, slot.enabled, slot.images, slot.activeImageTag);
 	}
 
 	public isEnabled(): boolean {
@@ -39,6 +40,13 @@ export class ResolvedOutfitSlot extends OutfitSlotBase {
 	public isEmpty(): boolean {
 		return this.value === 'None';
 	}
+
+	/**
+	 * @returns Whether the slot has an OutfitImage record keyed by the SlotPreset
+	 */
+	public hasPreset(preset: KeyedSlotPreset): boolean {
+		return this.images[preset.key] !== undefined;
+	}
 }
 
 export class UnresolvedOutfitSlot extends OutfitSlotBase {
@@ -49,7 +57,7 @@ export class UnresolvedOutfitSlot extends OutfitSlotBase {
 	}
 }
 
-export type OutfitSlotView = ResolvedOutfitSlot | UnresolvedOutfitSlot;
+export type OutfitSlotView = OutfitSlotState | UnresolvedOutfitSlot;
 
 export interface OutfitSnapshot {
 	slots: OutfitSlot[];

@@ -4,10 +4,11 @@ import type { PanelType } from "../types/maps.js";
 import { ensureRecordProperty } from "../util/narrowing.js";
 import { normalizePanelSettings } from "./mappings/PanelSettings.js";
 import { CharactersOutfitMap, ExtensionSettingsAugment, OutfitTrackerModel } from "./model/Outfit.js";
-import { normalizeImageBlobs, validatePresets } from "./normalize.js";
+import { normalizeImageBlobs, normalizeSlotPresets, validatePresets } from "./normalize.js";
 import { CharacterOutfitCollectionView, UserOutfitCollectionView } from "./view/OutfitCollectionView.js";
 import { OutfitImagesView } from "./view/OutfitImagesView.js";
 import { BotPanelSettingsView, defaultBotPanelSettings, defaultUserPanelSettings, PanelSettingsMap, PanelSettingsViewMap, UserPanelSettingsView } from "./view/PanelViews.js";
+import { SlotPresetRegistry } from "./view/SlotPresetsView.js";
 
 const PANEL_SETTINGS_FACTORIES = {
 	user: (s: PanelSettingsMap) => new UserPanelSettingsView(s.userPanel),
@@ -49,6 +50,10 @@ class Tracker {
 	public images(): OutfitImagesView {
 		return new OutfitImagesView(this.settings.images);
 	}
+
+	public slotPresets(): SlotPresetRegistry {
+		return new SlotPresetRegistry(this.settings.slotPresets);
+	}
 }
 
 class CharacterOutfitMapView {
@@ -76,6 +81,7 @@ function loadTracker(): Tracker {
 
 	raw.enableSysMessages ??= false;
 	normalizeImageBlobs(raw);
+	normalizeSlotPresets(raw);
 	validatePresets(raw);
 
 	normalizePanelSettings(raw, 'userPanel', defaultUserPanelSettings);

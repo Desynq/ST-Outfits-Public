@@ -1,0 +1,131 @@
+.slot-presets-overlay {
+	position: fixed;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.5);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	z-index: 10000;
+}
+
+.slot-presets-modal {
+	background: rgba(30, 30, 30, 0.95);
+	border-radius: 12px;
+	padding: 16px;
+	max-width: 600px;
+	width: 90vw;
+	max-height: 80vh;
+	overflow-y: auto;
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.slot-presets-slot-section,
+.slot-presets-other-section {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.slot-presets-item {
+	display: flex;
+	align-items: flex-start;
+	gap: 12px;
+	padding: 10px 12px;
+	border-radius: 10px;
+	cursor: pointer;
+	background: rgba(255, 255, 255, 0.06);
+	transition: background 120ms ease, border-color 120ms ease;
+}
+
+.slot-presets-item:hover {
+	background: rgba(255, 255, 255, 0.08);
+	border-color: rgba(255, 255, 255, 0.12);
+}
+
+.slot-presets-item.attached {
+	outline: 1px solid rgba(120, 200, 255, 0.5);
+}
+
+.slot-presets-thumb {
+	width: 48px;
+	height: 48px;
+	flex-shrink: 0;
+	object-fit: cover;
+	border-radius: 8px;
+}
+
+.slot-presets-label {
+	font-weight: 600;
+	font-size: 0.95rem;
+	color: rgba(240, 240, 240, 0.95);
+	margin-bottom: 4px;
+}
+
+.slot-presets-value {
+	font-size: 0.8rem;
+	color: rgba(200, 200, 200, 0.75);
+	line-height: 1.35;
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.slot-presets-text {
+	flex: 1;
+	min-width: 0;
+}
+
+
+
+.slot-presets-btn {
+	padding: 6px 10px;
+	font-size: 0.8rem;
+	border-radius: 6px;
+	border: 1px solid rgba(255, 255, 255, 0.15);
+	background: rgba(255, 255, 255, 0.06);
+	color: rgba(240, 240, 240, 0.9);
+	cursor: pointer;
+	transition: background 100ms ease, border-color 100ms ease, transform 80ms ease;
+}
+
+.slot-presets-btn:hover {
+	background: rgba(255, 255, 255, 0.12);
+	border-color: rgba(255, 255, 255, 0.25);
+}
+
+.slot-presets-btn:active {
+	transform: scale(0.96);
+}
+
+
+
+.slots-presets-delete-btn {
+	background: rgba(255, 80, 80, 0.12);
+	border-color: rgba(255, 80, 80, 0.3);
+	color: rgba(255, 120, 120, 0.9);
+}
+
+.slots-presets-delete-btn:hover {
+	background: rgba(255, 80, 80, 0.2);
+	border-color: rgba(255, 80, 80, 0.5);
+}
+
+
+
+.slot-presets-save-btn {
+	align-self: flex-end;
+	margin-top: 16px;
+	padding: 8px 14px;
+	font-size: 0.9rem;
+	font-weight: 600;
+	background: rgba(120, 200, 255, 0.15);
+	border: 1px solid rgba(120, 200, 255, 0.4);
+	color: rgba(180, 220, 255, 0.95);
+}
+
+.slot-presets-save-btn:hover {
+	background: rgba(120, 200, 255, 0.25);
+	border-color: rgba(120, 200, 255, 0.6);
+}

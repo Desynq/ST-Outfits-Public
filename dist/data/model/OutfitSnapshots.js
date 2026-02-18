@@ -3,7 +3,7 @@ class OutfitSlotBase {
         this.id = id;
     }
 }
-export class ResolvedOutfitSlot extends OutfitSlotBase {
+export class OutfitSlotState extends OutfitSlotBase {
     constructor(id, kind, value, enabled, images, activeImageTag) {
         super(id);
         this.kind = kind;
@@ -14,7 +14,7 @@ export class ResolvedOutfitSlot extends OutfitSlotBase {
         this.resolved = true;
     }
     static fromSlot(slot, value) {
-        return new ResolvedOutfitSlot(slot.id, slot.kind, value, slot.enabled, slot.images, slot.activeImageTag);
+        return new OutfitSlotState(slot.id, slot.kind, value, slot.enabled, slot.images, slot.activeImageTag);
     }
     isEnabled() {
         return this.enabled;
@@ -24,6 +24,12 @@ export class ResolvedOutfitSlot extends OutfitSlotBase {
     }
     isEmpty() {
         return this.value === 'None';
+    }
+    /**
+     * @returns Whether the slot has an OutfitImage record keyed by the SlotPreset
+     */
+    hasPreset(preset) {
+        return this.images[preset.key] !== undefined;
     }
 }
 export class UnresolvedOutfitSlot extends OutfitSlotBase {

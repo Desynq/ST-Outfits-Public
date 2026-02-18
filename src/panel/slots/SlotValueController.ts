@@ -1,4 +1,4 @@
-import { ResolvedOutfitSlot } from "../../data/model/OutfitSnapshots.js";
+import { OutfitSlotState } from "../../data/model/OutfitSnapshots.js";
 import { isWideScreen, scrollIntoViewAboveKeyboard } from "../../shared.js";
 import { PanelType } from "../../types/maps.js";
 import { popupConfirm } from "../../util/adapter/popup-adapter.js";
@@ -319,7 +319,7 @@ export class SlotValueController extends OutfitPanelContext {
 		ctx.actionsRightEl.appendChild(saveBtn);
 	}
 
-	private async commitValueEdit(textarea: HTMLTextAreaElement, slot: ResolvedOutfitSlot): Promise<void> {
+	private async commitValueEdit(textarea: HTMLTextAreaElement, slot: OutfitSlotState): Promise<void> {
 		const newValue = textarea.value.trim() === ''
 			? 'None'
 			: textarea.value.trim();

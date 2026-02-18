@@ -11,6 +11,16 @@ export function assertArray(x) {
         throw new Error(`Expected array, got ${x}`);
     }
 }
+export function assertString(x) {
+    if (typeof x !== 'string') {
+        throw new Error(`Expected string, got ${x}`);
+    }
+}
+export function assertPositiveNumber(x) {
+    if (typeof x !== 'number' || !Number.isFinite(x) || x <= 0) {
+        throw new Error(`Expected positive number, got ${x}`);
+    }
+}
 export function ensureRecordProperty(holder, key) {
     if (!isRecord(holder[key])) {
         holder[key] = {};

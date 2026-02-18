@@ -1,6 +1,8 @@
-import { asBoolean, asObject, asStringRecord, ensureObject } from "../ObjectHelper.js";
+import { asBoolean, asObject, resolvePositiveNumber, resolveString, asStringRecord, ensureObject, notObject, resolveObject, resolveTimestamp } from "../ObjectHelper.js";
+import { assertString } from "../util/narrowing.js";
 import { normalizeOutfitSnapshots } from "./mappings/OutfitCache.js";
 import { ImageBlob, Outfit, OutfitCollection, OutfitImage, OutfitSlot, OutfitTrackerModel, SlotKind } from "./model/Outfit.js";
+import { SlotPreset } from "./model/SlotPreset.js";
 
 
 export function validatePresets(holder: any): void {
@@ -184,7 +186,9 @@ function normalizeImages(
 
 export function normalizeImageBlobs(
 	holder: Partial<OutfitTrackerModel>
-): void {
+): asserts holder is Partial<OutfitTrackerModel> & {
+	images: Record<string, ImageBlob>;
+} {
 	if (!holder.images || typeof holder.images !== 'object') {
 		holder.images = {};
 		return;
@@ -207,4 +211,62 @@ function isValidImageBlob(v: unknown): v is ImageBlob {
 		typeof blob.width === 'number' &&
 		typeof blob.height === 'number'
 	);
+}
+
+
+export function normalizeSlotPresets(
+	holder: {
+		slotPresets?: unknown;
+		images: Record<string, ImageBlob>;
+	}
+): void {
+	holder.slotPresets = normalizeRecord(
+		holder.slotPresets,
+		v => normalizeRawSlotPreset(v, holder.images)
+	);
+}
+
+function normalizeRawSlotPreset(
+	value: any,
+	images: Record<string, ImageBlob>
+): SlotPreset | undefined {
+	if (notObject(value)) return undefined;
+
+	const presetValue = resolveString(value.value);
+	const imageKey = resolveString(value.imageKey);
+
+	if (!presetValue || !imageKey) return undefined;
+	if (!images[imageKey]) return undefined;
+
+	const imageWidth = resolvePositiveNumber(value.imageWidth);
+	const imageHeight = resolvePositiveNumber(value.imageHeight);
+	if (imageWidth === undefined || imageHeight === undefined) return undefined;
+
+	const createdAt = resolveTimestamp(value.timestamp, Date.now());
+	const lastUsedAt = resolveTimestamp(value.timestamp, Date.now());
+
+	return {
+		value: presetValue,
+		imageKey,
+		imageWidth,
+		imageHeight,
+		createdAt,
+		lastUsedAt
+	};
+}
+
+
+function normalizeRecord<T>(
+	input: any,
+	normalizeValue: (v: any) => T | undefined
+): Record<string, T> {
+	const out: Record<string, T> = {};
+	if (notObject(input)) return out;
+
+	for (const [k, v] of Object.entries(input)) {
+		const normalized = normalizeValue(v);
+		if (normalized) out[k] = normalized;
+	}
+
+	return out;
 }

@@ -1,5 +1,5 @@
 import { ImageBlob, OutfitImage } from "../../data/model/Outfit.js";
-import { ResolvedOutfitSlot } from "../../data/model/OutfitSnapshots.js";
+import { OutfitSlotState } from "../../data/model/OutfitSnapshots.js";
 import { OutfitTracker } from "../../data/tracker.js";
 import { OutfitImagesView } from "../../data/view/OutfitImagesView.js";
 import { assertNever } from "../../shared.js";
@@ -61,7 +61,7 @@ export class SlotImageElementFactory extends OutfitPanelContext {
 		super(panel);
 	}
 
-	public build(slot: ResolvedOutfitSlot): SlotImageElement {
+	public build(slot: OutfitSlotState): SlotImageElement {
 		return new SlotImageElement(this.panel, this.boundaryWidth, slot);
 	}
 }
@@ -74,7 +74,7 @@ class SlotImageElement extends OutfitPanelContext {
 	public constructor(
 		panel: OutfitPanel<PanelType>,
 		private boundaryWidth: number,
-		private slot: ResolvedOutfitSlot
+		private slot: OutfitSlotState
 	) {
 		super(panel);
 		this.imgWrapper = createElement('div', 'slot-image-wrapper');

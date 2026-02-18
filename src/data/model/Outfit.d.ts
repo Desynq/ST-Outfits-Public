@@ -1,3 +1,5 @@
+import { SlotPreset } from "./SlotPreset";
+
 export type KnownSlotKind =
 	| 'clothing'
 	| 'accessory';
@@ -36,7 +38,7 @@ export interface OutfitCollection {
 
 export type CharactersOutfitMap = Record<string, OutfitCollection | undefined>;
 
-export interface OutfitPresetsTree {
+export interface OutfitCollectionsTree {
 	bot: CharactersOutfitMap; // each character has their own OutfitCollection
 	user: OutfitCollection; // there is only one OutfitCollection for the user
 }
@@ -72,12 +74,15 @@ export interface ImageBlob {
 }
 
 export interface OutfitTrackerModel {
-	presets: OutfitPresetsTree;
+	presets: OutfitCollectionsTree;
 	enableSysMessages: boolean;
 	botPanel: PanelSettings;
 	userPanel: PanelSettings;
+
 	// key: base64
 	images: Record<string, ImageBlob>;
+
+	slotPresets: Record<string, SlotPreset>;
 }
 
 export interface ExtensionSettingsAugment {

@@ -24,3 +24,15 @@ export function toSnakeCase(input: string): string {
 		.replace(/[^a-z0-9]+/g, '_') // replace spaces and symbols with _
 		.replace(/^_+|_+$/g, ''); // trim leading/trailing _
 }
+
+export function resolveKebabCase(input: string): string | null {
+	const cleaned = input
+		.trim()
+		.toLowerCase()
+		.replace(/[^a-z0-9\s-]/g, '')
+		.replace(/\s+/g, '-');
+
+	return /^[a-z0-9]+(-[a-z0-9]+)*$/.test(cleaned)
+		? cleaned
+		: null;
+}

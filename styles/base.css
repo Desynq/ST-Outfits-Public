@@ -5,6 +5,7 @@
 @import "./outfit-cache-tab.css";
 @import "./visibility-tab.css";
 @import './image-picker.css';
+@import './slot-presets-modal.css';
 
 .outfit-panel {
     position: fixed;

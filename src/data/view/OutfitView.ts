@@ -1,5 +1,5 @@
 import { Outfit, OutfitSlot, SlotKind } from "../model/Outfit.js";
-import { OutfitSlotView, UnresolvedOutfitSlot, ResolvedOutfitSlot, OutfitSnapshot } from "../model/OutfitSnapshots.js";
+import { OutfitSlotView, UnresolvedOutfitSlot, OutfitSlotState, OutfitSnapshot } from "../model/OutfitSnapshots.js";
 import { MutableSlotView } from "./MutableSlotView.js";
 
 
@@ -89,7 +89,7 @@ export class OutfitView {
 		const slot = this.getSlotById(slotId);
 		return !slot
 			? new UnresolvedOutfitSlot(slotId)
-			: ResolvedOutfitSlot.fromSlot(slot, slot.value);
+			: OutfitSlotState.fromSlot(slot, slot.value);
 	}
 
 	public getValue(slot: Pick<OutfitSlot, 'id'>): string {

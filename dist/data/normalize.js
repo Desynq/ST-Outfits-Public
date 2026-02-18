@@ -1,4 +1,4 @@
-import { asBoolean, asObject, asStringRecord, ensureObject } from "../ObjectHelper.js";
+import { asBoolean, asObject, resolvePositiveNumber, resolveString, asStringRecord, ensureObject, notObject, resolveTimestamp } from "../ObjectHelper.js";
 import { normalizeOutfitSnapshots } from "./mappings/OutfitCache.js";
 export function validatePresets(holder) {
     if (!holder || typeof holder !== 'object')
@@ -160,4 +160,42 @@ function isValidImageBlob(v) {
     return (typeof blob.base64 === 'string' &&
         typeof blob.width === 'number' &&
         typeof blob.height === 'number');
+}
+export function normalizeSlotPresets(holder) {
+    holder.slotPresets = normalizeRecord(holder.slotPresets, v => normalizeRawSlotPreset(v, holder.images));
+}
+function normalizeRawSlotPreset(value, images) {
+    if (notObject(value))
+        return undefined;
+    const presetValue = resolveString(value.value);
+    const imageKey = resolveString(value.imageKey);
+    if (!presetValue || !imageKey)
+        return undefined;
+    if (!images[imageKey])
+        return undefined;
+    const imageWidth = resolvePositiveNumber(value.imageWidth);
+    const imageHeight = resolvePositiveNumber(value.imageHeight);
+    if (imageWidth === undefined || imageHeight === undefined)
+        return undefined;
+    const createdAt = resolveTimestamp(value.timestamp, Date.now());
+    const lastUsedAt = resolveTimestamp(value.timestamp, Date.now());
+    return {
+        value: presetValue,
+        imageKey,
+        imageWidth,
+        imageHeight,
+        createdAt,
+        lastUsedAt
+    };
+}
+function normalizeRecord(input, normalizeValue) {
+    const out = {};
+    if (notObject(input))
+        return out;
+    for (const [k, v] of Object.entries(input)) {
+        const normalized = normalizeValue(v);
+        if (normalized)
+            out[k] = normalized;
+    }
+    return out;
 }

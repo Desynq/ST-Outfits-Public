@@ -244,7 +244,8 @@ export class SlotRenderer extends OutfitPanelContext {
 			'.delete-slot',
 			'.slot-shift',
 			'.move-slot',
-			'.edit-slot'
+			'.edit-slot',
+			'.slot-presets-button'
 		];
 
 		for (const selector of selectors) {

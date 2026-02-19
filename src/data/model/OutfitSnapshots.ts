@@ -1,6 +1,5 @@
-import { OutfitTracker } from "../tracker.js";
 import { ImageRegistry } from "../view/OutfitImagesView.js";
-import { OutfitImage, OutfitSlot, SlotKind } from "./Outfit.js";
+import { OutfitSlot, SlotKind } from "./Outfit.js";
 import { OutfitImageState } from "./OutfitImageState.js";
 import { KeyedSlotPreset } from "./SlotPreset.js";
 

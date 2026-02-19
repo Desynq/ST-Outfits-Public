@@ -79,7 +79,7 @@ export class OutfitSlotState extends OutfitSlotBase {
 	}
 
 	public hasImageState(tag: string): boolean {
-		return this.getImageState(tag) !== undefined;
+		return tag in this.images;
 	}
 
 	public getImageStates(): OutfitImageState[] {
@@ -90,7 +90,7 @@ export class OutfitSlotState extends OutfitSlotBase {
 	 * @returns Whether the slot has an OutfitImage record keyed by the SlotPreset
 	 */
 	public hasPreset(preset: KeyedSlotPreset): boolean {
-		return this.images[preset.key] !== undefined;
+		return preset.key in this.images;
 	}
 
 	public isPreset(preset: KeyedSlotPreset): boolean {

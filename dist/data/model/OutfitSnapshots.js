@@ -48,7 +48,7 @@ export class OutfitSlotState extends OutfitSlotBase {
         return this.images[tag];
     }
     hasImageState(tag) {
-        return this.getImageState(tag) !== undefined;
+        return tag in this.images;
     }
     getImageStates() {
         return Object.values(this.images);
@@ -57,7 +57,7 @@ export class OutfitSlotState extends OutfitSlotBase {
      * @returns Whether the slot has an OutfitImage record keyed by the SlotPreset
      */
     hasPreset(preset) {
-        return this.images[preset.key] !== undefined;
+        return preset.key in this.images;
     }
     isPreset(preset) {
         const image = this.images[preset.key];

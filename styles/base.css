@@ -6,6 +6,7 @@
 @import "./visibility-tab.css";
 @import './image-picker.css';
 @import './slot-presets-modal.css';
+@import './shared.css';
 
 .outfit-panel {
     position: fixed;

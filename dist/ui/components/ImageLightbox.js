@@ -4,7 +4,7 @@ export class ImageLightbox {
         this.imgBlob = imgBlob;
         this.tag = tag;
         this.zoomed = false;
-        this.overlay = createElement('div', 'outfit-lightbox-overlay');
+        this.overlay = createElement('div', 'sto-overlay');
         this.stage = createElement('div', 'outfit-lightbox-stage');
         this.img = createElement('img', 'outfit-lightbox-image');
         this.img.src = this.imgBlob.base64;

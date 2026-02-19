@@ -25,7 +25,7 @@ export class SlotPresetsModal {
                 otherSection.append(presetEl);
             }
         }
-        const saveBtn = createElement('button', 'slot-presets-btn slot-presets-save-btn', 'Save');
+        const saveBtn = createElement('button', 'slot-preset-btn slot-presets-save-btn', 'Save');
         saveBtn.addEventListener('click', () => this.saveSlotAsPreset());
         this.root.append(slotSection, otherSection, saveBtn);
     }
@@ -59,24 +59,29 @@ export class SlotPresetsModal {
         const imageBlob = this.getBlob(preset.imageKey);
         if (!imageBlob)
             return null;
-        const el = createElement('div', 'slot-presets-item');
-        const img = createElement('img', 'slot-presets-thumb');
+        const el = createElement('div', 'slot-preset-item');
+        const img = createElement('img', 'slot-preset-thumb');
         img.src = imageBlob.base64;
         img.alt = preset.value;
-        const label = createElement('div', 'slot-presets-label', preset.key);
-        const value = createElement('div', 'slot-presets-value', preset.value);
-        const textWrap = createElement('div', 'slot-presets-text');
+        const label = createElement('div', 'slot-preset-label', preset.key);
+        const value = createElement('div', 'slot-preset-value', preset.value);
+        value.tabIndex = 0;
+        const textWrap = createElement('div', 'slot-preset-text');
         textWrap.append(label, value);
-        const deleteBtn = createElement('button', 'slot-presets-btn slots-presets-delete-btn', 'Delete');
-        deleteBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.deletePreset(preset);
-        });
-        el.append(img, textWrap, deleteBtn);
+        const createBtn = (token, text, click) => {
+            const btn = createElement('button', 'slot-preset-btn', text);
+            btn.classList.add(token);
+            btn.addEventListener('click', click);
+            return btn;
+        };
+        const useBtn = createBtn('use-btn', 'Use', () => this.usePreset(preset));
+        const deleteBtn = createBtn('delete-btn', 'Delete', () => this.deletePreset(preset));
+        const actionsEl = createElement('div', 'slot-preset-actions');
+        actionsEl.append(useBtn, deleteBtn);
+        el.append(img, textWrap, actionsEl);
         if (this.slot.hasPreset(preset)) {
             el.classList.add('attached');
         }
-        el.addEventListener('click', () => this.usePreset(preset));
         return el;
     }
     usePreset(preset) {
@@ -110,6 +115,7 @@ export class SlotPresetsModal {
             default: assertNever(imageActivateOutcome);
         }
         this.outfit.setValue(this.slot.id, preset.value);
+        this.close();
         this.saveAndRender();
     }
     saveSlotAsPreset() {

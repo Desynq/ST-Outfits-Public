@@ -1,6 +1,6 @@
 import { ImageBlob } from "../../data/model/Outfit.js";
 import { OutfitSlotState } from "../../data/model/OutfitSnapshots.js";
-import { KeyedSlotPreset, SlotPreset } from "../../data/model/SlotPreset.js";
+import { KeyedSlotPreset } from "../../data/model/SlotPreset.js";
 import { OutfitTracker } from "../../data/tracker.js";
 import { MutableOutfitView } from "../../data/view/MutableOutfitView.js";
 import { SlotPresetRegistry } from "../../data/view/SlotPresetsView.js";
@@ -45,7 +45,7 @@ export class SlotPresetsModal {
 			}
 		}
 
-		const saveBtn = createElement('button', 'slot-presets-btn slot-presets-save-btn', 'Save');
+		const saveBtn = createElement('button', 'slot-preset-btn slot-presets-save-btn', 'Save');
 		saveBtn.addEventListener('click', () => this.saveSlotAsPreset());
 
 		this.root.append(
@@ -98,31 +98,37 @@ export class SlotPresetsModal {
 		const imageBlob = this.getBlob(preset.imageKey);
 		if (!imageBlob) return null;
 
-		const el = createElement('div', 'slot-presets-item');
+		const el = createElement('div', 'slot-preset-item');
 
-		const img = createElement('img', 'slot-presets-thumb');
+		const img = createElement('img', 'slot-preset-thumb');
 		img.src = imageBlob.base64;
 		img.alt = preset.value;
 
-		const label = createElement('div', 'slot-presets-label', preset.key);
-		const value = createElement('div', 'slot-presets-value', preset.value);
+		const label = createElement('div', 'slot-preset-label', preset.key);
+		const value = createElement('div', 'slot-preset-value', preset.value);
+		value.tabIndex = 0;
 
-		const textWrap = createElement('div', 'slot-presets-text');
+		const textWrap = createElement('div', 'slot-preset-text');
 		textWrap.append(label, value);
 
-		const deleteBtn = createElement('button', 'slot-presets-btn slots-presets-delete-btn', 'Delete');
-		deleteBtn.addEventListener('click', (e) => {
-			e.stopPropagation();
-			this.deletePreset(preset);
-		});
+		const createBtn = (token: string, text: string, click: () => void) => {
+			const btn = createElement('button', 'slot-preset-btn', text);
+			btn.classList.add(token);
+			btn.addEventListener('click', click);
+			return btn;
+		};
 
-		el.append(img, textWrap, deleteBtn);
+		const useBtn = createBtn('use-btn', 'Use', () => this.usePreset(preset));
+		const deleteBtn = createBtn('delete-btn', 'Delete', () => this.deletePreset(preset));
+
+		const actionsEl = createElement('div', 'slot-preset-actions');
+		actionsEl.append(useBtn, deleteBtn);
+
+		el.append(img, textWrap, actionsEl);
 
 		if (this.slot.hasPreset(preset)) {
 			el.classList.add('attached');
 		}
-
-		el.addEventListener('click', () => this.usePreset(preset));
 
 		return el;
 	}
@@ -161,6 +167,7 @@ export class SlotPresetsModal {
 		}
 
 		this.outfit.setValue(this.slot.id, preset.value);
+		this.close();
 		this.saveAndRender();
 	}
 

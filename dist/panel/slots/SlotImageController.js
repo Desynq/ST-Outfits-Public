@@ -6,6 +6,7 @@ import { addDoubleTapListener } from "../../util/element/click-actions.js";
 import { createElement, setElementSize } from "../../util/ElementHelper.js";
 import { promptImageUpload, resizeImage } from "../../util/image-utils.js";
 import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
+import { showImagePicker } from "./prompt-images.js";
 ;
 export class SlotImageElementFactory extends OutfitPanelContext {
     constructor(panel, boundaryWidth) {
@@ -239,48 +240,18 @@ class SlotImageElement extends OutfitPanelContext {
         const tag = await this.promptImages(images);
         if (tag === null)
             return;
-        const image = images[tag];
-        const blob = this.toBlob(image);
-        if (!blob) {
-            console.error(`Image key ${image.key} from tag ${tag} does not point to an image blob`);
-            return;
-        }
         this.outfitView.setActiveImage(this.slot.id, tag);
         this.panel.saveAndRender();
     }
     async promptImages(images) {
-        const container = createElement('div', 'image-picker');
-        let selected = null;
-        for (const [tag, image] of Object.entries(images)) {
-            const blob = this.toBlob(image);
-            if (!blob)
-                continue;
-            const wrapper = createElement('div', 'image-picker-item');
-            const img = createElement('img');
-            img.src = blob.base64;
-            img.width = 96;
-            img.height = Math.round(96 * (blob.height / blob.width));
-            const label = createElement('div');
-            label.textContent = tag;
-            wrapper.appendChild(img);
-            wrapper.appendChild(label);
-            wrapper.onclick = () => {
-                selected = tag;
-                container.querySelectorAll('.selected')
-                    .forEach(el => el.classList.remove('selected'));
-                wrapper.classList.add('selected');
-            };
-            container.appendChild(wrapper);
-        }
-        const confirmed = await popupConfirm(container, {
-            title: 'Choose Image',
-            okText: 'Select',
-            cancelText: 'Cancel',
-            wide: true
+        return showImagePicker({
+            images,
+            toBlob: img => this.toBlob(img),
+            onDelete: async (tag) => {
+                this.outfitView.deleteImage(this.slot.id, tag);
+                this.outfitManager.saveSettings();
+            }
         });
-        if (!confirmed || !selected)
-            return null;
-        return selected;
     }
     toBlob(image) {
         return this.imagesView.getImage(image.key);

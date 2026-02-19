@@ -184,7 +184,7 @@
 .slot-value.--overflowing:not(.--reveal)::before {
 	content: '...';
 	position: absolute;
-	bottom: 0.25rem;
+	bottom: 0.15rem;
 	right: 0.5rem;
 	font-size: 0.75rem;
 	opacity: 0.6;
@@ -209,21 +209,23 @@
 
 .slot-actions {
 	display: grid;
-	grid-template-columns: 1fr auto;
-	column-gap: 8px;
+	grid-template-columns: minmax(0, 1fr) auto;
+	column-gap: 6px;
 	align-items: center;
 }
 
 .slot-actions-left {
 	display: flex;
-	gap: 8px;
-	justify-self: flex-start;
+	gap: 6px;
+	min-width: 0;
+	justify-content: flex-start;
 }
 
 .slot-actions-right {
 	display: flex;
-	gap: 8px;
-	justify-self: flex-end;
+	gap: 6px;
+	min-width: 0;
+	justify-content: flex-end;
 }
 
 
@@ -236,8 +238,9 @@
 	padding: 4px 10px;
 	cursor: pointer;
 	font-weight: 600;
-	font-size: 1.0em;
-	min-width: 15%;
+	font-size: 0.9em;
+	min-width: 0;
+	white-space: nowrap;
 }
 
 .slot-button button:hover {

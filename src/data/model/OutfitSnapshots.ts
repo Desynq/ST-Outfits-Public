@@ -7,12 +7,12 @@ abstract class OutfitSlotBase {
 		public readonly id: string
 	) { }
 
-	abstract readonly resolved: boolean;
+	public abstract readonly resolved: boolean;
 }
 
 export class OutfitSlotState extends OutfitSlotBase {
 
-	readonly resolved = true as const;
+	public readonly resolved = true as const;
 
 	public constructor(
 		id: string,
@@ -46,6 +46,16 @@ export class OutfitSlotState extends OutfitSlotBase {
 	 */
 	public hasPreset(preset: KeyedSlotPreset): boolean {
 		return this.images[preset.key] !== undefined;
+	}
+
+	public isPreset(preset: KeyedSlotPreset): boolean {
+		const image = this.images[preset.key];
+		if (!image) return false;
+		if (image.width !== preset.imageWidth) return false;
+		if (image.height !== preset.imageHeight) return false;
+		if (this.value !== preset.value) return false;
+
+		return true;
 	}
 }
 

@@ -1,0 +1,28 @@
+
+
+
+.sto-overlay {
+	position: fixed;
+
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: 100dvh;
+
+	display: flex;
+	justify-content: center;
+	align-items: center;
+
+	background: rgba(0, 0, 0, 0.6);
+	backdrop-filter: blur(4px);
+
+	overflow: hidden;
+	z-index: 9999;
+
+	opacity: 0;
+	transition: opacity 120ms ease;
+}
+
+.sto-overlay.show {
+	opacity: 1;
+}

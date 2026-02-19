@@ -14,7 +14,7 @@ export class ImageLightbox {
 		private imgBlob: ImageBlob,
 		private tag: string
 	) {
-		this.overlay = createElement('div', 'outfit-lightbox-overlay');
+		this.overlay = createElement('div', 'sto-overlay');
 		this.stage = createElement('div', 'outfit-lightbox-stage');
 
 		this.img = createElement('img', 'outfit-lightbox-image');

@@ -1,10 +1,17 @@
 .slot-presets-overlay {
 	position: fixed;
-	inset: 0;
-	background: rgba(0, 0, 0, 0.5);
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: 100dvh;
+
 	display: flex;
 	justify-content: center;
 	align-items: center;
+
+	background: rgba(0, 0, 0, 0.5);
+	backdrop-filter: blur(4px);
+
 	z-index: 10000;
 }
 
@@ -29,89 +36,6 @@
 	gap: 8px;
 }
 
-.slot-presets-item {
-	display: flex;
-	align-items: flex-start;
-	gap: 12px;
-	padding: 10px 12px;
-	border-radius: 10px;
-	cursor: pointer;
-	background: rgba(255, 255, 255, 0.06);
-	transition: background 120ms ease, border-color 120ms ease;
-}
-
-.slot-presets-item:hover {
-	background: rgba(255, 255, 255, 0.08);
-	border-color: rgba(255, 255, 255, 0.12);
-}
-
-.slot-presets-item.attached {
-	outline: 1px solid rgba(120, 200, 255, 0.5);
-}
-
-.slot-presets-thumb {
-	width: 48px;
-	height: 48px;
-	flex-shrink: 0;
-	object-fit: cover;
-	border-radius: 8px;
-}
-
-.slot-presets-label {
-	font-weight: 600;
-	font-size: 0.95rem;
-	color: rgba(240, 240, 240, 0.95);
-	margin-bottom: 4px;
-}
-
-.slot-presets-value {
-	font-size: 0.8rem;
-	color: rgba(200, 200, 200, 0.75);
-	line-height: 1.35;
-	white-space: pre-wrap;
-	word-break: break-word;
-}
-
-.slot-presets-text {
-	flex: 1;
-	min-width: 0;
-}
-
-
-
-.slot-presets-btn {
-	padding: 6px 10px;
-	font-size: 0.8rem;
-	border-radius: 6px;
-	border: 1px solid rgba(255, 255, 255, 0.15);
-	background: rgba(255, 255, 255, 0.06);
-	color: rgba(240, 240, 240, 0.9);
-	cursor: pointer;
-	transition: background 100ms ease, border-color 100ms ease, transform 80ms ease;
-}
-
-.slot-presets-btn:hover {
-	background: rgba(255, 255, 255, 0.12);
-	border-color: rgba(255, 255, 255, 0.25);
-}
-
-.slot-presets-btn:active {
-	transform: scale(0.96);
-}
-
-
-
-.slots-presets-delete-btn {
-	background: rgba(255, 80, 80, 0.12);
-	border-color: rgba(255, 80, 80, 0.3);
-	color: rgba(255, 120, 120, 0.9);
-}
-
-.slots-presets-delete-btn:hover {
-	background: rgba(255, 80, 80, 0.2);
-	border-color: rgba(255, 80, 80, 0.5);
-}
-
 
 
 .slot-presets-save-btn {
@@ -128,4 +52,115 @@
 .slot-presets-save-btn:hover {
 	background: rgba(120, 200, 255, 0.25);
 	border-color: rgba(120, 200, 255, 0.6);
+}
+
+
+
+
+
+
+
+.slot-preset-item {
+	display: flex;
+	align-items: flex-start;
+	gap: 12px;
+	padding: 10px 12px;
+	border-radius: 10px;
+	cursor: pointer;
+	background: rgba(255, 255, 255, 0.06);
+	transition: background 120ms ease, border-color 120ms ease;
+}
+
+.slot-preset-item:hover {
+	background: rgba(255, 255, 255, 0.08);
+	border-color: rgba(255, 255, 255, 0.12);
+}
+
+.slot-preset-item.attached {
+	outline: 1px solid rgba(120, 200, 255, 0.5);
+}
+
+.slot-preset-thumb {
+	width: 48px;
+	height: 48px;
+	flex-shrink: 0;
+	object-fit: cover;
+	border-radius: 8px;
+}
+
+
+.slot-preset-text {
+	flex: 1;
+	min-width: 0;
+}
+
+.slot-preset-label {
+	font-weight: 600;
+	font-size: 0.95rem;
+	color: rgba(240, 240, 240, 0.95);
+	margin-bottom: 4px;
+}
+
+.slot-preset-value {
+	font-size: 0.8rem;
+	color: rgba(200, 200, 200, 0.75);
+	line-height: 1.35;
+
+	display: -webkit-box;
+	-webkit-line-clamp: 4;
+	line-clamp: 4;
+	-webkit-box-orient: vertical;
+
+	overflow: hidden;
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.slot-preset-value:focus {
+	-webkit-line-clamp: unset;
+	line-clamp: unset;
+	display: block;
+	overflow: visible;
+}
+
+
+
+
+.slot-preset-actions {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.slot-preset-btn {
+	padding: 6px 10px;
+	font-size: 0.8rem;
+	border-radius: 6px;
+	border: 1px solid rgba(255, 255, 255, 0.15);
+	background: rgba(255, 255, 255, 0.06);
+	color: rgba(240, 240, 240, 0.9);
+	cursor: pointer;
+	transition: background 100ms ease, border-color 100ms ease, transform 80ms ease;
+}
+
+.slot-preset-btn:hover {
+	background: rgba(255, 255, 255, 0.12);
+	border-color: rgba(255, 255, 255, 0.25);
+}
+
+.slot-preset-btn:active {
+	transform: scale(0.96);
+}
+
+
+
+.slots-preset-btn.delete-btn {
+	background: rgba(255, 80, 80, 0.12);
+	border-color: rgba(255, 80, 80, 0.3);
+	color: rgba(255, 120, 120, 0.9);
+}
+
+.slots-preset-btn.delete-btn:hover {
+	background: rgba(255, 80, 80, 0.2);
+	border-color: rgba(255, 80, 80, 0.5);
 }

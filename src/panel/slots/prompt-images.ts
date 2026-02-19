@@ -1,4 +1,5 @@
 import { ImageBlob, OutfitImage } from "../../data/model/Outfit.js";
+import { OutfitImageState } from "../../data/model/OutfitImageState.js";
 import { multiConfirm, popupConfirm } from "../../util/adapter/popup-adapter.js";
 import { removeTokenFromAllIn } from "../../util/element/css.js";
 import { addLongPressAction, createElement } from "../../util/ElementHelper.js";
@@ -6,22 +7,20 @@ import { addLongPressAction, createElement } from "../../util/ElementHelper.js";
 
 
 export interface ImagePickerOptions {
-	images: Record<string, OutfitImage>;
-	toBlob: (img: OutfitImage) => ImageBlob | undefined;
+	imageStates: OutfitImageState[];
 	onDelete: (tag: string) => Promise<void> | void;
 }
 
 export async function showImagePicker(
 	options: ImagePickerOptions
 ): Promise<string | null> {
-	const { images, toBlob, onDelete } = options;
+	const { imageStates, onDelete } = options;
 
 	const container = createElement('div', 'image-picker');
 	let selected: string | null = null;
 
-	for (const [tag, image] of Object.entries(images)) {
-		const blob = toBlob(image);
-		if (!blob) continue;
+	for (const state of imageStates) {
+		const { tag, image, blob } = state;
 
 		const wrapper = createElement('div', 'image-picker-item');
 

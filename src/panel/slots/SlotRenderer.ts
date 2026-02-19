@@ -264,7 +264,7 @@ export class SlotRenderer extends OutfitPanelContext {
 
 	/* ------------------------------- Slot Moving ------------------------------ */
 
-	private moveSlot(slot: OutfitSlot): void {
+	private moveSlot(slot: OutfitSlotState): void {
 		const kind = prompt('Move slot to kind:')?.trim();
 		if (!kind) return;
 

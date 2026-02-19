@@ -14,7 +14,13 @@ async function hashBase64(base64: string): Promise<string> {
 		.join('');
 }
 
-export class OutfitImagesView {
+export interface ImageRegistry {
+	getImage(key: string): ImageBlob | undefined;
+	addImage(base64: string, width: number, height: number): Promise<string>;
+	tryDeleteImage(key: string): Promise<boolean>;
+}
+
+export class OutfitImagesView implements ImageRegistry {
 	public constructor(
 		protected images: Record<string, ImageBlob>
 	) { }

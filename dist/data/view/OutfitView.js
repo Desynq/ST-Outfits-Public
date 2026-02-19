@@ -1,4 +1,5 @@
 import { UnresolvedOutfitSlot, OutfitSlotState } from "../model/OutfitSnapshots.js";
+import { OutfitTracker } from "../tracker.js";
 import { MutableSlotView } from "./MutableSlotView.js";
 export class OutfitView {
     constructor(outfitName, outfit) {
@@ -64,7 +65,7 @@ export class OutfitView {
         const slot = this.getSlotById(slotId);
         return !slot
             ? new UnresolvedOutfitSlot(slotId)
-            : OutfitSlotState.fromSlot(slot, slot.value);
+            : OutfitSlotState.fromSlot(slot, OutfitTracker.images());
     }
     getValue(slot) {
         const realSlot = this.slotView.getSlotById(slot.id);

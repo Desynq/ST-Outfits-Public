@@ -2,13 +2,11 @@ import { multiConfirm, popupConfirm } from "../../util/adapter/popup-adapter.js"
 import { removeTokenFromAllIn } from "../../util/element/css.js";
 import { addLongPressAction, createElement } from "../../util/ElementHelper.js";
 export async function showImagePicker(options) {
-    const { images, toBlob, onDelete } = options;
+    const { imageStates, onDelete } = options;
     const container = createElement('div', 'image-picker');
     let selected = null;
-    for (const [tag, image] of Object.entries(images)) {
-        const blob = toBlob(image);
-        if (!blob)
-            continue;
+    for (const state of imageStates) {
+        const { tag, image, blob } = state;
         const wrapper = createElement('div', 'image-picker-item');
         const img = createElement('img');
         img.src = blob.base64;

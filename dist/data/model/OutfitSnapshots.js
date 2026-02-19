@@ -1,10 +1,13 @@
+import { OutfitImageState } from "./OutfitImageState.js";
 class OutfitSlotBase {
     constructor(id) {
         this.id = id;
     }
 }
 export class OutfitSlotState extends OutfitSlotBase {
-    constructor(id, kind, value, enabled, images, activeImageTag) {
+    constructor(id, kind, value, enabled, 
+    // tag: OutfitImageState
+    images, activeImageTag) {
         super(id);
         this.kind = kind;
         this.value = value;
@@ -13,8 +16,19 @@ export class OutfitSlotState extends OutfitSlotBase {
         this.activeImageTag = activeImageTag;
         this.resolved = true;
     }
-    static fromSlot(slot, value) {
-        return new OutfitSlotState(slot.id, slot.kind, value, slot.enabled, slot.images, slot.activeImageTag);
+    static fromSlot(slot, imageRegistry) {
+        const resolvedImages = {};
+        for (const [tag, image] of Object.entries(slot.images)) {
+            const blob = imageRegistry.getImage(image.key);
+            if (!blob) {
+                throw new Error(`Missing blob for image key ${image.key}`);
+            }
+            resolvedImages[tag] = new OutfitImageState(tag, image, blob);
+        }
+        if (slot.activeImageTag !== null && !resolvedImages[slot.activeImageTag]) {
+            throw new Error(`Missing image for active image tag`);
+        }
+        return new OutfitSlotState(slot.id, slot.kind, slot.value, slot.enabled, resolvedImages, slot.activeImageTag);
     }
     isEnabled() {
         return this.enabled;
@@ -24,6 +38,20 @@ export class OutfitSlotState extends OutfitSlotBase {
     }
     isEmpty() {
         return this.value === 'None';
+    }
+    getActiveImageState() {
+        if (this.activeImageTag === null)
+            return null;
+        return this.images[this.activeImageTag];
+    }
+    getImageState(tag) {
+        return this.images[tag];
+    }
+    hasImageState(tag) {
+        return this.getImageState(tag) !== undefined;
+    }
+    getImageStates() {
+        return Object.values(this.images);
     }
     /**
      * @returns Whether the slot has an OutfitImage record keyed by the SlotPreset
@@ -35,9 +63,9 @@ export class OutfitSlotState extends OutfitSlotBase {
         const image = this.images[preset.key];
         if (!image)
             return false;
-        if (image.width !== preset.imageWidth)
+        if (image.image.width !== preset.imageWidth)
             return false;
-        if (image.height !== preset.imageHeight)
+        if (image.image.height !== preset.imageHeight)
             return false;
         if (this.value !== preset.value)
             return false;

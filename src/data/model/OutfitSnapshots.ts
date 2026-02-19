@@ -1,4 +1,7 @@
+import { OutfitTracker } from "../tracker.js";
+import { ImageRegistry } from "../view/OutfitImagesView.js";
 import { OutfitImage, OutfitSlot, SlotKind } from "./Outfit.js";
+import { OutfitImageState } from "./OutfitImageState.js";
 import { KeyedSlotPreset } from "./SlotPreset.js";
 
 
@@ -14,19 +17,45 @@ export class OutfitSlotState extends OutfitSlotBase {
 
 	public readonly resolved = true as const;
 
-	public constructor(
+	private constructor(
 		id: string,
 		public readonly kind: SlotKind,
 		public readonly value: string,
 		public readonly enabled: boolean,
-		public readonly images: Record<string, OutfitImage>,
+		// tag: OutfitImageState
+		private readonly images: Record<string, OutfitImageState>,
 		public readonly activeImageTag: string | null
 	) {
 		super(id);
 	}
 
-	public static fromSlot(slot: Readonly<OutfitSlot>, value: string): OutfitSlotState {
-		return new OutfitSlotState(slot.id, slot.kind, value, slot.enabled, slot.images, slot.activeImageTag);
+	public static fromSlot(
+		slot: Readonly<OutfitSlot>,
+		imageRegistry: ImageRegistry
+	): OutfitSlotState {
+		const resolvedImages: Record<string, OutfitImageState> = {};
+
+		for (const [tag, image] of Object.entries(slot.images)) {
+			const blob = imageRegistry.getImage(image.key);
+			if (!blob) {
+				throw new Error(`Missing blob for image key ${image.key}`);
+			}
+
+			resolvedImages[tag] = new OutfitImageState(tag, image, blob);
+		}
+
+		if (slot.activeImageTag !== null && !resolvedImages[slot.activeImageTag]) {
+			throw new Error(`Missing image for active image tag`);
+		}
+
+		return new OutfitSlotState(
+			slot.id,
+			slot.kind,
+			slot.value,
+			slot.enabled,
+			resolvedImages,
+			slot.activeImageTag
+		);
 	}
 
 	public isEnabled(): boolean {
@@ -41,6 +70,23 @@ export class OutfitSlotState extends OutfitSlotBase {
 		return this.value === 'None';
 	}
 
+	public getActiveImageState(): OutfitImageState | null {
+		if (this.activeImageTag === null) return null;
+		return this.images[this.activeImageTag];
+	}
+
+	public getImageState(tag: string): OutfitImageState | undefined {
+		return this.images[tag];
+	}
+
+	public hasImageState(tag: string): boolean {
+		return this.getImageState(tag) !== undefined;
+	}
+
+	public getImageStates(): OutfitImageState[] {
+		return Object.values(this.images);
+	}
+
 	/**
 	 * @returns Whether the slot has an OutfitImage record keyed by the SlotPreset
 	 */
@@ -51,8 +97,8 @@ export class OutfitSlotState extends OutfitSlotBase {
 	public isPreset(preset: KeyedSlotPreset): boolean {
 		const image = this.images[preset.key];
 		if (!image) return false;
-		if (image.width !== preset.imageWidth) return false;
-		if (image.height !== preset.imageHeight) return false;
+		if (image.image.width !== preset.imageWidth) return false;
+		if (image.image.height !== preset.imageHeight) return false;
 		if (this.value !== preset.value) return false;
 
 		return true;

@@ -23,8 +23,8 @@ class SlotImageElement extends OutfitPanelContext {
         this.boundaryWidth = boundaryWidth;
         this.slot = slot;
         this.imgWrapper = createElement('div', 'slot-image-wrapper');
-        const tag = this.slot.activeImageTag;
-        const { onSingleTap, appendControls, noDoubleTap } = this.renderImageContent(tag);
+        const imageState = this.slot.getActiveImageState();
+        const { onSingleTap, appendControls, noDoubleTap } = this.renderImageContent(imageState);
         if (noDoubleTap) {
             this.imgWrapper.addEventListener('click', () => this.changeImage());
         }
@@ -39,8 +39,8 @@ class SlotImageElement extends OutfitPanelContext {
     get imagesView() {
         return OutfitTracker.images();
     }
-    renderImageContent(tag) {
-        if (!tag) {
+    renderImageContent(imageState) {
+        if (!imageState) {
             this.imgWrapper.classList.add('--empty');
             this.imgWrapper.textContent = 'Add Image';
             return {
@@ -48,7 +48,7 @@ class SlotImageElement extends OutfitPanelContext {
                 noDoubleTap: true
             };
         }
-        const result = this.createImage(tag);
+        const result = this.createImage(imageState);
         if (!result.ok) {
             switch (result.reason) {
                 case 'active-image-tag-not-stored':
@@ -129,28 +129,22 @@ class SlotImageElement extends OutfitPanelContext {
         this.outfitView.resizeImage(this.slot.id, tag, width, height);
         this.outfitManager.saveSettings();
     }
-    createImage(tag) {
-        const imgRecord = this.slot.images[tag];
-        if (!imgRecord)
-            return { ok: false, reason: 'active-image-tag-not-stored' };
-        if (imgRecord.hidden) {
+    createImage(imageState) {
+        const { tag, image, blob } = imageState;
+        if (image.hidden) {
             this.imgWrapper.classList.add('--hidden');
             return { ok: false, reason: 'image-hidden' };
         }
-        const key = imgRecord.key;
-        const imgBlob = this.imagesView.getImage(key);
-        if (!imgBlob)
-            return { ok: false, reason: 'image-blob-does-not-exist' };
         const imgEl = createElement('img', 'slot-image');
-        imgEl.src = imgBlob.base64;
-        this.clampImage(imgRecord);
+        imgEl.src = blob.base64;
+        this.clampImage(image);
         imgEl.addEventListener('error', () => {
             this.imgWrapper.classList.add('--error');
         });
         const value = {
             imgEl,
-            imgBlob,
-            imgRecord,
+            imgBlob: blob,
+            imgRecord: image,
             imgTag: tag
         };
         return { ok: true, value };
@@ -220,8 +214,8 @@ class SlotImageElement extends OutfitPanelContext {
             toastr.error('Invalid tag format');
             return;
         }
-        if (this.slot.images[tag] !== undefined) {
-            toastr.error('Tag already used');
+        if (this.slot.hasImageState(tag)) {
+            toastr.error('Tag already used.');
             return;
         }
         const { base64, height, width } = await resizeImage(file, 768);
@@ -236,17 +230,16 @@ class SlotImageElement extends OutfitPanelContext {
         this.panel.saveAndRender();
     }
     async chooseImage() {
-        const images = this.slot.images;
-        const tag = await this.promptImages(images);
+        const imageStates = this.slot.getImageStates();
+        const tag = await this.promptImages(imageStates);
         if (tag === null)
             return;
         this.outfitView.setActiveImage(this.slot.id, tag);
         this.panel.saveAndRender();
     }
-    async promptImages(images) {
+    async promptImages(imageStates) {
         return showImagePicker({
-            images,
-            toBlob: img => this.toBlob(img),
+            imageStates,
             onDelete: async (tag) => {
                 this.outfitView.deleteImage(this.slot.id, tag);
                 this.outfitManager.saveSettings();
@@ -267,13 +260,10 @@ class SlotImageElement extends OutfitPanelContext {
             : null;
     }
     toggleImage() {
-        const tag = this.slot.activeImageTag;
-        if (!tag)
+        const imageState = this.slot.getActiveImageState();
+        if (!imageState)
             return;
-        const image = this.slot.images[tag];
-        if (!image)
-            return;
-        this.outfitView.toggleImage(this.slot.id, tag, !image.hidden);
+        this.outfitView.toggleImage(this.slot.id, imageState.tag, !imageState.image.hidden);
         this.panel.saveAndRender();
     }
     // delete active image, setting active image key to null

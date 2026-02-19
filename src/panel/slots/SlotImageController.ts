@@ -1,4 +1,5 @@
 import { ImageBlob, OutfitImage } from "../../data/model/Outfit.js";
+import { OutfitImageState } from "../../data/model/OutfitImageState.js";
 import { OutfitSlotState } from "../../data/model/OutfitSnapshots.js";
 import { OutfitTracker } from "../../data/tracker.js";
 import { OutfitImagesView } from "../../data/view/OutfitImagesView.js";
@@ -79,9 +80,9 @@ class SlotImageElement extends OutfitPanelContext {
 	) {
 		super(panel);
 		this.imgWrapper = createElement('div', 'slot-image-wrapper');
-		const tag = this.slot.activeImageTag;
+		const imageState = this.slot.getActiveImageState();
 
-		const { onSingleTap, appendControls, noDoubleTap } = this.renderImageContent(tag);
+		const { onSingleTap, appendControls, noDoubleTap } = this.renderImageContent(imageState);
 
 		if (noDoubleTap) {
 			this.imgWrapper.addEventListener('click', () => this.changeImage());
@@ -106,8 +107,8 @@ class SlotImageElement extends OutfitPanelContext {
 		return OutfitTracker.images();
 	}
 
-	private renderImageContent(tag: string | null): RenderImageBundle {
-		if (!tag) {
+	private renderImageContent(imageState: OutfitImageState | null): RenderImageBundle {
+		if (!imageState) {
 			this.imgWrapper.classList.add('--empty');
 			this.imgWrapper.textContent = 'Add Image';
 			return {
@@ -116,7 +117,7 @@ class SlotImageElement extends OutfitPanelContext {
 			};
 		}
 
-		const result = this.createImage(tag);
+		const result = this.createImage(imageState);
 		if (!result.ok) {
 			switch (result.reason) {
 				case 'active-image-tag-not-stored':
@@ -220,25 +221,18 @@ class SlotImageElement extends OutfitPanelContext {
 		this.outfitManager.saveSettings();
 	}
 
-	private createImage(tag: string): CreateImageResult {
-
-		const imgRecord = this.slot.images[tag];
-		if (!imgRecord) return { ok: false, reason: 'active-image-tag-not-stored' };
-
-		if (imgRecord.hidden) {
+	private createImage(imageState: OutfitImageState): CreateImageResult {
+		const { tag, image, blob } = imageState;
+		if (image.hidden) {
 			this.imgWrapper.classList.add('--hidden');
 			return { ok: false, reason: 'image-hidden' };
 		}
 
-		const key = imgRecord.key;
-		const imgBlob = this.imagesView.getImage(key);
-		if (!imgBlob) return { ok: false, reason: 'image-blob-does-not-exist' };
-
 
 		const imgEl = createElement('img', 'slot-image');
 
-		imgEl.src = imgBlob.base64;
-		this.clampImage(imgRecord);
+		imgEl.src = blob.base64;
+		this.clampImage(image);
 
 		imgEl.addEventListener('error', () => {
 			this.imgWrapper.classList.add('--error');
@@ -246,8 +240,8 @@ class SlotImageElement extends OutfitPanelContext {
 
 		const value: ImageContext = {
 			imgEl,
-			imgBlob,
-			imgRecord,
+			imgBlob: blob,
+			imgRecord: image,
 			imgTag: tag
 		};
 		return { ok: true, value };
@@ -335,8 +329,8 @@ class SlotImageElement extends OutfitPanelContext {
 			return;
 		}
 
-		if (this.slot.images[tag] !== undefined) {
-			toastr.error('Tag already used');
+		if (this.slot.hasImageState(tag)) {
+			toastr.error('Tag already used.');
 			return;
 		}
 
@@ -358,9 +352,9 @@ class SlotImageElement extends OutfitPanelContext {
 	}
 
 	private async chooseImage(): Promise<void> {
-		const images = this.slot.images;
+		const imageStates = this.slot.getImageStates();
 
-		const tag = await this.promptImages(images);
+		const tag = await this.promptImages(imageStates);
 		if (tag === null) return;
 
 		this.outfitView.setActiveImage(this.slot.id, tag);
@@ -368,10 +362,9 @@ class SlotImageElement extends OutfitPanelContext {
 		this.panel.saveAndRender();
 	}
 
-	private async promptImages(images: Record<string, OutfitImage>): Promise<string | null> {
+	private async promptImages(imageStates: OutfitImageState[]): Promise<string | null> {
 		return showImagePicker({
-			images,
-			toBlob: img => this.toBlob(img),
+			imageStates,
 			onDelete: async (tag) => {
 				this.outfitView.deleteImage(this.slot.id, tag);
 				this.outfitManager.saveSettings();
@@ -396,14 +389,10 @@ class SlotImageElement extends OutfitPanelContext {
 	}
 
 	private toggleImage() {
-		const tag = this.slot.activeImageTag;
+		const imageState = this.slot.getActiveImageState();
+		if (!imageState) return;
 
-		if (!tag) return;
-
-		const image = this.slot.images[tag];
-		if (!image) return;
-
-		this.outfitView.toggleImage(this.slot.id, tag, !image.hidden);
+		this.outfitView.toggleImage(this.slot.id, imageState.tag, !imageState.image.hidden);
 
 		this.panel.saveAndRender();
 	}

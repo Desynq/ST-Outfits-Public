@@ -119,15 +119,11 @@ export class SlotPresetsModal {
         this.saveAndRender();
     }
     saveSlotAsPreset() {
-        const activeTag = this.slot.activeImageTag;
-        if (!activeTag) {
+        const imageState = this.slot.getActiveImageState();
+        if (!imageState) {
             // No image, no preset
             toastr.error('Slot must have an image in order to be saved as a preset');
             return;
-        }
-        const image = this.slot.images[activeTag];
-        if (!image) {
-            throw new Error();
         }
         const raw = prompt('Enter image tag (kebab-case only):');
         if (!raw) {
@@ -137,13 +133,14 @@ export class SlotPresetsModal {
         if (!key) {
             return;
         }
+        const { key: blobKey, width, height } = imageState.image;
         const old = this.registry.get(key);
         const preset = {
             key,
             value: this.slot.value,
-            imageKey: image.key,
-            imageWidth: image.width,
-            imageHeight: image.height,
+            imageKey: blobKey,
+            imageWidth: width,
+            imageHeight: height,
             createdAt: Date.now(),
             lastUsedAt: Date.now()
         };

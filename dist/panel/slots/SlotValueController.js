@@ -172,7 +172,7 @@ export class SlotValueController extends OutfitPanelContext {
             vv?.removeEventListener('scroll', onVvChange);
         };
         textarea.addEventListener('input', autoResize);
-        this.removeActionButtons(ctx.slotElement);
+        this.removeActionButtons(ctx);
         textarea.addEventListener('keydown', (e) => {
             if (e.isComposing)
                 return;

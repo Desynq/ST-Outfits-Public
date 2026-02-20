@@ -52,6 +52,8 @@
 	max-width: 100%;
 	min-width: 96px;
 	min-height: 24px;
+
+	flex: 0 0 auto;
 }
 
 .slot-image-wrapper:not(:has(.slot-image)) {
@@ -106,17 +108,22 @@
 	display: none;
 }
 
+.slot-content:has(.slot-value.disabled) .slot-image {
+	filter: grayscale(100%) opacity(0.6);
+}
+
+
 
 
 .outfit-slot-image-resize-handle {
 	position: absolute;
 	bottom: 0;
-	left: 0;
+	right: 0;
 
 	width: 14px;
 	height: 14px;
 
-	cursor: nesw-resize;
+	cursor: nwse-resize;
 
 	user-select: none;
 	touch-action: none;
@@ -139,16 +146,19 @@
 	content: '';
 	position: absolute;
 	bottom: 2px;
-	left: 2px;
+	right: 2px;
 
 	width: 10px;
 	height: 10px;
 
-	border-left: 2px solid rgba(255, 255, 255, 0.6);
+	border-right: 2px solid rgba(255, 255, 255, 0.6);
 	border-bottom: 2px solid rgba(255, 255, 255, 0.6);
 
 	box-sizing: border-box;
 }
+
+
+
 
 
 .outfit-lightbox-stage {

@@ -17,27 +17,59 @@ export class SlotImageElementFactory extends OutfitPanelContext {
         return new SlotImageElement(this.panel, this.boundaryWidth, slot);
     }
 }
-class SlotImageElement extends OutfitPanelContext {
+export class SlotImageElement extends OutfitPanelContext {
     constructor(panel, boundaryWidth, slot) {
         super(panel);
         this.boundaryWidth = boundaryWidth;
         this.slot = slot;
         this.imgWrapper = createElement('div', 'slot-image-wrapper');
         const imageState = this.slot.getActiveImageState();
-        const { onSingleTap, appendControls, noDoubleTap } = this.renderImageContent(imageState);
+        const { onSingleTap, appendControls, noDoubleTap, state } = this.renderImageContent(imageState);
+        this._state = state;
         if (noDoubleTap) {
             this.imgWrapper.addEventListener('click', () => this.changeImage());
         }
         else {
             addDoubleTapListener(this.imgWrapper, () => this.changeImage(), 300, onSingleTap);
         }
-        this.appendControls = appendControls;
+        this.appendControlsTo = appendControls;
     }
-    append(container) {
-        container.append(this.imgWrapper);
+    appendTo(parent) {
+        parent.append(this.imgWrapper);
+    }
+    observe(flexParent, sibling, disposer) {
+        if (this._state !== 'shown')
+            return;
+        let isColumn = false;
+        const ENTER_RATIO = 0.55; // image > 55% of container
+        const EXIT_RATIO = 0.45; // must shrink below 45% to exit
+        const updateLayout = () => {
+            const containerWidth = flexParent.clientWidth;
+            const imageWidth = this.imgWrapper.offsetWidth;
+            if (!containerWidth || !imageWidth)
+                return;
+            const ratio = imageWidth / containerWidth;
+            if (!isColumn && ratio > ENTER_RATIO) {
+                isColumn = true;
+            }
+            else if (isColumn && ratio < EXIT_RATIO) {
+                isColumn = false;
+            }
+            flexParent.classList.toggle('column', isColumn);
+        };
+        const observer = new ResizeObserver(() => {
+            requestAnimationFrame(updateLayout);
+        });
+        observer.observe(this.imgWrapper);
+        observer.observe(flexParent);
+        updateLayout();
+        disposer.add(() => observer.disconnect());
     }
     get imagesView() {
         return OutfitTracker.images();
+    }
+    get state() {
+        return this._state;
     }
     renderImageContent(imageState) {
         if (!imageState) {
@@ -45,7 +77,8 @@ class SlotImageElement extends OutfitPanelContext {
             this.imgWrapper.textContent = 'Add Image';
             return {
                 imgEl: null,
-                noDoubleTap: true
+                noDoubleTap: true,
+                state: 'empty'
             };
         }
         const result = this.createImage(imageState);
@@ -55,13 +88,17 @@ class SlotImageElement extends OutfitPanelContext {
                 case 'image-blob-does-not-exist':
                     this.imgWrapper.classList.add('--error');
                     this.imgWrapper.textContent = 'Error';
-                    return { imgEl: null };
+                    return {
+                        imgEl: null,
+                        state: 'error'
+                    };
                 case 'image-hidden':
                     this.imgWrapper.classList.add('--hidden');
                     this.imgWrapper.textContent = 'Show Image';
                     return {
                         imgEl: null,
-                        onSingleTap: () => this.toggleImage()
+                        onSingleTap: () => this.toggleImage(),
+                        state: 'hidden'
                     };
                 default: assertNever(result.reason);
             }
@@ -76,7 +113,8 @@ class SlotImageElement extends OutfitPanelContext {
         return {
             imgEl,
             onSingleTap: () => ImageLightbox.show(imgBlob, imgTag),
-            appendControls: (c) => c.append(deleteBtn, toggleBtn, resizeBtn)
+            appendControls: (c) => c.append(deleteBtn, toggleBtn, resizeBtn),
+            state: 'shown'
         };
     }
     createToggleBtn() {
@@ -166,7 +204,7 @@ class SlotImageElement extends OutfitPanelContext {
             const onMove = (moveEvent) => {
                 const dx = moveEvent.clientX - startX;
                 const dy = moveEvent.clientY - startY;
-                width = Math.max(24, startRect.width - dx);
+                width = Math.max(24, startRect.width + dx);
                 height = Math.max(24, startRect.height + dy);
                 setElementSize(this.imgWrapper, width, height);
             };
@@ -245,9 +283,6 @@ class SlotImageElement extends OutfitPanelContext {
                 this.outfitManager.saveSettings();
             }
         });
-    }
-    toBlob(image) {
-        return this.imagesView.getImage(image.key);
     }
     toKebabCase(input) {
         const cleaned = input

@@ -11,6 +11,7 @@ import { addDoubleTapListener } from "../../util/element/click-actions.js";
 import { createElement, setElementSize } from "../../util/ElementHelper.js";
 import { promptImageUpload, resizeImage } from "../../util/image-utils.js";
 import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
+import { Disposer } from "../Disposer.js";
 import { OutfitPanel } from "../OutfitPanel.js";
 import { showImagePicker } from "./prompt-images.js";
 
@@ -43,16 +44,15 @@ type RenderImageBundle =
 		appendControls?: undefined;
 		onSingleTap?: (e: PointerEvent) => void;
 		noDoubleTap?: true;
+		state: Exclude<ImageState, 'shown'>;
 	}
 	| {
 		imgEl: HTMLImageElement;
 		onSingleTap: (e: PointerEvent) => void;
 		appendControls: (container: HTMLElement) => void;
 		noDoubleTap?: never;
+		state: Extract<ImageState, 'shown'>;
 	};
-
-type PEC = (e: PointerEvent) => void;
-type TapGestureType = 'change-image' | 'toggle-image' | 'lightbox';
 
 export class SlotImageElementFactory extends OutfitPanelContext {
 
@@ -68,10 +68,14 @@ export class SlotImageElementFactory extends OutfitPanelContext {
 	}
 }
 
-class SlotImageElement extends OutfitPanelContext {
+export type ImageState = 'shown' | 'hidden' | 'empty' | 'error';
+
+export class SlotImageElement extends OutfitPanelContext {
 
 	private readonly imgWrapper: HTMLDivElement;
-	public readonly appendControls?: ((container: HTMLElement) => void) | undefined;
+	private _state: ImageState;
+
+	public readonly appendControlsTo?: ((parent: HTMLElement) => void) | undefined;
 
 	public constructor(
 		panel: OutfitPanel<PanelType>,
@@ -82,7 +86,8 @@ class SlotImageElement extends OutfitPanelContext {
 		this.imgWrapper = createElement('div', 'slot-image-wrapper');
 		const imageState = this.slot.getActiveImageState();
 
-		const { onSingleTap, appendControls, noDoubleTap } = this.renderImageContent(imageState);
+		const { onSingleTap, appendControls, noDoubleTap, state } = this.renderImageContent(imageState);
+		this._state = state;
 
 		if (noDoubleTap) {
 			this.imgWrapper.addEventListener('click', () => this.changeImage());
@@ -96,15 +101,56 @@ class SlotImageElement extends OutfitPanelContext {
 			);
 		}
 
-		this.appendControls = appendControls;
+		this.appendControlsTo = appendControls;
 	}
 
-	public append(container: HTMLElement): void {
-		container.append(this.imgWrapper);
+	public appendTo(parent: HTMLElement): void {
+		parent.append(this.imgWrapper);
+	}
+
+	public observe(flexParent: HTMLElement, sibling: HTMLElement, disposer: Disposer) {
+		if (this._state !== 'shown') return;
+
+		let isColumn = false;
+
+		const ENTER_RATIO = 0.55; // image > 55% of container
+		const EXIT_RATIO = 0.45; // must shrink below 45% to exit
+
+		const updateLayout = () => {
+			const containerWidth = flexParent.clientWidth;
+			const imageWidth = this.imgWrapper.offsetWidth;
+
+			if (!containerWidth || !imageWidth) return;
+
+			const ratio = imageWidth / containerWidth;
+
+			if (!isColumn && ratio > ENTER_RATIO) {
+				isColumn = true;
+			} else if (isColumn && ratio < EXIT_RATIO) {
+				isColumn = false;
+			}
+
+			flexParent.classList.toggle('column', isColumn);
+		};
+
+		const observer = new ResizeObserver(() => {
+			requestAnimationFrame(updateLayout);
+		});
+
+		observer.observe(this.imgWrapper);
+		observer.observe(flexParent);
+
+		updateLayout();
+
+		disposer.add(() => observer.disconnect());
 	}
 
 	private get imagesView(): OutfitImagesView {
 		return OutfitTracker.images();
+	}
+
+	public get state(): ImageState {
+		return this._state;
 	}
 
 	private renderImageContent(imageState: OutfitImageState | null): RenderImageBundle {
@@ -113,7 +159,8 @@ class SlotImageElement extends OutfitPanelContext {
 			this.imgWrapper.textContent = 'Add Image';
 			return {
 				imgEl: null,
-				noDoubleTap: true
+				noDoubleTap: true,
+				state: 'empty'
 			};
 		}
 
@@ -124,13 +171,17 @@ class SlotImageElement extends OutfitPanelContext {
 				case 'image-blob-does-not-exist':
 					this.imgWrapper.classList.add('--error');
 					this.imgWrapper.textContent = 'Error';
-					return { imgEl: null };
+					return {
+						imgEl: null,
+						state: 'error'
+					};
 				case 'image-hidden':
 					this.imgWrapper.classList.add('--hidden');
 					this.imgWrapper.textContent = 'Show Image';
 					return {
 						imgEl: null,
-						onSingleTap: () => this.toggleImage()
+						onSingleTap: () => this.toggleImage(),
+						state: 'hidden'
 					};
 				default: assertNever(result.reason);
 			}
@@ -148,7 +199,8 @@ class SlotImageElement extends OutfitPanelContext {
 		return {
 			imgEl,
 			onSingleTap: () => ImageLightbox.show(imgBlob, imgTag),
-			appendControls: (c: HTMLElement) => c.append(deleteBtn, toggleBtn, resizeBtn)
+			appendControls: (c: HTMLElement) => c.append(deleteBtn, toggleBtn, resizeBtn),
+			state: 'shown'
 		};
 	}
 
@@ -270,7 +322,7 @@ class SlotImageElement extends OutfitPanelContext {
 				const dx = moveEvent.clientX - startX;
 				const dy = moveEvent.clientY - startY;
 
-				width = Math.max(24, startRect.width - dx);
+				width = Math.max(24, startRect.width + dx);
 				height = Math.max(24, startRect.height + dy);
 
 				setElementSize(this.imgWrapper, width, height);
@@ -370,10 +422,6 @@ class SlotImageElement extends OutfitPanelContext {
 				this.outfitManager.saveSettings();
 			}
 		});
-	}
-
-	private toBlob(image: OutfitImage): ImageBlob | undefined {
-		return this.imagesView.getImage(image.key);
 	}
 
 	private toKebabCase(input: string): string | null {

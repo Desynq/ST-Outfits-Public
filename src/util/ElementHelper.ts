@@ -138,7 +138,7 @@ export function pushConfigured<T extends HTMLElement>(list: HTMLElement[], eleme
 	return element;
 }
 
-export function createElements<T extends HTMLElement>(...creators: (() => T)[]): T[] {
+export function createElementsFun<T extends HTMLElement>(...creators: (() => T)[]): T[] {
 	const elements: T[] = [];
 	for (const creator of creators) {
 		const element = creator();
@@ -158,7 +158,7 @@ export function configureSharedElements<T extends HTMLElement>(configure: (eleme
 }
 
 export function createSharedElements<T extends HTMLElement>(configure: (element: T) => void, ...creators: (() => T)[]): T[] {
-	const elements = createElements(...creators);
+	const elements = createElementsFun(...creators);
 	for (const element of elements) {
 		configure(element);
 	}
@@ -186,6 +186,62 @@ export function createElement<K extends keyof HTMLElementTagNameMap>(
 	if (text !== undefined) el.textContent = text;
 
 	return el;
+}
+
+export function createDiv(className?: string): HTMLDivElement {
+	const el = document.createElement('div');
+	if (className !== undefined) el.className = className;
+	return el;
+}
+
+interface BaseElementOptions {
+	className?: string;
+	dataset?: Record<string, string>;
+}
+
+type ElementOptions = {
+	className?: string;
+	dataset?: Record<string, string>;
+} & (
+		| { text: string; children?: never; }
+		| { children: HTMLElement[]; text?: never; }
+		| {}
+	);
+
+export function createEl<K extends keyof HTMLElementTagNameMap>(
+	tag: K,
+	options?: ElementOptions
+): HTMLElementTagNameMap[K] {
+	const el = document.createElement(tag);
+	if (!options) return el;
+
+	const { className, dataset } = options;
+
+	if (className !== undefined) el.className = className;
+
+	if (dataset) {
+		for (const [k, v] of Object.entries(dataset)) {
+			el.dataset[k] = v;
+		}
+	}
+
+	if ('text' in options) {
+		el.textContent = options.text;
+	}
+	else if ('children' in options) {
+		el.replaceChildren(...options.children);
+	}
+
+	return el;
+}
+
+export function createWithClasses<K extends keyof HTMLElementTagNameMap>(
+	tag: K,
+	...classNames: string[]
+): HTMLElementTagNameMap[K][] {
+	return classNames.map(className =>
+		createEl(tag, { className })
+	);
 }
 
 export function appendElement<K extends keyof HTMLElementTagNameMap>(

@@ -98,7 +98,7 @@ export function pushConfigured(list, element, configure) {
     list.push(element);
     return element;
 }
-export function createElements(...creators) {
+export function createElementsFun(...creators) {
     const elements = [];
     for (const creator of creators) {
         const element = creator();
@@ -113,7 +113,7 @@ export function configureSharedElements(configure, ...elements) {
     return elements;
 }
 export function createSharedElements(configure, ...creators) {
-    const elements = createElements(...creators);
+    const elements = createElementsFun(...creators);
     for (const element of elements) {
         configure(element);
     }
@@ -135,6 +135,35 @@ export function createElement(tag, className, text) {
     if (text !== undefined)
         el.textContent = text;
     return el;
+}
+export function createDiv(className) {
+    const el = document.createElement('div');
+    if (className !== undefined)
+        el.className = className;
+    return el;
+}
+export function createEl(tag, options) {
+    const el = document.createElement(tag);
+    if (!options)
+        return el;
+    const { className, dataset } = options;
+    if (className !== undefined)
+        el.className = className;
+    if (dataset) {
+        for (const [k, v] of Object.entries(dataset)) {
+            el.dataset[k] = v;
+        }
+    }
+    if ('text' in options) {
+        el.textContent = options.text;
+    }
+    else if ('children' in options) {
+        el.replaceChildren(...options.children);
+    }
+    return el;
+}
+export function createWithClasses(tag, ...classNames) {
+    return classNames.map(className => createEl(tag, { className }));
 }
 export function appendElement(container, tag, className, text) {
     const el = document.createElement(tag);

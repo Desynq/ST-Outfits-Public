@@ -1,7 +1,7 @@
 import { assertNever, toSlotName } from "../../shared.js";
 import { SlotPresetsModal } from "../../ui/components/SlotPresetsModal.js";
 import { addDoubleTapListener } from "../../util/element/click-actions.js";
-import { appendElement, createElement } from "../../util/ElementHelper.js";
+import { appendElement, createDiv, createElement } from "../../util/ElementHelper.js";
 import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
 import { SlotValueController } from "./SlotValueController.js";
 export class SlotRenderer extends OutfitPanelContext {
@@ -9,7 +9,7 @@ export class SlotRenderer extends OutfitPanelContext {
         super(panel);
         this.displaySlots = displaySlots;
         this.imageElementFactory = imageElementFactory;
-        this.slotValControl = new SlotValueController(this.panel, (slotElement) => this.removeActionButtons(slotElement));
+        this.slotValControl = new SlotValueController(this.panel, (ctx) => this.removeActionButtons(ctx));
     }
     isValueHidden(mode) {
         return mode !== 'normal';
@@ -23,26 +23,31 @@ export class SlotRenderer extends OutfitPanelContext {
         const labelLeftDiv = appendElement(labelDiv, 'div', 'slot-label-left');
         const labelRightDiv = appendElement(labelDiv, 'div', 'slot-label-right');
         const titleRow = appendElement(labelLeftDiv, 'div', 'slot-label-row');
-        appendElement(titleRow, 'div', 'slot-ordinal', display.displayIndex.toString());
+        const ordinalEl = appendElement(titleRow, 'div', 'slot-ordinal', display.displayIndex.toString());
         const name = toSlotName(slot.id);
         const slotNameEl = appendElement(titleRow, 'div', 'slot-name', name);
         slotNameEl.dataset.text = name;
+        const contentEl = createDiv('slot-content');
+        const imageActionsEl = createDiv('slot-image-actions');
         const actionsEl = document.createElement('div');
         actionsEl.className = 'slot-actions';
         const actionsLeftEl = appendElement(actionsEl, 'div', 'slot-actions-left');
         const actionsRightEl = appendElement(actionsEl, 'div', 'slot-actions-right');
+        const mode = this.getSlotRenderMode(slot, this.panel);
         const ctx = {
-            scroller: container,
-            displaySlot: display,
-            slotElement,
             slot,
+            displaySlot: display,
+            mode,
+            scroller: container,
+            slotElement,
+            labelLeftDiv,
+            slotNameEl,
+            labelRightDiv,
+            contentEl,
+            imageActionsEl,
             actionsLeftEl,
             actionsRightEl,
-            labelLeftDiv,
-            labelRightDiv,
-            slotNameEl
         };
-        const mode = this.getSlotRenderMode(slot, this.panel);
         const armTap = (delay) => {
             slotNameEl.dataset.delay = delay.toString();
             slotNameEl.style.setProperty("--tap-delay", `${slotNameEl.dataset.delay}ms`);
@@ -50,14 +55,10 @@ export class SlotRenderer extends OutfitPanelContext {
         };
         const disarmTap = () => slotNameEl.classList.remove('tap-armed');
         addDoubleTapListener(slotNameEl, () => { disarmTap(); this.beginRename(slotNameEl, ctx); }, 300, () => { disarmTap(); this.toggle(ctx.slot); }, armTap);
-        if (!this.isValueHidden(mode)) {
-            const imageElement = this.imageElementFactory.build(ctx.slot);
-            imageElement.append(ctx.labelRightDiv);
-            imageElement.appendControls?.(ctx.labelLeftDiv);
-        }
+        const imageElement = this.renderImageElement(ctx);
         const appendInlineToggleBtn = () => this.appendToggleBtn(labelRightDiv, slot);
         const appendInlineEdit = () => {
-            const valueEl = this.slotValControl.render(slotElement, ctx);
+            const valueEl = this.slotValControl.render(contentEl, ctx);
             if (slot.isEmpty())
                 valueEl.hidden = true;
             const editBtn = this.appendEditBtn(labelRightDiv, ctx, valueEl);
@@ -81,12 +82,38 @@ export class SlotRenderer extends OutfitPanelContext {
             case 'disabled-empty':
                 break;
             case 'normal':
-                this.decorateSlot(ctx);
+                this.decorateSlot(ctx, imageElement);
                 break;
             default: assertNever(mode);
         }
-        slotElement.appendChild(actionsEl);
+        slotElement.append(contentEl, imageActionsEl, actionsEl);
         return slotElement;
+    }
+    renderImageElement(ctx) {
+        const imageElement = this.imageElementFactory.build(ctx.slot);
+        const parent = this.resolveImageParent(imageElement.state, ctx);
+        switch (parent) {
+            case 'none':
+                break;
+            case 'label-right':
+                imageElement.appendControlsTo?.(ctx.imageActionsEl);
+                imageElement.appendTo(ctx.labelRightDiv);
+                break;
+            case 'content':
+                imageElement.appendControlsTo?.(ctx.imageActionsEl);
+                imageElement.appendTo(ctx.contentEl);
+                break;
+            default: assertNever(parent);
+        }
+        return imageElement;
+    }
+    resolveImageParent(state, ctx) {
+        if (this.isValueHidden(ctx.mode))
+            return 'none';
+        if (state === 'shown') {
+            return 'content';
+        }
+        return 'label-right';
     }
     getSlotRenderMode(slot, panel) {
         if (slot.isEmpty() && panel.areEmptySlotsHidden()) {
@@ -100,8 +127,9 @@ export class SlotRenderer extends OutfitPanelContext {
         }
         return 'normal';
     }
-    decorateSlot(ctx) {
-        const valueEl = this.slotValControl.render(ctx.slotElement, ctx);
+    decorateSlot(ctx, imageElement) {
+        const valueEl = this.slotValControl.render(ctx.contentEl, ctx);
+        imageElement.observe(ctx.contentEl, valueEl, this.panel.disposer);
         this.appendToggleBtn(ctx.actionsLeftEl, ctx.slot);
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'slot-button delete-slot';
@@ -112,7 +140,7 @@ export class SlotRenderer extends OutfitPanelContext {
         shiftBtn.className = 'slot-button slot-shift';
         shiftBtn.textContent = 'Shift';
         shiftBtn.addEventListener('click', () => {
-            this.beginSlotShift(ctx.slotElement, ctx.displaySlot);
+            this.beginSlotShift(ctx);
         });
         ctx.actionsLeftEl.appendChild(shiftBtn);
         const moveBtn = document.createElement('button');
@@ -145,7 +173,7 @@ export class SlotRenderer extends OutfitPanelContext {
         editBtn.addEventListener('click', () => this.slotValControl.beginInlineEdit(ctx, valueEl));
         return editBtn;
     }
-    removeActionButtons(slotElement) {
+    removeActionButtons(ctx) {
         const selectors = [
             '.slot-toggle',
             '.delete-slot',
@@ -155,8 +183,9 @@ export class SlotRenderer extends OutfitPanelContext {
             '.slot-presets-button'
         ];
         for (const selector of selectors) {
-            slotElement.querySelector(selector)?.remove();
+            ctx.slotElement.querySelector(selector)?.remove();
         }
+        ctx.imageActionsEl.replaceChildren();
     }
     toSlotId(slotName) {
         return slotName
@@ -192,8 +221,9 @@ export class SlotRenderer extends OutfitPanelContext {
         this.panel.saveAndRender();
     }
     /* ------------------------------ Slot Shifting ----------------------------- */
-    beginSlotShift(slotElement, display) {
-        this.removeActionButtons(slotElement);
+    beginSlotShift(ctx) {
+        const { displayIndex, slot } = ctx.displaySlot;
+        this.removeActionButtons(ctx);
         const select = document.createElement('select');
         select.className = 'slot-shift-select';
         const options = [];
@@ -205,10 +235,10 @@ export class SlotRenderer extends OutfitPanelContext {
         placeholder.value = '';
         select.appendChild(placeholder);
         for (const ds of displaySlots) {
-            if (ds.slot.id === display.slot.id)
+            if (ds.slot.id === slot.id)
                 continue; // skip self
             // Skip no-op: already before this slot
-            if (ds.displayIndex === display.displayIndex + 1)
+            if (ds.displayIndex === displayIndex + 1)
                 continue;
             options.push({
                 label: `Before: ${toSlotName(ds.slot.id)}`,
@@ -227,9 +257,9 @@ export class SlotRenderer extends OutfitPanelContext {
                 : String(opt.targetDisplayIndex);
             select.appendChild(optionEl);
         }
-        slotElement.querySelector('.slot-actions').appendChild(select);
+        ctx.slotElement.querySelector('.slot-actions').appendChild(select);
         select.focus();
-        select.addEventListener('change', () => this.shiftSlot(select, display));
+        select.addEventListener('change', () => this.shiftSlot(select, ctx.displaySlot));
         select.addEventListener('blur', () => {
             this.panel.render();
         });

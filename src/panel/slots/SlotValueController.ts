@@ -39,7 +39,7 @@ export class SlotValueController extends OutfitPanelContext {
 
 	public constructor(
 		panel: OutfitPanel<PanelType>,
-		private readonly removeActionButtons: (slotElement: HTMLDivElement) => void
+		private readonly removeActionButtons: (ctx: SlotContext) => void
 	) {
 		super(panel);
 	}
@@ -259,7 +259,7 @@ export class SlotValueController extends OutfitPanelContext {
 
 		textarea.addEventListener('input', autoResize);
 
-		this.removeActionButtons(ctx.slotElement);
+		this.removeActionButtons(ctx);
 
 		textarea.addEventListener('keydown', (e) => {
 			if (e.isComposing) return;

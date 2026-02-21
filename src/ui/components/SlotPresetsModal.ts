@@ -166,7 +166,7 @@ export class SlotPresetsModal {
 			default: assertNever(imageActivateOutcome);
 		}
 
-		this.outfit.setValue(this.slot.id, preset.value);
+		this.manager.setOutfitItem(this.slot.id, preset.value);
 		this.close();
 		this.saveAndRender();
 	}

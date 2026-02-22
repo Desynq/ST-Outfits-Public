@@ -1,3 +1,4 @@
+import { setScroll } from "../util/element/scroll.js";
 import { OutfitPanelContext } from "./base/OutfitPanelContext.js";
 import { DisplaySlot } from "./slots/DisplaySlot.js";
 import { SlotImageElementFactory } from "./slots/SlotImageController.js";
@@ -5,41 +6,26 @@ import { SlotRenderer } from "./slots/SlotRenderer.js";
 export class SlotsRenderer extends OutfitPanelContext {
     constructor() {
         super(...arguments);
-        this.rendered = new Map();
+        this.scrollPositions = new Map();
     }
     renderSlots(kind, slots, contentArea) {
-        if (this.currentKind !== kind) {
-            this.rendered.clear();
-            contentArea.innerHTML = '';
-            this.currentKind = kind;
+        // Always store current scroll before replacing
+        if (this.currentKind !== undefined) {
+            this.scrollPositions.set(this.currentKind, contentArea.scrollTop);
         }
+        this.currentKind = kind;
         const displaySlots = this.buildDisplaySlots(slots);
-        const desiredIds = new Set(displaySlots.map(ds => ds.slot.id));
-        // Remove slots that no longer exist
-        for (const [id, el] of this.rendered) {
-            if (!desiredIds.has(id)) {
-                el.remove();
-                this.rendered.delete(id);
-            }
-        }
         const imageFactory = new SlotImageElementFactory(this.panel, contentArea.getBoundingClientRect().width);
         const slotFactory = new SlotRenderer(this.panel, displaySlots, imageFactory);
-        for (let i = 0; i < displaySlots.length; i++) {
-            const display = displaySlots[i];
-            const existing = this.rendered.get(display.slot.id);
-            const fresh = slotFactory.createSlotElement(contentArea, display);
-            if (existing) {
-                existing.replaceWith(fresh);
-            }
-            this.rendered.set(display.slot.id, fresh);
-            const currentChild = contentArea.children[i];
-            if (currentChild !== fresh) {
-                contentArea.insertBefore(fresh, currentChild ?? null);
-            }
+        const fragment = document.createDocumentFragment();
+        for (const display of displaySlots) {
+            const el = slotFactory.createSlotElement(contentArea, display);
+            fragment.append(el);
         }
-        this.addSlotBtn?.remove();
-        this.addSlotBtn = this.createAddSlotButton(kind);
-        contentArea.append(this.addSlotBtn);
+        const addSlotBtn = this.createAddSlotButton(kind);
+        fragment.append(addSlotBtn);
+        contentArea.replaceChildren(fragment);
+        setScroll(contentArea, this.scrollPositions.get(kind));
     }
     buildDisplaySlots(slots) {
         const resolvedSlots = this.outfitView.resolve(slots);

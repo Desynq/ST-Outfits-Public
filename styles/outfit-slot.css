@@ -275,7 +275,7 @@
 	white-space: nowrap;
 }
 
-.slot-button button:hover {
+.slot-button:hover {
 	background: rgba(255, 255, 255, 0.25);
 }
 

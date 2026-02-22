@@ -1,79 +1,78 @@
-import { UserOutfitManager } from '../manager/UserOutfitManager.js';
 import { OutfitTracker } from '../data/tracker.js';
+import { UserOutfitManager } from '../manager/UserOutfitManager.js';
 import { queryOrThrow } from '../util/ElementHelper.js';
 import { OutfitPanel } from './OutfitPanel.js';
-import type { PanelType } from '../types/maps.js';
 
 export class UserOutfitPanel extends OutfitPanel<'user'> {
-    public constructor(
-        outfitManager: UserOutfitManager
-    ) {
-        super(outfitManager);
-        this.isVisible = false;
-        this.minimized = false;
-        this.panelEl = null;
-    }
+	public constructor(
+		outfitManager: UserOutfitManager
+	) {
+		super(outfitManager);
+		this.isVisible = false;
+		this.minimized = false;
+		this.panelEl = null;
+	}
 
-    protected override initializePanel(): boolean {
-        if (this.panelEl) return false;
+	protected override initializePanel(): boolean {
+		if (this.panelEl) return false;
 
-        const panel = document.createElement('div');
-        panel.id = 'user-outfit-panel';
-        panel.className = 'outfit-panel';
+		const panel = document.createElement('div');
+		panel.id = 'user-outfit-panel';
+		panel.className = 'outfit-panel';
 
-        /*html*/
-        panel.innerHTML = `
-            <div class="outfit-header">
-                <h3>${this.getHeaderTitle()}</h3>
-            </div>
-            <div class="outfit-tabs"></div>
-            <div class="outfit-content" id="user-outfit-tab-content"></div>
-        `;
+		/*html*/
+		panel.innerHTML = `
+			<div class="outfit-header">
+				<h3>${this.getHeaderTitle()}</h3>
+			</div>
+			<div class="outfit-tabs"></div>
+			<div class="outfit-content" id="user-outfit-tab-content"></div>
+		`;
 
-        document.body.appendChild(panel);
-        this.panelEl = panel;
+		document.body.appendChild(panel);
+		this.panelEl = panel;
 
-        this.makePanelDraggable();
-        this.makeHeaderMinimizable();
+		this.makePanelDraggable();
+		this.makeHeaderMinimizable();
 
-        const outfitHeaderDiv = queryOrThrow(this.panelEl, HTMLDivElement, '.outfit-header');
-        const outfitActionsDiv = this.createOutfitActions();
+		const outfitHeaderDiv = queryOrThrow(this.panelEl, HTMLDivElement, '.outfit-header');
+		const outfitActionsDiv = this.createOutfitActions();
 
-        outfitHeaderDiv.appendChild(outfitActionsDiv);
-        return true;
-    }
+		outfitHeaderDiv.appendChild(outfitActionsDiv);
+		return true;
+	}
 
-    public override async exportButtonClickListener(): Promise<void> {
-        const presetName = prompt('Name this export:');
-        if (!presetName) return;
+	public override async exportButtonClickListener(): Promise<void> {
+		const presetName = prompt('Name this export:');
+		if (!presetName) return;
 
-        const characterName = prompt(
-            'Export for which character?\nAdd "_user" to the end to export to a persona.\n',
-        );
+		const characterName = prompt(
+			'Export for which character?\nAdd "_user" to the end to export to a persona.\n',
+		);
 
-        let message;
-        const trimmedPreset = presetName.trim();
+		let message;
+		const trimmedPreset = presetName.trim();
 
-        if (characterName && characterName.trim() !== '') {
-            const trimmedCharacter = characterName.trim();
-            message = await this.outfitManager.exportPreset(trimmedPreset, trimmedCharacter);
-        }
-        else {
-            message = 'You must supply a character name!';
-        }
+		if (characterName && characterName.trim() !== '') {
+			const trimmedCharacter = characterName.trim();
+			message = await this.outfitManager.exportPreset(trimmedPreset, trimmedCharacter);
+		}
+		else {
+			message = 'You must supply a character name!';
+		}
 
-        if (message && OutfitTracker.areSystemMessagesEnabled()) {
-            this.sendSystemMessage(message);
-        }
+		if (message && OutfitTracker.areSystemMessagesEnabled()) {
+			this.sendSystemMessage(message);
+		}
 
-        this.saveAndRender();
-    }
+		this.saveAndRender();
+	}
 
-    protected override getHeaderTitle(): string {
-        return 'Your Outfit';
-    }
+	protected override getHeaderTitle(): string {
+		return 'Your Outfit';
+	}
 
-    public override getPanelType(): 'user' {
-        return 'user';
-    }
+	public override getPanelType(): 'user' {
+		return 'user';
+	}
 }

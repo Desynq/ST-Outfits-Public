@@ -16,12 +16,12 @@ export class UserOutfitPanel extends OutfitPanel {
         panel.className = 'outfit-panel';
         /*html*/
         panel.innerHTML = `
-            <div class="outfit-header">
-                <h3>${this.getHeaderTitle()}</h3>
-            </div>
-            <div class="outfit-tabs"></div>
-            <div class="outfit-content" id="user-outfit-tab-content"></div>
-        `;
+			<div class="outfit-header">
+				<h3>${this.getHeaderTitle()}</h3>
+			</div>
+			<div class="outfit-tabs"></div>
+			<div class="outfit-content" id="user-outfit-tab-content"></div>
+		`;
         document.body.appendChild(panel);
         this.panelEl = panel;
         this.makePanelDraggable();

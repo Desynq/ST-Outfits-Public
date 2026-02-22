@@ -16,7 +16,7 @@ export class BotOutfitManager extends OutfitManager {
         return '{{char}}';
     }
     getVarName(namespace) {
-        return `${this.character.replace(/\s+/g, '_')}_${namespace}`;
+        return `${this.character.replace(/\s+/g, ' ')}_${namespace}`;
     }
     setCharacter(name) {
         if (name === this.character)

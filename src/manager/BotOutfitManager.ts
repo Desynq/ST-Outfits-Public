@@ -26,7 +26,7 @@ export class BotOutfitManager extends OutfitManager {
     }
 
     public override getVarName(namespace: string) {
-        return `${this.character.replace(/\s+/g, '_')}_${namespace}`;
+        return `${this.character.replace(/\s+/g, ' ')}_${namespace}`;
     }
 
     public setCharacter(name: string) {

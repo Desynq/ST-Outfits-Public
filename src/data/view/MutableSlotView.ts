@@ -58,7 +58,7 @@ export type ResizeImageResult =
 export class MutableSlotView {
 
 	private readonly _slots: OutfitSlot[];
-	private indexById!: Record<string, number | undefined>;
+	private indexById: Record<string, number> = {};
 
 	public constructor(slots: OutfitSlot[]) {
 		this._slots = slots;
@@ -85,13 +85,13 @@ export class MutableSlotView {
 		return [...new Set(this.slots.map(s => s.kind))];
 	}
 
-	private getMutSlotById(id: string): OutfitSlot | undefined {
+	private getMutableSlotById(id: string): OutfitSlot | undefined {
 		const i = this.indexById[id];
 		return i === undefined ? undefined : this._slots[i];
 	}
 
 	public getSlotById(id: string): Readonly<OutfitSlot> | undefined {
-		return this.getMutSlotById(id);
+		return this.getMutableSlotById(id);
 	}
 
 	public getSlotAt(index: number): Readonly<OutfitSlot> | undefined {
@@ -141,6 +141,14 @@ export class MutableSlotView {
 		return true;
 	}
 
+	public setEquipped(id: string, equipped: boolean): boolean {
+		const slot = this.getMutableSlotById(id);
+		if (slot === undefined) return false;
+
+		slot.equipped = equipped;
+		return true;
+	}
+
 
 
 	public attachImage(id: string, tag: string, blobKey: string): AttachImageResult {
@@ -186,7 +194,7 @@ export class MutableSlotView {
 	}
 
 	public setActiveImage(id: string, tag: string): SetActiveImageResult {
-		const slot = this.getMutSlotById(id);
+		const slot = this.getMutableSlotById(id);
 		if (!slot) return 'slot-not-found';
 
 		if (slot.activeImageTag === tag) return 'image-already-active';
@@ -200,7 +208,7 @@ export class MutableSlotView {
 	}
 
 	public toggleImage(id: string, tag: string, hidden: boolean): ToggleImageResult {
-		const slot = this.getMutSlotById(id);
+		const slot = this.getMutableSlotById(id);
 		if (!slot) return 'slot-not-found';
 
 		const image = slot.images[tag];
@@ -213,7 +221,7 @@ export class MutableSlotView {
 	}
 
 	public resizeImage(id: string, tag: string, width: number, height: number): ResizeImageResult {
-		const slot = this.getMutSlotById(id);
+		const slot = this.getMutableSlotById(id);
 		if (!slot) return 'slot-not-found';
 
 		const image = slot.images[tag];
@@ -238,7 +246,8 @@ export class MutableSlotView {
 			value: 'None',
 			enabled: true,
 			images: {},
-			activeImageTag: null
+			activeImageTag: null,
+			equipped: false
 		});
 
 		this.indexById[id] = this._slots.length - 1; // append to index

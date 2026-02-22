@@ -67,7 +67,8 @@ function normalizeLegacyOutfit(value) {
         enabled: true,
         value: v,
         images: {},
-        activeImageTag: null
+        activeImageTag: null,
+        equipped: true
     }));
     return { slots };
 }
@@ -99,7 +100,8 @@ function normalizeOutfit(value) {
             enabled: typeof s.enabled === 'boolean' ? s.enabled : true,
             value: typeof s.value === 'string' ? s.value : raw.values[s.id] ?? 'None',
             images: normalizeImages(s.images),
-            activeImageTag: typeof s.activeImageTag === 'string' ? s.activeImageTag : null
+            activeImageTag: typeof s.activeImageTag === 'string' ? s.activeImageTag : null,
+            equipped: typeof s.equipped === 'boolean' ? s.equipped : true
         });
     }
     for (const [id, v] of Object.entries(raw.values)) {
@@ -111,7 +113,8 @@ function normalizeOutfit(value) {
             enabled: true,
             value: v,
             images: {},
-            activeImageTag: null
+            activeImageTag: null,
+            equipped: true
         });
     }
     return { slots };

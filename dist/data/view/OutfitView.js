@@ -17,7 +17,7 @@ export class OutfitView {
      * @deprecated
      */
     resolve(slotIds) {
-        return slotIds.map(id => this.getResolvedSlot(id));
+        return slotIds.map(id => this.resolveSlot(id));
     }
     getSlotIds() {
         return this.slots.map(s => s.id);
@@ -25,13 +25,19 @@ export class OutfitView {
     getSlotKinds() {
         return this.slotView.getKinds();
     }
-    getClothingSlotIds() {
-        return this.slots.filter(s => s.kind === 'clothing').map(s => s.id);
+    getSlotsFromKind(kind) {
+        return this.slots.filter(s => s.kind === kind);
     }
-    getAccessorySlotIds() {
-        return this.slots.filter(s => s.kind === 'accessory').map(s => s.id);
+    mapSlots(map, filter) {
+        const out = {};
+        for (const s of this.slots) {
+            if (filter && !filter(s))
+                continue;
+            out[s.id] = map(s);
+        }
+        return out;
     }
-    getSlotRecords(filter) {
+    getSlotValueMap(filter) {
         const out = {};
         for (const s of this.slots) {
             if (filter && !filter(s))
@@ -58,14 +64,11 @@ export class OutfitView {
     getIndexById(slotId) {
         return this.slotView.getIndex(slotId);
     }
-    /**
-     * @deprecated
-     */
-    getResolvedSlot(slotId) {
+    resolveSlot(slotId) {
         const slot = this.getSlotById(slotId);
         return !slot
             ? new UnresolvedOutfitSlot(slotId)
-            : OutfitSlotState.fromSlot(slot, OutfitTracker.images());
+            : new OutfitSlotState(slot, OutfitTracker.images());
     }
     getValue(slot) {
         const realSlot = this.slotView.getSlotById(slot.id);

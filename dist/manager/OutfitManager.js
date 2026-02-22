@@ -7,6 +7,9 @@ export class OutfitManager {
     constructor(settingsSaver) {
         this.settingsSaver = settingsSaver;
     }
+    get outfit() {
+        return this.getOutfitView();
+    }
     saveSettings() {
         this.settingsSaver();
     }
@@ -44,30 +47,28 @@ Cancel to keep the current value.`, currentValue);
     getValue(slotId) {
         return this.getOutfitView().values[slotId];
     }
-    getVisibleRecordsByType(kind) {
-        return this.getOutfitView().getSlotRecords(s => s.kind === kind && s.enabled);
+    buildPromptSlotValuesFromKind(kind) {
+        return this.outfit.mapSlots(s => this.formatSlotForPrompt(s), s => s.kind === kind && s.enabled);
+    }
+    formatSlotForPrompt(s) {
+        return (!s.equipped ? '((REMOVED))\n' : '') + s.value;
     }
     getVisibleSlotMap() {
-        return this.getOutfitView().getSlotRecords(s => s.enabled);
+        return this.getOutfitView().getSlotValueMap(s => s.enabled);
     }
-    /**
-     *
-     * @param namespace where the full summary will be stored—defaults to `'summary'`
-     * @param updateKindSummaries whether each individual slot type should have its own separate summary updated—defaults to `true`
-     * @returns the full summary of the outfit in XML-format
-     */
     updateSummaries() {
         const fullSummary = this.createOutfitSummary((kind, value) => {
+            // update each kind summary
             this.setSummary(toSummaryKey(kind), value);
         });
         this.setSummary('summary', fullSummary);
     }
     createOutfitSummary(kindSummaryCb) {
         let fullSummary = `<outfit character=${this.getNameMacro()}>`;
+        this.getOutfitView().getSlotKinds;
         for (const kind of this.getOutfitView().getSlotKinds()) {
-            const value = serializeRecord(this.getVisibleRecordsByType(kind), kind === 'accessory' ? formatAccessorySlotName : toSlotName, toKebabCase(kind));
-            if (kindSummaryCb)
-                kindSummaryCb(kind, value);
+            const value = serializeRecord(this.buildPromptSlotValuesFromKind(kind), kind === 'accessory' ? formatAccessorySlotName : toSlotName, toKebabCase(kind));
+            kindSummaryCb?.(kind, value);
             if (value !== '') {
                 fullSummary += `\n\n${indentString(value)}`;
             }
@@ -117,11 +118,12 @@ Cancel to keep the current value.`, currentValue);
     }
     updateOutfitValue(slotId) {
         const view = this.getOutfitView();
-        const slot = view.getResolvedSlot(slotId);
+        const slot = view.resolveSlot(slotId);
         if (!slot.resolved)
             return;
-        const varName = this.getVarName(slotId);
-        setGlobalVariable(varName, slot.value);
+        const varName = this.getVarName(slot.id);
+        const prompt = this.formatSlotForPrompt(slot.raw);
+        setGlobalVariable(varName, prompt);
         this.updateSummaries();
     }
     getSlots() {

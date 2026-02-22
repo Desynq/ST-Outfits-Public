@@ -5,30 +5,24 @@ class OutfitSlotBase {
     }
 }
 export class OutfitSlotState extends OutfitSlotBase {
-    constructor(id, kind, value, enabled, 
-    // tag: OutfitImageState
-    images, activeImageTag) {
-        super(id);
-        this.kind = kind;
-        this.value = value;
-        this.enabled = enabled;
-        this.images = images;
-        this.activeImageTag = activeImageTag;
+    constructor(raw, imageRegistry) {
+        super(raw.id);
+        this.raw = raw;
         this.resolved = true;
-    }
-    static fromSlot(slot, imageRegistry) {
-        const resolvedImages = {};
-        for (const [tag, image] of Object.entries(slot.images)) {
+        const images = {};
+        for (const [tag, image] of Object.entries(raw.images)) {
             const blob = imageRegistry.getImage(image.key);
             if (!blob) {
                 throw new Error(`Missing blob for image key ${image.key}`);
             }
-            resolvedImages[tag] = new OutfitImageState(tag, image, blob);
+            images[tag] = new OutfitImageState(tag, image, blob);
         }
-        if (slot.activeImageTag !== null && !resolvedImages[slot.activeImageTag]) {
-            throw new Error(`Missing image for active image tag`);
-        }
-        return new OutfitSlotState(slot.id, slot.kind, slot.value, slot.enabled, resolvedImages, slot.activeImageTag);
+        this.kind = raw.kind;
+        this.value = raw.value;
+        this.enabled = raw.enabled;
+        this.images = images;
+        this.activeImageTag = raw.activeImageTag;
+        this.equipped = raw.equipped;
     }
     isEnabled() {
         return this.enabled;

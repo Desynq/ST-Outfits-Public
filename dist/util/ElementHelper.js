@@ -142,16 +142,27 @@ export function createDiv(className) {
         el.className = className;
     return el;
 }
-export function createEl(tag, options) {
+export function el(tag, options) {
     const el = document.createElement(tag);
     if (!options)
         return el;
-    const { className, dataset } = options;
+    const { className, dataset, events, classes } = options;
     if (className !== undefined)
         el.className = className;
+    if (classes) {
+        for (const c of classes) {
+            if (c)
+                el.classList.add(c);
+        }
+    }
     if (dataset) {
         for (const [k, v] of Object.entries(dataset)) {
             el.dataset[k] = v;
+        }
+    }
+    if (events) {
+        for (const [type, listener] of Object.entries(events)) {
+            el.addEventListener(type, listener);
         }
     }
     if ('text' in options) {
@@ -163,7 +174,7 @@ export function createEl(tag, options) {
     return el;
 }
 export function createWithClasses(tag, ...classNames) {
-    return classNames.map(className => createEl(tag, { className }));
+    return classNames.map(className => el(tag, { className }));
 }
 export function appendElement(container, tag, className, text) {
     const el = document.createElement(tag);

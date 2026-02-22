@@ -4,12 +4,13 @@ import { assertNever, toSlotName } from "../../shared.js";
 import { PanelType } from "../../types/maps.js";
 import { SlotPresetsModal } from "../../ui/components/SlotPresetsModal.js";
 import { addDoubleTapListener } from "../../util/element/click-actions.js";
-import { appendElement, createDiv, createEl, createElement, createWithClasses } from "../../util/ElementHelper.js";
+import { appendElement, createDiv, el, createElement, createWithClasses, addOrRemoveClass } from "../../util/ElementHelper.js";
 import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
 import { Disposer } from "../Disposer.js";
 import { OutfitPanel } from "../OutfitPanel.js";
 import { OutfitSlotsHost } from "../OutfitSlotsHost.js";
 import { DisplaySlot } from "./DisplaySlot.js";
+import { SlotActionsElement } from "./SlotActionsElement.js";
 import { ImageState, SlotImageElement, SlotImageElementFactory } from "./SlotImageController.js";
 import { SlotValueController } from "./SlotValueController.js";
 
@@ -62,9 +63,14 @@ export class SlotRenderer extends OutfitPanelContext {
 	): HTMLDivElement {
 		const slot = display.slot;
 
-		const slotElement = document.createElement('div');
-		slotElement.className = 'outfit-slot';
-		slotElement.dataset.slot = display.slot.id;
+		const slotElement = el('div', {
+			className: 'outfit-slot',
+			dataset: { slot: display.slot.id },
+			classes: [
+				slot.enabled && !slot.equipped && '--unequipped',
+				!slot.enabled && '--disabled',
+			]
+		});
 
 		const labelDiv = appendElement(slotElement, 'div', 'slot-label');
 		const labelLeftDiv = appendElement(labelDiv, 'div', 'slot-label-left');
@@ -123,8 +129,10 @@ export class SlotRenderer extends OutfitPanelContext {
 		const imageElement = this.renderImageElement(ctx);
 
 
-		const appendInlineToggleBtn = () =>
-			this.appendToggleBtn(labelRightDiv, slot);
+		const appendInlineToggleBtn = () => {
+			const toggleBtn = this.createToggleBtn(slot);
+			labelRightDiv.append(toggleBtn);
+		};
 
 		const appendInlineEdit = () => {
 			const valueEl = this.slotValControl.render(contentEl, ctx);
@@ -217,10 +225,18 @@ export class SlotRenderer extends OutfitPanelContext {
 		ctx: SlotContext,
 		imageElement: SlotImageElement
 	): void {
+		const actionsElement = new SlotActionsElement(this.panel);
+
 		const valueEl = this.slotValControl.render(ctx.contentEl, ctx);
 		imageElement.observe(ctx.contentEl, valueEl, this.panel.disposer);
 
-		this.appendToggleBtn(ctx.actionsLeftEl, ctx.slot);
+		const toggleBtn = this.createToggleBtn(ctx.slot);
+		ctx.actionsLeftEl.append(toggleBtn);
+
+		if (ctx.slot.enabled) {
+			const unequipBtn = actionsElement.createUnequipButton(ctx.slot);
+			ctx.actionsLeftEl.append(unequipBtn);
+		}
 
 
 		const deleteBtn = document.createElement('button');
@@ -262,7 +278,7 @@ export class SlotRenderer extends OutfitPanelContext {
 		// const editBtn = this.appendEditBtn(ctx.actionsRightEl, ctx, valueEl);
 	}
 
-	private appendToggleBtn(container: HTMLDivElement, slot: OutfitSlotState): HTMLButtonElement {
+	private createToggleBtn(slot: OutfitSlotState): HTMLButtonElement {
 		const toggleBtn = document.createElement('button');
 		toggleBtn.className = 'slot-button slot-toggle';
 
@@ -272,7 +288,6 @@ export class SlotRenderer extends OutfitPanelContext {
 
 		toggleBtn.addEventListener('click', () => this.toggle(slot));
 
-		container.appendChild(toggleBtn);
 		return toggleBtn;
 	}
 
@@ -281,6 +296,9 @@ export class SlotRenderer extends OutfitPanelContext {
 		this.outfitManager.updateOutfitValue(slot.id);
 		this.panel.saveAndRender();
 	}
+
+
+
 
 	private appendEditBtn(container: HTMLDivElement, ctx: SlotContext, valueEl: HTMLDivElement): HTMLButtonElement {
 		const editBtn = appendElement(container, 'button', 'slot-button edit-slot', '✏️');
@@ -299,7 +317,8 @@ export class SlotRenderer extends OutfitPanelContext {
 			'.slot-shift',
 			'.move-slot',
 			'.edit-slot',
-			'.slot-presets-button'
+			'.slot-presets-button',
+			'.unequip-button'
 		];
 
 		for (const selector of selectors) {

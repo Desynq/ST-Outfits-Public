@@ -10,6 +10,9 @@ export class MutableOutfitView extends OutfitView {
         this.slotView.setEnabled(slot.id, !slot.enabled);
         return true;
     }
+    setEquipped(slotId, equipped) {
+        return this.slotView.setEquipped(slotId, equipped);
+    }
     shiftSlotByIndex(sourceIndex, targetIndex) {
         return this.slotView.moveIndex(sourceIndex, targetIndex);
     }

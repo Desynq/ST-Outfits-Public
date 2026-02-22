@@ -92,7 +92,8 @@ function normalizeLegacyOutfit(value: any): Outfit {
 			enabled: true,
 			value: v,
 			images: {},
-			activeImageTag: null
+			activeImageTag: null,
+			equipped: true
 		})
 	);
 
@@ -131,7 +132,8 @@ function normalizeOutfit(value: any): Outfit {
 			enabled: typeof s.enabled === 'boolean' ? s.enabled : true,
 			value: typeof s.value === 'string' ? s.value : raw.values[s.id] ?? 'None',
 			images: normalizeImages(s.images),
-			activeImageTag: typeof s.activeImageTag === 'string' ? s.activeImageTag : null
+			activeImageTag: typeof s.activeImageTag === 'string' ? s.activeImageTag : null,
+			equipped: typeof s.equipped === 'boolean' ? s.equipped : true
 		});
 	}
 
@@ -144,7 +146,8 @@ function normalizeOutfit(value: any): Outfit {
 			enabled: true,
 			value: v,
 			images: {},
-			activeImageTag: null
+			activeImageTag: null,
+			equipped: true
 		});
 	}
 

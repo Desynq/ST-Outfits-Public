@@ -5,12 +5,37 @@
 }
 
 .outfit-slot {
+	position: relative;
+
 	padding: 8px 6px;
 	background: rgba(255, 255, 255, 0.08);
 	border-radius: 8px;
 	backdrop-filter: blur(5px);
 	border: 1px solid rgba(255, 255, 255, 0.1);
 }
+
+.outfit-slot.--unequipped::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+
+	background-image: repeating-linear-gradient(
+		45deg,
+		rgba(255, 255, 255, 0.15) 0px,
+		rgba(255, 255, 255, 0.15) 4px,
+		transparent 6px,
+		transparent 12px
+	)
+}
+
+.outfit-slot > * {
+	position: relative;
+	z-index: 1;
+}
+
+
+
 
 .add-slot-button {
 	padding: 10px;
@@ -279,6 +304,10 @@
 	background: rgba(255, 255, 255, 0.25);
 }
 
+.slot-button:active {
+	transform: translateY(1px);
+}
+
 
 .slot-button.slot-shift {
 	background-color: rgba(120, 160, 255, 0.12);
@@ -355,6 +384,35 @@
 .slot-button.edit-slot:hover {
 	background-color: rgba(255, 255, 255, 0.25);
 }
+
+
+.unequip-button {
+	transition: background 0.15s ease, transform 0.05s ease, opacity 0.15s ease;
+}
+
+.unequip-button--unequip {
+	background: rgba(220, 80, 80, 0.25);
+}
+
+.unequip-button--unequip:hover {
+	background: rgba(220, 80, 80, 0.4);
+}
+
+.unequip-button--equip {
+	background: rgba(80, 180, 120, 0.25);
+}
+
+.unequip-button--equip:hover {
+	background: rgba(80, 180, 120, 0.4);
+}
+
+
+
+
+
+
+
+
 
 
 

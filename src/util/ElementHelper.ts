@@ -194,34 +194,48 @@ export function createDiv(className?: string): HTMLDivElement {
 	return el;
 }
 
-interface BaseElementOptions {
-	className?: string;
-	dataset?: Record<string, string>;
-}
 
-type ElementOptions = {
+
+
+type ElementOptions<K extends keyof HTMLElementTagNameMap> = {
 	className?: string;
 	dataset?: Record<string, string>;
+	events?: Partial<{
+		[E in keyof GlobalEventHandlersEventMap]: (this: HTMLElementTagNameMap[K], ev: GlobalEventHandlersEventMap[E]) => void
+	}>;
+	classes?: Array<string | false | null | undefined>;
 } & (
 		| { text: string; children?: never; }
 		| { children: HTMLElement[]; text?: never; }
 		| {}
 	);
 
-export function createEl<K extends keyof HTMLElementTagNameMap>(
+export function el<K extends keyof HTMLElementTagNameMap>(
 	tag: K,
-	options?: ElementOptions
+	options?: ElementOptions<K>
 ): HTMLElementTagNameMap[K] {
 	const el = document.createElement(tag);
 	if (!options) return el;
 
-	const { className, dataset } = options;
+	const { className, dataset, events, classes } = options;
 
 	if (className !== undefined) el.className = className;
+
+	if (classes) {
+		for (const c of classes) {
+			if (c) el.classList.add(c);
+		}
+	}
 
 	if (dataset) {
 		for (const [k, v] of Object.entries(dataset)) {
 			el.dataset[k] = v;
+		}
+	}
+
+	if (events) {
+		for (const [type, listener] of Object.entries(events)) {
+			el.addEventListener(type, listener as EventListener);
 		}
 	}
 
@@ -240,7 +254,7 @@ export function createWithClasses<K extends keyof HTMLElementTagNameMap>(
 	...classNames: string[]
 ): HTMLElementTagNameMap[K][] {
 	return classNames.map(className =>
-		createEl(tag, { className })
+		el(tag, { className })
 	);
 }
 

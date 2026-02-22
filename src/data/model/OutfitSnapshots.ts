@@ -16,45 +16,35 @@ export class OutfitSlotState extends OutfitSlotBase {
 
 	public readonly resolved = true as const;
 
-	private constructor(
-		id: string,
-		public readonly kind: SlotKind,
-		public readonly value: string,
-		public readonly enabled: boolean,
-		// tag: OutfitImageState
-		private readonly images: Record<string, OutfitImageState>,
-		public readonly activeImageTag: string | null
-	) {
-		super(id);
-	}
+	public readonly kind: SlotKind;
+	public readonly value: string;
+	public readonly enabled: boolean;
+	public readonly images: Readonly<Record<string, OutfitImageState>>;
+	public readonly activeImageTag: string | null;
+	public readonly equipped: boolean;
 
-	public static fromSlot(
-		slot: Readonly<OutfitSlot>,
+	public constructor(
+		public readonly raw: Readonly<OutfitSlot>,
 		imageRegistry: ImageRegistry
-	): OutfitSlotState {
-		const resolvedImages: Record<string, OutfitImageState> = {};
+	) {
+		super(raw.id);
 
-		for (const [tag, image] of Object.entries(slot.images)) {
+		const images: Record<string, OutfitImageState> = {};
+		for (const [tag, image] of Object.entries(raw.images)) {
 			const blob = imageRegistry.getImage(image.key);
 			if (!blob) {
 				throw new Error(`Missing blob for image key ${image.key}`);
 			}
 
-			resolvedImages[tag] = new OutfitImageState(tag, image, blob);
+			images[tag] = new OutfitImageState(tag, image, blob);
 		}
 
-		if (slot.activeImageTag !== null && !resolvedImages[slot.activeImageTag]) {
-			throw new Error(`Missing image for active image tag`);
-		}
-
-		return new OutfitSlotState(
-			slot.id,
-			slot.kind,
-			slot.value,
-			slot.enabled,
-			resolvedImages,
-			slot.activeImageTag
-		);
+		this.kind = raw.kind;
+		this.value = raw.value;
+		this.enabled = raw.enabled;
+		this.images = images;
+		this.activeImageTag = raw.activeImageTag;
+		this.equipped = raw.equipped;
 	}
 
 	public isEnabled(): boolean {
@@ -68,6 +58,8 @@ export class OutfitSlotState extends OutfitSlotBase {
 	public isEmpty(): boolean {
 		return this.value === 'None';
 	}
+
+
 
 	public getActiveImageState(): OutfitImageState | null {
 		if (this.activeImageTag === null) return null;

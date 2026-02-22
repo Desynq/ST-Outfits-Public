@@ -1,4 +1,4 @@
-import { SlotKind } from "../data/model/Outfit.js";
+import { OutfitSlot, SlotKind } from "../data/model/Outfit.js";
 import { OutfitTracker } from "../data/tracker.js";
 import { IOutfitCollectionView } from "../data/view/OutfitCollectionView.js";
 import { MutableOutfitView } from "../data/view/MutableOutfitView.js";
@@ -18,6 +18,10 @@ export abstract class OutfitManager {
 	public constructor(
 		private settingsSaver: Function
 	) {
+	}
+
+	private get outfit() {
+		return this.getOutfitView();
 	}
 
 	public saveSettings(): void {
@@ -91,12 +95,21 @@ Cancel to keep the current value.`,
 
 
 
-	public getVisibleRecordsByType(kind: string): Record<string, string> {
-		return this.getOutfitView().getSlotRecords(s => s.kind === kind && s.enabled);
+	public buildPromptSlotValuesFromKind(kind: string): Record<string, string> {
+		return this.outfit.mapSlots(
+			s => this.formatSlotForPrompt(s),
+			s => s.kind === kind && s.enabled
+		);
 	}
 
+	private formatSlotForPrompt(s: OutfitSlot): string {
+		return (!s.equipped ? '((REMOVED))\n' : '') + s.value;
+	}
+
+
+
 	public getVisibleSlotMap(): Record<string, string> {
-		return this.getOutfitView().getSlotRecords(s => s.enabled);
+		return this.getOutfitView().getSlotValueMap(s => s.enabled);
 	}
 
 	public abstract getVarName(namespace: string): string;
@@ -106,14 +119,11 @@ Cancel to keep the current value.`,
 	 */
 	public abstract getNameMacro(): string;
 
-	/**
-	 * 
-	 * @param namespace where the full summary will be stored—defaults to `'summary'`
-	 * @param updateKindSummaries whether each individual slot type should have its own separate summary updated—defaults to `true`
-	 * @returns the full summary of the outfit in XML-format
-	 */
+
+
 	protected updateSummaries(): void {
 		const fullSummary = this.createOutfitSummary((kind, value) => {
+			// update each kind summary
 			this.setSummary(toSummaryKey(kind), value);
 		});
 
@@ -122,14 +132,15 @@ Cancel to keep the current value.`,
 
 	public createOutfitSummary(kindSummaryCb?: (kind: SlotKind, value: string) => void): string {
 		let fullSummary = `<outfit character=${this.getNameMacro()}>`;
+		this.getOutfitView().getSlotKinds;
 		for (const kind of this.getOutfitView().getSlotKinds()) {
 			const value = serializeRecord(
-				this.getVisibleRecordsByType(kind),
+				this.buildPromptSlotValuesFromKind(kind),
 				kind === 'accessory' ? formatAccessorySlotName : toSlotName,
 				toKebabCase(kind)
 			);
 
-			if (kindSummaryCb) kindSummaryCb(kind, value);
+			kindSummaryCb?.(kind, value);
 
 			if (value !== '') {
 				fullSummary += `\n\n${indentString(value)}`;
@@ -191,11 +202,13 @@ Cancel to keep the current value.`,
 
 	public updateOutfitValue(slotId: string): void {
 		const view = this.getOutfitView();
-		const slot = view.getResolvedSlot(slotId);
+		const slot = view.resolveSlot(slotId);
 		if (!slot.resolved) return;
 
-		const varName = this.getVarName(slotId);
-		setGlobalVariable(varName, slot.value);
+		const varName = this.getVarName(slot.id);
+		const prompt = this.formatSlotForPrompt(slot.raw);
+
+		setGlobalVariable(varName, prompt);
 		this.updateSummaries();
 	}
 

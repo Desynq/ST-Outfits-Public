@@ -80,10 +80,10 @@ export function formatAccessorySlotName(name: string): string {
 	return toSlotName(name).replace(/\s+Accessory$/, '');
 }
 
-export function serializeRecord(record: Record<string, string>, slotFormatter: (slot: string) => string, category: string): string {
+export function serializeRecord(record: Record<string, string>, keyFormatter: (key: string) => string, category: string): string {
 	return Object.entries(record)
-		.map(([slot, value]) => {
-			const tag = toKebabCase(slotFormatter(slot));
+		.map(([key, value]) => {
+			const tag = toKebabCase(keyFormatter(key));
 			return `<${tag} category="${category}">\n${indentString(value)}\n</${tag}>`;
 		})
 		.join("\n\n");

@@ -20,6 +20,8 @@ export interface OutfitSlot {
 	enabled: boolean;
 	images: Record<string, OutfitImage>;
 	activeImageTag: string | null;
+
+	equipped: boolean;
 }
 
 export interface Outfit {

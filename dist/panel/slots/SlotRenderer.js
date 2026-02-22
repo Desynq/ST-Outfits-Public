@@ -1,8 +1,9 @@
 import { assertNever, toSlotName } from "../../shared.js";
 import { SlotPresetsModal } from "../../ui/components/SlotPresetsModal.js";
 import { addDoubleTapListener } from "../../util/element/click-actions.js";
-import { appendElement, createDiv, createElement } from "../../util/ElementHelper.js";
+import { appendElement, createDiv, el, createElement } from "../../util/ElementHelper.js";
 import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
+import { SlotActionsElement } from "./SlotActionsElement.js";
 import { SlotValueController } from "./SlotValueController.js";
 export class SlotRenderer extends OutfitPanelContext {
     constructor(panel, displaySlots, imageElementFactory) {
@@ -16,9 +17,14 @@ export class SlotRenderer extends OutfitPanelContext {
     }
     createSlotElement(container, display) {
         const slot = display.slot;
-        const slotElement = document.createElement('div');
-        slotElement.className = 'outfit-slot';
-        slotElement.dataset.slot = display.slot.id;
+        const slotElement = el('div', {
+            className: 'outfit-slot',
+            dataset: { slot: display.slot.id },
+            classes: [
+                slot.enabled && !slot.equipped && '--unequipped',
+                !slot.enabled && '--disabled',
+            ]
+        });
         const labelDiv = appendElement(slotElement, 'div', 'slot-label');
         const labelLeftDiv = appendElement(labelDiv, 'div', 'slot-label-left');
         const labelRightDiv = appendElement(labelDiv, 'div', 'slot-label-right');
@@ -56,7 +62,10 @@ export class SlotRenderer extends OutfitPanelContext {
         const disarmTap = () => slotNameEl.classList.remove('tap-armed');
         addDoubleTapListener(slotNameEl, () => { disarmTap(); this.beginRename(slotNameEl, ctx); }, 300, () => { disarmTap(); this.toggle(ctx.slot); }, armTap);
         const imageElement = this.renderImageElement(ctx);
-        const appendInlineToggleBtn = () => this.appendToggleBtn(labelRightDiv, slot);
+        const appendInlineToggleBtn = () => {
+            const toggleBtn = this.createToggleBtn(slot);
+            labelRightDiv.append(toggleBtn);
+        };
         const appendInlineEdit = () => {
             const valueEl = this.slotValControl.render(contentEl, ctx);
             if (slot.isEmpty())
@@ -128,9 +137,15 @@ export class SlotRenderer extends OutfitPanelContext {
         return 'normal';
     }
     decorateSlot(ctx, imageElement) {
+        const actionsElement = new SlotActionsElement(this.panel);
         const valueEl = this.slotValControl.render(ctx.contentEl, ctx);
         imageElement.observe(ctx.contentEl, valueEl, this.panel.disposer);
-        this.appendToggleBtn(ctx.actionsLeftEl, ctx.slot);
+        const toggleBtn = this.createToggleBtn(ctx.slot);
+        ctx.actionsLeftEl.append(toggleBtn);
+        if (ctx.slot.enabled) {
+            const unequipBtn = actionsElement.createUnequipButton(ctx.slot);
+            ctx.actionsLeftEl.append(unequipBtn);
+        }
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'slot-button delete-slot';
         deleteBtn.textContent = 'Delete';
@@ -153,14 +168,13 @@ export class SlotRenderer extends OutfitPanelContext {
         ctx.actionsRightEl.append(presetsBtn);
         // const editBtn = this.appendEditBtn(ctx.actionsRightEl, ctx, valueEl);
     }
-    appendToggleBtn(container, slot) {
+    createToggleBtn(slot) {
         const toggleBtn = document.createElement('button');
         toggleBtn.className = 'slot-button slot-toggle';
         const enabled = slot.isEnabled();
         toggleBtn.classList.add(enabled ? 'is-enabled' : 'is-disabled');
         toggleBtn.textContent = enabled ? 'Disable' : 'Enable';
         toggleBtn.addEventListener('click', () => this.toggle(slot));
-        container.appendChild(toggleBtn);
         return toggleBtn;
     }
     toggle(slot) {
@@ -180,7 +194,8 @@ export class SlotRenderer extends OutfitPanelContext {
             '.slot-shift',
             '.move-slot',
             '.edit-slot',
-            '.slot-presets-button'
+            '.slot-presets-button',
+            '.unequip-button'
         ];
         for (const selector of selectors) {
             ctx.slotElement.querySelector(selector)?.remove();

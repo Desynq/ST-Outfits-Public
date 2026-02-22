@@ -34,7 +34,8 @@ function slot(id: string, kind: SlotKind): OutfitSlot {
 		kind,
 		enabled: true,
 		images: {},
-		activeImageTag: null
+		activeImageTag: null,
+		equipped: true
 	};
 }
 

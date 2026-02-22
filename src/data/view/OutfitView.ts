@@ -30,7 +30,7 @@ export class OutfitView {
 	 * @deprecated
 	 */
 	public resolve(slotIds: readonly string[]): readonly OutfitSlotView[] {
-		return slotIds.map(id => this.getResolvedSlot(id));
+		return slotIds.map(id => this.resolveSlot(id));
 	}
 
 	public getSlotIds(): readonly string[] {
@@ -41,15 +41,27 @@ export class OutfitView {
 		return this.slotView.getKinds();
 	}
 
-	public getClothingSlotIds(): readonly string[] {
-		return this.slots.filter(s => s.kind === 'clothing').map(s => s.id);
+	public getSlotsFromKind(kind: string): readonly Readonly<OutfitSlot>[] {
+		return this.slots.filter(s => s.kind === kind);
 	}
 
-	public getAccessorySlotIds(): readonly string[] {
-		return this.slots.filter(s => s.kind === 'accessory').map(s => s.id);
+	public mapSlots<T>(
+		map: (s: Readonly<OutfitSlot>) => T,
+		filter?: (s: Readonly<OutfitSlot>) => boolean
+	): Readonly<Record<OutfitSlot['id'], T>> {
+		const out: Record<OutfitSlot['id'], T> = {};
+
+		for (const s of this.slots) {
+			if (filter && !filter(s)) continue;
+			out[s.id] = map(s);
+		}
+
+		return out;
 	}
 
-	public getSlotRecords(filter?: (s: Readonly<OutfitSlot>) => boolean): Readonly<Record<string, string>> {
+	public getSlotValueMap(
+		filter?: (s: Readonly<OutfitSlot>) => boolean
+	): Readonly<Record<string, string>> {
 		const out: Record<string, string> = {};
 
 		for (const s of this.slots) {
@@ -83,14 +95,11 @@ export class OutfitView {
 		return this.slotView.getIndex(slotId);
 	}
 
-	/**
-	 * @deprecated
-	 */
-	public getResolvedSlot(slotId: string): OutfitSlotView {
+	public resolveSlot(slotId: string): OutfitSlotView {
 		const slot = this.getSlotById(slotId);
 		return !slot
 			? new UnresolvedOutfitSlot(slotId)
-			: OutfitSlotState.fromSlot(slot, OutfitTracker.images());
+			: new OutfitSlotState(slot, OutfitTracker.images());
 	}
 
 	public getValue(slot: Pick<OutfitSlot, 'id'>): string {

@@ -30,7 +30,8 @@ function slot(id, kind) {
         kind,
         enabled: true,
         images: {},
-        activeImageTag: null
+        activeImageTag: null,
+        equipped: true
     };
 }
 export const DEFAULT_SLOTS = [

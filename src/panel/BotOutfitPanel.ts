@@ -4,6 +4,9 @@ import { queryOrThrow } from '../util/ElementHelper.js';
 import { OutfitPanel } from './OutfitPanel.js';
 
 export class BotOutfitPanel extends OutfitPanel<'bot'> {
+
+	private readonly updateCharacterListeners: (() => void)[] = [];
+
 	public constructor(
 		outfitManager: BotOutfitManager
 	) {
@@ -13,12 +16,15 @@ export class BotOutfitPanel extends OutfitPanel<'bot'> {
 		this.panelEl = null;
 	}
 
+	public get character(): string {
+		return this.outfitManager.character;
+	}
+
 	protected override initializePanel(): boolean {
 		if (this.panelEl) return false;
 
 		const panel = document.createElement('div');
-		panel.id = 'bot-outfit-panel';
-		panel.className = 'outfit-panel';
+		panel.className = 'outfit-panel bot-outfit-panel';
 
 		/*html*/
 		panel.innerHTML = `
@@ -76,16 +82,31 @@ export class BotOutfitPanel extends OutfitPanel<'bot'> {
 		return `${this.outfitManager.character}'s Outfit`;
 	}
 
-	public updateCharacter(name: string): void {
-		this.outfitManager.setCharacter(name);
+	public updateCharacter(name: string, domOnly: boolean = false): void {
+		if (!domOnly) {
+			this.outfitManager.setCharacter(name);
+		}
+
 		if (this.panelEl && !this.minimized) {
 			const header = this.panelEl.querySelector('.outfit-header h3');
 			if (header) header.textContent = `${name}'s Outfit`;
 		}
 		this.render();
+
+		this.emitUpdateCharacter();
 	}
 
 	public override getPanelType(): 'bot' {
 		return 'bot';
+	}
+
+	public onUpdateCharacter(listener: () => void): void {
+		this.updateCharacterListeners.push(listener);
+	}
+
+	private emitUpdateCharacter(): void {
+		for (const listener of this.updateCharacterListeners) {
+			listener();
+		}
 	}
 }

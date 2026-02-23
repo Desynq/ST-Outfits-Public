@@ -4,14 +4,11 @@ import { indentString, toKebabCase } from "../util/StringHelper.js";
 import { toSummaryKey } from "../util/SummaryHelper.js";
 import { deleteGlobalVariable, getGlobalVariable, setGlobalVariable } from "./GlobalVarManager.js";
 export class OutfitManager {
-    constructor(settingsSaver) {
-        this.settingsSaver = settingsSaver;
+    constructor(saveSettings) {
+        this.saveSettings = saveSettings;
     }
     get outfit() {
         return this.getOutfitView();
-    }
-    saveSettings() {
-        this.settingsSaver();
     }
     exportPreset(outfitName, character) {
         // Create preset data for all slots
@@ -82,6 +79,7 @@ Cancel to keep the current value.`, currentValue);
     }
     setSummary(namespace, value) {
         const varName = this.getVarName(namespace);
+        // console.log('Setting global', varName, value);
         setGlobalVariable(varName, value);
     }
     initializeOutfit() {

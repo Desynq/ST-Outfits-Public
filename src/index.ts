@@ -2,7 +2,9 @@
 // @ts-ignore
 import { getContext, extension_settings } from '../../../../extensions.js';
 // @ts-ignore
-import { saveSettingsDebounced } from '../../../../../script.js';
+import { saveSettingsDebounced as saveSettings } from '../../../../../script.js';
+import { OutfitPanelRegistry } from './panel/PanelRegistry.js';
+import { CustomOutfitPanel } from './panel/CustomOutfitPanel.js';
 
 console.log('[OutfitTracker] Starting extension loading...');
 
@@ -19,7 +21,8 @@ async function initializeExtension() {
     try {
         const autoOutfitModule = await import('./AutoOutfitSystem.js');
         AutoOutfitSystem = autoOutfitModule.AutoOutfitSystem;
-    } catch (error) {
+    }
+    catch (error) {
         console.error('[OutfitTracker] Failed to load AutoOutfitSystem:', error);
         // Create a dummy class if AutoOutfitSystem fails to load
         AutoOutfitSystem = class DummyAutoOutfitSystem {
@@ -34,11 +37,14 @@ async function initializeExtension() {
         };
     }
 
-    const botManager = new BotOutfitManager(saveSettingsDebounced);
-    const userManager = new UserOutfitManager(saveSettingsDebounced);
+    const botManager = new BotOutfitManager(saveSettings);
+    const userManager = new UserOutfitManager(saveSettings);
     const botPanel = new BotOutfitPanel(botManager);
     const userPanel = new UserOutfitPanel(userManager);
+    const panelRegistry = new OutfitPanelRegistry(userPanel, botPanel);
+
     const autoOutfitSystem = new AutoOutfitSystem(botManager);
+
 
     // Store panels globally for access in other functions
     window.botOutfitPanel = botPanel;
@@ -52,13 +58,25 @@ async function initializeExtension() {
             console.log('Bot Outfit command triggered');
             botPanel.toggle();
             toastr.info('Toggled character outfit panel', 'Outfit System');
+            return '';
         }, [], 'Toggle character outfit tracker', true, true);
 
         registerSlashCommand('outfit-user', (...args) => {
             console.log('User Outfit command triggered');
             userPanel.toggle();
             toastr.info('Toggled user outfit panel', 'Outfit System');
+            return '';
         }, [], 'Toggle user outfit tracker', true, true);
+
+        registerSlashCommand('outfit-char', (...args) => {
+            console.log('Character Outfit command triggered');
+            const character = typeof args[1] === 'string' ? args[1].trim() : null;
+            if (!character) return;
+
+            const charPanel = panelRegistry.getOrCreate(character, saveSettings);
+            charPanel.autoOpen(undefined, 170);
+            return '';
+        }, [], 'Toggle custom character outfit tracker', true, true);
 
         // Only register auto commands if AutoOutfitSystem loaded successfully
         if (AutoOutfitSystem.name !== 'DummyAutoOutfitSystem') {
@@ -95,7 +113,7 @@ async function initializeExtension() {
                 // Update the textarea in settings
                 $('#outfit-prompt-input').val(autoOutfitSystem.systemPrompt);
                 extension_settings[MODULE_NAME].autoOutfitPrompt = autoOutfitSystem.systemPrompt;
-                saveSettingsDebounced();
+                saveSettings();
             }, [], 'Reset to default system prompt', true, true);
 
             registerSlashCommand('outfit-prompt-view', (...args) => {
@@ -120,7 +138,6 @@ async function initializeExtension() {
     function updateForCurrentCharacter() {
         const context = getContext();
         const charName = context.characters[context.characterId]?.name || 'Unknown';
-        botManager.setCharacter(charName);
         botPanel.updateCharacter(charName);
     }
 
@@ -227,17 +244,17 @@ async function initializeExtension() {
 
         $('#outfit-sys-toggle').on('input', function () {
             extension_settings[MODULE_NAME].enableSysMessages = $(this).prop('checked');
-            saveSettingsDebounced();
+            saveSettings();
         });
 
         $('#outfit-auto-bot').on('input', function () {
             extension_settings[MODULE_NAME].autoOpenBot = $(this).prop('checked');
-            saveSettingsDebounced();
+            saveSettings();
         });
 
         $('#outfit-auto-user').on('input', function () {
             extension_settings[MODULE_NAME].autoOpenUser = $(this).prop('checked');
-            saveSettingsDebounced();
+            saveSettings();
         });
 
         // Only add auto system event listeners if it loaded successfully
@@ -249,20 +266,20 @@ async function initializeExtension() {
                 } else {
                     autoOutfitSystem.disable();
                 }
-                saveSettingsDebounced();
+                saveSettings();
             });
 
             $('#outfit-prompt-input').on('change', function () {
                 extension_settings[MODULE_NAME].autoOutfitPrompt = $(this).val();
                 autoOutfitSystem.setPrompt($(this).val());
-                saveSettingsDebounced();
+                saveSettings();
             });
 
             $('#outfit-prompt-reset-btn').on('click', function () {
                 const message = autoOutfitSystem.resetToDefaultPrompt();
                 $('#outfit-prompt-input').val(autoOutfitSystem.systemPrompt);
                 extension_settings[MODULE_NAME].autoOutfitPrompt = autoOutfitSystem.systemPrompt;
-                saveSettingsDebounced();
+                saveSettings();
 
                 if (extension_settings.outfit_tracker?.enableSysMessages) {
                     botPanel.sendSystemMessage(message);
@@ -290,12 +307,6 @@ async function initializeExtension() {
     setupEventListeners();
     updateForCurrentCharacter();
     createSettingsUI();
-
-    if (extension_settings[MODULE_NAME].autoOpenBot) {
-        setTimeout(() => {
-            botPanel.autoOpen();
-        }, 1000);
-    }
 
     if (extension_settings[MODULE_NAME].autoOpenUser) {
         setTimeout(() => {

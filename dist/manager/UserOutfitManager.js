@@ -2,8 +2,8 @@ import { areOutfitSnapshotsEqual } from "../data/model/OutfitSnapshots.js";
 import { OutfitTracker } from "../data/tracker.js";
 import { OutfitManager } from "./OutfitManager.js";
 export class UserOutfitManager extends OutfitManager {
-    constructor(settingsSaver) {
-        super(settingsSaver);
+    constructor(saveSettings) {
+        super(saveSettings);
         this.onActiveOutfitChanged();
     }
     getName() {

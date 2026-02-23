@@ -17,8 +17,7 @@ export class UserOutfitPanel extends OutfitPanel<'user'> {
 		if (this.panelEl) return false;
 
 		const panel = document.createElement('div');
-		panel.id = 'user-outfit-panel';
-		panel.className = 'outfit-panel';
+		panel.className = 'outfit-panel user-outfit-panel';
 
 		/*html*/
 		panel.innerHTML = `

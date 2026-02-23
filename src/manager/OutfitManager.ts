@@ -16,16 +16,11 @@ type RenameSlotResult =
 export abstract class OutfitManager {
 
 	public constructor(
-		private settingsSaver: Function
-	) {
-	}
+		public readonly saveSettings: Function
+	) { }
 
 	private get outfit() {
 		return this.getOutfitView();
-	}
-
-	public saveSettings(): void {
-		this.settingsSaver();
 	}
 
 	public exportPreset(outfitName: string, character: string): string {
@@ -158,6 +153,7 @@ Cancel to keep the current value.`,
 
 	public setSummary(namespace: string, value: string): void {
 		const varName = this.getVarName(namespace);
+		// console.log('Setting global', varName, value);
 		setGlobalVariable(varName, value);
 	}
 

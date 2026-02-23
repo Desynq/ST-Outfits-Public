@@ -1,5 +1,5 @@
 // @ts-ignore
-import { substituteParams as baseSubstituteParams } from '../../../../../../../script.js';
+import { getContext } from '../../../../../../extensions.js';
 export function substituteParams(str) {
-    return baseSubstituteParams(str, {});
+    return getContext().substituteParams(str);
 }

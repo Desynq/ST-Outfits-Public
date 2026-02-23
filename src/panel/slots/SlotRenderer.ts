@@ -221,13 +221,13 @@ export class SlotRenderer extends OutfitPanelContext {
 		return 'normal';
 	}
 
-	private decorateSlot(
+	private async decorateSlot(
 		ctx: SlotContext,
 		imageElement: SlotImageElement
-	): void {
+	): Promise<void> {
 		const actionsElement = new SlotActionsElement(this.panel);
 
-		const valueEl = this.slotValControl.render(ctx.contentEl, ctx);
+		const valueEl = await this.slotValControl.render(ctx.contentEl, ctx);
 		imageElement.observe(ctx.contentEl, valueEl, this.panel.disposer);
 
 		const toggleBtn = this.createToggleBtn(ctx.slot);

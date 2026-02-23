@@ -27,15 +27,23 @@
     overflow: auto;
 }
 
-#bot-outfit-panel {
+.bot-outfit-panel {
     background: linear-gradient(135deg, #7a57d1 0%, #6559e0 100%);
     border: 1px solid #8783e1;
 }
 
-#user-outfit-panel {
+.char-outfit-panel {
+    background: linear-gradient(135deg, #248a55 0%, #1f9e5c 100%);
+    border: 1px solid #49b978;
+}
+
+.user-outfit-panel {
     background: linear-gradient(135deg, #1e88e5 0%, #3d5afe 100%);
     border: 1px solid #64b5f6;
 }
+
+
+
 
 /* Header Styles */
 .outfit-header {
@@ -173,8 +181,7 @@
 
 
 /* Ensure outfits page has proper scroll */
-#bot-outfit-tab-content,
-#user-outfit-tab-content {
+.outfit-content {
     flex: 1;
     overflow-y: auto;
     padding-right: 4px;
@@ -249,8 +256,7 @@
     height: calc(100vh - var(--topBarBlockSize)) !important;
 }
 
-#bot-outfit-tab-content,
-#user-outfit-tab-content {
+.outfit-content {
     max-height: 80vh;
 }
 

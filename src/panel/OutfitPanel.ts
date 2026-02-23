@@ -22,6 +22,9 @@ export abstract class OutfitPanel<T extends PanelType> implements OutfitSlotsHos
 
 	public readonly disposer: Disposer = new Disposer();
 
+	private hideListeners: (() => void)[] = [];
+	private disabled: boolean = false;
+
 	public constructor(
 		protected outfitManager: OutfitManagerMap[T]
 	) { }
@@ -324,7 +327,11 @@ export abstract class OutfitPanel<T extends PanelType> implements OutfitSlotsHos
 
 
 	protected toggleMinimize() {
-		this.minimized = !this.minimized;
+		this.setMinimize(!this.minimized);
+	}
+
+	protected setMinimize(minimize: boolean): void {
+		this.minimized = minimize;
 		this.updateMinimizeState();
 	}
 
@@ -365,7 +372,7 @@ export abstract class OutfitPanel<T extends PanelType> implements OutfitSlotsHos
 
 	public autoOpen(x?: number, y?: number): void {
 		this.show(x === undefined, y === undefined);
-		this.toggleMinimize();
+		this.setMinimize(true);
 
 		if (!this.panelEl) return;
 		this.panelEl.style.left = `${x}px`;
@@ -379,6 +386,8 @@ export abstract class OutfitPanel<T extends PanelType> implements OutfitSlotsHos
 	protected abstract initializePanel(): boolean;
 
 	public show(setDefaultX: boolean = false, setDefaultY: boolean = false) {
+		if (this.disabled) return;
+
 		if (this.initializePanel()) {
 			this.resetSizeAndPos(setDefaultX, setDefaultY);
 		}
@@ -397,9 +406,30 @@ export abstract class OutfitPanel<T extends PanelType> implements OutfitSlotsHos
 		}
 		this.isVisible = false;
 		this.minimized = false;
+
+		this.emitHide();
 	}
 
 	public toggle() {
 		this.isVisible ? this.hide() : this.show();
+	}
+
+	public onHide(listener: () => void): void {
+		this.hideListeners.push(listener);
+	}
+
+	protected emitHide(): void {
+		for (const listener of this.hideListeners) {
+			listener();
+		}
+	}
+
+	public disable(): void {
+		this.disabled = true;
+		this.hide();
+	}
+
+	public enable(): void {
+		this.disabled = false;
 	}
 }

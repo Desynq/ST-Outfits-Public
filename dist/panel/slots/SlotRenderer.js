@@ -136,9 +136,9 @@ export class SlotRenderer extends OutfitPanelContext {
         }
         return 'normal';
     }
-    decorateSlot(ctx, imageElement) {
+    async decorateSlot(ctx, imageElement) {
         const actionsElement = new SlotActionsElement(this.panel);
-        const valueEl = this.slotValControl.render(ctx.contentEl, ctx);
+        const valueEl = await this.slotValControl.render(ctx.contentEl, ctx);
         imageElement.observe(ctx.contentEl, valueEl, this.panel.disposer);
         const toggleBtn = this.createToggleBtn(ctx.slot);
         ctx.actionsLeftEl.append(toggleBtn);

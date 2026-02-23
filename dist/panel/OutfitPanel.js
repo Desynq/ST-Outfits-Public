@@ -13,6 +13,8 @@ export class OutfitPanel {
         this.slotsRenderer = new SlotsRenderer(this);
         this.tabsRenderer = new TabsRenderer(this);
         this.disposer = new Disposer();
+        this.hideListeners = [];
+        this.disabled = false;
     }
     isMinimized() {
         return this.minimized;
@@ -253,7 +255,10 @@ export class OutfitPanel {
             titleEl.textContent = "";
     }
     toggleMinimize() {
-        this.minimized = !this.minimized;
+        this.setMinimize(!this.minimized);
+    }
+    setMinimize(minimize) {
+        this.minimized = minimize;
         this.updateMinimizeState();
     }
     updateMinimizeState() {
@@ -285,13 +290,15 @@ export class OutfitPanel {
     }
     autoOpen(x, y) {
         this.show(x === undefined, y === undefined);
-        this.toggleMinimize();
+        this.setMinimize(true);
         if (!this.panelEl)
             return;
         this.panelEl.style.left = `${x}px`;
         this.panelEl.style.top = `${y}px`;
     }
     show(setDefaultX = false, setDefaultY = false) {
+        if (this.disabled)
+            return;
         if (this.initializePanel()) {
             this.resetSizeAndPos(setDefaultX, setDefaultY);
         }
@@ -307,8 +314,24 @@ export class OutfitPanel {
         }
         this.isVisible = false;
         this.minimized = false;
+        this.emitHide();
     }
     toggle() {
         this.isVisible ? this.hide() : this.show();
+    }
+    onHide(listener) {
+        this.hideListeners.push(listener);
+    }
+    emitHide() {
+        for (const listener of this.hideListeners) {
+            listener();
+        }
+    }
+    disable() {
+        this.disabled = true;
+        this.hide();
+    }
+    enable() {
+        this.disabled = false;
     }
 }

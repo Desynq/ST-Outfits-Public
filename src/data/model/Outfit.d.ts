@@ -76,8 +76,12 @@ export interface ImageBlob {
 }
 
 export interface OutfitTrackerModel {
-	presets: OutfitCollectionsTree;
 	enableSysMessages: boolean;
+	autoOpenBot: boolean;
+	autoOpenUser: boolean;
+
+
+	presets: OutfitCollectionsTree;
 	botPanel: PanelSettings;
 	userPanel: PanelSettings;
 

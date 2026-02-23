@@ -8,7 +8,9 @@ import { BotPanelSettingsView, defaultBotPanelSettings, defaultUserPanelSettings
 import { SlotPresetRegistry } from "./view/SlotPresetsView.js";
 const PANEL_SETTINGS_FACTORIES = {
     user: (s) => new UserPanelSettingsView(s.userPanel),
-    bot: (s) => new BotPanelSettingsView(s.botPanel)
+    bot: (s) => new BotPanelSettingsView(s.botPanel),
+    // TODO: Change panel settings to be dynamic for char panels
+    char: (s) => new BotPanelSettingsView(s.botPanel)
 };
 class Tracker {
     constructor(settings) {
@@ -16,6 +18,12 @@ class Tracker {
     }
     areSystemMessagesEnabled() {
         return this.settings.enableSysMessages;
+    }
+    isAutoOpen() {
+        return {
+            user: this.settings.autoOpenUser,
+            bot: this.settings.autoOpenBot
+        };
     }
     characters() {
         return new CharacterOutfitMapView(this.settings.presets.bot);
@@ -55,6 +63,8 @@ const settings = extension_settings;
 function loadTracker() {
     const raw = settings.outfit_tracker ?? (settings.outfit_tracker = {});
     raw.enableSysMessages ?? (raw.enableSysMessages = false);
+    raw.autoOpenUser ?? (raw.autoOpenUser = false);
+    raw.autoOpenBot ?? (raw.autoOpenBot = false);
     normalizeImageBlobs(raw);
     normalizeSlotPresets(raw);
     validatePresets(raw);

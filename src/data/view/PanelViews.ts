@@ -7,6 +7,7 @@ export type LayoutMode = 'desktop' | 'mobile';
 export type PanelSettingsViewMap = {
 	user: UserPanelSettingsView;
 	bot: BotPanelSettingsView;
+	char: BotPanelSettingsView;
 };
 
 export const defaultUserPanelSettings: PanelSettings = {

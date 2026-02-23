@@ -2,9 +2,9 @@ import { areOutfitSnapshotsEqual } from "../data/model/OutfitSnapshots.js";
 import { OutfitTracker } from "../data/tracker.js";
 import { OutfitManager } from "./OutfitManager.js";
 export class BotOutfitManager extends OutfitManager {
-    constructor(settingsSaver) {
-        super(settingsSaver);
-        this.setCharacter('Unknown');
+    constructor(saveSettings, defaultCharacter) {
+        super(saveSettings);
+        this.setCharacter(defaultCharacter ?? 'Unknown');
     }
     getName() {
         return this.character;

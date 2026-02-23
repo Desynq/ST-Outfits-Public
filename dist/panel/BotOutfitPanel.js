@@ -4,16 +4,19 @@ import { OutfitPanel } from './OutfitPanel.js';
 export class BotOutfitPanel extends OutfitPanel {
     constructor(outfitManager) {
         super(outfitManager);
+        this.updateCharacterListeners = [];
         this.isVisible = false;
         this.minimized = false;
         this.panelEl = null;
+    }
+    get character() {
+        return this.outfitManager.character;
     }
     initializePanel() {
         if (this.panelEl)
             return false;
         const panel = document.createElement('div');
-        panel.id = 'bot-outfit-panel';
-        panel.className = 'outfit-panel';
+        panel.className = 'outfit-panel bot-outfit-panel';
         /*html*/
         panel.innerHTML = `
 			<div class="outfit-header">
@@ -57,16 +60,27 @@ export class BotOutfitPanel extends OutfitPanel {
     getHeaderTitle() {
         return `${this.outfitManager.character}'s Outfit`;
     }
-    updateCharacter(name) {
-        this.outfitManager.setCharacter(name);
+    updateCharacter(name, domOnly = false) {
+        if (!domOnly) {
+            this.outfitManager.setCharacter(name);
+        }
         if (this.panelEl && !this.minimized) {
             const header = this.panelEl.querySelector('.outfit-header h3');
             if (header)
                 header.textContent = `${name}'s Outfit`;
         }
         this.render();
+        this.emitUpdateCharacter();
     }
     getPanelType() {
         return 'bot';
+    }
+    onUpdateCharacter(listener) {
+        this.updateCharacterListeners.push(listener);
+    }
+    emitUpdateCharacter() {
+        for (const listener of this.updateCharacterListeners) {
+            listener();
+        }
     }
 }

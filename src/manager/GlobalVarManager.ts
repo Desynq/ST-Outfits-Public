@@ -1,8 +1,8 @@
-import { extension_settings } from "../../../../../extensions.js";
+const { extensionSettings } = SillyTavern.getContext();
 
 
 function getGlobalVars(): Record<string, string> {
-	const vars = extension_settings.variables ??= { global: {} };
+	const vars = extensionSettings.variables ??= { global: {} };
 	const globalVars = vars.global ??= {};
 	return globalVars;
 }

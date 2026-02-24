@@ -1,15 +1,17 @@
-// @ts-nocheck
+
+const getContext = SillyTavern.getContext;
 // @ts-ignore
-import { getContext, extension_settings } from '../../../../extensions.js';
-// @ts-ignore
-import { saveSettingsDebounced as saveSettings } from '../../../../../script.js';
+import { extension_settings } from '../../../../extensions.js';
+import { registerPanelCommands } from './command/panel-commands.js';
 import { OutfitPanelRegistry } from './panel/PanelRegistry.js';
-import { CustomOutfitPanel } from './panel/CustomOutfitPanel.js';
+import { el } from './util/ElementHelper.js';
 
 console.log('[OutfitTracker] Starting extension loading...');
 
 async function initializeExtension() {
     const MODULE_NAME = 'outfit_tracker';
+
+    const saveSettings = getContext().saveSettingsDebounced as () => void;
 
     const { BotOutfitManager } = await import('./manager/BotOutfitManager.js');
     const { BotOutfitPanel } = await import('./panel/BotOutfitPanel.js');
@@ -17,6 +19,7 @@ async function initializeExtension() {
     const { UserOutfitPanel } = await import('./panel/UserOutfitPanel.js');
 
     // Import AutoOutfitSystem with error handling
+    // @ts-ignore
     let AutoOutfitSystem;
     try {
         const autoOutfitModule = await import('./AutoOutfitSystem.js');
@@ -26,12 +29,14 @@ async function initializeExtension() {
         console.error('[OutfitTracker] Failed to load AutoOutfitSystem:', error);
         // Create a dummy class if AutoOutfitSystem fails to load
         AutoOutfitSystem = class DummyAutoOutfitSystem {
+            // @ts-ignore
             constructor() { this.isEnabled = false; }
             enable() { return '[Outfit System] Auto outfit system not available'; }
             disable() { return '[Outfit System] Auto outfit system not available'; }
             setPrompt() { return '[Outfit System] Auto outfit system not available'; }
             resetToDefaultPrompt() { return '[Outfit System] Auto outfit system not available'; }
             getStatus() { return { enabled: false, hasPrompt: false }; }
+            // @ts-ignore
             manualTrigger() { this.showPopup('Auto outfit system not available', 'error'); }
             showPopup() { }
         };
@@ -47,13 +52,15 @@ async function initializeExtension() {
 
 
     // Store panels globally for access in other functions
+    // TODO: haha this needs to get removed at some point
     window.botOutfitPanel = botPanel;
     window.userOutfitPanel = userPanel;
     window.autoOutfitSystem = autoOutfitSystem;
 
     function registerOutfitCommands() {
-        const { registerSlashCommand } = SillyTavern.getContext();
+        const { registerSlashCommand, SlashCommandParser, SlashCommand, SlashCommandNamedArgument, ARGUMENT_TYPE } = SillyTavern.getContext();
 
+        // @ts-ignore
         registerSlashCommand('outfit-bot', (...args) => {
             console.log('Bot Outfit command triggered');
             botPanel.toggle();
@@ -61,6 +68,7 @@ async function initializeExtension() {
             return '';
         }, [], 'Toggle character outfit tracker', true, true);
 
+        // @ts-ignore
         registerSlashCommand('outfit-user', (...args) => {
             console.log('User Outfit command triggered');
             userPanel.toggle();
@@ -68,18 +76,12 @@ async function initializeExtension() {
             return '';
         }, [], 'Toggle user outfit tracker', true, true);
 
-        registerSlashCommand('outfit-char', (...args) => {
-            console.log('Character Outfit command triggered');
-            const character = typeof args[1] === 'string' ? args[1].trim() : null;
-            if (!character) return;
-
-            const charPanel = panelRegistry.getOrCreate(character, saveSettings);
-            charPanel.autoOpen(undefined, 170);
-            return '';
-        }, [], 'Toggle custom character outfit tracker', true, true);
+        registerPanelCommands(panelRegistry, saveSettings);
 
         // Only register auto commands if AutoOutfitSystem loaded successfully
+        // @ts-ignore
         if (AutoOutfitSystem.name !== 'DummyAutoOutfitSystem') {
+            // @ts-ignore
             registerSlashCommand('outfit-auto', (...args) => {
                 if (args[0] === 'on') {
                     const message = autoOutfitSystem.enable();
@@ -93,6 +95,7 @@ async function initializeExtension() {
                 }
             }, [], 'Toggle auto outfit updates (on/off)', true, true);
 
+            // @ts-ignore
             registerSlashCommand('outfit-prompt', (...args) => {
                 const prompt = args.join(' ');
                 if (prompt) {
@@ -101,35 +104,46 @@ async function initializeExtension() {
                         botPanel.sendSystemMessage(message);
                     }
                 } else {
+                    // @ts-ignore
                     toastr.info('Current prompt length: ' + (autoOutfitSystem.systemPrompt?.length || 0));
                 }
             }, [], 'Set auto outfit system prompt', true, true);
 
+            // @ts-ignore
             registerSlashCommand('outfit-prompt-reset', (...args) => {
                 const message = autoOutfitSystem.resetToDefaultPrompt();
                 if (extension_settings.outfit_tracker?.enableSysMessages) {
                     botPanel.sendSystemMessage(message);
                 }
                 // Update the textarea in settings
+                // @ts-ignore
                 $('#outfit-prompt-input').val(autoOutfitSystem.systemPrompt);
+                // @ts-ignore
                 extension_settings[MODULE_NAME].autoOutfitPrompt = autoOutfitSystem.systemPrompt;
                 saveSettings();
             }, [], 'Reset to default system prompt', true, true);
 
+            // @ts-ignore
             registerSlashCommand('outfit-prompt-view', (...args) => {
                 const status = autoOutfitSystem.getStatus();
+                // @ts-ignore
                 const preview = autoOutfitSystem.systemPrompt.length > 100
+                    // @ts-ignore
                     ? autoOutfitSystem.systemPrompt.substring(0, 100) + '...'
+                    // @ts-ignore
                     : autoOutfitSystem.systemPrompt;
 
+                // @ts-ignore
                 toastr.info(`Prompt preview: ${preview}\n\nFull length: ${status.promptLength} chars`, 'Current System Prompt', {
                     timeOut: 10000,
                     extendedTimeOut: 20000,
                 });
             }, [], 'View current system prompt', true, true);
 
+            // @ts-ignore
             registerSlashCommand('outfit-auto-trigger', async (...args) => {
                 const result = await autoOutfitSystem.manualTrigger();
+                // @ts-ignore
                 toastr.info(result, 'Manual Outfit Check');
             }, [], 'Manually trigger auto outfit check', true, true);
         }
@@ -148,6 +162,7 @@ async function initializeExtension() {
         // Listen for app ready event to mark initialization
         eventSource.on(event_types.APP_READY, () => {
             console.log('[OutfitTracker] App ready, marking auto outfit system as initialized');
+            // @ts-ignore
             autoOutfitSystem.markAppInitialized();
         });
 
@@ -163,7 +178,9 @@ async function initializeExtension() {
                 position: 'right',
                 enableSysMessages: true,
                 autoOutfitSystem: false,
+                // @ts-ignore
                 autoOutfitPrompt: AutoOutfitSystem.name !== 'DummyAutoOutfitSystem'
+                    // @ts-ignore
                     ? new AutoOutfitSystem(botManager).getDefaultPrompt()
                     : '',
                 presets: {
@@ -174,11 +191,13 @@ async function initializeExtension() {
         }
 
         // Only initialize auto outfit system if it loaded successfully
+        // @ts-ignore
         if (AutoOutfitSystem.name !== 'DummyAutoOutfitSystem') {
             if (extension_settings[MODULE_NAME].autoOutfitPrompt) {
                 autoOutfitSystem.setPrompt(extension_settings[MODULE_NAME].autoOutfitPrompt);
             } else {
                 // Ensure we always have a prompt
+                // @ts-ignore
                 extension_settings[MODULE_NAME].autoOutfitPrompt = autoOutfitSystem.systemPrompt;
             }
 
@@ -189,6 +208,7 @@ async function initializeExtension() {
     }
 
     function createSettingsUI() {
+        // @ts-ignore
         const hasAutoSystem = AutoOutfitSystem.name !== 'DummyAutoOutfitSystem';
         const autoSettingsHtml = hasAutoSystem ? `
             <div class="flex-container">
@@ -277,7 +297,9 @@ async function initializeExtension() {
 
             $('#outfit-prompt-reset-btn').on('click', function () {
                 const message = autoOutfitSystem.resetToDefaultPrompt();
+                // @ts-ignore
                 $('#outfit-prompt-input').val(autoOutfitSystem.systemPrompt);
+                // @ts-ignore
                 extension_settings[MODULE_NAME].autoOutfitPrompt = autoOutfitSystem.systemPrompt;
                 saveSettings();
 
@@ -290,10 +312,14 @@ async function initializeExtension() {
 
             $('#outfit-prompt-view-btn').on('click', function () {
                 const status = autoOutfitSystem.getStatus();
+                // @ts-ignore
                 const preview = autoOutfitSystem.systemPrompt.length > 100
+                    // @ts-ignore
                     ? autoOutfitSystem.systemPrompt.substring(0, 100) + '...'
+                    // @ts-ignore
                     : autoOutfitSystem.systemPrompt;
 
+                // @ts-ignore
                 toastr.info(`Prompt preview: ${preview}\n\nFull length: ${status.promptLength} characters`, 'Current System Prompt', {
                     timeOut: 15000,
                     extendedTimeOut: 30000,

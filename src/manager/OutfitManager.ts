@@ -1,7 +1,7 @@
-import { OutfitSlot, SlotKind } from "../data/model/Outfit.js";
+import { OutfitSlot } from "../data/model/Outfit.js";
 import { OutfitTracker } from "../data/tracker.js";
-import { IOutfitCollectionView } from "../data/view/OutfitCollectionView.js";
 import { MutableOutfitView } from "../data/view/MutableOutfitView.js";
+import { IOutfitCollectionView } from "../data/view/OutfitCollectionView.js";
 import { OutfitSnapshotsView } from "../data/view/OutfitSnapshotsView.js";
 import { formatAccessorySlotName, serializeRecord, toSlotName } from "../shared.js";
 import { indentString, toKebabCase } from "../util/StringHelper.js";
@@ -117,17 +117,33 @@ Cancel to keep the current value.`,
 
 
 	protected updateSummaries(): void {
-		const fullSummary = this.createOutfitSummary((kind, value) => {
-			// update each kind summary
-			this.setSummary(toSummaryKey(kind), value);
-		});
+		const kindSummaries = new Map<string, string>();
+		const fullSummary = this.createOutfitSummary(kindSummaries);
 
-		this.setSummary('summary', fullSummary);
+		const namespace = 'summary';
+		const oldSummary = this.getSummary(namespace);
+		if (fullSummary === oldSummary) return;
+
+		console.log('Updating summaries for', this.getName());
+
+		for (const [k, v] of kindSummaries) {
+			this.updateKindSummary(k, v);
+		}
+
+		this.setSummary(namespace, fullSummary);
 	}
 
-	public createOutfitSummary(kindSummaryCb?: (kind: SlotKind, value: string) => void): string {
+	private updateKindSummary(kind: string, value: string): void {
+		const namespace = toSummaryKey(kind);
+		const oldValue = this.getSummary(namespace);
+		if (value === oldValue) return;
+
+		this.setSummary(namespace, value);
+	}
+
+	public createOutfitSummary(out?: Map<string, string>): string {
 		let fullSummary = `<outfit character=${this.getNameMacro()}>`;
-		this.getOutfitView().getSlotKinds;
+
 		for (const kind of this.getOutfitView().getSlotKinds()) {
 			const value = serializeRecord(
 				this.buildPromptSlotValuesFromKind(kind),
@@ -135,7 +151,7 @@ Cancel to keep the current value.`,
 				toKebabCase(kind)
 			);
 
-			kindSummaryCb?.(kind, value);
+			out?.set(kind, value);
 
 			if (value !== '') {
 				fullSummary += `\n\n${indentString(value)}`;

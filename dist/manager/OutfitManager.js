@@ -54,18 +54,30 @@ Cancel to keep the current value.`, currentValue);
         return this.getOutfitView().getSlotValueMap(s => s.enabled);
     }
     updateSummaries() {
-        const fullSummary = this.createOutfitSummary((kind, value) => {
-            // update each kind summary
-            this.setSummary(toSummaryKey(kind), value);
-        });
-        this.setSummary('summary', fullSummary);
+        const kindSummaries = new Map();
+        const fullSummary = this.createOutfitSummary(kindSummaries);
+        const namespace = 'summary';
+        const oldSummary = this.getSummary(namespace);
+        if (fullSummary === oldSummary)
+            return;
+        console.log('Updating summaries for', this.getName());
+        for (const [k, v] of kindSummaries) {
+            this.updateKindSummary(k, v);
+        }
+        this.setSummary(namespace, fullSummary);
     }
-    createOutfitSummary(kindSummaryCb) {
+    updateKindSummary(kind, value) {
+        const namespace = toSummaryKey(kind);
+        const oldValue = this.getSummary(namespace);
+        if (value === oldValue)
+            return;
+        this.setSummary(namespace, value);
+    }
+    createOutfitSummary(out) {
         let fullSummary = `<outfit character=${this.getNameMacro()}>`;
-        this.getOutfitView().getSlotKinds;
         for (const kind of this.getOutfitView().getSlotKinds()) {
             const value = serializeRecord(this.buildPromptSlotValuesFromKind(kind), kind === 'accessory' ? formatAccessorySlotName : toSlotName, toKebabCase(kind));
-            kindSummaryCb?.(kind, value);
+            out?.set(kind, value);
             if (value !== '') {
                 fullSummary += `\n\n${indentString(value)}`;
             }

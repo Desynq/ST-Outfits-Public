@@ -1,6 +1,10 @@
 // @ts-ignore
-import { getContext } from '../../../../../../extensions.js';
+import { getContext as _getContext } from '../../../../../../extensions.js';
 
 export function substituteParams(str: string): string {
-	return getContext().substituteParams(str);
+	return _getContext().substituteParams(str);
+}
+
+export function getContext() {
+	return _getContext();
 }

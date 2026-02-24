@@ -3,7 +3,9 @@
 export interface SillyTavernContext {
 	characterId: number;
 
-	saveSettingsDebounced(): void;
+	saveSettingsDebounced: () => void;
+	reloadCurrentChat: () => Promise<void>;
+
 
 	SlashCommandParser: any;
 	SlashCommand: any;

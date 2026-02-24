@@ -20,11 +20,11 @@ export class OutfitPanelRegistry {
         }
         let panel = this.panels.get(character);
         if (panel)
-            return panel;
+            return { panel, created: false };
         panel = CharOutfitPanel.from(character, saveSettings);
         panel.onHide(() => this.unregister(character));
         this.panels.set(character, panel);
-        return panel;
+        return { panel, created: true };
     }
     unregister(character) {
         this.panels.delete(character);

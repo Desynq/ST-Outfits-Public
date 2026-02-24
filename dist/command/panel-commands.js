@@ -1,22 +1,31 @@
 import { html } from "../util/lint.js";
-const { SlashCommandParser, SlashCommand, SlashCommandNamedArgument, ARGUMENT_TYPE, characters } = SillyTavern.getContext();
+const { SlashCommandParser, SlashCommand, SlashCommandNamedArgument, ARGUMENT_TYPE, characters, reloadCurrentChat } = SillyTavern.getContext();
 export function registerPanelCommands(panelRegistry, saveSettings) {
+    // Current fix for outlet macros going away on command use is to reload the current chat
     SlashCommandParser.addCommandObject(SlashCommand.fromProps({
         name: 'outfit-char',
         callback: (namedArgs, unnamedArgs) => {
             const charName = unnamedArgs.toString().trim();
             if (!charName) {
-                toastr.error(`Character name must be non-empty`);
-                return '';
+                const msg = `Character name must be non-empty`;
+                toastr.error(msg);
+                return msg;
             }
             const exists = characters.map(c => c.name).includes(charName);
             if (!exists) {
-                toastr.error(`"${charName}" is not a known character`);
-                return '';
+                const msg = `"${charName}" is not a known character`;
+                toastr.error(msg);
+                return msg;
             }
-            const panel = panelRegistry.getOrCreate(charName, saveSettings);
+            const { panel, created } = panelRegistry.getOrCreate(charName, saveSettings);
+            if (!created) {
+                panel.hide();
+                reloadCurrentChat();
+                return `Removed character panel for ${charName}`;
+            }
             panel.autoOpen(undefined, 170);
-            return charName;
+            reloadCurrentChat();
+            return `Showed character panel for ${charName}`;
         },
         aliases: ['outfit-char'],
         returns: 'the character name if successful, or nothing if not successful',

@@ -29,20 +29,20 @@ export class OutfitPanelRegistry {
 	public getOrCreate(
 		character: string,
 		saveSettings: Function
-	): CharOutfitPanel {
+	): { panel: CharOutfitPanel; created: boolean; } {
 		if (this.botPanel.character === character) {
 			this.botPanel.disable();
 		}
 
 		let panel = this.panels.get(character);
 
-		if (panel) return panel;
+		if (panel) return { panel, created: false };
 
 		panel = CharOutfitPanel.from(character, saveSettings);
 		panel.onHide(() => this.unregister(character));
 		this.panels.set(character, panel);
 
-		return panel;
+		return { panel, created: true };
 	}
 
 	public unregister(character: string): void {

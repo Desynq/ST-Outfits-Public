@@ -14,7 +14,7 @@ export function registerPanelCommands(panelRegistry: OutfitPanelRegistry, saveSe
 				return '';
 			}
 
-			const exists = (characters as { name: string; }[]).map(c => c.name).includes(charName);
+			const exists = characters.map(c => c.name).includes(charName);
 			if (!exists) {
 				toastr.error(`"${charName}" is not a known character`);
 				return '';

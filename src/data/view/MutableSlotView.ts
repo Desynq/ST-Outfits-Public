@@ -247,7 +247,7 @@ export class MutableSlotView {
 			enabled: true,
 			images: {},
 			activeImageTag: null,
-			equipped: false
+			equipped: true
 		});
 
 		this.indexById[id] = this._slots.length - 1; // append to index

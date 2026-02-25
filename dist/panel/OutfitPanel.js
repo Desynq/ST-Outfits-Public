@@ -42,6 +42,15 @@ export class OutfitPanel {
     getLayoutMode() {
         return isWideScreen() ? 'desktop' : 'mobile';
     }
+    /**
+     * @throws if panel is not mounted
+     */
+    getBoundingClientRect() {
+        if (!this.panelEl) {
+            throw new Error('Panel element is not mounted');
+        }
+        return this.panelEl.getBoundingClientRect();
+    }
     reinitialize() {
         this.outfitManager.initializeOutfit();
         this.getPanelSettings().resetXY(this.getLayoutMode());

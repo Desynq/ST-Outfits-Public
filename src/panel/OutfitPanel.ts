@@ -64,6 +64,20 @@ export abstract class OutfitPanel<T extends PanelType> implements OutfitSlotsHos
 		return isWideScreen() ? 'desktop' : 'mobile';
 	}
 
+	/**
+	 * @throws if panel is not mounted
+	 */
+	public getBoundingClientRect(): DOMRect {
+		if (!this.panelEl) {
+			throw new Error('Panel element is not mounted');
+		}
+		return this.panelEl.getBoundingClientRect();
+	}
+
+
+
+
+
 	private reinitialize(): void {
 		this.outfitManager.initializeOutfit();
 

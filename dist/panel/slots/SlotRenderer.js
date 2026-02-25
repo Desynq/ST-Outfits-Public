@@ -6,10 +6,11 @@ import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
 import { SlotActionsElement } from "./SlotActionsElement.js";
 import { SlotValueController } from "./SlotValueController.js";
 export class SlotRenderer extends OutfitPanelContext {
-    constructor(panel, displaySlots, imageElementFactory) {
+    constructor(panel, displaySlots, imageElementFactory, actionOverflowFactory) {
         super(panel);
         this.displaySlots = displaySlots;
         this.imageElementFactory = imageElementFactory;
+        this.actionOverflowFactory = actionOverflowFactory;
         this.slotValControl = new SlotValueController(this.panel, (ctx) => this.removeActionButtons(ctx));
     }
     isValueHidden(mode) {
@@ -136,9 +137,9 @@ export class SlotRenderer extends OutfitPanelContext {
         }
         return 'normal';
     }
-    async decorateSlot(ctx, imageElement) {
+    decorateSlot(ctx, imageElement) {
         const actionsElement = new SlotActionsElement(this.panel);
-        const valueEl = await this.slotValControl.render(ctx.contentEl, ctx);
+        const valueEl = this.slotValControl.render(ctx.contentEl, ctx);
         imageElement.observe(ctx.contentEl, valueEl, this.panel.disposer);
         const toggleBtn = this.createToggleBtn(ctx.slot);
         ctx.actionsLeftEl.append(toggleBtn);
@@ -146,26 +147,17 @@ export class SlotRenderer extends OutfitPanelContext {
             const unequipBtn = actionsElement.createUnequipButton(ctx.slot);
             ctx.actionsLeftEl.append(unequipBtn);
         }
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'slot-button delete-slot';
-        deleteBtn.textContent = 'Delete';
-        deleteBtn.addEventListener('click', () => this.askDeleteSlot(ctx.slotElement, ctx.slot));
-        ctx.actionsLeftEl.appendChild(deleteBtn);
-        const shiftBtn = document.createElement('button');
-        shiftBtn.className = 'slot-button slot-shift';
-        shiftBtn.textContent = 'Shift';
-        shiftBtn.addEventListener('click', () => {
-            this.beginSlotShift(ctx);
-        });
-        ctx.actionsLeftEl.appendChild(shiftBtn);
-        const moveBtn = document.createElement('button');
-        moveBtn.classList.add('slot-button', 'move-slot');
-        moveBtn.textContent = 'Move';
-        moveBtn.addEventListener('click', () => this.moveSlot(ctx.slot));
-        ctx.actionsLeftEl.appendChild(moveBtn);
-        const presetsBtn = createElement('button', 'slot-button slot-presets-button', 'Presets');
-        presetsBtn.addEventListener('click', () => SlotPresetsModal.show(ctx.slot, this.outfitManager, () => this.panel.saveAndRender()));
-        ctx.actionsRightEl.append(presetsBtn);
+        const overflowElement = this.actionOverflowFactory.create({
+            mountEl: ctx.slotElement,
+            getViewBoundary: () => ctx.scroller.getBoundingClientRect(),
+            disposer: this.panel.disposer,
+            deleteSlot: () => this.askDeleteSlot(ctx.slotElement, ctx.slot),
+            shiftSlot: () => this.beginSlotShift(ctx),
+            moveSlot: () => this.moveSlot(ctx.slot),
+            showPresets: () => SlotPresetsModal.show(ctx.slot, this.outfitManager, () => this.panel.saveAndRender())
+        })
+            .onClopen(open => ctx.slotElement.classList.toggle('--menu-open', open))
+            .appendTo(ctx.actionsRightEl);
         // const editBtn = this.appendEditBtn(ctx.actionsRightEl, ctx, valueEl);
     }
     createToggleBtn(slot) {
@@ -195,7 +187,8 @@ export class SlotRenderer extends OutfitPanelContext {
             '.move-slot',
             '.edit-slot',
             '.slot-presets-button',
-            '.unequip-button'
+            '.unequip-button',
+            '.slot-overflow-button'
         ];
         for (const selector of selectors) {
             ctx.slotElement.querySelector(selector)?.remove();

@@ -9,24 +9,18 @@
 
 	padding: 8px 6px;
 	background: rgba(255, 255, 255, 0.08);
-	border-radius: 8px;
+	border-radius: 12px;
 	backdrop-filter: blur(5px);
 	border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.outfit-slot.--unequipped::before {
-	content: "";
-	position: absolute;
-	inset: 0;
-	z-index: 0;
+.outfit-slot.--menu-open {
+	z-index: 10;
+}
 
-	background-image: repeating-linear-gradient(
-		45deg,
-		rgba(255, 255, 255, 0.15) 0px,
-		rgba(255, 255, 255, 0.15) 4px,
-		transparent 6px,
-		transparent 12px
-	)
+.outfit-slot.--unequipped {
+	border-color: rgba(100, 100, 100, 0.8);
+	box-shadow: 0 0 0 2px rgba(100, 100, 100, 0.4);
 }
 
 .outfit-slot > * {
@@ -131,6 +125,13 @@
 	transition: background-image 100ms ease;
 }
 
+.outfit-slot.--unequipped .slot-name {
+	color: rgba(200, 200, 200, 0.8);
+	text-shadow:
+		0 0 4px rgba(100, 100, 100, 0.4),
+		0 0 8px rgba(100, 100, 100, 0.4);
+}
+
 .slot-name::after {
 	content: attr(data-text);
 	position: absolute;
@@ -209,7 +210,7 @@
 	word-break: break-word;
 
 	background: rgba(0, 0, 0, 0.5);
-	border-color: rgba(255, 255, 255, 0.25);
+	border: rgba(255, 255, 255, 0.25);
 
 	overflow: hidden;
 	transition: max-height 180ms ease;
@@ -246,6 +247,12 @@
 	border: 1px solid rgba(255, 255, 255, 0.05);
 	font-weight: bold;
 	min-height: auto;
+}
+
+.outfit-slot.--unequipped .slot-value {
+	font-style: oblique;
+	background: rgba(0, 0, 0, 0.25);
+	border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 
@@ -288,16 +295,25 @@
 
 
 .slot-button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	height: 32px;
+	padding: 0 10px;
+
 	background: rgba(255, 255, 255, 0.15);
 	color: #fff;
 	border: none;
 	border-radius: 5px;
-	padding: 4px 10px;
 	cursor: pointer;
 	font-weight: 600;
-	font-size: 0.9em;
+
 	min-width: 0;
-	white-space: nowrap;
+	white-space: normal;
+	text-align: center;
+
+	font-size: 0.9rem;
 }
 
 .slot-button:hover {
@@ -463,6 +479,8 @@
 	border-left: 2px solid #c4b5fd;
 	border-right: 2px solid #c4b5fd;
 }
+
+
 
 /* Base disabled */
 .slot-value.disabled {

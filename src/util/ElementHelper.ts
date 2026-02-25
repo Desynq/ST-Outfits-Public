@@ -197,7 +197,7 @@ export function createDiv(className?: string): HTMLDivElement {
 
 
 
-type ElementOptions<K extends keyof HTMLElementTagNameMap> = {
+export type ElementOptions<K extends keyof HTMLElementTagNameMap> = {
 	className?: string;
 	dataset?: Record<string, string>;
 	events?: Partial<{

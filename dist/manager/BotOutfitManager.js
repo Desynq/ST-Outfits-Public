@@ -3,7 +3,7 @@ import { OutfitTracker } from "../data/tracker.js";
 import { OutfitManager } from "./OutfitManager.js";
 export class BotOutfitManager extends OutfitManager {
     constructor(saveSettings, defaultCharacter) {
-        super(saveSettings);
+        super(saveSettings, 'char');
         this.setCharacter(defaultCharacter ?? 'Unknown');
     }
     getName() {
@@ -11,9 +11,6 @@ export class BotOutfitManager extends OutfitManager {
     }
     isUser() {
         return false;
-    }
-    getMacroOwner() {
-        return 'char';
     }
     getNameMacro() {
         return '{{char}}';

@@ -10,7 +10,7 @@ export class BotOutfitManager extends OutfitManager {
         saveSettings: Function,
         defaultCharacter?: string
     ) {
-        super(saveSettings);
+        super(saveSettings, 'char');
         this.setCharacter(defaultCharacter ?? 'Unknown');
     }
 
@@ -20,10 +20,6 @@ export class BotOutfitManager extends OutfitManager {
 
     public override isUser(): boolean {
         return false;
-    }
-
-    public override getMacroOwner(): string {
-        return 'char';
     }
 
     public override getNameMacro(): string {

@@ -7,7 +7,7 @@ export class UserOutfitManager extends OutfitManager {
     constructor(
         saveSettings: Function
     ) {
-        super(saveSettings);
+        super(saveSettings, 'user');
         this.onActiveOutfitChanged();
     }
 
@@ -17,10 +17,6 @@ export class UserOutfitManager extends OutfitManager {
 
     public override isUser(): boolean {
         return true;
-    }
-
-    public override getMacroOwner(): string {
-        return 'user';
     }
 
     public override getNameMacro(): string {

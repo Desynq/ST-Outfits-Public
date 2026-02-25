@@ -1,5 +1,6 @@
 export { };
 
+// import('../../../../../global');
 import { BotOutfitPanel } from '../src/panel/BotOutfitPanel';
 import { UserOutfitPanel } from '../src/panel/UserOutfitPanel';
 import { SillyTavernContext } from './context';

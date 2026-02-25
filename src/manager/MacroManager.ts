@@ -1,5 +1,6 @@
 
-const { registerMacro, unregisterMacro } = SillyTavern.getContext();
+const { macros } = SillyTavern.getContext();
+const { registry: MacroRegistry, category: MacroCategory } = macros;
 
 
 export type OutfitOwner = 'user' | 'char' | (string & {});
@@ -32,12 +33,18 @@ export class OutfitMacroManager {
 		if (this.registry.get(kind) === value) return;
 
 		this.registry.set(kind, value);
-		registerMacro(key, value);
+		MacroRegistry.registerMacro(key, {
+			category: MacroCategory.CHARACTER,
+			description: 'Returns the summary for this section of the outfit',
+			returns: 'This section\'s summary of the character\'s outfit',
+			returnType: 'string',
+			handler: () => value
+		});
 	}
 
 	public clear(): void {
 		for (const kind of this.registry.keys()) {
-			unregisterMacro(this.asKey(kind));
+			MacroRegistry.unregisterMacro(this.asKey(kind));
 		}
 
 		this.registry.clear();

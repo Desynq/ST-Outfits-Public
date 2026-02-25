@@ -1,10 +1,10 @@
 import { areOutfitSnapshotsEqual } from "../data/model/OutfitSnapshots.js";
 import { OutfitTracker } from "../data/tracker.js";
-import { toCamelCase, toPascalCase } from "../util/StringHelper.js";
+import { toPascalCase } from "../util/StringHelper.js";
 import { OutfitManager } from "./OutfitManager.js";
 export class CharOutfitManager extends OutfitManager {
     constructor(saveSettings, character) {
-        super(saveSettings);
+        super(saveSettings, toPascalCase(character));
         this.character = character;
         this.onActiveOutfitChanged();
     }
@@ -14,11 +14,8 @@ export class CharOutfitManager extends OutfitManager {
     isUser() {
         return false;
     }
-    getMacroOwner() {
-        return toCamelCase(this.character);
-    }
     getNameMacro() {
-        return toPascalCase(this.character);
+        return this.character;
     }
     getVarName(namespace) {
         return `${this.character.replace(/\s+/g, ' ')}_${namespace}`;
@@ -39,18 +36,12 @@ export class CharOutfitManager extends OutfitManager {
     async savePreset(outfitName) {
         const outfit = this.getOutfitView().snapshot();
         OutfitTracker.characterOutfits(this.character).saveOutfit(outfitName, outfit);
-        if (OutfitTracker.areSystemMessagesEnabled()) {
-            return `Saved "${outfitName}" outfit for ${this.character}.`;
-        }
-        return '';
+        return `Saved "${outfitName}" outfit for ${this.character}.`;
     }
     exportPresetToUser(outfitName) {
         const outfit = this.getOutfitView().snapshot();
         OutfitTracker.userOutfits().saveOutfit(outfitName, outfit);
-        if (OutfitTracker.areSystemMessagesEnabled()) {
-            return `Exported "${outfitName}" outfit to user.`;
-        }
-        return "";
+        return `Exported "${outfitName}" outfit to user.`;
     }
     async loadPreset(outfitName) {
         const collectionView = OutfitTracker.characterOutfits(this.character);
@@ -74,10 +65,7 @@ export class CharOutfitManager extends OutfitManager {
             return `[Outfit System] Preset "${outfitName}" not found.`;
         }
         OutfitTracker.characterOutfits(this.character).deleteSavedOutfit(outfitName);
-        if (OutfitTracker.areSystemMessagesEnabled()) {
-            return `Deleted "${outfitName}" outfit.`;
-        }
-        return '';
+        return `Deleted "${outfitName}" outfit.`;
     }
     getPresets() {
         const outfits = OutfitTracker.characterOutfits(this.character).getSavedOutfitNames();

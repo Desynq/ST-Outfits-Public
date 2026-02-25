@@ -3,7 +3,7 @@ import { OutfitTracker } from "../data/tracker.js";
 import { OutfitManager } from "./OutfitManager.js";
 export class UserOutfitManager extends OutfitManager {
     constructor(saveSettings) {
-        super(saveSettings);
+        super(saveSettings, 'user');
         this.onActiveOutfitChanged();
     }
     getName() {
@@ -11,9 +11,6 @@ export class UserOutfitManager extends OutfitManager {
     }
     isUser() {
         return true;
-    }
-    getMacroOwner() {
-        return 'user';
     }
     getNameMacro() {
         return '{{user}}';

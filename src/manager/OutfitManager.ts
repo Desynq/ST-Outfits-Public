@@ -19,9 +19,10 @@ export abstract class OutfitManager {
 	protected readonly summaryMacros: OutfitMacroManager;
 
 	public constructor(
-		public readonly saveSettings: Function
+		public readonly saveSettings: Function,
+		macroOwner: string
 	) {
-		this.summaryMacros = new OutfitMacroManager(this.getMacroOwner(), 'summary');
+		this.summaryMacros = new OutfitMacroManager(macroOwner, 'summary');
 	}
 
 	private get outfit() {
@@ -45,8 +46,6 @@ export abstract class OutfitManager {
 	public abstract getName(): string;
 
 	public abstract isUser(): boolean;
-
-	public abstract getMacroOwner(): string;
 
 
 

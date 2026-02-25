@@ -1,3 +1,4 @@
+import { CharOutfitPanel } from "../panel/CharOutfitPanel.js";
 import { OutfitPanelRegistry } from "../panel/PanelRegistry.js";
 import { html } from "../util/lint.js";
 
@@ -9,6 +10,62 @@ const {
 	characters,
 	reloadCurrentChat
 } = SillyTavern.getContext();
+
+
+
+type AttemptSuccess<T> = { ok: true; value: T; };
+
+type AttemptFailure = {
+	ok: false;
+	error: unknown;
+};
+type AttemptFailureWithToastr = AttemptFailure & {
+	toastr: string;
+};
+
+function attempt<T>(
+	fn: () => T,
+	options: {
+		log: string;
+		toastr: string;
+		meta?: (error: unknown) => Record<string, unknown>;
+	}
+): AttemptSuccess<T> | AttemptFailureWithToastr;
+
+function attempt<T>(
+	fn: () => T,
+	options: {
+		log: string;
+		meta?: (error: unknown) => Record<string, unknown>;
+	}
+): AttemptSuccess<T> | AttemptFailure;
+
+function attempt<T>(
+	fn: () => T,
+	options: {
+		log: string;
+		toastr?: string;
+		meta?: (error: unknown) => Record<string, unknown>;
+	}
+) {
+	try {
+		return { ok: true, value: fn() };
+	} catch (error) {
+		console.error(options.log, {
+			error,
+			...(options.meta?.(error) ?? {})
+		});
+
+		if (options.toastr) {
+			toastr.error(options.toastr);
+			return { ok: false, error, toastr: options.toastr };
+		}
+
+		return { ok: false, error };
+	}
+}
+
+
 
 export function registerPanelCommands(panelRegistry: OutfitPanelRegistry, saveSettings: () => void): void {
 
@@ -26,19 +83,50 @@ export function registerPanelCommands(panelRegistry: OutfitPanelRegistry, saveSe
 
 			const exists = characters.map(c => c.name).includes(charName);
 			if (!exists) {
-				const msg = `"${charName}" is not a known character`;
+				const msg = `${charName} is not a known character`;
 				toastr.error(msg);
 				return msg;
 			}
 
-			const { panel, created } = panelRegistry.getOrCreate(charName, saveSettings);
+			const createResult = attempt(
+				() => panelRegistry.getOrCreate(charName, saveSettings),
+				{
+					toastr: `Failed to create panel for ${charName}`,
+					log: '[Outfits] getOrCreate failed:',
+					meta: () => ({ character: charName })
+				}
+			);
+			if (!createResult.ok) return createResult.toastr;
+
+			const { panel, created } = createResult.value;
+
 			if (!created) {
-				panel.hide();
+				const hideResult = attempt(
+					() => panel.hide(),
+					{
+						toastr: `Panel removal failed for ${charName}`,
+						log: '[Outfits] panel.hide failed:',
+						meta: () => ({ character: charName })
+					}
+				);
+
+				if (!hideResult.ok) return hideResult.toastr;
+
 				reloadCurrentChat();
 				return `Removed character panel for ${charName}`;
 			}
 
-			panel.autoOpen(undefined, 170);
+			const openResult = attempt(
+				() => panel.autoOpen(undefined, 170),
+				{
+					toastr: `Panel opened but failed for render for ${charName}`,
+					log: '[Outfits] panel.autoOpen failed:',
+					meta: () => ({ character: charName })
+				}
+			);
+
+			if (!openResult.ok) return openResult.toastr;
+
 			reloadCurrentChat();
 			return `Showed character panel for ${charName}`;
 		},

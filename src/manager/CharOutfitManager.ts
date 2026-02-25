@@ -12,7 +12,7 @@ export class CharOutfitManager extends OutfitManager {
 		saveSettings: Function,
 		public readonly character: string,
 	) {
-		super(saveSettings);
+		super(saveSettings, toPascalCase(character));
 		this.onActiveOutfitChanged();
 	}
 
@@ -24,12 +24,8 @@ export class CharOutfitManager extends OutfitManager {
 		return false;
 	}
 
-	public override getMacroOwner(): string {
-		return toCamelCase(this.character);
-	}
-
 	public override getNameMacro(): string {
-		return toPascalCase(this.character);
+		return this.character;
 	}
 
 	public override getVarName(namespace: string): string {
@@ -57,10 +53,7 @@ export class CharOutfitManager extends OutfitManager {
 
 		OutfitTracker.characterOutfits(this.character).saveOutfit(outfitName, outfit);
 
-		if (OutfitTracker.areSystemMessagesEnabled()) {
-			return `Saved "${outfitName}" outfit for ${this.character}.`;
-		}
-		return '';
+		return `Saved "${outfitName}" outfit for ${this.character}.`;
 	}
 
 	public exportPresetToUser(outfitName: string): string {
@@ -68,10 +61,7 @@ export class CharOutfitManager extends OutfitManager {
 
 		OutfitTracker.userOutfits().saveOutfit(outfitName, outfit);
 
-		if (OutfitTracker.areSystemMessagesEnabled()) {
-			return `Exported "${outfitName}" outfit to user.`;
-		}
-		return "";
+		return `Exported "${outfitName}" outfit to user.`;
 	}
 
 	public override async loadPreset(outfitName: string): Promise<string> {
@@ -103,10 +93,7 @@ export class CharOutfitManager extends OutfitManager {
 
 		OutfitTracker.characterOutfits(this.character).deleteSavedOutfit(outfitName);
 
-		if (OutfitTracker.areSystemMessagesEnabled()) {
-			return `Deleted "${outfitName}" outfit.`;
-		}
-		return '';
+		return `Deleted "${outfitName}" outfit.`;
 	}
 
 	public override getPresets(): string[] {

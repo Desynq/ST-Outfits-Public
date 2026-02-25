@@ -5,9 +5,9 @@ import { toSummaryKey } from "../util/SummaryHelper.js";
 import { deleteGlobalVariable, getGlobalVariable, setGlobalVariable } from "./GlobalVarManager.js";
 import { OutfitMacroManager } from "./MacroManager.js";
 export class OutfitManager {
-    constructor(saveSettings) {
+    constructor(saveSettings, macroOwner) {
         this.saveSettings = saveSettings;
-        this.summaryMacros = new OutfitMacroManager(this.getMacroOwner(), 'summary');
+        this.summaryMacros = new OutfitMacroManager(macroOwner, 'summary');
     }
     get outfit() {
         return this.getOutfitView();

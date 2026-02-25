@@ -1,16 +1,17 @@
 import { assertNever, toSlotName } from "../../shared.js";
 import { SlotPresetsModal } from "../../ui/components/SlotPresetsModal.js";
 import { addDoubleTapListener } from "../../util/element/click-actions.js";
-import { appendElement, createDiv, el, createElement } from "../../util/ElementHelper.js";
+import { appendElement, createDiv, createElement, el } from "../../util/ElementHelper.js";
 import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
+import { SlotActionsMenuElement } from "./ActionOverflowElement.js";
 import { SlotActionsElement } from "./SlotActionsElement.js";
 import { SlotValueController } from "./SlotValueController.js";
 export class SlotRenderer extends OutfitPanelContext {
-    constructor(panel, displaySlots, imageElementFactory, actionOverflowFactory) {
+    constructor(panel, displaySlots, imageElementFactory, actionMenuFactory) {
         super(panel);
         this.displaySlots = displaySlots;
         this.imageElementFactory = imageElementFactory;
-        this.actionOverflowFactory = actionOverflowFactory;
+        this.actionMenuFactory = actionMenuFactory;
         this.slotValControl = new SlotValueController(this.panel, (ctx) => this.removeActionButtons(ctx));
     }
     isValueHidden(mode) {
@@ -147,15 +148,15 @@ export class SlotRenderer extends OutfitPanelContext {
             const unequipBtn = actionsElement.createUnequipButton(ctx.slot);
             ctx.actionsLeftEl.append(unequipBtn);
         }
-        const overflowElement = this.actionOverflowFactory.create({
+        const overflowElement = new SlotActionsMenuElement({
             mountEl: ctx.slotElement,
             getViewBoundary: () => ctx.scroller.getBoundingClientRect(),
             disposer: this.panel.disposer,
             deleteSlot: () => this.askDeleteSlot(ctx.slotElement, ctx.slot),
             shiftSlot: () => this.beginSlotShift(ctx),
             moveSlot: () => this.moveSlot(ctx.slot),
-            showPresets: () => SlotPresetsModal.show(ctx.slot, this.outfitManager, () => this.panel.saveAndRender())
-        })
+            showPresets: () => SlotPresetsModal.show(ctx.slot, this.outfitManager, () => this.panel.saveAndRender()),
+        }, this.actionMenuFactory)
             .onClopen(open => ctx.slotElement.classList.toggle('--menu-open', open))
             .appendTo(ctx.actionsRightEl);
         // const editBtn = this.appendEditBtn(ctx.actionsRightEl, ctx, valueEl);

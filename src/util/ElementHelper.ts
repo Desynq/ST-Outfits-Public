@@ -204,6 +204,7 @@ export type ElementOptions<K extends keyof HTMLElementTagNameMap> = {
 		[E in keyof GlobalEventHandlersEventMap]: (this: HTMLElementTagNameMap[K], ev: GlobalEventHandlersEventMap[E]) => void
 	}>;
 	classes?: Array<string | false | null | undefined>;
+	parent?: HTMLElement;
 } & (
 		| { text: string; children?: never; }
 		| { children: HTMLElement[]; text?: never; }
@@ -244,6 +245,10 @@ export function el<K extends keyof HTMLElementTagNameMap>(
 	}
 	else if ('children' in options) {
 		el.replaceChildren(...options.children);
+	}
+
+	if ('parent' in options) {
+		options.parent.append(el);
 	}
 
 	return el;

@@ -1,15 +1,14 @@
-import { OutfitSlot } from "../../data/model/Outfit.js";
 import { OutfitSlotState } from "../../data/model/OutfitSnapshots.js";
 import { assertNever, toSlotName } from "../../shared.js";
 import { PanelType } from "../../types/maps.js";
+import { OverflowMenuFactory } from "../../ui/components/OverflowMenu.js";
 import { SlotPresetsModal } from "../../ui/components/SlotPresetsModal.js";
 import { addDoubleTapListener } from "../../util/element/click-actions.js";
-import { appendElement, createDiv, el, createElement, createWithClasses, addOrRemoveClass } from "../../util/ElementHelper.js";
+import { appendElement, createDiv, createElement, el } from "../../util/ElementHelper.js";
 import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
-import { Disposer } from "../Disposer.js";
 import { OutfitPanel } from "../OutfitPanel.js";
 import { OutfitSlotsHost } from "../OutfitSlotsHost.js";
-import { SlotActionOverflowFactory } from "./ActionOverflowElement.js";
+import { SlotActionsMenuElement } from "./ActionOverflowElement.js";
 import { DisplaySlot } from "./DisplaySlot.js";
 import { SlotActionsElement } from "./SlotActionsElement.js";
 import { ImageState, SlotImageElement, SlotImageElementFactory } from "./SlotImageController.js";
@@ -46,7 +45,7 @@ export class SlotRenderer extends OutfitPanelContext {
 		panel: OutfitPanel<PanelType>,
 		private readonly displaySlots: DisplaySlot[],
 		private readonly imageElementFactory: SlotImageElementFactory,
-		private readonly actionOverflowFactory: SlotActionOverflowFactory
+		private readonly actionMenuFactory: OverflowMenuFactory
 	) {
 		super(panel);
 		this.slotValControl = new SlotValueController(
@@ -240,19 +239,22 @@ export class SlotRenderer extends OutfitPanelContext {
 			ctx.actionsLeftEl.append(unequipBtn);
 		}
 
-		const overflowElement = this.actionOverflowFactory.create({
-			mountEl: ctx.slotElement,
-			getViewBoundary: () => ctx.scroller.getBoundingClientRect(),
-			disposer: this.panel.disposer,
-			deleteSlot: () => this.askDeleteSlot(ctx.slotElement, ctx.slot),
-			shiftSlot: () => this.beginSlotShift(ctx),
-			moveSlot: () => this.moveSlot(ctx.slot),
-			showPresets: () => SlotPresetsModal.show(
-				ctx.slot,
-				this.outfitManager,
-				() => this.panel.saveAndRender()
-			)
-		})
+		const overflowElement = new SlotActionsMenuElement(
+			{
+				mountEl: ctx.slotElement,
+				getViewBoundary: () => ctx.scroller.getBoundingClientRect(),
+				disposer: this.panel.disposer,
+				deleteSlot: () => this.askDeleteSlot(ctx.slotElement, ctx.slot),
+				shiftSlot: () => this.beginSlotShift(ctx),
+				moveSlot: () => this.moveSlot(ctx.slot),
+				showPresets: () => SlotPresetsModal.show(
+					ctx.slot,
+					this.outfitManager,
+					() => this.panel.saveAndRender()
+				),
+			},
+			this.actionMenuFactory
+		)
 			.onClopen(open =>
 				ctx.slotElement.classList.toggle('--menu-open', open)
 			)

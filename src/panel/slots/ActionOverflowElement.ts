@@ -1,3 +1,4 @@
+import { OverflowMenu, OverflowMenuFactory } from "../../ui/components/OverflowMenu.js";
 import { el, ElementOptions } from "../../util/ElementHelper.js";
 import { EventBus } from "../../util/EventBus.js";
 import { Disposer } from "../Disposer.js";
@@ -5,7 +6,7 @@ import { Disposer } from "../Disposer.js";
 
 
 
-interface Deps {
+export interface SlotActionMenuDeps {
 	mountEl: HTMLElement;
 	getViewBoundary: () => DOMRect;
 	disposer: Disposer;
@@ -15,50 +16,36 @@ interface Deps {
 	showPresets(): void;
 }
 
-export class SlotActionOverflowFactory {
-	private openInstance: SlotActionOverflowElement | null = null;
-
-	public create(deps: Deps): SlotActionOverflowElement {
-		const element = new SlotActionOverflowElement(deps);
-		element.onOpen(() => {
-			this.openInstance?.closeMenu();
-			this.openInstance = element;
-		});
-
-		return element;
-	}
-}
-
-class SlotActionOverflowElement {
+export class SlotActionsMenuElement {
 	private readonly btn: HTMLButtonElement;
-	private menu: HTMLDivElement | null = null;
-
-	private readonly openBus = new EventBus<() => void>();
-	private readonly closeBus = new EventBus<() => void>();
-
-	private handleOutsideClick = (e: MouseEvent) => {
-		if (!this.menu) return;
-		if (this.menu.contains(e.target as Node)) return;
-		if (this.btn.contains(e.target as Node)) return;
-
-		this.closeMenu();
-	};
+	private readonly menu: OverflowMenu;
 
 
 	public constructor(
-		private readonly deps: Deps
+		private readonly deps: SlotActionMenuDeps,
+		private readonly factory: OverflowMenuFactory
 	) {
 		this.btn = el('button', {
 			className: 'slot-button slot-overflow-button',
-			text: '⋯',
-			events: {
-				click: (e) => {
-					e.stopPropagation();
-					this.toggleMenu();
-				}
-			}
+			text: '⋯'
 		});
-		this.deps.disposer.add(() => this.closeMenu());
+
+		this.menu = this.factory.create({
+			openerEl: this.btn,
+			disposer: this.deps.disposer,
+			align: 'right',
+			options: {
+				className: 'slot-overflow-menu',
+				parent: this.deps.mountEl,
+				children: this.buildMenuChildren()
+			},
+			getViewBoundary: this.deps.getViewBoundary
+		});
+
+		this.btn.addEventListener('click', (e) => {
+			e.stopPropagation();
+			this.menu.toggleMenu();
+		});
 	}
 
 	public appendTo(parent: HTMLElement): this {
@@ -66,78 +53,32 @@ class SlotActionOverflowElement {
 		return this;
 	}
 
+	public closeMenu(): void {
+		this.menu.closeMenu();
+	}
+
 	public onOpen(listener: () => void): this {
-		this.openBus.add(listener);
+		this.menu.onOpen(listener);
 		return this;
 	}
 
 	public onClose(listener: () => void): this {
-		this.closeBus.add(listener);
+		this.menu.onClose(listener);
 		return this;
 	}
 
 	public onClopen(listener: (open: boolean) => void): this {
-		this.openBus.add(() => listener(true));
-		this.closeBus.add(() => listener(false));
+		this.menu.onClopen(listener);
 		return this;
 	}
 
-	public closeMenu(): void {
-		this.menu?.remove();
-		document.removeEventListener('click', this.handleOutsideClick);
-		this.menu = null;
-		this.closeBus.call();
-	}
-
-	private toggleMenu(): void {
-		if (this.menu) {
-			this.closeMenu();
-			return;
-		}
-
-		this.openBus.call();
-		this.menu = this.buildMenu();
-		this.deps.mountEl.append(this.menu);
-		document.addEventListener('click', this.handleOutsideClick);
-	}
-
-	private buildMenu(): HTMLDivElement {
-		const menu = el('div', {
-			className: 'slot-overflow-menu',
-			children: [
-				this.createDeleteBtn(),
-				this.createShiftBtn(),
-				this.createMoveBtn(),
-				this.createPresetsBtn()
-			]
-		});
-		this.positionMenu(menu);
-
-		return menu;
-	}
-
-	private positionMenu(menu: HTMLDivElement): void {
-		const mountRect = this.deps.mountEl.getBoundingClientRect();
-		const btnRect = this.btn.getBoundingClientRect();
-		const scrollRect = this.deps.getViewBoundary();
-
-		// Horizontal alignment (relative to mountEl)
-		const right = mountRect.right - btnRect.right;
-		menu.style.right = `${right}px`;
-		menu.style.left = 'auto';
-
-		// Vertical flip based on scroll container
-		const spaceBelow = scrollRect.bottom - btnRect.bottom;
-		const spaceAbove = btnRect.top - scrollRect.top;
-
-		if (spaceBelow < 180 && spaceAbove > spaceBelow) {
-			menu.classList.add('--open-up');
-			menu.style.bottom = `${mountRect.bottom - btnRect.top}px`;
-			menu.style.top = 'auto';
-		} else {
-			menu.style.top = `${btnRect.bottom - mountRect.top}px`;
-			menu.style.bottom = 'auto';
-		}
+	private buildMenuChildren(): HTMLElement[] {
+		return [
+			this.createDeleteBtn(),
+			this.createShiftBtn(),
+			this.createMoveBtn(),
+			this.createPresetsBtn()
+		];
 	}
 
 
@@ -151,7 +92,7 @@ class SlotActionOverflowElement {
 			events: {
 				...events,
 				click: function (this: HTMLButtonElement, e) {
-					self.closeMenu();
+					self.menu.closeMenu();
 					subClick?.call(this, e);
 				}
 			}

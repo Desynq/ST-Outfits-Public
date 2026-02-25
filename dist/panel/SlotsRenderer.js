@@ -1,6 +1,6 @@
+import { OverflowMenuFactory } from "../ui/components/OverflowMenu.js";
 import { setScroll } from "../util/element/scroll.js";
 import { OutfitPanelContext } from "./base/OutfitPanelContext.js";
-import { SlotActionOverflowFactory } from "./slots/ActionOverflowElement.js";
 import { DisplaySlot } from "./slots/DisplaySlot.js";
 import { SlotImageElementFactory } from "./slots/SlotImageController.js";
 import { SlotRenderer } from "./slots/SlotRenderer.js";
@@ -17,7 +17,7 @@ export class SlotsRenderer extends OutfitPanelContext {
         this.currentKind = kind;
         const displaySlots = this.buildDisplaySlots(slots);
         const imageFactory = new SlotImageElementFactory(this.panel, contentArea.getBoundingClientRect().width);
-        const overflowFactory = new SlotActionOverflowFactory();
+        const overflowFactory = new OverflowMenuFactory();
         const slotFactory = new SlotRenderer(this.panel, displaySlots, imageFactory, overflowFactory);
         const fragment = document.createDocumentFragment();
         for (const display of displaySlots) {

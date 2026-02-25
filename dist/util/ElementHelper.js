@@ -171,6 +171,9 @@ export function el(tag, options) {
     else if ('children' in options) {
         el.replaceChildren(...options.children);
     }
+    if ('parent' in options) {
+        options.parent.append(el);
+    }
     return el;
 }
 export function createWithClasses(tag, ...classNames) {

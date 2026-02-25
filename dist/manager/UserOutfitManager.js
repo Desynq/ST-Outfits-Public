@@ -12,6 +12,9 @@ export class UserOutfitManager extends OutfitManager {
     isUser() {
         return true;
     }
+    getMacroOwner() {
+        return 'user';
+    }
     getNameMacro() {
         return '{{user}}';
     }

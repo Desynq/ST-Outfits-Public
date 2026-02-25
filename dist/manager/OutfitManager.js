@@ -3,9 +3,11 @@ import { formatAccessorySlotName, serializeRecord, toSlotName } from "../shared.
 import { indentString, toKebabCase } from "../util/StringHelper.js";
 import { toSummaryKey } from "../util/SummaryHelper.js";
 import { deleteGlobalVariable, getGlobalVariable, setGlobalVariable } from "./GlobalVarManager.js";
+import { OutfitMacroManager } from "./MacroManager.js";
 export class OutfitManager {
     constructor(saveSettings) {
         this.saveSettings = saveSettings;
+        this.summaryMacros = new OutfitMacroManager(this.getMacroOwner(), 'summary');
     }
     get outfit() {
         return this.getOutfitView();
@@ -61,10 +63,11 @@ Cancel to keep the current value.`, currentValue);
         if (fullSummary === oldSummary)
             return;
         console.log('Updating summaries for', this.getName());
+        this.summaryMacros.clear();
         for (const [k, v] of kindSummaries) {
             this.updateKindSummary(k, v);
         }
-        this.setSummary(namespace, fullSummary);
+        this.setSummary('*', fullSummary);
     }
     updateKindSummary(kind, value) {
         const namespace = toSummaryKey(kind);
@@ -85,14 +88,14 @@ Cancel to keep the current value.`, currentValue);
         fullSummary += `\n</outfit>`;
         return fullSummary;
     }
-    getSummary(namespace) {
-        const varName = this.getVarName(namespace);
-        return getGlobalVariable(varName);
+    getSummaryKey(scope) {
+        return this.summaryMacros.asKey(scope);
     }
-    setSummary(namespace, value) {
-        const varName = this.getVarName(namespace);
-        // console.log('Setting global', varName, value);
-        setGlobalVariable(varName, value);
+    getSummary(scope) {
+        return this.summaryMacros.get(scope);
+    }
+    setSummary(scope, value) {
+        this.summaryMacros.set(scope, value);
     }
     initializeOutfit() {
         const view = this.getOutfitView();

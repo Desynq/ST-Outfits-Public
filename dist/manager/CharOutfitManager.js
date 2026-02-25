@@ -1,11 +1,12 @@
 import { areOutfitSnapshotsEqual } from "../data/model/OutfitSnapshots.js";
 import { OutfitTracker } from "../data/tracker.js";
+import { toCamelCase, toPascalCase } from "../util/StringHelper.js";
 import { OutfitManager } from "./OutfitManager.js";
 export class CharOutfitManager extends OutfitManager {
     constructor(saveSettings, character) {
         super(saveSettings);
         this.character = character;
-        // this.onActiveOutfitChanged();
+        this.onActiveOutfitChanged();
     }
     getName() {
         return this.character;
@@ -13,8 +14,11 @@ export class CharOutfitManager extends OutfitManager {
     isUser() {
         return false;
     }
+    getMacroOwner() {
+        return toCamelCase(this.character);
+    }
     getNameMacro() {
-        return this.character;
+        return toPascalCase(this.character);
     }
     getVarName(namespace) {
         return `${this.character.replace(/\s+/g, ' ')}_${namespace}`;

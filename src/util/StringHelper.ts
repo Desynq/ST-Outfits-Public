@@ -25,6 +25,32 @@ export function toSnakeCase(input: string): string {
 		.replace(/^_+|_+$/g, ''); // trim leading/trailing _
 }
 
+export function toCamelCase(input: string): string {
+	return input
+		.trim()
+		.toLowerCase()
+		.split(/[^a-z0-9]+/)
+		.filter(Boolean)
+		.map((word, index) => {
+			return index === 0
+				? word
+				: word[0].toUpperCase() + word.slice(1);
+		})
+		.join('');
+}
+
+export function toPascalCase(input: string): string {
+	return input
+		.trim()
+		.toLowerCase()
+		.split(/[^a-z0-9]+/)
+		.filter(Boolean)
+		.map(word => word[0].toUpperCase() + word.slice(1))
+		.join('');
+}
+
+
+
 export function resolveKebabCase(input: string): string | null {
 	const cleaned = input
 		.trim()

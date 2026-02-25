@@ -39,7 +39,7 @@ export class VisibilityTab extends PanelTab {
             const section = this.createPreviewSection(this.formatKind(kind), toSummaryKey(kind));
             previewBody.appendChild(section);
         }
-        const fullSummarySection = this.createPreviewSection('Full Summary', 'summary');
+        const fullSummarySection = this.createPreviewSection('Full Summary', '*');
         previewBody.appendChild(fullSummarySection);
         overlay.appendChild(modal);
         document.body.appendChild(overlay);
@@ -51,20 +51,20 @@ export class VisibilityTab extends PanelTab {
                 overlay.remove();
         });
     }
-    createPreviewSection(header, summaryKey) {
+    createPreviewSection(header, kindScope) {
         const section = document.createElement('div');
         section.classList.add('outfit-preview-section');
         const h4 = document.createElement('h4');
         h4.textContent = header;
         const code = document.createElement('code');
-        code.textContent = `{{getglobalvar::${this.outfitManager.getVarName(summaryKey)}}}`;
+        code.textContent = `{{${this.outfitManager.getSummaryKey(kindScope)}}}`;
         const details = document.createElement('details');
         details.classList.add('outfit-preview-details');
         const summary = document.createElement('summary');
         summary.textContent = 'Show summary';
         const pre = document.createElement('pre');
-        pre.classList.add('outfit-preview-text');
-        pre.textContent = this.outfitManager.getSummary(summaryKey);
+        pre.classList.add('outfit-preview-section-text');
+        pre.textContent = this.outfitManager.getSummary(kindScope) ?? 'None';
         details.appendChild(summary);
         details.appendChild(pre);
         section.appendChild(h4);

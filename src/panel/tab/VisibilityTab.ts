@@ -1,5 +1,6 @@
 import { PanelType } from "../../types/maps.js";
 import { createButton, createDerivedToggleButton } from "../../util/element/ButtonHelper.js";
+import { el } from "../../util/ElementHelper.js";
 import { toSummaryKey } from "../../util/SummaryHelper.js";
 import { OutfitTabsHost } from "../OutfitTabsHost.js";
 import { PanelTab } from "./PanelTab.js";
@@ -61,7 +62,7 @@ export class VisibilityTab extends PanelTab {
 
 		const fullSummarySection = this.createPreviewSection(
 			'Full Summary',
-			'summary'
+			'*'
 		);
 		previewBody.appendChild(fullSummarySection);
 
@@ -77,7 +78,7 @@ export class VisibilityTab extends PanelTab {
 		});
 	}
 
-	private createPreviewSection(header: string, summaryKey: string): HTMLDivElement {
+	private createPreviewSection(header: string, kindScope: string): HTMLDivElement {
 		const section = document.createElement('div');
 		section.classList.add('outfit-preview-section');
 
@@ -85,7 +86,7 @@ export class VisibilityTab extends PanelTab {
 		h4.textContent = header;
 
 		const code = document.createElement('code');
-		code.textContent = `{{getglobalvar::${this.outfitManager.getVarName(summaryKey)}}}`;
+		code.textContent = `{{${this.outfitManager.getSummaryKey(kindScope)}}}`;
 
 		const details = document.createElement('details');
 		details.classList.add('outfit-preview-details');
@@ -94,8 +95,8 @@ export class VisibilityTab extends PanelTab {
 		summary.textContent = 'Show summary';
 
 		const pre = document.createElement('pre');
-		pre.classList.add('outfit-preview-text');
-		pre.textContent = this.outfitManager.getSummary(summaryKey);
+		pre.classList.add('outfit-preview-section-text');
+		pre.textContent = this.outfitManager.getSummary(kindScope) ?? 'None';
 
 		details.appendChild(summary);
 		details.appendChild(pre);

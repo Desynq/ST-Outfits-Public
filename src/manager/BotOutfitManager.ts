@@ -22,6 +22,10 @@ export class BotOutfitManager extends OutfitManager {
         return false;
     }
 
+    public override getMacroOwner(): string {
+        return 'char';
+    }
+
     public override getNameMacro(): string {
         return '{{char}}';
     }

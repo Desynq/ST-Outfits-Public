@@ -1,6 +1,6 @@
-import { toSnakeCase } from "./StringHelper.js";
+import { toCamelCase, toKebabCase } from "./StringHelper.js";
 
 
 export function toSummaryKey(kind: string): string {
-	return toSnakeCase(kind) + '_summary';
+	return toKebabCase(kind);
 }

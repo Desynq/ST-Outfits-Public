@@ -23,4 +23,7 @@ export interface SillyTavernContext {
 	eventSource: any;
 
 	registerSlashCommand: any;
+
+	registerMacro: (k: string, v: string | (() => string)) => void;
+	unregisterMacro: (k: string) => void;
 }

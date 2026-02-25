@@ -7,6 +7,7 @@ import { formatAccessorySlotName, serializeRecord, toSlotName } from "../shared.
 import { indentString, toKebabCase } from "../util/StringHelper.js";
 import { toSummaryKey } from "../util/SummaryHelper.js";
 import { deleteGlobalVariable, getGlobalVariable, setGlobalVariable } from "./GlobalVarManager.js";
+import { KindScope, OutfitMacroManager } from "./MacroManager.js";
 
 type RenameSlotResult =
 	| 'slot-not-found'
@@ -15,9 +16,13 @@ type RenameSlotResult =
 
 export abstract class OutfitManager {
 
+	protected readonly summaryMacros: OutfitMacroManager;
+
 	public constructor(
 		public readonly saveSettings: Function
-	) { }
+	) {
+		this.summaryMacros = new OutfitMacroManager(this.getMacroOwner(), 'summary');
+	}
 
 	private get outfit() {
 		return this.getOutfitView();
@@ -40,6 +45,8 @@ export abstract class OutfitManager {
 	public abstract getName(): string;
 
 	public abstract isUser(): boolean;
+
+	public abstract getMacroOwner(): string;
 
 
 
@@ -126,11 +133,13 @@ Cancel to keep the current value.`,
 
 		console.log('Updating summaries for', this.getName());
 
+		this.summaryMacros.clear();
+
 		for (const [k, v] of kindSummaries) {
 			this.updateKindSummary(k, v);
 		}
 
-		this.setSummary(namespace, fullSummary);
+		this.setSummary('*', fullSummary);
 	}
 
 	private updateKindSummary(kind: string, value: string): void {
@@ -162,15 +171,16 @@ Cancel to keep the current value.`,
 		return fullSummary;
 	}
 
-	public getSummary(namespace: string): string {
-		const varName = this.getVarName(namespace);
-		return getGlobalVariable(varName);
+	public getSummaryKey(scope: KindScope): string {
+		return this.summaryMacros.asKey(scope);
 	}
 
-	public setSummary(namespace: string, value: string): void {
-		const varName = this.getVarName(namespace);
-		// console.log('Setting global', varName, value);
-		setGlobalVariable(varName, value);
+	public getSummary(scope: KindScope): string | undefined {
+		return this.summaryMacros.get(scope);
+	}
+
+	public setSummary(scope: KindScope, value: string): void {
+		this.summaryMacros.set(scope, value);
 	}
 
 	public initializeOutfit(): void {

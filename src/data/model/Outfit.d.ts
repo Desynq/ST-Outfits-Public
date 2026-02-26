@@ -1,3 +1,4 @@
+import { PartialPanelSettings } from "../view/PanelViews";
 import { SlotPreset } from "./SlotPreset";
 
 export type KnownSlotKind =
@@ -75,6 +76,12 @@ export interface ImageBlob {
 	width: number;
 }
 
+export interface CharPanelsTree {
+	active: string[];
+	panels: Record<string, PartialPanelSettings>;
+}
+
+
 export interface OutfitTrackerModel {
 	enableSysMessages: boolean;
 	autoOpenBot: boolean;
@@ -84,6 +91,7 @@ export interface OutfitTrackerModel {
 	presets: OutfitCollectionsTree;
 	botPanel: PanelSettings;
 	userPanel: PanelSettings;
+	charPanels: CharPanelsTree;
 
 	// key: base64
 	images: Record<string, ImageBlob>;

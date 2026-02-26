@@ -34,6 +34,9 @@ export class BotOutfitPanel extends OutfitPanel {
         outfitHeaderDiv.appendChild(outfitActionsDiv);
         return true;
     }
+    getPanelSettings() {
+        return OutfitTracker.botPanel();
+    }
     async exportButtonClickListener() {
         const presetName = prompt('Name this export:');
         if (!presetName)

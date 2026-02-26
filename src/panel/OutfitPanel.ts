@@ -126,6 +126,8 @@ export abstract class OutfitPanel<T extends PanelType> implements OutfitSlotsHos
 		this.disposer.dispose();
 		if (!this.panelEl || this.minimized) return;
 
+		this.applyTheme();
+
 		const tabsContainer = this.panelEl.querySelector('.outfit-tabs') as HTMLDivElement | undefined;
 		if (!tabsContainer) return;
 
@@ -370,9 +372,7 @@ export abstract class OutfitPanel<T extends PanelType> implements OutfitSlotsHos
 
 	public abstract getPanelType(): T;
 
-	public getPanelSettings(): PanelSettingsViewMap[T] {
-		return OutfitTracker.panelSettings(this.getPanelType());
-	}
+	public abstract getPanelSettings(): PanelSettingsViewMap[T];
 
 	public getSavedXY(mode: LayoutMode): XY {
 		const panelSettings = this.getPanelSettings();
@@ -399,8 +399,8 @@ export abstract class OutfitPanel<T extends PanelType> implements OutfitSlotsHos
 
 	protected abstract initializePanel(): boolean;
 
-	public show(setDefaultX: boolean = false, setDefaultY: boolean = false) {
-		if (this.disabled) return;
+	public show(setDefaultX: boolean = false, setDefaultY: boolean = false): boolean {
+		if (this.disabled) return false;
 
 		if (this.initializePanel()) {
 			this.resetSizeAndPos(setDefaultX, setDefaultY);
@@ -412,6 +412,7 @@ export abstract class OutfitPanel<T extends PanelType> implements OutfitSlotsHos
 
 		this.isVisible = true;
 		this.render();
+		return true;
 	}
 
 	public hide() {
@@ -445,5 +446,15 @@ export abstract class OutfitPanel<T extends PanelType> implements OutfitSlotsHos
 
 	public enable(): void {
 		this.disabled = false;
+	}
+
+	public applyTheme(): void {
+		if (!this.panelEl) return;
+
+		const s = this.getPanelSettings();
+
+		this.panelEl.style.setProperty('--panel-bg-1', s.bgColor1);
+		this.panelEl.style.setProperty('--panel-bg-2', s.bgColor2);
+		this.panelEl.style.setProperty('--panel-border', s.borderColor);
 	}
 }

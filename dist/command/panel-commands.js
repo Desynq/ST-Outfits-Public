@@ -27,12 +27,6 @@ export function registerPanelCommands(panelRegistry, saveSettings) {
                 toastr.error(msg);
                 return msg;
             }
-            const exists = characters.map(c => c.name).includes(charName);
-            if (!exists) {
-                const msg = `${charName} is not a known character`;
-                toastr.error(msg);
-                return msg;
-            }
             const createResult = attempt(() => panelRegistry.getOrCreate(charName, saveSettings), {
                 toastr: `Failed to create panel for ${charName}`,
                 log: '[Outfits] getOrCreate failed:',

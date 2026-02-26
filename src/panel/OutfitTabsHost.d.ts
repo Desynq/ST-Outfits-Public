@@ -1,5 +1,4 @@
-import { PanelSettingsViewMap } from "../data/view/PanelViews";
-import { OutfitManager } from "../manager/OutfitManager";
+import { PanelSettingsView, PanelSettingsViewMap } from "../data/view/PanelViews";
 import { PanelType } from "../types/maps";
 import { SlotsRenderer } from "./SlotsRenderer";
 
@@ -29,8 +28,7 @@ export interface OutfitTabsHost<T extends PanelType> {
 
 	public toggleHideEmpty(): void;
 
-
-	public getPanelType(): PanelType;
-
 	public getPanelSettings(): PanelSettingsViewMap[T];
+
+	public applyTheme(): void;
 }

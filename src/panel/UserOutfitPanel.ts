@@ -1,4 +1,5 @@
 import { OutfitTracker } from '../data/tracker.js';
+import { UserPanelSettingsView } from '../data/view/PanelViews.js';
 import { UserOutfitManager } from '../manager/UserOutfitManager.js';
 import { queryOrThrow } from '../util/ElementHelper.js';
 import { OutfitPanel } from './OutfitPanel.js';
@@ -39,6 +40,10 @@ export class UserOutfitPanel extends OutfitPanel<'user'> {
 
 		outfitHeaderDiv.appendChild(outfitActionsDiv);
 		return true;
+	}
+
+	public override getPanelSettings(): UserPanelSettingsView {
+		return OutfitTracker.userPanel();
 	}
 
 	public override async exportButtonClickListener(): Promise<void> {

@@ -1,4 +1,5 @@
 import { OutfitTracker } from '../data/tracker.js';
+import { BotPanelSettingsView } from '../data/view/PanelViews.js';
 import { BotOutfitManager } from '../manager/BotOutfitManager.js';
 import { queryOrThrow } from '../util/ElementHelper.js';
 import { OutfitPanel } from './OutfitPanel.js';
@@ -46,6 +47,10 @@ export class BotOutfitPanel extends OutfitPanel<'bot'> {
 
 		outfitHeaderDiv.appendChild(outfitActionsDiv);
 		return true;
+	}
+
+	public override getPanelSettings(): BotPanelSettingsView {
+		return OutfitTracker.botPanel();
 	}
 
 	public override async exportButtonClickListener(): Promise<void> {

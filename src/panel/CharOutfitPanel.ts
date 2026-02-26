@@ -1,4 +1,6 @@
 import { OutfitTracker } from "../data/tracker.js";
+import { CharPanelsView } from "../data/view/CharPanelsView.js";
+import { BotPanelSettingsView, CharPanelSettingsView } from "../data/view/PanelViews.js";
 import { CharOutfitManager } from "../manager/CharOutfitManager.js";
 import { el } from "../util/ElementHelper.js";
 import { OutfitPanel } from "./OutfitPanel.js";
@@ -26,6 +28,10 @@ export class CharOutfitPanel extends OutfitPanel<'char'> {
 
 	public get character(): string {
 		return this.outfitManager.character;
+	}
+
+	private get panelsView(): CharPanelsView {
+		return OutfitTracker.charPanels();
 	}
 
 	protected override initializePanel(): boolean {
@@ -69,6 +75,10 @@ export class CharOutfitPanel extends OutfitPanel<'char'> {
 		return true;
 	}
 
+	public override getPanelSettings(): CharPanelSettingsView {
+		return this.panelsView.getOrCreate(this.character);
+	}
+
 	public override async exportButtonClickListener(): Promise<void> {
 		const presetName = prompt('Name this export:');
 		if (!presetName) return;
@@ -100,16 +110,28 @@ export class CharOutfitPanel extends OutfitPanel<'char'> {
 	}
 
 	protected override getHeaderTitle(): string {
-		return `${this.character}'s Outfit`;
+		return `${this.character} Outfit`;
 	}
 
 	public override getPanelType(): 'char' {
 		return 'char';
 	}
 
+	public override show(setDefaultX?: boolean, setDefaultY?: boolean): boolean {
+		if (!super.show(setDefaultX, setDefaultY)) return false;
+
+		this.panelsView.setActive(this.character);
+		this.outfitManager.saveSettings();
+
+		return true;
+	}
+
 	public override hide(): void {
 		super.hide();
 		this.panelEl?.remove();
 		this.panelEl = null;
+
+		this.panelsView.removeActive(this.character);
+		this.outfitManager.saveSettings();
 	}
 }

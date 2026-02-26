@@ -30,6 +30,9 @@ export class UserOutfitPanel extends OutfitPanel {
         outfitHeaderDiv.appendChild(outfitActionsDiv);
         return true;
     }
+    getPanelSettings() {
+        return OutfitTracker.userPanel();
+    }
     async exportButtonClickListener() {
         const presetName = prompt('Name this export:');
         if (!presetName)

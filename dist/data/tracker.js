@@ -1,17 +1,12 @@
 // @ts-ignore
 import { extension_settings } from "../../../../../extensions.js";
-import { normalizePanelSettings } from "./mappings/PanelSettings.js";
+import { normalizeCharPanels, normalizePanelSettings } from "./mappings/PanelSettings.js";
 import { normalizeImageBlobs, normalizeSlotPresets, validatePresets } from "./normalize.js";
+import { CharPanelsView } from "./view/CharPanelsView.js";
 import { CharacterOutfitCollectionView, UserOutfitCollectionView } from "./view/OutfitCollectionView.js";
 import { OutfitImagesView } from "./view/OutfitImagesView.js";
 import { BotPanelSettingsView, defaultBotPanelSettings, defaultUserPanelSettings, UserPanelSettingsView } from "./view/PanelViews.js";
 import { SlotPresetRegistry } from "./view/SlotPresetsView.js";
-const PANEL_SETTINGS_FACTORIES = {
-    user: (s) => new UserPanelSettingsView(s.userPanel),
-    bot: (s) => new BotPanelSettingsView(s.botPanel),
-    // TODO: Change panel settings to be dynamic for char panels
-    char: (s) => new BotPanelSettingsView(s.botPanel)
-};
 class Tracker {
     constructor(settings) {
         this.settings = settings;
@@ -34,9 +29,14 @@ class Tracker {
     userOutfits() {
         return new UserOutfitCollectionView(this.settings.presets.user);
     }
-    panelSettings(type) {
-        const factory = PANEL_SETTINGS_FACTORIES[type];
-        return factory(this.settings);
+    userPanel() {
+        return new UserPanelSettingsView(this.settings.userPanel);
+    }
+    botPanel() {
+        return new BotPanelSettingsView(this.settings.botPanel);
+    }
+    charPanels() {
+        return new CharPanelsView(this.settings.charPanels);
     }
     images() {
         return new OutfitImagesView(this.settings.images);
@@ -65,6 +65,7 @@ function loadTracker() {
     raw.enableSysMessages ?? (raw.enableSysMessages = false);
     raw.autoOpenUser ?? (raw.autoOpenUser = false);
     raw.autoOpenBot ?? (raw.autoOpenBot = false);
+    raw.charPanels = normalizeCharPanels(raw.charPanels);
     normalizeImageBlobs(raw);
     normalizeSlotPresets(raw);
     validatePresets(raw);

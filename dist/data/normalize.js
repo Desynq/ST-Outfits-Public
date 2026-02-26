@@ -191,7 +191,7 @@ function normalizeRawSlotPreset(value, images) {
         lastUsedAt
     };
 }
-function normalizeRecord(input, normalizeValue) {
+export function normalizeRecord(input, normalizeValue) {
     const out = {};
     if (notObject(input))
         return out;

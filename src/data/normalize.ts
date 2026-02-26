@@ -259,7 +259,7 @@ function normalizeRawSlotPreset(
 }
 
 
-function normalizeRecord<T>(
+export function normalizeRecord<T>(
 	input: any,
 	normalizeValue: (v: any) => T | undefined
 ): Record<string, T> {

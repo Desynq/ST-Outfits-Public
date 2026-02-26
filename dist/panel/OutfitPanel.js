@@ -89,6 +89,7 @@ export class OutfitPanel {
         this.disposer.dispose();
         if (!this.panelEl || this.minimized)
             return;
+        this.applyTheme();
         const tabsContainer = this.panelEl.querySelector('.outfit-tabs');
         if (!tabsContainer)
             return;
@@ -285,9 +286,6 @@ export class OutfitPanel {
             this.render();
         }
     }
-    getPanelSettings() {
-        return OutfitTracker.panelSettings(this.getPanelType());
-    }
     getSavedXY(mode) {
         const panelSettings = this.getPanelSettings();
         if (panelSettings.isXYSaved()) {
@@ -307,7 +305,7 @@ export class OutfitPanel {
     }
     show(setDefaultX = false, setDefaultY = false) {
         if (this.disabled)
-            return;
+            return false;
         if (this.initializePanel()) {
             this.resetSizeAndPos(setDefaultX, setDefaultY);
         }
@@ -316,6 +314,7 @@ export class OutfitPanel {
         }
         this.isVisible = true;
         this.render();
+        return true;
     }
     hide() {
         if (this.panelEl) {
@@ -342,5 +341,13 @@ export class OutfitPanel {
     }
     enable() {
         this.disabled = false;
+    }
+    applyTheme() {
+        if (!this.panelEl)
+            return;
+        const s = this.getPanelSettings();
+        this.panelEl.style.setProperty('--panel-bg-1', s.bgColor1);
+        this.panelEl.style.setProperty('--panel-bg-2', s.bgColor2);
+        this.panelEl.style.setProperty('--panel-border', s.borderColor);
     }
 }

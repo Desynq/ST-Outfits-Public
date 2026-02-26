@@ -13,9 +13,15 @@ export class OutfitPanelRegistry {
 	private botAutoOpenTimer: ReturnType<typeof setTimeout> | null = null;
 
 	public constructor(
+		saveSettings: () => void,
 		private userPanel: UserOutfitPanel,
 		private botPanel: BotOutfitPanel
 	) {
+		for (const active of OutfitTracker.charPanels().getActives()) {
+			const { panel } = this.getOrCreate(active, saveSettings);
+			panel.autoOpen();
+		}
+
 		botPanel.onUpdateCharacter(() => {
 			if (this.panels.has(botPanel.character)) {
 				this.botPanel.disable();

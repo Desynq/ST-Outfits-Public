@@ -16,6 +16,9 @@ export class CharOutfitPanel extends OutfitPanel {
     get character() {
         return this.outfitManager.character;
     }
+    get panelsView() {
+        return OutfitTracker.charPanels();
+    }
     initializePanel() {
         if (this.panelEl)
             return false;
@@ -49,6 +52,9 @@ export class CharOutfitPanel extends OutfitPanel {
         outfitHeader.append(outfitActions);
         return true;
     }
+    getPanelSettings() {
+        return this.panelsView.getOrCreate(this.character);
+    }
     async exportButtonClickListener() {
         const presetName = prompt('Name this export:');
         if (!presetName)
@@ -73,14 +79,23 @@ export class CharOutfitPanel extends OutfitPanel {
         this.saveAndRender();
     }
     getHeaderTitle() {
-        return `${this.character}'s Outfit`;
+        return `${this.character} Outfit`;
     }
     getPanelType() {
         return 'char';
+    }
+    show(setDefaultX, setDefaultY) {
+        if (!super.show(setDefaultX, setDefaultY))
+            return false;
+        this.panelsView.setActive(this.character);
+        this.outfitManager.saveSettings();
+        return true;
     }
     hide() {
         super.hide();
         this.panelEl?.remove();
         this.panelEl = null;
+        this.panelsView.removeActive(this.character);
+        this.outfitManager.saveSettings();
     }
 }

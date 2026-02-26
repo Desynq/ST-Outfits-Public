@@ -38,7 +38,7 @@ async function initializeExtension() {
     const userManager = new UserOutfitManager(saveSettings);
     const botPanel = new BotOutfitPanel(botManager);
     const userPanel = new UserOutfitPanel(userManager);
-    const panelRegistry = new OutfitPanelRegistry(userPanel, botPanel);
+    const panelRegistry = new OutfitPanelRegistry(saveSettings, userPanel, botPanel);
     const autoOutfitSystem = new AutoOutfitSystem(botManager);
     // Store panels globally for access in other functions
     // TODO: haha this needs to get removed at some point

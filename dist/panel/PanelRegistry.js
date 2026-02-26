@@ -1,11 +1,15 @@
 import { OutfitTracker } from "../data/tracker.js";
 import { CharOutfitPanel } from "./CharOutfitPanel.js";
 export class OutfitPanelRegistry {
-    constructor(userPanel, botPanel) {
+    constructor(saveSettings, userPanel, botPanel) {
         this.userPanel = userPanel;
         this.botPanel = botPanel;
         this.panels = new Map();
         this.botAutoOpenTimer = null;
+        for (const active of OutfitTracker.charPanels().getActives()) {
+            const { panel } = this.getOrCreate(active, saveSettings);
+            panel.autoOpen();
+        }
         botPanel.onUpdateCharacter(() => {
             if (this.panels.has(botPanel.character)) {
                 this.botPanel.disable();

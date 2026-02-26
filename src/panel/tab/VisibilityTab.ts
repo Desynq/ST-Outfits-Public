@@ -21,6 +21,7 @@ export class VisibilityTab extends PanelTab {
 		this.renderPositionButtons(contentArea);
 		this.renderPreviewButton(contentArea);
 		this.renderVisibilityButtons(contentArea);
+		this.renderThemeInputs(contentArea);
 	}
 
 	private renderPreviewButton(contentArea: HTMLDivElement): void {
@@ -148,5 +149,56 @@ export class VisibilityTab extends PanelTab {
 		contentArea.append(
 			toggleSavingXYButton
 		);
+	}
+
+
+
+
+
+	private renderThemeInputs(contentArea: HTMLDivElement): void {
+		const panelSettings = this.panel.getPanelSettings();
+
+		const container = document.createElement('div');
+		container.className = 'visibility-theme-section';
+
+		const makeColorInput = (
+			labelText: string,
+			key: 'bgColor1' | 'bgColor2' | 'borderColor',
+			value: string
+		) => {
+			const wrapper = document.createElement('div');
+			wrapper.className = 'visibility-theme-row';
+
+			const label = document.createElement('label');
+			label.textContent = labelText;
+
+			const input = document.createElement('input');
+			input.type = 'color';
+			input.value = value;
+
+			let pendingValue: string = input.value;
+
+			input.addEventListener('input', () => {
+				pendingValue = input.value;
+
+				panelSettings.setColor(key, pendingValue);
+				this.panel.applyTheme(); // preview
+			});
+
+			input.addEventListener('blur', () => {
+				this.outfitManager.saveSettings(); // commit
+			});
+
+			wrapper.append(label, input);
+			return wrapper;
+		};
+
+		container.append(
+			makeColorInput('Background 1', 'bgColor1', panelSettings.bgColor1),
+			makeColorInput('Background 2', 'bgColor2', panelSettings.bgColor2),
+			makeColorInput('Border', 'borderColor', panelSettings.borderColor)
+		);
+
+		contentArea.appendChild(container);
 	}
 }

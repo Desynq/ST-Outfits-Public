@@ -1,7 +1,7 @@
 import { OutfitSlotState } from "../../data/model/OutfitSnapshots.js";
 import { assertNever, toSlotName } from "../../shared.js";
 import { PanelType } from "../../types/maps.js";
-import { OverflowMenuFactory } from "../../ui/components/OverflowMenu.js";
+import { OverflowMenu, OverflowMenuFactory } from "../../ui/components/OverflowMenu.js";
 import { SlotPresetsModal } from "../../ui/components/SlotPresetsModal.js";
 import { addDoubleTapListener } from "../../util/element/click-actions.js";
 import { appendElement, createDiv, createElement, el } from "../../util/ElementHelper.js";
@@ -39,17 +39,16 @@ type ImageParent = 'content' | 'label-right' | 'none';
 
 export class SlotRenderer extends OutfitPanelContext {
 
-	private readonly slotValControl: SlotValueController;
+	private readonly valueElement: SlotValueController;
 
 	public constructor(
 		panel: OutfitPanel<PanelType>,
 		private readonly displaySlots: DisplaySlot[],
 		private readonly imageElementFactory: SlotImageElementFactory,
-		private readonly actionMenuFactory: OverflowMenuFactory,
-		private readonly imageMenuFactory: OverflowMenuFactory
+		private readonly overflowMenuFactory: OverflowMenuFactory,
 	) {
 		super(panel);
-		this.slotValControl = new SlotValueController(
+		this.valueElement = new SlotValueController(
 			this.panel,
 			(ctx: SlotContext) => this.removeActionButtons(ctx)
 		);
@@ -128,7 +127,7 @@ export class SlotRenderer extends OutfitPanelContext {
 			armTap
 		);
 
-		const imageElement = this.renderImageElement(ctx);
+		this.renderImageElement(ctx);
 
 
 		const appendInlineToggleBtn = () => {
@@ -137,7 +136,7 @@ export class SlotRenderer extends OutfitPanelContext {
 		};
 
 		const appendInlineEdit = () => {
-			const valueEl = this.slotValControl.render(contentEl, ctx);
+			const valueEl = this.valueElement.render(contentEl, ctx);
 			if (slot.isEmpty()) valueEl.hidden = true;
 			const editBtn = this.appendEditBtn(labelRightDiv, ctx, valueEl);
 			return {
@@ -162,7 +161,7 @@ export class SlotRenderer extends OutfitPanelContext {
 			case 'disabled-empty':
 				break;
 			case 'normal':
-				this.decorateSlot(ctx, imageElement);
+				this.decorateSlot(ctx);
 				break;
 			default: assertNever(mode);
 		}
@@ -178,12 +177,33 @@ export class SlotRenderer extends OutfitPanelContext {
 
 	private renderImageElement(ctx: SlotContext): SlotImageElement {
 		const imageElement = this.imageElementFactory.build(ctx.slot);
+		const { imgWrapper } = imageElement;
 
 		const parent = this.resolveImageParent(imageElement.state, ctx);
 		if (parent === 'none') return imageElement;
 
-		const menu = this.imageMenuFactory.create({
-			openerEl: imageElement.imgWrapper,
+		const target = {
+			'label-right': ctx.labelRightDiv,
+			'content': ctx.contentEl
+		}[parent];
+
+		const menu = this.createImageMenu(ctx, imageElement, imgWrapper);
+		imageElement
+			.onDoubleTap(() => menu.toggleMenu())
+			.appendTo(target);
+
+		this.valueElement.onRender(valueEl => {
+			if (parent !== 'content') return;
+
+			imageElement.observe(ctx.contentEl, this.panel.disposer);
+		});
+
+		return imageElement;
+	}
+
+	private createImageMenu(ctx: SlotContext, imageElement: SlotImageElement, opener: HTMLElement): OverflowMenu {
+		return this.overflowMenuFactory.create({
+			openerEl: opener,
 			disposer: this.panel.disposer,
 			align: 'left',
 			options: {
@@ -205,19 +225,6 @@ export class SlotRenderer extends OutfitPanelContext {
 			.onClopen(open =>
 				ctx.slotElement.classList.toggle('--menu-open', open)
 			);
-
-		const target = {
-			'label-right': ctx.labelRightDiv,
-			'content': ctx.contentEl
-		}[parent];
-
-		imageElement
-			.onDoubleTap(() =>
-				menu.toggleMenu()
-			)
-			.appendTo(target);
-
-		return imageElement;
 	}
 
 	private resolveImageParent(state: ImageState, ctx: SlotContext): ImageParent {
@@ -247,13 +254,11 @@ export class SlotRenderer extends OutfitPanelContext {
 	}
 
 	private decorateSlot(
-		ctx: SlotContext,
-		imageElement: SlotImageElement
+		ctx: SlotContext
 	): void {
 		const actionsElement = new SlotActionsElement(this.panel);
 
-		const valueEl = this.slotValControl.render(ctx.contentEl, ctx);
-		imageElement.observe(ctx.contentEl, valueEl, this.panel.disposer);
+		this.valueElement.render(ctx.contentEl, ctx);
 
 		const toggleBtn = this.createToggleBtn(ctx.slot);
 		ctx.actionsLeftEl.append(toggleBtn);
@@ -277,7 +282,7 @@ export class SlotRenderer extends OutfitPanelContext {
 					() => this.panel.saveAndRender()
 				),
 			},
-			this.actionMenuFactory
+			this.overflowMenuFactory
 		)
 			.onClopen(open =>
 				ctx.slotElement.classList.toggle('--menu-open', open)
@@ -314,7 +319,7 @@ export class SlotRenderer extends OutfitPanelContext {
 
 		editBtn.addEventListener(
 			'click',
-			() => this.slotValControl.beginInlineEdit(ctx, valueEl)
+			() => this.valueElement.beginInlineEdit(ctx, valueEl)
 		);
 		return editBtn;
 	}

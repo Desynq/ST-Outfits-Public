@@ -77,6 +77,7 @@ export class SlotImageElement extends OutfitPanelContext {
 	private _state: ImageState;
 
 	private readonly doubleTapBus = new EventBus<() => void>();
+
 	/**
 	 * Shows a lightbox if the image is visible
 	 */
@@ -132,33 +133,30 @@ export class SlotImageElement extends OutfitPanelContext {
 		);
 	}
 
-	public observe(flexParent: HTMLElement, sibling: HTMLElement, disposer: Disposer) {
-		if (this._state !== 'shown') return;
-
-		let isColumn = false;
-
-		const ENTER_RATIO = 0.55; // image > 55% of container
-		const EXIT_RATIO = 0.45; // must shrink below 45% to exit
+	/**
+	 * @throws if there's no shown image to observe
+	 */
+	public observe(flexParent: HTMLElement, disposer: Disposer): void {
+		if (this._state !== 'shown') {
+			throw new Error('No shown image to observe');
+		}
 
 		const updateLayout = () => {
-			const containerWidth = flexParent.clientWidth;
-			const imageWidth = this.imgWrapper.offsetWidth;
+			const imageRect = this.imgWrapper.getBoundingClientRect();
+			const containerRect = flexParent.getBoundingClientRect();
 
-			if (!containerWidth || !imageWidth) return;
+			const widthRatio = imageRect.width / containerRect.width;
+			const heightRatio = imageRect.height / (containerRect.height);
 
-			const ratio = imageWidth / containerWidth;
+			const imageWider = widthRatio > 0.4;
+			const imageShort = heightRatio < 0.8;
 
-			if (!isColumn && ratio > ENTER_RATIO) {
-				isColumn = true;
-			} else if (isColumn && ratio < EXIT_RATIO) {
-				isColumn = false;
-			}
-
-			flexParent.classList.toggle('column', isColumn);
+			flexParent.classList.toggle('--image-wider', imageWider);
+			flexParent.classList.toggle('--value-taller', imageShort);
 		};
 
 		const observer = new ResizeObserver(() => {
-			requestAnimationFrame(updateLayout);
+			updateLayout();
 		});
 
 		observer.observe(this.imgWrapper);

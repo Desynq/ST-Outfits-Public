@@ -5,6 +5,7 @@ import { popupConfirm } from "../../util/adapter/popup-adapter.js";
 import { substituteParams } from "../../util/adapter/script-adapter.js";
 import { addDoubleTapListener } from "../../util/element/click-actions.js";
 import { addLongPressAction, createElement } from "../../util/ElementHelper.js";
+import { EventBus } from "../../util/EventBus.js";
 import { branch } from "../../util/logic.js";
 import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
 import { OutfitPanel } from "../OutfitPanel.js";
@@ -37,11 +38,18 @@ function iterateMacros(value: string): Iterable<MacroMatch> {
 
 export class SlotValueController extends OutfitPanelContext {
 
+	private readonly renderBus = new EventBus<(valueEl: HTMLDivElement) => void>();
+
 	public constructor(
 		panel: OutfitPanel<PanelType>,
 		private readonly removeActionButtons: (ctx: SlotContext) => void
 	) {
 		super(panel);
+	}
+
+	public onRender(listener: (valueEl: HTMLDivElement) => void): this {
+		this.renderBus.add(listener);
+		return this;
 	}
 
 	public render(container: HTMLDivElement, ctx: SlotContext): HTMLDivElement {
@@ -82,6 +90,7 @@ export class SlotValueController extends OutfitPanelContext {
 
 		container.appendChild(valueEl);
 		this.updateOverflowState(valueEl);
+		this.renderBus.call(valueEl);
 		return valueEl;
 	}
 

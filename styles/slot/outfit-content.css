@@ -1,0 +1,212 @@
+
+
+
+.slot-content {
+	position: relative;
+
+	display: grid;
+	grid-template-columns: auto 1fr;
+	grid-template-rows: auto auto; /* 2 rows */
+	grid-template-areas:
+		'image value'
+		'image value';
+
+	gap: 6px;
+	margin-bottom: 8px;
+	align-items: flex-start;
+}
+
+.slot-content.--value-taller {
+	grid-template-areas:
+		'image value'
+		'image value';
+}
+
+.slot-content.--image-wider {
+	grid-template-columns: auto 1fr;
+	grid-template-rows: auto auto;
+	grid-template-areas:
+		'image image'
+		'value value';
+}
+
+
+
+.slot-image-wrapper {
+	grid-area: image;
+}
+
+.slot-value {
+	grid-area: value;
+}
+
+.image-menu-button {
+	grid-area: btn;
+	justify-self: start;
+	align-self: end;
+}
+
+
+
+.slot-content:has(.slot-value[hidden]) {
+	display: none;
+}
+
+
+
+
+
+
+
+/* Slot Value */
+
+.slot-editbox,
+.slot-value {
+	flex: 1;
+	width: 100%;
+
+	font-size: 0.8em;
+	font-weight: 500;
+
+	line-height: 1.2;
+	min-height: calc(3lh + 12px);
+	box-sizing: border-box;
+
+	padding: 6px;
+	border-radius: 5px;
+	white-space: pre-wrap;
+	word-break: break-word;
+
+	background: rgba(0, 0, 0, 0.5);
+	border: rgba(255, 255, 255, 0.25);
+
+	overflow: hidden;
+	transition: max-height 180ms ease;
+}
+
+.slot-value {
+	cursor: pointer;
+	overflow: auto;
+}
+
+.slot-value.--reveal {
+	max-height: none;
+}
+
+.slot-value.--overflowing:not(.--reveal)::before {
+	content: '...';
+	position: absolute;
+	bottom: 0.15rem;
+	right: 0.5rem;
+	font-size: 0.75rem;
+	opacity: 0.6;
+	pointer-events: none;
+}
+
+.slot-value.disabled {
+	color: rgba(255, 255, 255, 0.75);
+	background: rgba(255, 255, 255, 0.1);
+	border-color: rgba(255, 255, 255, 0.15);
+	font-weight: normal;
+}
+
+.slot-value.none {
+	background: rgba(0, 0, 0, 0.25);
+	border: 1px solid rgba(255, 255, 255, 0.05);
+	font-weight: bold;
+	min-height: auto;
+}
+
+.outfit-slot.--unequipped .slot-value {
+	font-style: italic;
+	background: rgba(0, 0, 0, 0.25);
+	border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+
+
+
+.slot-macro-span {
+	font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+	color: #3ccfcf;
+	background: rgba(60, 207, 207, 0.12);
+
+	padding: 0.1em 0.35em;
+	border-radius: 4px;
+	font-size: 0.9em;
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+}
+
+.slot-macro-span.--error {
+	color: #c77;
+	text-decoration: underline dotted;
+	cursor: help;
+}
+
+.slot-macro-span.--char {
+	color: #7dd3fc;
+	background: rgba(125, 211, 252, 0.15);
+	border-left: 2px solid #7dd3fc;
+	border-right: 2px solid #7dd3fc;
+}
+
+.slot-macro-span.--user {
+	color: #fbbf24;
+	background: rgba(251, 191, 36, 0.15);
+	border-left: 2px solid #fbbf24;
+	border-right: 2px solid #fbbf24;
+}
+
+.slot-macro-span.--unknown {
+	color: #c4b5fd;
+	background: rgba(196, 181, 253, 0.12);
+	border-left: 2px solid #c4b5fd;
+	border-right: 2px solid #c4b5fd;
+}
+
+.slot-macro-span.--outlet {
+	display: block;
+	color: #c4b5fd;
+	background: rgba(196, 181, 253, 0.12);
+	border-left: 2px solid #c4b5fd;
+	border-right: 2px solid #c4b5fd;
+}
+
+
+
+/* Base disabled */
+.slot-value.disabled {
+	opacity: 0.5;
+	transition:
+		opacity 120ms ease,
+		box-shadow 120ms ease,
+		background-color 120ms ease,
+		border-color 120ms ease;
+}
+
+/* Reveal on hover/focus (temporary attention) */
+.slot-value.disabled:is(:hover, :focus-within) {
+	opacity: 0.75;
+	box-shadow: 0 0 0 2px rgba(196, 181, 253, 0.25);
+	/* subtle focus ring */
+}
+
+/* Reveal toggled (persistent state, stronger) */
+.slot-value.disabled.--reveal {
+	opacity: 1;
+	background: rgba(196, 181, 253, 0.18);
+	border-left-color: #c4b5fd;
+	border-right-color: #c4b5fd;
+	box-shadow:
+		0 0 0 2px rgba(196, 181, 253, 0.55),
+		0 6px 18px rgba(196, 181, 253, 0.25);
+}
+
+/* If it's both focused and revealed, make it *extra* obvious */
+.slot-value.disabled.--reveal:focus-within {
+	box-shadow:
+		0 0 0 3px rgba(196, 181, 253, 0.8),
+		0 10px 28px rgba(196, 181, 253, 0.28);
+}

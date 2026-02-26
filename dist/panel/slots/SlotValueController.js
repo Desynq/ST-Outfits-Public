@@ -3,6 +3,7 @@ import { popupConfirm } from "../../util/adapter/popup-adapter.js";
 import { substituteParams } from "../../util/adapter/script-adapter.js";
 import { addDoubleTapListener } from "../../util/element/click-actions.js";
 import { addLongPressAction, createElement } from "../../util/ElementHelper.js";
+import { EventBus } from "../../util/EventBus.js";
 import { branch } from "../../util/logic.js";
 import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
 function iterateMacros(value) {
@@ -25,6 +26,11 @@ export class SlotValueController extends OutfitPanelContext {
     constructor(panel, removeActionButtons) {
         super(panel);
         this.removeActionButtons = removeActionButtons;
+        this.renderBus = new EventBus();
+    }
+    onRender(listener) {
+        this.renderBus.add(listener);
+        return this;
     }
     render(container, ctx) {
         const disabledClass = ctx.slot.isDisabled() ? 'disabled' : '';
@@ -44,6 +50,7 @@ export class SlotValueController extends OutfitPanelContext {
         });
         container.appendChild(valueEl);
         this.updateOverflowState(valueEl);
+        this.renderBus.call(valueEl);
         return valueEl;
     }
     updateOverflowState(el) {

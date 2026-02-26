@@ -2,6 +2,7 @@
 
 @import "./outfit-slot.css";
 @import "./slot/overflow-menu.css";
+@import "./slot/outfit-content.css";
 
 @import "./outfit-tabs.css";
 @import "./outfit-presets-tab.css";

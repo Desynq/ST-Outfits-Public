@@ -51,28 +51,25 @@ export class SlotImageElement extends OutfitPanelContext {
         }
         this.doubleTap = addDoubleTapListener(this.imgWrapper, () => this.doubleTapBus.call(), 300, this.singleTap);
     }
-    observe(flexParent, sibling, disposer) {
-        if (this._state !== 'shown')
-            return;
-        let isColumn = false;
-        const ENTER_RATIO = 0.55; // image > 55% of container
-        const EXIT_RATIO = 0.45; // must shrink below 45% to exit
+    /**
+     * @throws if there's no shown image to observe
+     */
+    observe(flexParent, disposer) {
+        if (this._state !== 'shown') {
+            throw new Error('No shown image to observe');
+        }
         const updateLayout = () => {
-            const containerWidth = flexParent.clientWidth;
-            const imageWidth = this.imgWrapper.offsetWidth;
-            if (!containerWidth || !imageWidth)
-                return;
-            const ratio = imageWidth / containerWidth;
-            if (!isColumn && ratio > ENTER_RATIO) {
-                isColumn = true;
-            }
-            else if (isColumn && ratio < EXIT_RATIO) {
-                isColumn = false;
-            }
-            flexParent.classList.toggle('column', isColumn);
+            const imageRect = this.imgWrapper.getBoundingClientRect();
+            const containerRect = flexParent.getBoundingClientRect();
+            const widthRatio = imageRect.width / containerRect.width;
+            const heightRatio = imageRect.height / (containerRect.height);
+            const imageWider = widthRatio > 0.4;
+            const imageShort = heightRatio < 0.8;
+            flexParent.classList.toggle('--image-wider', imageWider);
+            flexParent.classList.toggle('--value-taller', imageShort);
         };
         const observer = new ResizeObserver(() => {
-            requestAnimationFrame(updateLayout);
+            updateLayout();
         });
         observer.observe(this.imgWrapper);
         observer.observe(flexParent);

@@ -9,6 +9,7 @@ import { ImageLightbox } from "../../ui/components/ImageLightbox.js";
 import { popupConfirm } from "../../util/adapter/popup-adapter.js";
 import { addDoubleTapListener } from "../../util/element/click-actions.js";
 import { createElement, setElementSize } from "../../util/ElementHelper.js";
+import { EventBus } from "../../util/EventBus.js";
 import { promptImageUpload, resizeImage } from "../../util/image-utils.js";
 import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
 import { Disposer } from "../Disposer.js";
@@ -42,13 +43,13 @@ type RenderImageBundle =
 	| {
 		imgEl: null;
 		appendControls?: undefined;
-		onSingleTap?: (e: PointerEvent) => void;
+		singleTap?: (e: PointerEvent) => void;
 		noDoubleTap?: true;
 		state: Exclude<ImageState, 'shown'>;
 	}
 	| {
 		imgEl: HTMLImageElement;
-		onSingleTap: (e: PointerEvent) => void;
+		singleTap: (e: PointerEvent) => void;
 		appendControls: (container: HTMLElement) => void;
 		noDoubleTap?: never;
 		state: Extract<ImageState, 'shown'>;
@@ -72,8 +73,15 @@ export type ImageState = 'shown' | 'hidden' | 'empty' | 'error';
 
 export class SlotImageElement extends OutfitPanelContext {
 
-	private readonly imgWrapper: HTMLDivElement;
+	public readonly imgWrapper: HTMLDivElement;
 	private _state: ImageState;
+
+	private readonly doubleTapBus = new EventBus<() => void>();
+	/**
+	 * Shows a lightbox if the image is visible
+	 */
+	private singleTap: ((e: PointerEvent) => void) | undefined;
+	private doubleTap: (() => void) | undefined;
 
 	public readonly appendControlsTo?: ((parent: HTMLElement) => void) | undefined;
 
@@ -86,26 +94,42 @@ export class SlotImageElement extends OutfitPanelContext {
 		this.imgWrapper = createElement('div', 'slot-image-wrapper');
 		const imageState = this.slot.getActiveImageState();
 
-		const { onSingleTap, appendControls, noDoubleTap, state } = this.renderImageContent(imageState);
+		const { singleTap, appendControls, state } = this.renderImageContent(imageState);
 		this._state = state;
 
-		if (noDoubleTap) {
-			this.imgWrapper.addEventListener('click', () => this.changeImage());
-		}
-		else {
-			addDoubleTapListener(
-				this.imgWrapper,
-				() => this.changeImage(),
-				300,
-				onSingleTap
-			);
+		if (singleTap) {
+			this.imgWrapper.addEventListener('click', singleTap);
+			this.singleTap = singleTap;
 		}
 
 		this.appendControlsTo = appendControls;
 	}
 
-	public appendTo(parent: HTMLElement): void {
+	public appendTo(parent: HTMLElement): this {
 		parent.append(this.imgWrapper);
+		return this;
+	}
+
+	public onDoubleTap(listener: () => void): this {
+		this.doubleTapBus.add(listener);
+		this.ensureDoubleTap();
+
+		return this;
+	}
+
+	private ensureDoubleTap(): void {
+		if (this.doubleTap) return;
+
+		if (this.singleTap) {
+			this.imgWrapper.removeEventListener('click', this.singleTap);
+		}
+
+		this.doubleTap = addDoubleTapListener(
+			this.imgWrapper,
+			() => this.doubleTapBus.call(),
+			300,
+			this.singleTap
+		);
 	}
 
 	public observe(flexParent: HTMLElement, sibling: HTMLElement, disposer: Disposer) {
@@ -180,7 +204,7 @@ export class SlotImageElement extends OutfitPanelContext {
 					this.imgWrapper.textContent = 'Show Image';
 					return {
 						imgEl: null,
-						onSingleTap: () => this.toggleImage(),
+						singleTap: () => this.toggleImage(),
 						state: 'hidden'
 					};
 				default: assertNever(result.reason);
@@ -198,7 +222,7 @@ export class SlotImageElement extends OutfitPanelContext {
 
 		return {
 			imgEl,
-			onSingleTap: () => ImageLightbox.show(imgBlob, imgTag),
+			singleTap: () => ImageLightbox.show(imgBlob, imgTag),
 			appendControls: (c: HTMLElement) => c.append(deleteBtn, toggleBtn, resizeBtn),
 			state: 'shown'
 		};
@@ -353,7 +377,7 @@ export class SlotImageElement extends OutfitPanelContext {
 	// add a new image or change to a pre-existing image
 	// image tag must be kebab-case with no special characters
 	// can be cancelled
-	private async changeImage() {
+	public async changeImage(): Promise<void> {
 		const uploading = await popupConfirm('Will you be uploading a new image or choosing a stored image?', {
 			okText: 'Upload',
 			cancelText: 'Choose'

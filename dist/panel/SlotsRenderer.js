@@ -17,8 +17,9 @@ export class SlotsRenderer extends OutfitPanelContext {
         this.currentKind = kind;
         const displaySlots = this.buildDisplaySlots(slots);
         const imageFactory = new SlotImageElementFactory(this.panel, contentArea.getBoundingClientRect().width);
-        const overflowFactory = new OverflowMenuFactory();
-        const slotFactory = new SlotRenderer(this.panel, displaySlots, imageFactory, overflowFactory);
+        const actionMenuFactory = new OverflowMenuFactory();
+        const imageMenuFactory = new OverflowMenuFactory();
+        const slotFactory = new SlotRenderer(this.panel, displaySlots, imageFactory, actionMenuFactory, imageMenuFactory);
         const fragment = document.createDocumentFragment();
         for (const display of displaySlots) {
             const el = slotFactory.createSlotElement(contentArea, display);

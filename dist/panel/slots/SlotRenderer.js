@@ -7,11 +7,12 @@ import { SlotActionsMenuElement } from "./ActionOverflowElement.js";
 import { SlotActionsElement } from "./SlotActionsElement.js";
 import { SlotValueController } from "./SlotValueController.js";
 export class SlotRenderer extends OutfitPanelContext {
-    constructor(panel, displaySlots, imageElementFactory, actionMenuFactory) {
+    constructor(panel, displaySlots, imageElementFactory, actionMenuFactory, imageMenuFactory) {
         super(panel);
         this.displaySlots = displaySlots;
         this.imageElementFactory = imageElementFactory;
         this.actionMenuFactory = actionMenuFactory;
+        this.imageMenuFactory = imageMenuFactory;
         this.slotValControl = new SlotValueController(this.panel, (ctx) => this.removeActionButtons(ctx));
     }
     isValueHidden(mode) {
@@ -103,19 +104,36 @@ export class SlotRenderer extends OutfitPanelContext {
     renderImageElement(ctx) {
         const imageElement = this.imageElementFactory.build(ctx.slot);
         const parent = this.resolveImageParent(imageElement.state, ctx);
-        switch (parent) {
-            case 'none':
-                break;
-            case 'label-right':
-                imageElement.appendControlsTo?.(ctx.imageActionsEl);
-                imageElement.appendTo(ctx.labelRightDiv);
-                break;
-            case 'content':
-                imageElement.appendControlsTo?.(ctx.imageActionsEl);
-                imageElement.appendTo(ctx.contentEl);
-                break;
-            default: assertNever(parent);
-        }
+        if (parent === 'none')
+            return imageElement;
+        const menu = this.imageMenuFactory.create({
+            openerEl: imageElement.imgWrapper,
+            disposer: this.panel.disposer,
+            align: 'left',
+            options: {
+                parent: ctx.slotElement,
+                className: 'slot-overflow-menu',
+            },
+            getViewBoundary: () => ctx.scroller.getBoundingClientRect()
+        })
+            .onBuild(menu => {
+            menu.append(el('button', {
+                className: 'slot-button change-image-button',
+                text: 'Change Image',
+                events: {
+                    click: () => imageElement.changeImage()
+                }
+            }));
+            imageElement.appendControlsTo?.(menu);
+        })
+            .onClopen(open => ctx.slotElement.classList.toggle('--menu-open', open));
+        const target = {
+            'label-right': ctx.labelRightDiv,
+            'content': ctx.contentEl
+        }[parent];
+        imageElement
+            .onDoubleTap(() => menu.toggleMenu())
+            .appendTo(target);
         return imageElement;
     }
     resolveImageParent(state, ctx) {

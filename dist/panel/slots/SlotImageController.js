@@ -4,6 +4,7 @@ import { ImageLightbox } from "../../ui/components/ImageLightbox.js";
 import { popupConfirm } from "../../util/adapter/popup-adapter.js";
 import { addDoubleTapListener } from "../../util/element/click-actions.js";
 import { createElement, setElementSize } from "../../util/ElementHelper.js";
+import { EventBus } from "../../util/EventBus.js";
 import { promptImageUpload, resizeImage } from "../../util/image-utils.js";
 import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
 import { showImagePicker } from "./prompt-images.js";
@@ -22,20 +23,33 @@ export class SlotImageElement extends OutfitPanelContext {
         super(panel);
         this.boundaryWidth = boundaryWidth;
         this.slot = slot;
+        this.doubleTapBus = new EventBus();
         this.imgWrapper = createElement('div', 'slot-image-wrapper');
         const imageState = this.slot.getActiveImageState();
-        const { onSingleTap, appendControls, noDoubleTap, state } = this.renderImageContent(imageState);
+        const { singleTap, appendControls, state } = this.renderImageContent(imageState);
         this._state = state;
-        if (noDoubleTap) {
-            this.imgWrapper.addEventListener('click', () => this.changeImage());
-        }
-        else {
-            addDoubleTapListener(this.imgWrapper, () => this.changeImage(), 300, onSingleTap);
+        if (singleTap) {
+            this.imgWrapper.addEventListener('click', singleTap);
+            this.singleTap = singleTap;
         }
         this.appendControlsTo = appendControls;
     }
     appendTo(parent) {
         parent.append(this.imgWrapper);
+        return this;
+    }
+    onDoubleTap(listener) {
+        this.doubleTapBus.add(listener);
+        this.ensureDoubleTap();
+        return this;
+    }
+    ensureDoubleTap() {
+        if (this.doubleTap)
+            return;
+        if (this.singleTap) {
+            this.imgWrapper.removeEventListener('click', this.singleTap);
+        }
+        this.doubleTap = addDoubleTapListener(this.imgWrapper, () => this.doubleTapBus.call(), 300, this.singleTap);
     }
     observe(flexParent, sibling, disposer) {
         if (this._state !== 'shown')
@@ -97,7 +111,7 @@ export class SlotImageElement extends OutfitPanelContext {
                     this.imgWrapper.textContent = 'Show Image';
                     return {
                         imgEl: null,
-                        onSingleTap: () => this.toggleImage(),
+                        singleTap: () => this.toggleImage(),
                         state: 'hidden'
                     };
                 default: assertNever(result.reason);
@@ -112,7 +126,7 @@ export class SlotImageElement extends OutfitPanelContext {
         const resizeBtn = this.createResizeBtn();
         return {
             imgEl,
-            onSingleTap: () => ImageLightbox.show(imgBlob, imgTag),
+            singleTap: () => ImageLightbox.show(imgBlob, imgTag),
             appendControls: (c) => c.append(deleteBtn, toggleBtn, resizeBtn),
             state: 'shown'
         };

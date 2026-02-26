@@ -1,5 +1,6 @@
 import { el } from "../../util/ElementHelper.js";
 import { EventBus } from "../../util/EventBus.js";
+import { clamp } from "../../util/math.js";
 export class OverflowMenuFactory {
     constructor() {
         this.openMenu = null;
@@ -19,6 +20,7 @@ export class OverflowMenu {
         this.menu = null;
         this.openBus = new EventBus();
         this.closeBus = new EventBus();
+        this.buildBus = new EventBus();
         this.handleOutsideClick = (e) => {
             if (!this.menu)
                 return;
@@ -61,33 +63,47 @@ export class OverflowMenu {
         this.closeBus.add(() => listener(false));
         return this;
     }
+    onBuild(listener) {
+        this.buildBus.add(listener);
+        return this;
+    }
     buildMenu() {
         const menu = el('div', this.deps.options);
+        this.buildBus.call(menu);
         this.positionMenu(menu);
         return menu;
     }
     get invAlign() {
         return this.deps.align === 'left' ? 'right' : 'left';
     }
-    positionMenu(menu) {
+    positionMenu(menuEl) {
         const parentRect = this.deps.options.parent.getBoundingClientRect();
         const openerRect = this.deps.openerEl.getBoundingClientRect();
         const viewRect = this.deps.getViewBoundary();
-        const x = parentRect[this.deps.align] - openerRect[this.deps.align];
-        menu.style[this.deps.align] = `${x}px`;
-        menu.style[this.invAlign] = 'auto';
+        const x = {
+            'left': openerRect.left - parentRect.left,
+            'right': parentRect.right - openerRect.right
+        }[this.deps.align];
+        const menuWidth = menuEl.offsetWidth;
+        const parentWidth = parentRect.width;
+        const padding = 8;
+        const finalX = clamp({ value: x, min: padding, max: parentWidth - menuWidth - padding });
+        menuEl.style[this.deps.align] = `${finalX}px`;
+        menuEl.style[this.invAlign] = 'auto';
         const spaceBelow = viewRect.bottom - openerRect.bottom;
         const spaceAbove = openerRect.top - viewRect.top;
-        const menuHeight = menu.offsetHeight;
-        const up = spaceBelow < menuHeight && spaceAbove > spaceBelow;
-        menu.classList.toggle('--open-up', up);
-        if (up) {
-            menu.style.bottom = `${parentRect.bottom - openerRect.top}px`;
-            menu.style.top = 'auto';
+        const menuHeight = menuEl.offsetHeight;
+        const openUp = spaceBelow < menuHeight && spaceAbove > spaceBelow;
+        menuEl.classList.toggle('--open-up', openUp);
+        if (openUp) {
+            const bottom = parentRect.bottom - openerRect.top;
+            menuEl.style.bottom = `${bottom}px`;
+            menuEl.style.top = 'auto';
         }
         else {
-            menu.style.top = `${openerRect.bottom - parentRect.top}px`;
-            menu.style.bottom = 'auto';
+            const top = openerRect.bottom - parentRect.top;
+            menuEl.style.top = `${top}px`;
+            menuEl.style.bottom = 'auto';
         }
     }
 }

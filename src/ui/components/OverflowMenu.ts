@@ -8,7 +8,7 @@ import { clamp } from "../../util/math.js";
 
 export interface OverflowMenuDeps {
 	openerEl: HTMLElement;
-	disposer: Disposer;
+	onDispose: (fn: () => void) => void;
 	align: 'left' | 'right';
 	options: RequireKeys<ElementOptions<'div'>, 'className' | 'parent'>;
 	getViewBoundary(): DOMRect;
@@ -53,7 +53,7 @@ export class OverflowMenu {
 		this.openBus.call();
 		this.menu = this.buildMenu();
 		document.addEventListener('click', this.handleOutsideClick);
-		this.deps.disposer.add(() => this.closeMenu());
+		this.deps.onDispose(() => this.closeMenu());
 	}
 
 	public closeMenu(): void {

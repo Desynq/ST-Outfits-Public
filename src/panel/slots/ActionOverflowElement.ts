@@ -9,7 +9,7 @@ import { Disposer } from "../Disposer.js";
 export interface SlotActionMenuDeps {
 	mountEl: HTMLElement;
 	getViewBoundary: () => DOMRect;
-	disposer: Disposer;
+	onDispose: (fn: () => void) => void;
 	deleteSlot(): void;
 	shiftSlot(): void;
 	moveSlot(): void;
@@ -32,7 +32,7 @@ export class SlotActionsMenuElement {
 
 		this.menu = this.factory.create({
 			openerEl: this.btn,
-			disposer: this.deps.disposer,
+			onDispose: this.deps.onDispose,
 			align: 'right',
 			options: {
 				className: 'slot-overflow-menu',

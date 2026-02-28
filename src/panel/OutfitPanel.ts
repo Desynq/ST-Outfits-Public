@@ -5,6 +5,7 @@ import { LayoutMode, PanelSettingsViewMap } from "../data/view/PanelViews.js";
 import { isWideScreen } from "../shared.js";
 import type { OutfitManagerMap, PanelType } from "../types/maps.js";
 import { createConfiguredElements, toggleClasses } from "../util/ElementHelper.js";
+import { EventBus } from "../util/EventBus.js";
 import { Disposer } from "./Disposer.js";
 import { OutfitSlotsHost } from "./OutfitSlotsHost.js";
 import { OutfitTabsHost } from "./OutfitTabsHost.js";
@@ -16,18 +17,29 @@ export abstract class OutfitPanel<T extends PanelType> implements OutfitSlotsHos
 	protected panelEl: HTMLDivElement | null = null;
 	protected minimized: boolean = false;
 	protected isVisible: boolean = false;
-
-	protected slotsRenderer: SlotsRenderer = new SlotsRenderer(this);
-	protected tabsRenderer: TabsRenderer = new TabsRenderer(this);
-
-	public readonly disposer: Disposer = new Disposer();
-
-	private hideListeners: (() => void)[] = [];
 	private disabled: boolean = false;
 
+	protected readonly slotsRenderer: SlotsRenderer = new SlotsRenderer(this);
+	protected readonly tabsRenderer: TabsRenderer = new TabsRenderer(this);
+
+	private readonly disposer: Disposer = new Disposer();
+
+	private readonly hideBus = new EventBus<() => void>();
+
 	public constructor(
-		protected outfitManager: OutfitManagerMap[T]
+		protected readonly outfitManager: OutfitManagerMap[T]
 	) { }
+
+	// Event registration
+
+	public readonly onDispose = (fn: () => void): void => this.disposer.add(fn);
+
+	public onHide(listener: () => void): void {
+		this.hideBus.add(listener);
+	}
+
+
+
 
 	public isMinimized(): boolean {
 		return this.minimized;
@@ -422,21 +434,11 @@ export abstract class OutfitPanel<T extends PanelType> implements OutfitSlotsHos
 		this.isVisible = false;
 		this.minimized = false;
 
-		this.emitHide();
+		this.hideBus.call();
 	}
 
 	public toggle() {
 		this.isVisible ? this.hide() : this.show();
-	}
-
-	public onHide(listener: () => void): void {
-		this.hideListeners.push(listener);
-	}
-
-	protected emitHide(): void {
-		for (const listener of this.hideListeners) {
-			listener();
-		}
 	}
 
 	public disable(): void {

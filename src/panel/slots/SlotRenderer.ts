@@ -195,7 +195,8 @@ export class SlotRenderer extends OutfitPanelContext {
 		this.valueElement.onRender(valueEl => {
 			if (parent !== 'content') return;
 
-			imageElement.observe(ctx.contentEl, this.panel.disposer);
+			const observer = imageElement.observe(ctx.contentEl);
+			this.panel.onDispose(observer.disconnect);
 		});
 
 		return imageElement;
@@ -204,7 +205,7 @@ export class SlotRenderer extends OutfitPanelContext {
 	private createImageMenu(ctx: SlotContext, imageElement: SlotImageElement, opener: HTMLElement): OverflowMenu {
 		return this.overflowMenuFactory.create({
 			openerEl: opener,
-			disposer: this.panel.disposer,
+			onDispose: this.panel.onDispose,
 			align: 'left',
 			options: {
 				parent: ctx.slotElement,
@@ -272,7 +273,7 @@ export class SlotRenderer extends OutfitPanelContext {
 			{
 				mountEl: ctx.slotElement,
 				getViewBoundary: () => ctx.scroller.getBoundingClientRect(),
-				disposer: this.panel.disposer,
+				onDispose: this.panel.onDispose,
 				deleteSlot: () => this.askDeleteSlot(ctx.slotElement, ctx.slot),
 				shiftSlot: () => this.beginSlotShift(ctx),
 				moveSlot: () => this.moveSlot(ctx.slot),

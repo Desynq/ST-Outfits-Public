@@ -37,7 +37,7 @@ export class OverflowMenu {
         this.openBus.call();
         this.menu = this.buildMenu();
         document.addEventListener('click', this.handleOutsideClick);
-        this.deps.disposer.add(() => this.closeMenu());
+        this.deps.onDispose(() => this.closeMenu());
     }
     closeMenu() {
         if (!this.menu)

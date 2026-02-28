@@ -12,7 +12,7 @@ export class EventBus {
         this.listeners.clear();
     }
     call(...args) {
-        for (const listener of this.listeners) {
+        for (const listener of [...this.listeners]) {
             listener(...args);
         }
     }

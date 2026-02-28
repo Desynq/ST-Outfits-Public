@@ -54,7 +54,7 @@ export class SlotImageElement extends OutfitPanelContext {
     /**
      * @throws if there's no shown image to observe
      */
-    observe(flexParent, disposer) {
+    observe(flexParent) {
         if (this._state !== 'shown') {
             throw new Error('No shown image to observe');
         }
@@ -74,7 +74,9 @@ export class SlotImageElement extends OutfitPanelContext {
         observer.observe(this.imgWrapper);
         observer.observe(flexParent);
         updateLayout();
-        disposer.add(() => observer.disconnect());
+        return {
+            disconnect: () => observer.disconnect()
+        };
     }
     get imagesView() {
         return OutfitTracker.images();

@@ -9,7 +9,7 @@ export class SlotActionsMenuElement {
         });
         this.menu = this.factory.create({
             openerEl: this.btn,
-            disposer: this.deps.disposer,
+            onDispose: this.deps.onDispose,
             align: 'right',
             options: {
                 className: 'slot-overflow-menu',

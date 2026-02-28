@@ -1,6 +1,7 @@
 import { OutfitTracker } from "../data/tracker.js";
 import { isWideScreen } from "../shared.js";
 import { createConfiguredElements, toggleClasses } from "../util/ElementHelper.js";
+import { EventBus } from "../util/EventBus.js";
 import { Disposer } from "./Disposer.js";
 import { SlotsRenderer } from "./SlotsRenderer.js";
 import { OutfitTabsRenderer as TabsRenderer } from "./TabsRenderer.js";
@@ -10,11 +11,16 @@ export class OutfitPanel {
         this.panelEl = null;
         this.minimized = false;
         this.isVisible = false;
+        this.disabled = false;
         this.slotsRenderer = new SlotsRenderer(this);
         this.tabsRenderer = new TabsRenderer(this);
         this.disposer = new Disposer();
-        this.hideListeners = [];
-        this.disabled = false;
+        this.hideBus = new EventBus();
+        // Event registration
+        this.onDispose = (fn) => this.disposer.add(fn);
+    }
+    onHide(listener) {
+        this.hideBus.add(listener);
     }
     isMinimized() {
         return this.minimized;
@@ -322,18 +328,10 @@ export class OutfitPanel {
         }
         this.isVisible = false;
         this.minimized = false;
-        this.emitHide();
+        this.hideBus.call();
     }
     toggle() {
         this.isVisible ? this.hide() : this.show();
-    }
-    onHide(listener) {
-        this.hideListeners.push(listener);
-    }
-    emitHide() {
-        for (const listener of this.hideListeners) {
-            listener();
-        }
     }
     disable() {
         this.disabled = true;

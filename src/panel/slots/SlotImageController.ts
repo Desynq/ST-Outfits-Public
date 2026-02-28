@@ -136,7 +136,7 @@ export class SlotImageElement extends OutfitPanelContext {
 	/**
 	 * @throws if there's no shown image to observe
 	 */
-	public observe(flexParent: HTMLElement, disposer: Disposer): void {
+	public observe(flexParent: HTMLElement): { disconnect: () => void; } {
 		if (this._state !== 'shown') {
 			throw new Error('No shown image to observe');
 		}
@@ -164,7 +164,9 @@ export class SlotImageElement extends OutfitPanelContext {
 
 		updateLayout();
 
-		disposer.add(() => observer.disconnect());
+		return {
+			disconnect: () => observer.disconnect()
+		};
 	}
 
 	private get imagesView(): OutfitImagesView {

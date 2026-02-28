@@ -259,7 +259,7 @@ export class SlotRenderer extends OutfitPanelContext {
 	): void {
 		const actionsElement = new SlotActionsElement(this.panel);
 
-		this.valueElement.render(ctx.contentEl, ctx);
+		const valueEl = this.valueElement.render(ctx.contentEl, ctx);
 
 		const toggleBtn = this.createToggleBtn(ctx.slot);
 		ctx.actionsLeftEl.append(toggleBtn);
@@ -268,6 +268,8 @@ export class SlotRenderer extends OutfitPanelContext {
 			const unequipBtn = actionsElement.createUnequipButton(ctx.slot);
 			ctx.actionsLeftEl.append(unequipBtn);
 		}
+
+		const editBtn = this.appendEditBtn(ctx.actionsRightEl, ctx, valueEl);
 
 		const overflowElement = new SlotActionsMenuElement(
 			{
@@ -289,8 +291,6 @@ export class SlotRenderer extends OutfitPanelContext {
 				ctx.slotElement.classList.toggle('--menu-open', open)
 			)
 			.appendTo(ctx.actionsRightEl);
-
-		// const editBtn = this.appendEditBtn(ctx.actionsRightEl, ctx, valueEl);
 	}
 
 	private createToggleBtn(slot: OutfitSlotState): HTMLButtonElement {

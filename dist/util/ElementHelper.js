@@ -1,3 +1,4 @@
+import { addEvents } from "./element/batch.js";
 import { forceArray } from "./list-utils.js";
 export function addContextActionListener(element, listener, longPressMs = 550) {
     element.addEventListener('contextmenu', (e) => {
@@ -35,18 +36,61 @@ export function addLeftClickListener(element, listener) {
 export function addLongPressAction(el, delay, onLongPress, options) {
     let timer = null;
     let longPressTriggered = false;
+    let startX = 0;
+    let startY = 0;
+    const tolerance = options?.jitterTolerance ?? 6; // default 6px
     const getDelay = () => typeof delay === 'function' ? delay() : delay;
+    const getPoint = (e) => {
+        if ('touches' in e && e.touches.length > 0) {
+            return {
+                x: e.touches[0].clientX,
+                y: e.touches[0].clientY
+            };
+        }
+        else if ('changedTouches' in e && e.changedTouches.length > 0) {
+            return {
+                x: e.changedTouches[0].clientX,
+                y: e.changedTouches[0].clientY
+            };
+        }
+        else {
+            const m = e;
+            return {
+                x: m.clientX,
+                y: m.clientY
+            };
+        }
+    };
+    const exceededJitter = (e) => {
+        const { x, y } = getPoint(e);
+        const dx = x - startX;
+        const dy = y - startY;
+        return (dx * dx + dy * dy) > (tolerance * tolerance);
+    };
     const start = (e) => {
         if (timer !== null)
             return;
         if (options?.stopImmediatePropagation)
             e.stopImmediatePropagation();
         longPressTriggered = false;
+        const point = getPoint(e);
+        startX = point.x;
+        startY = point.y;
         timer = window.setTimeout(() => {
             timer = null;
+            if (window.getSelection()?.toString())
+                return;
             longPressTriggered = true;
             onLongPress(e);
         }, getDelay());
+    };
+    const move = (e) => {
+        if (timer === null)
+            return;
+        if (exceededJitter(e)) {
+            clearTimeout(timer);
+            timer = null;
+        }
     };
     const cancel = (e) => {
         if (timer !== null) {
@@ -63,20 +107,13 @@ export function addLongPressAction(el, delay, onLongPress, options) {
             }, 0);
         }
     };
-    el.addEventListener('touchstart', start, { passive: true });
-    el.addEventListener('touchend', cancel);
-    el.addEventListener('touchmove', cancel);
-    el.addEventListener('touchcancel', cancel);
-    el.addEventListener('mousedown', start);
-    el.addEventListener('mouseup', cancel);
-    el.addEventListener('mouseleave', cancel);
-    el.addEventListener('click', (e) => {
-        if (longPressTriggered) {
-            e.preventDefault();
-            e.stopPropagation();
-            longPressTriggered = false;
-        }
-    });
+    addEvents(el, ['touchstart', start, { passive: true }], ['touchmove', move], ['touchend', cancel], ['touchcancel', cancel], ['mousedown', start], ['mousemove', move], ['mouseup', cancel], ['mouseleave', cancel], ['click', (e) => {
+            if (longPressTriggered) {
+                e.preventDefault();
+                e.stopPropagation();
+                longPressTriggered = false;
+            }
+        }]);
 }
 export function addHorizontalScroll(el, scale = 1.0) {
     const listener = (e) => {

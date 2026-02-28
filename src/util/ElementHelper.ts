@@ -1,3 +1,4 @@
+import { addEvents } from "./element/batch.js";
 import { conditionalList, forceArray } from "./list-utils.js";
 
 
@@ -49,13 +50,48 @@ export function addLongPressAction(
 		stopImmediatePropagation?: boolean;
 		onReleaseAfterLongPress?: (e: TouchEvent | MouseEvent) => void;
 		onReleaseAfterNormalPress?: (e: TouchEvent | MouseEvent) => void;
+		jitterTolerance?: number;
 	}
 ): void {
 	let timer: number | null = null;
 	let longPressTriggered = false;
 
+	let startX = 0;
+	let startY = 0;
+
+	const tolerance = options?.jitterTolerance ?? 6; // default 6px
+
 	const getDelay = () =>
 		typeof delay === 'function' ? delay() : delay;
+
+	const getPoint = (e: TouchEvent | MouseEvent) => {
+		if ('touches' in e && e.touches.length > 0) {
+			return {
+				x: e.touches[0].clientX,
+				y: e.touches[0].clientY
+			};
+		}
+		else if ('changedTouches' in e && e.changedTouches.length > 0) {
+			return {
+				x: e.changedTouches[0].clientX,
+				y: e.changedTouches[0].clientY
+			};
+		}
+		else {
+			const m = e as MouseEvent;
+			return {
+				x: m.clientX,
+				y: m.clientY
+			};
+		}
+	};
+
+	const exceededJitter = (e: TouchEvent | MouseEvent) => {
+		const { x, y } = getPoint(e);
+		const dx = x - startX;
+		const dy = y - startY;
+		return (dx * dx + dy * dy) > (tolerance * tolerance);
+	};
 
 	const start = (e: TouchEvent | MouseEvent) => {
 		if (timer !== null) return;
@@ -63,11 +99,27 @@ export function addLongPressAction(
 
 		longPressTriggered = false;
 
+		const point = getPoint(e);
+		startX = point.x;
+		startY = point.y;
+
 		timer = window.setTimeout(() => {
 			timer = null;
+
+			if (window.getSelection()?.toString()) return;
+
 			longPressTriggered = true;
 			onLongPress(e);
 		}, getDelay());
+	};
+
+	const move = (e: TouchEvent | MouseEvent) => {
+		if (timer === null) return;
+
+		if (exceededJitter(e)) {
+			clearTimeout(timer);
+			timer = null;
+		}
 	};
 
 	const cancel = (e: TouchEvent | MouseEvent) => {
@@ -89,22 +141,25 @@ export function addLongPressAction(
 		}
 	};
 
-	el.addEventListener('touchstart', start, { passive: true });
-	el.addEventListener('touchend', cancel);
-	el.addEventListener('touchmove', cancel);
-	el.addEventListener('touchcancel', cancel);
+	addEvents(el,
+		['touchstart', start, { passive: true }],
+		['touchmove', move],
+		['touchend', cancel],
+		['touchcancel', cancel],
 
-	el.addEventListener('mousedown', start);
-	el.addEventListener('mouseup', cancel);
-	el.addEventListener('mouseleave', cancel);
+		['mousedown', start],
+		['mousemove', move],
+		['mouseup', cancel],
+		['mouseleave', cancel],
 
-	el.addEventListener('click', (e) => {
-		if (longPressTriggered) {
-			e.preventDefault();
-			e.stopPropagation();
-			longPressTriggered = false;
-		}
-	});
+		['click', (e: MouseEvent) => {
+			if (longPressTriggered) {
+				e.preventDefault();
+				e.stopPropagation();
+				longPressTriggered = false;
+			}
+		}]
+	);
 }
 
 
@@ -205,7 +260,7 @@ type NativeProps<K extends keyof HTMLElementTagNameMap> =
 
 type ContentOptions =
 	| { text: string; children?: never; }
-	| { children: HTMLElement[]; text?: never; }
+	| { children: Node[]; text?: never; }
 	| {};
 
 export type ElementOptions<K extends keyof HTMLElementTagNameMap> =

@@ -162,7 +162,7 @@ Cancel to keep the current value.`,
 	protected getFullSummaryTag(): { domain: string, openingTag: string; closingTag: string; } {
 		return {
 			domain: 'outfit',
-			openingTag: `<outfit character=${this.getNameMacro()}>`,
+			openingTag: `<outfit character="${this.getNameMacro()}">`,
 			closingTag: '</outfit>'
 		};
 	}
@@ -170,6 +170,7 @@ Cancel to keep the current value.`,
 	public createOutfitSummary(out?: Map<string, string>): string {
 		const { openingTag, closingTag } = this.getFullSummaryTag();
 		let fullSummary = openingTag;
+		let isFirst = true;
 
 		for (const kind of this.getOutfitView().getSlotKinds()) {
 			const value = serializeRecord(
@@ -181,7 +182,11 @@ Cancel to keep the current value.`,
 			out?.set(kind, value);
 
 			if (value !== '') {
-				fullSummary += `\n\n${indentString(value)}`;
+				fullSummary += isFirst
+					? `\n${indentString(value)}`
+					: `\n\n${indentString(value)}`;
+
+				isFirst = false;
 			}
 		}
 

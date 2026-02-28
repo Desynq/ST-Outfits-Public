@@ -86,18 +86,22 @@ Cancel to keep the current value.`, currentValue);
     getFullSummaryTag() {
         return {
             domain: 'outfit',
-            openingTag: `<outfit character=${this.getNameMacro()}>`,
+            openingTag: `<outfit character="${this.getNameMacro()}">`,
             closingTag: '</outfit>'
         };
     }
     createOutfitSummary(out) {
         const { openingTag, closingTag } = this.getFullSummaryTag();
         let fullSummary = openingTag;
+        let isFirst = true;
         for (const kind of this.getOutfitView().getSlotKinds()) {
             const value = serializeRecord(this.buildPromptSlotValuesFromKind(kind), kind === 'accessory' ? formatAccessorySlotName : toSlotName, toKebabCase(kind));
             out?.set(kind, value);
             if (value !== '') {
-                fullSummary += `\n\n${indentString(value)}`;
+                fullSummary += isFirst
+                    ? `\n${indentString(value)}`
+                    : `\n\n${indentString(value)}`;
+                isFirst = false;
             }
         }
         fullSummary += `\n${closingTag}`;

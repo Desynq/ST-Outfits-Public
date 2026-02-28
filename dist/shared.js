@@ -68,7 +68,7 @@ export function serializeRecord(record, keyFormatter, category) {
     return Object.entries(record)
         .map(([key, value]) => {
         const tag = toKebabCase(keyFormatter(key));
-        return `<${tag} category="${category}">\n${indentString(value)}\n</${tag}>`;
+        return `<${category} type="${tag}">\n${indentString(value)}\n</${category}>`;
     })
         .join("\n\n");
 }
@@ -89,11 +89,23 @@ export function scrollIntoViewAboveKeyboard(scroller, el, pad = 12) {
     const visibleBottom = vv ? (vv.offsetTop + vv.height) : window.innerHeight;
     const clipTop = Math.max(scrollerRect.top, visibleTop);
     const clipBottom = Math.min(scrollerRect.bottom, visibleBottom);
+    // 🔒 Guard: already fully visible
+    const fullyVisible = elRect.top >= clipTop + pad &&
+        elRect.bottom <= clipBottom - pad;
+    if (fullyVisible)
+        return;
+    let newScrollTop = scroller.scrollTop;
     if (elRect.bottom > clipBottom - pad) {
-        scroller.scrollTop += (elRect.bottom - (clipBottom - pad));
+        newScrollTop += elRect.bottom - (clipBottom - pad);
     }
-    if (elRect.top < clipTop + pad) {
-        scroller.scrollTop -= ((clipTop + pad) - elRect.top);
+    else if (elRect.top < clipTop + pad) {
+        newScrollTop -= (clipTop + pad) - elRect.top;
+    }
+    if (newScrollTop !== scroller.scrollTop) {
+        scroller.scrollTo({
+            top: newScrollTop,
+            behavior: 'instant'
+        });
     }
 }
 export function escapeHTML(str) {

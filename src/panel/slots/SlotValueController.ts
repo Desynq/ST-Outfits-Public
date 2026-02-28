@@ -4,7 +4,7 @@ import { PanelType } from "../../types/maps.js";
 import { popupConfirm } from "../../util/adapter/popup-adapter.js";
 import { substituteParams } from "../../util/adapter/script-adapter.js";
 import { addDoubleTapListener } from "../../util/element/click-actions.js";
-import { addLongPressAction, createElement } from "../../util/ElementHelper.js";
+import { addLongPressAction, createElement, el } from "../../util/ElementHelper.js";
 import { EventBus } from "../../util/EventBus.js";
 import { branch } from "../../util/logic.js";
 import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
@@ -20,18 +20,53 @@ interface MacroMatch {
 }
 
 function iterateMacros(value: string): Iterable<MacroMatch> {
-	const regex = /\{\{(.+?)\}\}/g;
 	return (function* () {
-		for (const match of value.matchAll(regex)) {
-			const full = match[0];
-			const content = match[1];
-			const index = match.index!;
-			yield {
-				full,
-				content,
-				index,
-				end: index + full.length
-			};
+		let i = 0;
+
+		while (i < value.length) {
+			// Find opening {{
+			if (value[i] === '{' && value[i + 1] === '{') {
+				const start = i;
+				i += 2;
+
+				let depth = 1;
+
+				while (i < value.length && depth > 0) {
+					if (value[i] === '{' && value[i + 1] === '{') {
+						depth++;
+						i += 2;
+						continue;
+					}
+
+					if (value[i] === '}' && value[i + 1] === '}') {
+						depth--;
+						i += 2;
+						continue;
+					}
+
+					i++;
+				}
+
+				if (depth === 0) {
+					const end = i;
+					const full = value.slice(start, end);
+					const content = full.slice(2, -2);
+
+					yield {
+						full,
+						content,
+						index: start,
+						end
+					};
+				}
+				else {
+					// Unbalanced braces — stop parsing
+					break;
+				}
+			}
+			else {
+				i++;
+			}
 		}
 	})();
 }
@@ -110,9 +145,10 @@ export class SlotValueController extends OutfitPanelContext {
 
 	private renderInlineCode(value: string): DocumentFragment {
 		const frag = document.createDocumentFragment();
-		const appendText = (start: number, end?: number) => frag.append(
-			document.createTextNode(value.slice(start, end))
-		);
+		const appendText = (start: number, end?: number) => {
+			const text = value.slice(start, end);
+			frag.append(...this.renderTextWithRules(text));
+		};
 
 		let lastIndex = 0;
 
@@ -137,17 +173,139 @@ export class SlotValueController extends OutfitPanelContext {
 		return frag;
 	}
 
+	private renderTextWithRules(text: string): Node[] {
+		const nodes: Node[] = [];
+
+		const lines = text.split('\n');
+
+		for (let i = 0; i < lines.length; i++) {
+			const rawLine = lines[i];
+			const line = rawLine.trim();
+
+			// --- Horizontal Rule
+			if (line === '---') {
+				const hr = el('hr', {
+					className: 'slot-value-hr'
+				});
+				nodes.push(hr);
+			}
+			// ### Header
+			else if (line.startsWith('### ')) {
+				const h3 = el('h3', {
+					className: 'slot-value-h3',
+					children: [
+						...this.renderInlineFormatting(line.slice(4))
+					]
+				});
+				nodes.push(h3);
+			}
+			// > Quote
+			else if (line.startsWith('> ')) {
+				const block = el('blockquote', {
+					className: 'slot-value-quote',
+					children: [
+						...this.renderInlineFormatting(line.slice(2))
+					]
+				});
+				nodes.push(block);
+			}
+			// Normal line
+			else {
+				nodes.push(...this.renderInlineFormatting(rawLine));
+			}
+
+			// Preserves line breaks (except for the last line)
+			if (i < lines.length - 1) {
+				nodes.push(document.createTextNode('\n'));
+			}
+		}
+
+		return nodes;
+	}
+
+	private renderInlineFormatting(text: string): Node[] {
+		const nodes: Node[] = [];
+		const boldRegex = /\*\*(.*?)\*\*/g;
+
+		let lastIndex = 0;
+		let match: RegExpExecArray | null;
+
+		while ((match = boldRegex.exec(text)) !== null) {
+			const [full, content] = match;
+			const start = match.index;
+
+			// Plain text before bold
+			if (start > lastIndex) {
+				nodes.push(document.createTextNode(text.slice(lastIndex, start)));
+			}
+
+			// Bold node
+			const strong = el('strong', {
+				className: 'slot-value-bold',
+				text: content
+			});
+			nodes.push(strong);
+
+			lastIndex = start + full.length;
+		}
+
+		// Trailing text
+		if (lastIndex < text.length) {
+			nodes.push(document.createTextNode(text.slice(lastIndex)));
+		}
+
+		return nodes;
+	}
+
 	private createMacroSpan(macro: MacroMatch): HTMLSpanElement {
 		// macro static content does not change until rerender
 		const text = macro.full;
 		const isOutlet = macro.content.startsWith('outlet::');
+		const isNSFW = macro.content.startsWith('spoiler::');
+
+		const span = el('span', {
+			className: 'slot-macro-span',
+			text
+		});
+
+		if (isNSFW) {
+			const inner = macro.content.slice('spoiler::'.length);
+
+			span.classList.add('--spoiler');
+
+			const placeholder = el('span', {
+				className: 'spoiler-placeholder',
+				text: '[Spoiler]'
+			});
+
+			const content = el('span', {
+				className: 'spoiler-content'
+			});
+
+			const nodes = this.renderMacroText(inner);
+			content.append(...nodes);
+
+			span.replaceChildren(placeholder, content);
+
+			const toggleReveal = () => {
+				span.classList.toggle('--revealed');
+			};
+
+			span.addEventListener('click', e => {
+				e.stopPropagation();
+				toggleReveal();
+			});
+
+			return span;
+		}
+
+
+
 
 		const getPrompt = (): string | null => {
 			const prompt = substituteParams(text);
 			return prompt === text ? null : prompt;
 		};
-
-		const span = createElement('span', 'slot-macro-span', text);
 
 		const updateFromPrompt = (): string | null => {
 			span.classList.remove('--error', '--char', '--user');
@@ -194,6 +352,30 @@ export class SlotValueController extends OutfitPanelContext {
 		}, { stopImmediatePropagation: true });
 
 		return span;
+	}
+
+	private renderMacroText(text: string): Node[] {
+		const nodes: Node[] = [];
+		let lastIndex = 0;
+
+		for (const macro of iterateMacros(text)) {
+			if (macro.index > lastIndex) {
+				nodes.push(
+					document.createTextNode(text.slice(lastIndex, macro.index))
+				);
+			}
+
+			nodes.push(this.createMacroSpan(macro));
+			lastIndex = macro.end;
+		}
+
+		if (lastIndex < text.length) {
+			nodes.push(
+				document.createTextNode(text.slice(lastIndex))
+			);
+		}
+
+		return nodes;
 	}
 
 	private async showPromptModal(promptText: string): Promise<void> {
@@ -243,8 +425,17 @@ export class SlotValueController extends OutfitPanelContext {
 		ctx.scroller.scrollTop = scrollTop;
 
 		const autoResize = () => {
-			textarea.style.height = 'auto'; // reset
-			textarea.style.height = `${textarea.scrollHeight}px`;
+			const prevScroll = ctx.scroller.scrollTop;
+
+			// Temporarily reset height to allow shrink
+			textarea.style.height = '0px';
+
+			const next = textarea.scrollHeight;
+
+			textarea.style.height = `${next}px`;
+
+			// Restore scroll to prevent browser compensation
+			ctx.scroller.scrollTop = prevScroll;
 		};
 
 		autoResize();
@@ -265,9 +456,6 @@ export class SlotValueController extends OutfitPanelContext {
 			vv?.removeEventListener('scroll', onVvChange);
 		};
 
-
-		textarea.addEventListener('input', autoResize);
-
 		this.removeActionButtons(ctx);
 
 		textarea.addEventListener('keydown', (e) => {
@@ -287,19 +475,34 @@ export class SlotValueController extends OutfitPanelContext {
 			btn.addEventListener('pointerdown', e => e.preventDefault());
 
 		if (!empty) {
-			const clearBtn = document.createElement('button');
-			clearBtn.classList.add('slot-button', 'clear-button');
-			clearBtn.textContent = 'Clear';
-
-			clearBtn.addEventListener('click', async () => {
-				await this.outfitManager.setOutfitItem(ctx.slot.id, 'None');
-				cleanup();
-				this.panel.renderTabsAndActiveContent();
+			const clearBtn = el('button', {
+				className: 'slot-button clear-button',
+				text: 'Clear',
+				events: {
+					click: async () => {
+						await this.outfitManager.setOutfitItem(ctx.slot.id, 'None');
+						cleanup();
+						this.panel.renderTabsAndActiveContent();
+					}
+				},
+				parent: ctx.actionsLeftEl
 			});
-			preventBlur(clearBtn);
-
-			ctx.actionsLeftEl.appendChild(clearBtn);
 		}
+
+		const tokenCounter = el('div', {
+			className: 'slot-token-count',
+			parent: ctx.actionsLeftEl
+		});
+
+		const updateTokenCount = () =>
+			tokenCounter.textContent = `Tokens:\n${Math.ceil(textarea.value.length / 4)}`;
+
+		updateTokenCount();
+
+		textarea.addEventListener('input', () => {
+			autoResize();
+			updateTokenCount();
+		});
 
 		const cancelBtn = document.createElement('button');
 		cancelBtn.classList.add('slot-button', 'cancel-button');

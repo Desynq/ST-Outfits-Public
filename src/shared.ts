@@ -84,7 +84,7 @@ export function serializeRecord(record: Record<string, string>, keyFormatter: (k
 	return Object.entries(record)
 		.map(([key, value]) => {
 			const tag = toKebabCase(keyFormatter(key));
-			return `<${tag} category="${category}">\n${indentString(value)}\n</${tag}>`;
+			return `<${category} type="${tag}">\n${indentString(value)}\n</${category}>`;
 		})
 		.join("\n\n");
 }
@@ -105,7 +105,11 @@ export function assertNever(x: never): never {
 
 
 
-export function scrollIntoViewAboveKeyboard(scroller: HTMLElement, el: HTMLElement, pad: number = 12): void {
+export function scrollIntoViewAboveKeyboard(
+	scroller: HTMLElement,
+	el: HTMLElement,
+	pad: number = 12
+): void {
 	const vv = window.visualViewport;
 
 	const scrollerRect = scroller.getBoundingClientRect();
@@ -117,12 +121,27 @@ export function scrollIntoViewAboveKeyboard(scroller: HTMLElement, el: HTMLEleme
 	const clipTop = Math.max(scrollerRect.top, visibleTop);
 	const clipBottom = Math.min(scrollerRect.bottom, visibleBottom);
 
+	// 🔒 Guard: already fully visible
+	const fullyVisible =
+		elRect.top >= clipTop + pad &&
+		elRect.bottom <= clipBottom - pad;
+
+	if (fullyVisible) return;
+
+	let newScrollTop = scroller.scrollTop;
+
 	if (elRect.bottom > clipBottom - pad) {
-		scroller.scrollTop += (elRect.bottom - (clipBottom - pad));
+		newScrollTop += elRect.bottom - (clipBottom - pad);
+	}
+	else if (elRect.top < clipTop + pad) {
+		newScrollTop -= (clipTop + pad) - elRect.top;
 	}
 
-	if (elRect.top < clipTop + pad) {
-		scroller.scrollTop -= ((clipTop + pad) - elRect.top);
+	if (newScrollTop !== scroller.scrollTop) {
+		scroller.scrollTo({
+			top: newScrollTop,
+			behavior: 'instant'
+		});
 	}
 }
 

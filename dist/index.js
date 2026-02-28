@@ -298,11 +298,6 @@ async function initializeExtension() {
     setupEventListeners();
     updateForCurrentCharacter();
     createSettingsUI();
-    if (extension_settings[MODULE_NAME].autoOpenUser) {
-        setTimeout(() => {
-            userPanel.autoOpen();
-        }, 1000);
-    }
 }
 $(async () => {
     try {

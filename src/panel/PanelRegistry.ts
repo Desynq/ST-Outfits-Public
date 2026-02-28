@@ -1,6 +1,8 @@
 import { OutfitTracker } from "../data/tracker.js";
+import { PanelType } from "../types/maps.js";
 import { BotOutfitPanel } from "./BotOutfitPanel.js";
 import { CharOutfitPanel } from "./CharOutfitPanel.js";
+import { OutfitPanel } from "./OutfitPanel.js";
 import { UserOutfitPanel } from "./UserOutfitPanel.js";
 
 
@@ -23,13 +25,17 @@ export class OutfitPanelRegistry {
 		}
 
 		botPanel.onUpdateCharacter(() => {
-			if (this.panels.has(botPanel.character)) {
+			if (this.isReserved(this.botPanel.character)) {
 				this.botPanel.disable();
 				return;
 			}
 
 			this.enableBotPanel();
 		});
+
+		if (OutfitTracker.isAutoOpen().user) {
+			userPanel.autoOpen();
+		}
 	}
 
 	public getOrCreate(
@@ -59,8 +65,14 @@ export class OutfitPanelRegistry {
 		}
 	}
 
+	public isReserved(character: string): boolean {
+		return character === 'Unknown' || this.panels.has(character);
+	}
+
+
+
 	private enableBotPanel(): void {
-		if (this.panels.has(this.botPanel.character)) return;
+		if (this.isReserved(this.botPanel.character)) return;
 
 		this.botPanel.enable();
 
@@ -75,7 +87,7 @@ export class OutfitPanelRegistry {
 
 			if (!OutfitTracker.isAutoOpen().bot) return;
 
-			if (this.panels.has(this.botPanel.character)) return;
+			if (this.isReserved(this.botPanel.character)) return;
 
 			this.botPanel.autoOpen();
 		}, 100);

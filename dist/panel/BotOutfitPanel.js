@@ -1,13 +1,11 @@
 import { OutfitTracker } from '../data/tracker.js';
 import { queryOrThrow } from '../util/ElementHelper.js';
+import { EventBus } from '../util/EventBus.js';
 import { OutfitPanel } from './OutfitPanel.js';
 export class BotOutfitPanel extends OutfitPanel {
     constructor(outfitManager) {
         super(outfitManager);
-        this.updateCharacterListeners = [];
-        this.isVisible = false;
-        this.minimized = false;
-        this.panelEl = null;
+        this.updateCharBus = new EventBus();
     }
     get character() {
         return this.outfitManager.character;
@@ -73,17 +71,12 @@ export class BotOutfitPanel extends OutfitPanel {
                 header.textContent = `${name}'s Outfit`;
         }
         this.render();
-        this.emitUpdateCharacter();
+        this.updateCharBus.call();
     }
     getPanelType() {
         return 'bot';
     }
     onUpdateCharacter(listener) {
-        this.updateCharacterListeners.push(listener);
-    }
-    emitUpdateCharacter() {
-        for (const listener of this.updateCharacterListeners) {
-            listener();
-        }
+        this.updateCharBus.add(listener);
     }
 }

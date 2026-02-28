@@ -12,9 +12,6 @@ export class CharOutfitPanel extends OutfitPanel<'char'> {
 		outfitManager: CharOutfitManager
 	) {
 		super(outfitManager);
-		this.isVisible = false;
-		this.minimized = false;
-		this.panelEl = null;
 	}
 
 	public static from(

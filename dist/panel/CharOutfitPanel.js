@@ -5,9 +5,6 @@ import { OutfitPanel } from "./OutfitPanel.js";
 export class CharOutfitPanel extends OutfitPanel {
     constructor(outfitManager) {
         super(outfitManager);
-        this.isVisible = false;
-        this.minimized = false;
-        this.panelEl = null;
     }
     static from(character, saveSettings) {
         const manager = new CharOutfitManager(saveSettings, character);

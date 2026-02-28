@@ -9,9 +9,6 @@ export class UserOutfitPanel extends OutfitPanel<'user'> {
 		outfitManager: UserOutfitManager
 	) {
 		super(outfitManager);
-		this.isVisible = false;
-		this.minimized = false;
-		this.panelEl = null;
 	}
 
 	protected override initializePanel(): boolean {

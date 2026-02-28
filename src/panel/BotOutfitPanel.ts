@@ -2,19 +2,17 @@ import { OutfitTracker } from '../data/tracker.js';
 import { BotPanelSettingsView } from '../data/view/PanelViews.js';
 import { BotOutfitManager } from '../manager/BotOutfitManager.js';
 import { queryOrThrow } from '../util/ElementHelper.js';
+import { EventBus } from '../util/EventBus.js';
 import { OutfitPanel } from './OutfitPanel.js';
 
 export class BotOutfitPanel extends OutfitPanel<'bot'> {
 
-	private readonly updateCharacterListeners: (() => void)[] = [];
+	private readonly updateCharBus = new EventBus<() => void>();
 
 	public constructor(
 		outfitManager: BotOutfitManager
 	) {
 		super(outfitManager);
-		this.isVisible = false;
-		this.minimized = false;
-		this.panelEl = null;
 	}
 
 	public get character(): string {
@@ -98,7 +96,7 @@ export class BotOutfitPanel extends OutfitPanel<'bot'> {
 		}
 		this.render();
 
-		this.emitUpdateCharacter();
+		this.updateCharBus.call();
 	}
 
 	public override getPanelType(): 'bot' {
@@ -106,12 +104,6 @@ export class BotOutfitPanel extends OutfitPanel<'bot'> {
 	}
 
 	public onUpdateCharacter(listener: () => void): void {
-		this.updateCharacterListeners.push(listener);
-	}
-
-	private emitUpdateCharacter(): void {
-		for (const listener of this.updateCharacterListeners) {
-			listener();
-		}
+		this.updateCharBus.add(listener);
 	}
 }

@@ -4,9 +4,6 @@ import { OutfitPanel } from './OutfitPanel.js';
 export class UserOutfitPanel extends OutfitPanel {
     constructor(outfitManager) {
         super(outfitManager);
-        this.isVisible = false;
-        this.minimized = false;
-        this.panelEl = null;
     }
     initializePanel() {
         if (this.panelEl)

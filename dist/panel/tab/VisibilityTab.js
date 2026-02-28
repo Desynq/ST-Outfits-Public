@@ -36,14 +36,14 @@ export class VisibilityTab extends PanelTab {
 		<div class="outfit-preview-body"></div>
 		`;
         const previewBody = modal.querySelector('.outfit-preview-body');
+        const fullSummarySection = this.createPreviewSection('Full Summary', '*');
+        previewBody.append(fullSummarySection);
         for (const kind of this.outfitManager.getOutfitView().getSlotKinds()) {
             const section = this.createPreviewSection(this.formatKind(kind), toSummaryKey(kind));
-            previewBody.appendChild(section);
+            previewBody.append(section);
         }
-        const fullSummarySection = this.createPreviewSection('Full Summary', '*');
-        previewBody.appendChild(fullSummarySection);
-        overlay.appendChild(modal);
-        document.body.appendChild(overlay);
+        overlay.append(modal);
+        document.body.append(overlay);
         overlay.querySelector('.outfit-preview-close-btn').addEventListener('click', () => {
             overlay.remove();
         });

@@ -1,8 +1,6 @@
 import { OutfitTracker } from "../data/tracker.js";
-import { PanelType } from "../types/maps.js";
 import { BotOutfitPanel } from "./BotOutfitPanel.js";
 import { CharOutfitPanel } from "./CharOutfitPanel.js";
-import { OutfitPanel } from "./OutfitPanel.js";
 import { UserOutfitPanel } from "./UserOutfitPanel.js";
 
 

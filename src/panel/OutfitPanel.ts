@@ -139,6 +139,7 @@ export abstract class OutfitPanel<T extends PanelType> implements OutfitSlotsHos
 		if (!this.panelEl || this.minimized) return;
 
 		this.applyTheme();
+		this.expandHeader();
 
 		const tabsContainer = this.panelEl.querySelector('.outfit-tabs') as HTMLDivElement | undefined;
 		if (!tabsContainer) return;
@@ -377,7 +378,6 @@ export abstract class OutfitPanel<T extends PanelType> implements OutfitSlotsHos
 			this.collapseHeader();
 		}
 		else {
-			this.expandHeader();
 			this.render();
 		}
 	}

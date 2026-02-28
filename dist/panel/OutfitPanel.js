@@ -96,6 +96,7 @@ export class OutfitPanel {
         if (!this.panelEl || this.minimized)
             return;
         this.applyTheme();
+        this.expandHeader();
         const tabsContainer = this.panelEl.querySelector('.outfit-tabs');
         if (!tabsContainer)
             return;
@@ -288,7 +289,6 @@ export class OutfitPanel {
             this.collapseHeader();
         }
         else {
-            this.expandHeader();
             this.render();
         }
     }

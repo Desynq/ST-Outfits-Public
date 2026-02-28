@@ -197,19 +197,29 @@ export function createDiv(className?: string): HTMLDivElement {
 
 
 
-export type ElementOptions<K extends keyof HTMLElementTagNameMap> = {
-	className?: string;
-	dataset?: Record<string, string>;
-	events?: Partial<{
-		[E in keyof GlobalEventHandlersEventMap]: (this: HTMLElementTagNameMap[K], ev: GlobalEventHandlersEventMap[E]) => void
-	}>;
-	classes?: Array<string | false | null | undefined>;
-	parent?: HTMLElement;
-} & (
-		| { text: string; children?: never; }
-		| { children: HTMLElement[]; text?: never; }
-		| {}
-	);
+type NativeProps<K extends keyof HTMLElementTagNameMap> =
+	Omit<
+		HTMLElementTagNameMap[K],
+		'className' | 'dataset' | 'children' | 'textContent'
+	>;
+
+type ContentOptions =
+	| { text: string; children?: never; }
+	| { children: HTMLElement[]; text?: never; }
+	| {};
+
+export type ElementOptions<K extends keyof HTMLElementTagNameMap> =
+	{
+		className?: string;
+		dataset?: Record<string, string>;
+		events?: Partial<{
+			[E in keyof GlobalEventHandlersEventMap]: (this: HTMLElementTagNameMap[K], ev: GlobalEventHandlersEventMap[E]) => void
+		}>;
+		classes?: Array<string | false | null | undefined>;
+		parent?: HTMLElement;
+	}
+	& Partial<NativeProps<K>>
+	& ContentOptions;
 
 export function el<K extends keyof HTMLElementTagNameMap>(
 	tag: K,
@@ -251,6 +261,21 @@ export function el<K extends keyof HTMLElementTagNameMap>(
 		options.parent.append(el);
 	}
 
+	const knownKeys = new Set([
+		'className',
+		'dataset',
+		'events',
+		'classes',
+		'parent',
+		'text',
+		'children'
+	]);
+
+	for (const [key, value] of Object.entries(options)) {
+		if (knownKeys.has(key)) continue;
+		(el as any)[key] = value;
+	}
+
 	return el;
 }
 
@@ -266,7 +291,7 @@ export function createWithClasses<K extends keyof HTMLElementTagNameMap>(
 	...classNames: string[]
 ): HTMLElementTagNameMap[K][] {
 	return classNames.map(className =>
-		el(tag, { className })
+		el(tag, { className } as ElementOptions<K>)
 	);
 }
 

@@ -1,3 +1,4 @@
+import { toKebabCase } from "../util/StringHelper.js";
 
 const { macros } = SillyTavern.getContext();
 const { registry: MacroRegistry, category: MacroCategory } = macros;
@@ -12,8 +13,21 @@ export class OutfitMacroManager {
 
 	public constructor(
 		private readonly owner: OutfitOwner,
-		private readonly suffix: string
+		private readonly suffix: string,
+		private domain: string
 	) { }
+
+	/**
+	 * Clears macros if successful
+	 */
+	public setDomain(domain: string): boolean {
+		const norm = toKebabCase(domain);
+		if (norm === this.domain) return false;
+
+		this.clear();
+		this.domain = norm;
+		return true;
+	}
 
 	/**
 	 * @example asKey('user', '*') => 'user_outfit_<suffix>'
@@ -24,7 +38,7 @@ export class OutfitMacroManager {
 			? this.suffix
 			: kind + '_' + this.suffix;
 
-		return this.owner + '_outfit_' + rest;
+		return this.owner + `_${this.domain}_` + rest;
 	}
 
 	public set(kind: KindScope, value: string): void {
@@ -32,7 +46,11 @@ export class OutfitMacroManager {
 
 		if (this.registry.get(kind) === value) return;
 
+
+		MacroRegistry.unregisterMacro(key);
+
 		this.registry.set(kind, value);
+
 		MacroRegistry.registerMacro(key, {
 			category: MacroCategory.CHARACTER,
 			description: 'Returns the summary for this section of the outfit',

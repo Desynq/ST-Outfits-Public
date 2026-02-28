@@ -1,12 +1,15 @@
 import { areOutfitSnapshotsEqual } from "../data/model/OutfitSnapshots.js";
 import { OutfitTracker } from "../data/tracker.js";
 import { IOutfitCollectionView } from "../data/view/OutfitCollectionView.js";
+import { FullSummaryTag } from "../data/view/PanelViews.js";
 import { toCamelCase, toPascalCase } from "../util/StringHelper.js";
 import { OutfitManager } from "./OutfitManager.js";
 
 
 
 export class CharOutfitManager extends OutfitManager {
+
+	private resolveFullSummaryTag?: () => FullSummaryTag | undefined;
 
 	public constructor(
 		saveSettings: Function,
@@ -104,5 +107,25 @@ export class CharOutfitManager extends OutfitManager {
 
 	public override getOutfitCollection(): IOutfitCollectionView {
 		return OutfitTracker.characterOutfits(this.character);
+	}
+
+
+	protected override getFullSummaryTag(): { domain: string; openingTag: string; closingTag: string; } {
+		const tag = this.resolveFullSummaryTag?.();
+		if (tag === undefined) {
+			return super.getFullSummaryTag();
+		}
+
+		return {
+			domain: tag.tag,
+			openingTag: tag.openingTag,
+			closingTag: tag.closingTag
+		};
+	}
+
+
+	public setFullSummaryTagResolver(fn: () => FullSummaryTag | undefined): void {
+		this.resolveFullSummaryTag = fn;
+		this.updateSummaries();
 	}
 }

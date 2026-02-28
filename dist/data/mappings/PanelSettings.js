@@ -48,6 +48,39 @@ export function normalizeCharPanels(obj) {
             panel.bgColor2 = bg2;
         if (border)
             panel.borderColor = border;
+        if (v.fullSummaryTag && typeof v.fullSummaryTag === 'object') {
+            const rawTag = v.fullSummaryTag.tag;
+            const rawAttrs = v.fullSummaryTag.attributes;
+            if (typeof rawTag === 'string' && typeof rawAttrs === 'string') {
+                const tag = rawTag.trim();
+                const attributes = rawAttrs.trim();
+                // Always reject if attributes contain angle brackets
+                if (/[<>]/.test(attributes)) {
+                    // ignore invalid tag entirely
+                }
+                // Raw mode (empty tag)
+                else if (tag === '') {
+                    panel.fullSummaryTag = {
+                        tag: '',
+                        attributes,
+                        openingTag: attributes,
+                        closingTag: ''
+                    };
+                }
+                // Structured tag mode
+                else if (/^[A-Za-z_][A-Za-z0-9_\-]*$/.test(tag)) {
+                    const openingTag = attributes === ''
+                        ? `<${tag}>`
+                        : `<${tag} ${attributes}>`;
+                    panel.fullSummaryTag = {
+                        tag,
+                        attributes,
+                        openingTag,
+                        closingTag: `</${tag}>`
+                    };
+                }
+            }
+        }
         panels[k] = panel;
     }
     const active = [];

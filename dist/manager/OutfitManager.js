@@ -7,7 +7,7 @@ import { OutfitMacroManager } from "./MacroManager.js";
 export class OutfitManager {
     constructor(saveSettings, macroOwner) {
         this.saveSettings = saveSettings;
-        this.summaryMacros = new OutfitMacroManager(macroOwner, 'summary');
+        this.summaryMacros = new OutfitMacroManager(macroOwner, 'summary', 'outfit');
     }
     get outfit() {
         return this.getOutfitView();
@@ -56,14 +56,18 @@ Cancel to keep the current value.`, currentValue);
         return this.getOutfitView().getSlotValueMap(s => s.enabled);
     }
     updateSummaries() {
+        const domain = this.getFullSummaryTag().domain;
+        const domainChanged = this.summaryMacros.setDomain(domain);
         const kindSummaries = new Map();
         const fullSummary = this.createOutfitSummary(kindSummaries);
         const namespace = 'summary';
         const oldSummary = this.getSummary(namespace);
-        if (fullSummary === oldSummary)
+        if (!domainChanged && fullSummary === oldSummary)
             return;
         console.log('Updating summaries for', this.getName());
-        this.summaryMacros.clear();
+        if (!domainChanged) {
+            this.summaryMacros.clear();
+        }
         for (const [k, v] of kindSummaries) {
             this.updateKindSummary(k, v);
         }
@@ -76,8 +80,16 @@ Cancel to keep the current value.`, currentValue);
             return;
         this.setSummary(namespace, value);
     }
+    getFullSummaryTag() {
+        return {
+            domain: 'outfit',
+            openingTag: `<outfit character=${this.getNameMacro()}>`,
+            closingTag: '</outfit>'
+        };
+    }
     createOutfitSummary(out) {
-        let fullSummary = `<outfit character=${this.getNameMacro()}>`;
+        const { openingTag, closingTag } = this.getFullSummaryTag();
+        let fullSummary = openingTag;
         for (const kind of this.getOutfitView().getSlotKinds()) {
             const value = serializeRecord(this.buildPromptSlotValuesFromKind(kind), kind === 'accessory' ? formatAccessorySlotName : toSlotName, toKebabCase(kind));
             out?.set(kind, value);
@@ -85,7 +97,7 @@ Cancel to keep the current value.`, currentValue);
                 fullSummary += `\n\n${indentString(value)}`;
             }
         }
-        fullSummary += `\n</outfit>`;
+        fullSummary += `\n${closingTag}`;
         return fullSummary;
     }
     getSummaryKey(scope) {

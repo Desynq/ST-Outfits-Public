@@ -1,6 +1,7 @@
 import { OutfitTracker } from "../data/tracker.js";
 import { CharOutfitManager } from "../manager/CharOutfitManager.js";
 import { el } from "../util/ElementHelper.js";
+import { fromKebabCase } from "../util/StringHelper.js";
 import { OutfitPanel } from "./OutfitPanel.js";
 export class CharOutfitPanel extends OutfitPanel {
     constructor(outfitManager) {
@@ -8,7 +9,9 @@ export class CharOutfitPanel extends OutfitPanel {
     }
     static from(character, saveSettings) {
         const manager = new CharOutfitManager(saveSettings, character);
-        return new CharOutfitPanel(manager);
+        const panel = new CharOutfitPanel(manager);
+        manager.setFullSummaryTagResolver(() => panel.getPanelSettings().getFullSummaryTag());
+        return panel;
     }
     get character() {
         return this.outfitManager.character;
@@ -76,7 +79,14 @@ export class CharOutfitPanel extends OutfitPanel {
         this.saveAndRender();
     }
     getHeaderTitle() {
-        return `${this.character} Outfit`;
+        const tag = this.getPanelSettings().getFullSummaryTag()?.tag;
+        if (tag === undefined) {
+            return `${this.character}'s Outfit`;
+        }
+        if (this.character.toLowerCase().endsWith(tag)) {
+            return `${this.character}`;
+        }
+        return `${this.character}'s ${fromKebabCase(tag)}`;
     }
     getPanelType() {
         return 'char';

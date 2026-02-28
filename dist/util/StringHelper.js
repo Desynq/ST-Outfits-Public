@@ -12,6 +12,18 @@ export function toKebabCase(input) {
         .replace(/[^a-z0-9]+/g, '-') // replace spaces and symbols with -
         .replace(/^-+|-+$/g, ''); // trim leading/trailing -
 }
+/**
+ * @example 'foo-bar' => 'Foo Bar'
+ */
+export function fromKebabCase(value) {
+    return value
+        .trim()
+        .split('-')
+        .filter(Boolean)
+        .map(word => word.charAt(0).toUpperCase() +
+        word.slice(1).toLowerCase())
+        .join(' ');
+}
 export function toSnakeCase(input) {
     return input
         .trim()

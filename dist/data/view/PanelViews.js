@@ -94,6 +94,48 @@ export class CharPanelSettingsView extends PanelSettingsView {
         super(panelSettings);
         this.name = name;
     }
+    getFullSummaryTag() {
+        return this.settings.fullSummaryTag;
+    }
+    setFullSummaryTag(tag, attributes) {
+        tag = tag.trim();
+        attributes = attributes.trim();
+        if (/[<>]/.test(attributes)) {
+            return 'has-xml-braces';
+        }
+        if (tag === '') {
+            this.settings.fullSummaryTag = {
+                tag: '',
+                attributes,
+                openingTag: attributes,
+                closingTag: ''
+            };
+            return 'ok';
+        }
+        if (!/^[A-Za-z_][A-Za-z0-9_\-]*$/.test(tag)) {
+            return 'invalid-tag-name';
+        }
+        if (attributes !== '') {
+            const attrPattern = /^(\s*[A-Za-z_][A-Za-z0-9_\-]*="[^"]*"\s*)*$/;
+            if (!attrPattern.test(attributes)) {
+                return 'invalid-attributes';
+            }
+        }
+        const openingTag = attributes === ''
+            ? `<${tag}>`
+            : `<${tag} ${attributes}>`;
+        const closingTag = `</${tag}>`;
+        this.settings.fullSummaryTag = {
+            tag,
+            attributes,
+            openingTag,
+            closingTag
+        };
+        return 'ok';
+    }
+    resetFullSummaryTag() {
+        delete this.settings.fullSummaryTag;
+    }
     getDefaultSettings() {
         return {
             saveXY: false,

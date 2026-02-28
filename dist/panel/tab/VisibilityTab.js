@@ -1,5 +1,8 @@
+import { assertNever } from "../../shared.js";
 import { createButton, createDerivedToggleButton } from "../../util/element/ButtonHelper.js";
+import { el } from "../../util/ElementHelper.js";
 import { toSummaryKey } from "../../util/SummaryHelper.js";
+import { CharOutfitPanel } from "../CharOutfitPanel.js";
 import { PanelTab } from "./PanelTab.js";
 export class VisibilityTab extends PanelTab {
     constructor(panel, formatKind) {
@@ -9,9 +12,83 @@ export class VisibilityTab extends PanelTab {
     render(contentArea) {
         contentArea.innerHTML = '';
         this.renderPositionButtons(contentArea);
+        this.renderTagInputs(contentArea);
         this.renderPreviewButton(contentArea);
         this.renderVisibilityButtons(contentArea);
         this.renderThemeInputs(contentArea);
+    }
+    renderTagInputs(contentArea) {
+        // only character panels can have a custom tag and attributes
+        if (!(this.panel instanceof CharOutfitPanel))
+            return;
+        const settings = this.panel.getPanelSettings();
+        const existing = settings.getFullSummaryTag();
+        const wrapper = el('div', {
+            className: 'panel-tag-config'
+        });
+        const tagInput = el('input', {
+            className: 'panel-tag-input',
+            type: 'text',
+            placeholder: 'Tag - e.g., outfit, behavior',
+            value: existing?.tag ?? ''
+        });
+        const attrInput = el('input', {
+            className: 'panel-attr-input',
+            type: 'text',
+            placeholder: 'Attributes - e.g., character="John"',
+            value: existing?.attributes ?? ''
+        });
+        const msgClassName = 'panel-tag-message';
+        const messageEl = el('div', {
+            className: msgClassName
+        });
+        const updateMsgEl = (text, className) => {
+            messageEl.textContent = text;
+            messageEl.className = `${msgClassName} ${className}`;
+        };
+        const resetBtn = el('button', {
+            className: 'panel-tag-reset',
+            text: 'Reset'
+        });
+        const apply = () => {
+            const old = settings.getFullSummaryTag();
+            if (old === undefined && tagInput.value === '' && attrInput.value === '') {
+                return; // no change to default
+            }
+            if (tagInput.value === old?.tag && attrInput.value === old?.tag) {
+                return; // no change
+            }
+            const result = settings.setFullSummaryTag(tagInput.value, attrInput.value);
+            switch (result) {
+                case 'ok':
+                    updateMsgEl('✓ Tag updated', '--ok');
+                    this.outfitManager.updateSummaries();
+                    this.panel.saveAndRender();
+                    break;
+                case 'invalid-tag-name':
+                    updateMsgEl('Invalid tag name', '--error');
+                    break;
+                case 'has-xml-braces':
+                    updateMsgEl('Attributes cannot contain < or >', '--error');
+                    break;
+                case 'invalid-attributes':
+                    updateMsgEl('Invalid attribute format', '--error');
+                    break;
+                default: assertNever(result);
+            }
+        };
+        tagInput.addEventListener('blur', apply);
+        attrInput.addEventListener('blur', apply);
+        resetBtn.addEventListener('click', () => {
+            tagInput.value = '';
+            attrInput.value = '';
+            updateMsgEl('Preset to default', '--ok');
+            settings.resetFullSummaryTag();
+            this.outfitManager.updateSummaries();
+            this.panel.saveAndRender();
+        });
+        wrapper.append(el('label', { text: 'Panel Tag:' }), tagInput, el('label', { text: 'Panel Attributes:' }), attrInput, resetBtn, messageEl);
+        contentArea.append(wrapper);
     }
     renderPreviewButton(contentArea) {
         const previewButton = document.createElement('button');

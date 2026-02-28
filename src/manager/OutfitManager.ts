@@ -3,6 +3,7 @@ import { OutfitTracker } from "../data/tracker.js";
 import { MutableOutfitView } from "../data/view/MutableOutfitView.js";
 import { IOutfitCollectionView } from "../data/view/OutfitCollectionView.js";
 import { OutfitSnapshotsView } from "../data/view/OutfitSnapshotsView.js";
+import { FullSummaryTag } from "../data/view/PanelViews.js";
 import { formatAccessorySlotName, serializeRecord, toSlotName } from "../shared.js";
 import { indentString, toKebabCase } from "../util/StringHelper.js";
 import { toSummaryKey } from "../util/SummaryHelper.js";
@@ -22,10 +23,10 @@ export abstract class OutfitManager {
 		public readonly saveSettings: Function,
 		macroOwner: string
 	) {
-		this.summaryMacros = new OutfitMacroManager(macroOwner, 'summary');
+		this.summaryMacros = new OutfitMacroManager(macroOwner, 'summary', 'outfit');
 	}
 
-	private get outfit() {
+	protected get outfit() {
 		return this.getOutfitView();
 	}
 
@@ -122,17 +123,23 @@ Cancel to keep the current value.`,
 
 
 
-	protected updateSummaries(): void {
+	public updateSummaries(): void {
+		const domain = this.getFullSummaryTag().domain;
+		const domainChanged = this.summaryMacros.setDomain(domain);
+
 		const kindSummaries = new Map<string, string>();
 		const fullSummary = this.createOutfitSummary(kindSummaries);
 
 		const namespace = 'summary';
 		const oldSummary = this.getSummary(namespace);
-		if (fullSummary === oldSummary) return;
+
+		if (!domainChanged && fullSummary === oldSummary) return;
 
 		console.log('Updating summaries for', this.getName());
 
-		this.summaryMacros.clear();
+		if (!domainChanged) {
+			this.summaryMacros.clear();
+		}
 
 		for (const [k, v] of kindSummaries) {
 			this.updateKindSummary(k, v);
@@ -149,8 +156,17 @@ Cancel to keep the current value.`,
 		this.setSummary(namespace, value);
 	}
 
+	protected getFullSummaryTag(): { domain: string, openingTag: string; closingTag: string; } {
+		return {
+			domain: 'outfit',
+			openingTag: `<outfit character=${this.getNameMacro()}>`,
+			closingTag: '</outfit>'
+		};
+	}
+
 	public createOutfitSummary(out?: Map<string, string>): string {
-		let fullSummary = `<outfit character=${this.getNameMacro()}>`;
+		const { openingTag, closingTag } = this.getFullSummaryTag();
+		let fullSummary = openingTag;
 
 		for (const kind of this.getOutfitView().getSlotKinds()) {
 			const value = serializeRecord(
@@ -166,7 +182,7 @@ Cancel to keep the current value.`,
 			}
 		}
 
-		fullSummary += `\n</outfit>`;
+		fullSummary += `\n${closingTag}`;
 		return fullSummary;
 	}
 

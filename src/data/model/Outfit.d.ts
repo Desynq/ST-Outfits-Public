@@ -1,4 +1,4 @@
-import { PartialPanelSettings } from "../view/PanelViews";
+import { CharPanelSettings, PartialPanelSettings } from "../view/PanelViews";
 import { SlotPreset } from "./SlotPreset";
 
 export type KnownSlotKind =
@@ -78,7 +78,7 @@ export interface ImageBlob {
 
 export interface CharPanelsTree {
 	active: string[];
-	panels: Record<string, PartialPanelSettings>;
+	panels: Record<string, CharPanelSettings>;
 }
 
 

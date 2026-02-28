@@ -174,6 +174,20 @@ export function el(tag, options) {
     if ('parent' in options) {
         options.parent.append(el);
     }
+    const knownKeys = new Set([
+        'className',
+        'dataset',
+        'events',
+        'classes',
+        'parent',
+        'text',
+        'children'
+    ]);
+    for (const [key, value] of Object.entries(options)) {
+        if (knownKeys.has(key))
+            continue;
+        el[key] = value;
+    }
     return el;
 }
 export function createWithClasses(tag, ...classNames) {

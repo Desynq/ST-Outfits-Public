@@ -47,6 +47,17 @@ export interface PartialPanelSettings extends PanelSettingsBase {
 	mobileXY?: XY;
 }
 
+export interface FullSummaryTag {
+	tag: string;
+	attributes: string;
+	openingTag: string;
+	closingTag: string;
+}
+
+export interface CharPanelSettings extends PartialPanelSettings {
+	fullSummaryTag?: FullSummaryTag;
+}
+
 
 export abstract class PanelSettingsView<TSettings extends PartialPanelSettings> {
 	public constructor(
@@ -156,12 +167,71 @@ export class BotPanelSettingsView extends PanelSettingsView<FullPanelSettings> {
 }
 
 
-export class CharPanelSettingsView extends PanelSettingsView<PartialPanelSettings> {
+export type SetFullSummaryTagResult =
+	| 'ok'
+	| 'invalid-tag-name'
+	| 'has-xml-braces'
+	| 'invalid-attributes';
+
+export class CharPanelSettingsView extends PanelSettingsView<CharPanelSettings> {
 	public constructor(
 		protected readonly name: string,
-		panelSettings: PartialPanelSettings
+		panelSettings: CharPanelSettings
 	) {
 		super(panelSettings);
+	}
+
+	public getFullSummaryTag(): FullSummaryTag | undefined {
+		return this.settings.fullSummaryTag;
+	}
+
+	public setFullSummaryTag(tag: string, attributes: string): SetFullSummaryTagResult {
+		tag = tag.trim();
+		attributes = attributes.trim();
+
+		if (/[<>]/.test(attributes)) {
+			return 'has-xml-braces';
+		}
+
+		if (tag === '') {
+			this.settings.fullSummaryTag = {
+				tag: '',
+				attributes,
+				openingTag: attributes,
+				closingTag: ''
+			};
+			return 'ok';
+		}
+
+		if (!/^[A-Za-z_][A-Za-z0-9_\-]*$/.test(tag)) {
+			return 'invalid-tag-name';
+		}
+
+		if (attributes !== '') {
+			const attrPattern = /^(\s*[A-Za-z_][A-Za-z0-9_\-]*="[^"]*"\s*)*$/;
+			if (!attrPattern.test(attributes)) {
+				return 'invalid-attributes';
+			}
+		}
+
+		const openingTag = attributes === ''
+			? `<${tag}>`
+			: `<${tag} ${attributes}>`;
+
+		const closingTag = `</${tag}>`;
+
+		this.settings.fullSummaryTag = {
+			tag,
+			attributes,
+			openingTag,
+			closingTag
+		};
+
+		return 'ok';
+	}
+
+	public resetFullSummaryTag(): void {
+		delete this.settings.fullSummaryTag;
 	}
 
 	protected override getDefaultSettings(): PanelSettings {

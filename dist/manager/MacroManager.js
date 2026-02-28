@@ -1,10 +1,23 @@
+import { toKebabCase } from "../util/StringHelper.js";
 const { macros } = SillyTavern.getContext();
 const { registry: MacroRegistry, category: MacroCategory } = macros;
 export class OutfitMacroManager {
-    constructor(owner, suffix) {
+    constructor(owner, suffix, domain) {
         this.owner = owner;
         this.suffix = suffix;
+        this.domain = domain;
         this.registry = new Map();
+    }
+    /**
+     * Clears macros if successful
+     */
+    setDomain(domain) {
+        const norm = toKebabCase(domain);
+        if (norm === this.domain)
+            return false;
+        this.clear();
+        this.domain = norm;
+        return true;
     }
     /**
      * @example asKey('user', '*') => 'user_outfit_<suffix>'
@@ -14,12 +27,13 @@ export class OutfitMacroManager {
         const rest = kind === '*'
             ? this.suffix
             : kind + '_' + this.suffix;
-        return this.owner + '_outfit_' + rest;
+        return this.owner + `_${this.domain}_` + rest;
     }
     set(kind, value) {
         const key = this.asKey(kind);
         if (this.registry.get(kind) === value)
             return;
+        MacroRegistry.unregisterMacro(key);
         this.registry.set(kind, value);
         MacroRegistry.registerMacro(key, {
             category: MacroCategory.CHARACTER,

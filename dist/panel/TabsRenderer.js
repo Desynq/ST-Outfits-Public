@@ -257,7 +257,7 @@ export class OutfitTabsRenderer {
         element.dataset.tabId = tabId;
         switch (tabId) {
             case 'outfits':
-                element.textContent = 'Outfits';
+                element.textContent = 'Presets';
                 element.classList.add('outfits-tab');
                 break;
             case 'cache':

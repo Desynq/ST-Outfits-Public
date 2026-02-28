@@ -17,6 +17,24 @@ export function toKebabCase(input: string): string {
 		.replace(/^-+|-+$/g, ''); // trim leading/trailing -
 }
 
+/**
+ * @example 'foo-bar' => 'Foo Bar'
+ */
+export function fromKebabCase(value: string): string {
+	return value
+		.trim()
+		.split('-')
+		.filter(Boolean)
+		.map(word =>
+			word.charAt(0).toUpperCase() +
+			word.slice(1).toLowerCase()
+		)
+		.join(' ');
+}
+
+
+
+
 export function toSnakeCase(input: string): string {
 	return input
 		.trim()

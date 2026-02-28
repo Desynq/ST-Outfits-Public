@@ -74,4 +74,19 @@ export class CharOutfitManager extends OutfitManager {
     getOutfitCollection() {
         return OutfitTracker.characterOutfits(this.character);
     }
+    getFullSummaryTag() {
+        const tag = this.resolveFullSummaryTag?.();
+        if (tag === undefined) {
+            return super.getFullSummaryTag();
+        }
+        return {
+            domain: tag.tag,
+            openingTag: tag.openingTag,
+            closingTag: tag.closingTag
+        };
+    }
+    setFullSummaryTagResolver(fn) {
+        this.resolveFullSummaryTag = fn;
+        this.updateSummaries();
+    }
 }

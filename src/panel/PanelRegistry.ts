@@ -5,7 +5,6 @@ import { UserOutfitPanel } from "./UserOutfitPanel.js";
 
 
 
-
 export class OutfitPanelRegistry {
 
 	private readonly panels = new Map<string, CharOutfitPanel>();

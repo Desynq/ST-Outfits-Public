@@ -1,6 +1,4 @@
-import { RequireKeys } from "../../../types/utility.js";
-import { Disposer } from "../../panel/Disposer.js";
-import { assertNever } from "../../shared.js";
+import { RequireKeys } from "../../types/utility.js";
 import { el, ElementOptions } from "../../util/ElementHelper.js";
 import { EventBus } from "../../util/EventBus.js";
 import { clamp } from "../../util/math.js";

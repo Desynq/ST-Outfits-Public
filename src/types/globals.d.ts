@@ -1,8 +1,8 @@
 export { };
 
 // import('../../../../../global');
-import { BotOutfitPanel } from '../src/panel/BotOutfitPanel';
-import { UserOutfitPanel } from '../src/panel/UserOutfitPanel';
+import { BotOutfitPanel } from './panel/BotOutfitPanel';
+import { UserOutfitPanel } from './panel/UserOutfitPanel';
 import { SillyTavernContext } from './context';
 
 declare global {

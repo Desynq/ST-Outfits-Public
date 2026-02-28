@@ -122,6 +122,9 @@ Cancel to keep the current value.`,
 	public abstract getNameMacro(): string;
 
 
+	public clearSummaries(): void {
+		this.summaryMacros.clear();
+	}
 
 	public updateSummaries(): void {
 		const domain = this.getFullSummaryTag().domain;

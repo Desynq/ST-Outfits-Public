@@ -51,6 +51,11 @@ export class OutfitPanelRegistry {
         return { panel, created: true };
     }
     unregister(character) {
+        const panel = this.charPanels.get(character);
+        if (!panel) {
+            return;
+        }
+        this.panels.delete(panel);
         this.charPanels.delete(character);
         if (this.botPanel.character === character) {
             this.enableBotPanel();
@@ -60,14 +65,14 @@ export class OutfitPanelRegistry {
         return character === 'Unknown' || this.charPanels.has(character);
     }
     enableBotPanel() {
-        if (this.isReserved(this.botPanel.character))
-            return;
-        this.botPanel.enable();
-        if (!OutfitTracker.isAutoOpen().bot) {
-            this.cancelBotAutoOpen();
+        if (this.isReserved(this.botPanel.character)) {
             return;
         }
-        this.cancelBotAutoOpen();
+        this.botPanel.enable();
+        if (!OutfitTracker.isAutoOpen().bot) {
+            return;
+        }
+        this.cancelBotAutoOpen(); // debounce
         this.botAutoOpenTimer = setTimeout(() => {
             this.botAutoOpenTimer = null;
             if (!OutfitTracker.isAutoOpen().bot)

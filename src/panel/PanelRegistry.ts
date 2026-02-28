@@ -68,7 +68,9 @@ export class OutfitPanelRegistry {
 		if (panel) return { panel, created: false };
 
 		panel = CharOutfitPanel.from(character, saveSettings);
+
 		panel.onHide(() => this.unregister(character));
+
 		this.panels.add(panel);
 		this.charPanels.set(character, panel);
 
@@ -76,6 +78,12 @@ export class OutfitPanelRegistry {
 	}
 
 	public unregister(character: string): void {
+		const panel = this.charPanels.get(character);
+		if (!panel) {
+			return;
+		}
+
+		this.panels.delete(panel);
 		this.charPanels.delete(character);
 
 		if (this.botPanel.character === character) {
@@ -90,16 +98,17 @@ export class OutfitPanelRegistry {
 
 
 	private enableBotPanel(): void {
-		if (this.isReserved(this.botPanel.character)) return;
+		if (this.isReserved(this.botPanel.character)) {
+			return;
+		}
 
 		this.botPanel.enable();
 
 		if (!OutfitTracker.isAutoOpen().bot) {
-			this.cancelBotAutoOpen();
 			return;
 		}
 
-		this.cancelBotAutoOpen();
+		this.cancelBotAutoOpen(); // debounce
 		this.botAutoOpenTimer = setTimeout(() => {
 			this.botAutoOpenTimer = null;
 
@@ -113,6 +122,7 @@ export class OutfitPanelRegistry {
 
 	private cancelBotAutoOpen(): void {
 		if (this.botAutoOpenTimer === null) return;
+
 		clearTimeout(this.botAutoOpenTimer);
 		this.botAutoOpenTimer = null;
 	}

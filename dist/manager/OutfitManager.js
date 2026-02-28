@@ -55,6 +55,9 @@ Cancel to keep the current value.`, currentValue);
     getVisibleSlotMap() {
         return this.getOutfitView().getSlotValueMap(s => s.enabled);
     }
+    clearSummaries() {
+        this.summaryMacros.clear();
+    }
     updateSummaries() {
         const domain = this.getFullSummaryTag().domain;
         const domainChanged = this.summaryMacros.setDomain(domain);

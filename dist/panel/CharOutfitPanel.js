@@ -102,6 +102,7 @@ export class CharOutfitPanel extends OutfitPanel {
         super.hide();
         this.panelEl?.remove();
         this.panelEl = null;
+        this.outfitManager.clearSummaries();
         this.panelsView.removeActive(this.character);
         this.outfitManager.saveSettings();
     }

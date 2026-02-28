@@ -140,8 +140,11 @@ export class CharOutfitPanel extends OutfitPanel<'char'> {
 
 	public override hide(): void {
 		super.hide();
+
 		this.panelEl?.remove();
 		this.panelEl = null;
+
+		this.outfitManager.clearSummaries();
 
 		this.panelsView.removeActive(this.character);
 		this.outfitManager.saveSettings();

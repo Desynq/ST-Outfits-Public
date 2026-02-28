@@ -55,7 +55,7 @@ export class SlotsRenderer extends OutfitPanelContext {
     addSlot(kind) {
         const id = prompt('Name?')?.trim();
         if (!id) {
-            this.panel.render();
+            this.panel.renderTabsAndActiveContent();
             return;
         }
         const duplicate = !this.outfitView.addSlot(id, kind);

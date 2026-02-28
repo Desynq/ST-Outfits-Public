@@ -91,8 +91,8 @@ export class CharOutfitPanel extends OutfitPanel {
     getPanelType() {
         return 'char';
     }
-    show(setDefaultX, setDefaultY) {
-        if (!super.show(setDefaultX, setDefaultY))
+    show(options) {
+        if (!super.show(options))
             return false;
         this.panelsView.setActive(this.character);
         this.outfitManager.saveSettings();

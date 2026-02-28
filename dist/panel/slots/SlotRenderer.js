@@ -296,7 +296,7 @@ export class SlotRenderer extends OutfitPanelContext {
         select.focus();
         select.addEventListener('change', () => this.shiftSlot(select, ctx.displaySlot));
         select.addEventListener('blur', () => {
-            this.panel.render();
+            this.panel.renderTabsAndActiveContent();
         });
     }
     shiftSlot(select, display) {
@@ -343,7 +343,7 @@ export class SlotRenderer extends OutfitPanelContext {
         const saveBtn = createElement('button', 'slot-button save-button', 'Save');
         // Wiring
         const cancelRename = () => {
-            this.panel.render();
+            this.panel.renderTabsAndActiveContent();
         };
         cancelBtn.addEventListener('click', cancelRename);
         saveBtn.addEventListener('click', () => this.commitRename(ctx.slot, textarea));

@@ -4,6 +4,8 @@ import { IOutfitCollectionView } from "../data/view/OutfitCollectionView.js";
 import { LayoutMode, PanelSettingsViewMap } from "../data/view/PanelViews.js";
 import { isWideScreen } from "../shared.js";
 import type { OutfitManagerMap, PanelType } from "../types/maps.js";
+import { ShowOptions } from "../types/OutfitPanel.js";
+import { clampPosition, enforceViewportBounds } from "../util/element/position.js";
 import { createConfiguredElements, toggleClasses } from "../util/ElementHelper.js";
 import { EventBus } from "../util/EventBus.js";
 import { Disposer } from "./Disposer.js";
@@ -25,6 +27,7 @@ export abstract class OutfitPanel<T extends PanelType> implements OutfitSlotsHos
 	private readonly disposer: Disposer = new Disposer();
 
 	private readonly hideBus = new EventBus<() => void>();
+	private readonly expandedBus = new EventBus<() => void>();
 
 	public constructor(
 		protected readonly outfitManager: OutfitManagerMap[T]
@@ -36,6 +39,10 @@ export abstract class OutfitPanel<T extends PanelType> implements OutfitSlotsHos
 
 	public onHide(listener: () => void): void {
 		this.hideBus.add(listener);
+	}
+
+	public onExpand(listener: () => void): void {
+		this.expandedBus.add(listener);
 	}
 
 
@@ -95,21 +102,40 @@ export abstract class OutfitPanel<T extends PanelType> implements OutfitSlotsHos
 
 		this.getPanelSettings().resetXY(this.getLayoutMode());
 		this.outfitManager.saveSettings();
-		this.resetSizeAndPos();
+		this.restoreSizeAndPos();
 
-		this.render();
+		this.renderTabsAndActiveContent();
 	}
 
-	private resetSizeAndPos(setDefaultX: boolean = true, setDefaultY: boolean = true): void {
+	private restoreSize(): void {
 		if (!this.panelEl) return;
-		const isWide = isWideScreen();
+
+		const mode = this.getLayoutMode();
 
 		this.panelEl.style.height = '80vh';
-		this.panelEl.style.width = isWide ? '24svw' : '90svw';
+		this.panelEl.style.width = mode === 'desktop' ? '24svw' : '90svw';
+	}
 
-		const [x, y] = this.getSavedXY(this.getLayoutMode());
-		if (setDefaultX) this.panelEl.style.left = `${x}px`;
-		if (setDefaultY) this.panelEl.style.top = `${y}px`;
+	private restorePos(restoreX = true, restoreY = true): void {
+		if (!this.panelEl) return;
+
+		const mode = this.getLayoutMode();
+
+		const [x, y] = this.getSavedXY(mode);
+		if (restoreX) this.panelEl.style.left = `${x}px`;
+		if (restoreY) this.panelEl.style.top = `${y}px`;
+	}
+
+	private restoreSizeAndPos(restoreX: boolean = true, restoreY: boolean = true): void {
+		this.restoreSize();
+		this.restorePos(restoreX, restoreY);
+	}
+
+	private resetSizeAndPos(): void {
+		this.getPanelSettings().resetXY(this.getLayoutMode());
+		this.outfitManager.saveSettings();
+
+		this.restoreSizeAndPos();
 	}
 
 
@@ -134,7 +160,7 @@ export abstract class OutfitPanel<T extends PanelType> implements OutfitSlotsHos
 
 
 
-	public render(): void {
+	public renderTabsAndActiveContent(): void {
 		this.disposer.dispose();
 		if (!this.panelEl || this.minimized) return;
 
@@ -148,11 +174,16 @@ export abstract class OutfitPanel<T extends PanelType> implements OutfitSlotsHos
 		if (!contentArea) return;
 
 		this.tabsRenderer.renderTabs(tabsContainer, contentArea);
+
+		const mode = this.getLayoutMode();
+		if (mode !== 'mobile') {
+			enforceViewportBounds(this.panelEl);
+		}
 	}
 
 	public saveAndRender(): void {
 		this.outfitManager.saveSettings();
-		this.render();
+		this.renderTabsAndActiveContent();
 	}
 
 
@@ -166,6 +197,8 @@ export abstract class OutfitPanel<T extends PanelType> implements OutfitSlotsHos
 
 		let offsetX = 0;
 		let offsetY = 0;
+		let width = 0;
+		let height = 0;
 
 		const start = (e: PointerEvent) => {
 			if (!this.panelEl) return;
@@ -177,6 +210,8 @@ export abstract class OutfitPanel<T extends PanelType> implements OutfitSlotsHos
 			const rect = this.panelEl.getBoundingClientRect();
 			offsetX = e.clientX - rect.left;
 			offsetY = e.clientY - rect.top;
+			width = rect.width;
+			height = rect.height;
 
 			this.panelEl.style.position ||= 'absolute';
 			this.panelEl.style.right = "auto";
@@ -192,11 +227,19 @@ export abstract class OutfitPanel<T extends PanelType> implements OutfitSlotsHos
 			if (!this.panelEl) return;
 
 			if (e.pointerType === 'touch') {
-				e.preventDefault(); // stops scrolling
+				e.preventDefault();
 			}
 
-			this.panelEl.style.left = `${e.clientX - offsetX}px`;
-			this.panelEl.style.top = `${e.clientY - offsetY}px`;
+			const x = e.clientX - offsetX;
+			const y = e.clientY - offsetY;
+
+			clampPosition({
+				element: this.panelEl,
+				x,
+				y,
+				width,
+				height
+			});
 		};
 
 		const stop = (e: PointerEvent) => {
@@ -359,12 +402,13 @@ export abstract class OutfitPanel<T extends PanelType> implements OutfitSlotsHos
 		this.setMinimize(!this.minimized);
 	}
 
-	protected setMinimize(minimize: boolean): void {
+	public setMinimize(minimize: boolean): void {
+		const changed = minimize !== this.minimized;
 		this.minimized = minimize;
-		this.updateMinimizeState();
+		this.updateMinimizeState(changed);
 	}
 
-	private updateMinimizeState(): void {
+	private updateMinimizeState(changed: boolean): void {
 		if (!this.panelEl) return;
 
 		const minimizeBtn = this.panelEl.querySelector('.minimize-button') as HTMLElement;
@@ -378,7 +422,11 @@ export abstract class OutfitPanel<T extends PanelType> implements OutfitSlotsHos
 			this.collapseHeader();
 		}
 		else {
-			this.render();
+			this.renderTabsAndActiveContent();
+		}
+
+		if (changed && !this.minimized) {
+			this.expandedBus.call();
 		}
 	}
 
@@ -397,7 +445,10 @@ export abstract class OutfitPanel<T extends PanelType> implements OutfitSlotsHos
 	}
 
 	public autoOpen(x?: number, y?: number): void {
-		this.show(x === undefined, y === undefined);
+		this.show({
+			restoreX: x === undefined,
+			restoreY: x === undefined
+		});
 		this.setMinimize(true);
 
 		if (!this.panelEl) return;
@@ -411,11 +462,24 @@ export abstract class OutfitPanel<T extends PanelType> implements OutfitSlotsHos
 
 	protected abstract initializePanel(): boolean;
 
-	public show(setDefaultX: boolean = false, setDefaultY: boolean = false): boolean {
+	public show(
+		options: ShowOptions = {}
+	): boolean {
 		if (this.disabled) return false;
 
-		if (this.initializePanel()) {
-			this.resetSizeAndPos(setDefaultX, setDefaultY);
+		const {
+			restoreX = false,
+			restoreY = false,
+			resetSizeAndPos = false
+		} = options;
+
+		const initialized = this.initializePanel();
+
+		if (resetSizeAndPos) {
+			this.resetSizeAndPos();
+		}
+		else if (initialized) {
+			this.restoreSizeAndPos(restoreX, restoreY);
 		}
 
 		if (this.panelEl) {
@@ -423,7 +487,7 @@ export abstract class OutfitPanel<T extends PanelType> implements OutfitSlotsHos
 		}
 
 		this.isVisible = true;
-		this.render();
+		this.renderTabsAndActiveContent();
 		return true;
 	}
 
@@ -437,8 +501,12 @@ export abstract class OutfitPanel<T extends PanelType> implements OutfitSlotsHos
 		this.hideBus.call();
 	}
 
-	public toggle() {
-		this.isVisible ? this.hide() : this.show();
+	public toggle(resetSizeAndPos = false) {
+		this.isVisible
+			? this.hide()
+			: this.show({
+				resetSizeAndPos
+			});
 	}
 
 	public disable(): void {

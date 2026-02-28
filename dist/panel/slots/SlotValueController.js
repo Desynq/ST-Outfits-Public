@@ -200,7 +200,7 @@ export class SlotValueController extends OutfitPanelContext {
             clearBtn.addEventListener('click', async () => {
                 await this.outfitManager.setOutfitItem(ctx.slot.id, 'None');
                 cleanup();
-                this.panel.render();
+                this.panel.renderTabsAndActiveContent();
             });
             preventBlur(clearBtn);
             ctx.actionsLeftEl.appendChild(clearBtn);
@@ -232,6 +232,6 @@ export class SlotValueController extends OutfitPanelContext {
         this.panel.saveAndRender();
     }
     cancelValueEdit() {
-        this.panel.render();
+        this.panel.renderTabsAndActiveContent();
     }
 }

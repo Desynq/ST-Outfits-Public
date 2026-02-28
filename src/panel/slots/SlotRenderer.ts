@@ -435,7 +435,7 @@ export class SlotRenderer extends OutfitPanelContext {
 		select.addEventListener('change', () => this.shiftSlot(select, ctx.displaySlot));
 
 		select.addEventListener('blur', () => {
-			this.panel.render();
+			this.panel.renderTabsAndActiveContent();
 		});
 	}
 
@@ -497,7 +497,7 @@ export class SlotRenderer extends OutfitPanelContext {
 
 		// Wiring
 		const cancelRename = () => {
-			this.panel.render();
+			this.panel.renderTabsAndActiveContent();
 		};
 
 		cancelBtn.addEventListener('click', cancelRename);

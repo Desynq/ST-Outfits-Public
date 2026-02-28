@@ -2,6 +2,7 @@ import { OutfitTracker } from "../data/tracker.js";
 import { CharPanelsView } from "../data/view/CharPanelsView.js";
 import { BotPanelSettingsView, CharPanelSettingsView } from "../data/view/PanelViews.js";
 import { CharOutfitManager } from "../manager/CharOutfitManager.js";
+import { ShowOptions } from "../types/OutfitPanel.js";
 import { el } from "../util/ElementHelper.js";
 import { fromKebabCase } from "../util/StringHelper.js";
 import { OutfitPanel } from "./OutfitPanel.js";
@@ -128,8 +129,8 @@ export class CharOutfitPanel extends OutfitPanel<'char'> {
 		return 'char';
 	}
 
-	public override show(setDefaultX?: boolean, setDefaultY?: boolean): boolean {
-		if (!super.show(setDefaultX, setDefaultY)) return false;
+	public override show(options: ShowOptions): boolean {
+		if (!super.show(options)) return false;
 
 		this.panelsView.setActive(this.character);
 		this.outfitManager.saveSettings();

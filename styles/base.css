@@ -14,18 +14,22 @@
 
 .outfit-panel {
     position: fixed;
+
+    display: flex;
+    flex-direction: column;
+
+    overflow-y: auto;
+
     border-radius: 10px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     padding: 6px;
     z-index: 100;
     /* Only one display property */
-    display: flex;
     color: #ffffff;
     user-select: none;
     font-size: 0.9em;
     /* Now we only have one display property */
-    flex-direction: column;
-    overflow-y: auto;
+
 
     resize: both;
     overflow: auto;

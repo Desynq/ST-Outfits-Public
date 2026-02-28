@@ -88,7 +88,7 @@ export class SlotsRenderer extends OutfitPanelContext {
 	private addSlot(kind: SlotKind): void {
 		const id = prompt('Name?')?.trim();
 		if (!id) {
-			this.panel.render();
+			this.panel.renderTabsAndActiveContent();
 			return;
 		}
 

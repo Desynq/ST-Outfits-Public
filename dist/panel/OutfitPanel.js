@@ -1,5 +1,6 @@
 import { OutfitTracker } from "../data/tracker.js";
 import { isWideScreen } from "../shared.js";
+import { clampPosition, enforceViewportBounds } from "../util/element/position.js";
 import { createConfiguredElements, toggleClasses } from "../util/ElementHelper.js";
 import { EventBus } from "../util/EventBus.js";
 import { Disposer } from "./Disposer.js";
@@ -16,11 +17,15 @@ export class OutfitPanel {
         this.tabsRenderer = new TabsRenderer(this);
         this.disposer = new Disposer();
         this.hideBus = new EventBus();
+        this.expandedBus = new EventBus();
         // Event registration
         this.onDispose = (fn) => this.disposer.add(fn);
     }
     onHide(listener) {
         this.hideBus.add(listener);
+    }
+    onExpand(listener) {
+        this.expandedBus.add(listener);
     }
     isMinimized() {
         return this.minimized;
@@ -61,20 +66,34 @@ export class OutfitPanel {
         this.outfitManager.initializeOutfit();
         this.getPanelSettings().resetXY(this.getLayoutMode());
         this.outfitManager.saveSettings();
-        this.resetSizeAndPos();
-        this.render();
+        this.restoreSizeAndPos();
+        this.renderTabsAndActiveContent();
     }
-    resetSizeAndPos(setDefaultX = true, setDefaultY = true) {
+    restoreSize() {
         if (!this.panelEl)
             return;
-        const isWide = isWideScreen();
+        const mode = this.getLayoutMode();
         this.panelEl.style.height = '80vh';
-        this.panelEl.style.width = isWide ? '24svw' : '90svw';
-        const [x, y] = this.getSavedXY(this.getLayoutMode());
-        if (setDefaultX)
+        this.panelEl.style.width = mode === 'desktop' ? '24svw' : '90svw';
+    }
+    restorePos(restoreX = true, restoreY = true) {
+        if (!this.panelEl)
+            return;
+        const mode = this.getLayoutMode();
+        const [x, y] = this.getSavedXY(mode);
+        if (restoreX)
             this.panelEl.style.left = `${x}px`;
-        if (setDefaultY)
+        if (restoreY)
             this.panelEl.style.top = `${y}px`;
+    }
+    restoreSizeAndPos(restoreX = true, restoreY = true) {
+        this.restoreSize();
+        this.restorePos(restoreX, restoreY);
+    }
+    resetSizeAndPos() {
+        this.getPanelSettings().resetXY(this.getLayoutMode());
+        this.outfitManager.saveSettings();
+        this.restoreSizeAndPos();
     }
     getOutfitManager() {
         return this.outfitManager;
@@ -91,7 +110,7 @@ export class OutfitPanel {
             });
         }
     }
-    render() {
+    renderTabsAndActiveContent() {
         this.disposer.dispose();
         if (!this.panelEl || this.minimized)
             return;
@@ -104,10 +123,14 @@ export class OutfitPanel {
         if (!contentArea)
             return;
         this.tabsRenderer.renderTabs(tabsContainer, contentArea);
+        const mode = this.getLayoutMode();
+        if (mode !== 'mobile') {
+            enforceViewportBounds(this.panelEl);
+        }
     }
     saveAndRender() {
         this.outfitManager.saveSettings();
-        this.render();
+        this.renderTabsAndActiveContent();
     }
     makePanelDraggable() {
         if (!this.panelEl)
@@ -117,6 +140,8 @@ export class OutfitPanel {
             return;
         let offsetX = 0;
         let offsetY = 0;
+        let width = 0;
+        let height = 0;
         const start = (e) => {
             var _a;
             if (!this.panelEl)
@@ -127,6 +152,8 @@ export class OutfitPanel {
             const rect = this.panelEl.getBoundingClientRect();
             offsetX = e.clientX - rect.left;
             offsetY = e.clientY - rect.top;
+            width = rect.width;
+            height = rect.height;
             (_a = this.panelEl.style).position || (_a.position = 'absolute');
             this.panelEl.style.right = "auto";
             this.panelEl.style.left = rect.left + "px";
@@ -139,10 +166,17 @@ export class OutfitPanel {
             if (!this.panelEl)
                 return;
             if (e.pointerType === 'touch') {
-                e.preventDefault(); // stops scrolling
+                e.preventDefault();
             }
-            this.panelEl.style.left = `${e.clientX - offsetX}px`;
-            this.panelEl.style.top = `${e.clientY - offsetY}px`;
+            const x = e.clientX - offsetX;
+            const y = e.clientY - offsetY;
+            clampPosition({
+                element: this.panelEl,
+                x,
+                y,
+                width,
+                height
+            });
         };
         const stop = (e) => {
             if (handle.hasPointerCapture(e.pointerId)) {
@@ -275,10 +309,11 @@ export class OutfitPanel {
         this.setMinimize(!this.minimized);
     }
     setMinimize(minimize) {
+        const changed = minimize !== this.minimized;
         this.minimized = minimize;
-        this.updateMinimizeState();
+        this.updateMinimizeState(changed);
     }
-    updateMinimizeState() {
+    updateMinimizeState(changed) {
         if (!this.panelEl)
             return;
         const minimizeBtn = this.panelEl.querySelector('.minimize-button');
@@ -289,7 +324,10 @@ export class OutfitPanel {
             this.collapseHeader();
         }
         else {
-            this.render();
+            this.renderTabsAndActiveContent();
+        }
+        if (changed && !this.minimized) {
+            this.expandedBus.call();
         }
     }
     getSavedXY(mode) {
@@ -302,24 +340,32 @@ export class OutfitPanel {
         }
     }
     autoOpen(x, y) {
-        this.show(x === undefined, y === undefined);
+        this.show({
+            restoreX: x === undefined,
+            restoreY: x === undefined
+        });
         this.setMinimize(true);
         if (!this.panelEl)
             return;
         this.panelEl.style.left = `${x}px`;
         this.panelEl.style.top = `${y}px`;
     }
-    show(setDefaultX = false, setDefaultY = false) {
+    show(options = {}) {
         if (this.disabled)
             return false;
-        if (this.initializePanel()) {
-            this.resetSizeAndPos(setDefaultX, setDefaultY);
+        const { restoreX = false, restoreY = false, resetSizeAndPos = false } = options;
+        const initialized = this.initializePanel();
+        if (resetSizeAndPos) {
+            this.resetSizeAndPos();
+        }
+        else if (initialized) {
+            this.restoreSizeAndPos(restoreX, restoreY);
         }
         if (this.panelEl) {
             this.panelEl.hidden = false;
         }
         this.isVisible = true;
-        this.render();
+        this.renderTabsAndActiveContent();
         return true;
     }
     hide() {
@@ -330,8 +376,12 @@ export class OutfitPanel {
         this.minimized = false;
         this.hideBus.call();
     }
-    toggle() {
-        this.isVisible ? this.hide() : this.show();
+    toggle(resetSizeAndPos = false) {
+        this.isVisible
+            ? this.hide()
+            : this.show({
+                resetSizeAndPos
+            });
     }
     disable() {
         this.disabled = true;

@@ -66,7 +66,7 @@ export class OutfitTabsRenderer {
         else {
             this.currentTab = { type: 'system', id: 'outfits' };
         }
-        this.panel.render();
+        this.panel.renderTabsAndActiveContent();
     }
     recreateTabs(tabsContainer) {
         const restoreScroll = this.captureScroll(tabsContainer);
@@ -149,7 +149,7 @@ export class OutfitTabsRenderer {
         if (!tab)
             throw new Error(`Element could not be coerced into a tab: ${clickedTab.outerHTML}`);
         this.currentTab = tab;
-        this.panel.render();
+        this.panel.renderTabsAndActiveContent();
         for (const t of allTabs) {
             t.classList.remove('active');
         }

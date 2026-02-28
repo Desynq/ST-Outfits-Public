@@ -70,7 +70,7 @@ export class BotOutfitPanel extends OutfitPanel {
             if (header)
                 header.textContent = `${name}'s Outfit`;
         }
-        this.render();
+        this.renderTabsAndActiveContent();
         this.updateCharBus.call();
     }
     getPanelType() {

@@ -115,7 +115,7 @@ export class OutfitTabsRenderer {
 			this.currentTab = { type: 'system', id: 'outfits' };
 		}
 
-		this.panel.render();
+		this.panel.renderTabsAndActiveContent();
 	}
 
 	private recreateTabs(tabsContainer: HTMLDivElement): void {
@@ -232,7 +232,7 @@ export class OutfitTabsRenderer {
 
 		this.currentTab = tab;
 
-		this.panel.render();
+		this.panel.renderTabsAndActiveContent();
 
 		for (const t of allTabs) {
 			t.classList.remove('active');

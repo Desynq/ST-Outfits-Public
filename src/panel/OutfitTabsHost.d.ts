@@ -9,7 +9,7 @@ export interface OutfitTabsHost<T extends PanelType> {
 
 	public getSlotsRenderer(): SlotsRenderer;
 
-	public render(): void;
+	public renderTabsAndActiveContent(): void;
 
 	public saveAndRender(): void;
 

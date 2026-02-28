@@ -284,7 +284,7 @@ export class SlotImageElement extends OutfitPanelContext {
 		if (!width || !height) return;
 
 		await this.saveImageResize(width, height);
-		this.panel.render();
+		this.panel.renderTabsAndActiveContent();
 	}
 
 

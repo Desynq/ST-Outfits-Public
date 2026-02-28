@@ -94,7 +94,7 @@ export class BotOutfitPanel extends OutfitPanel<'bot'> {
 			const header = this.panelEl.querySelector('.outfit-header h3');
 			if (header) header.textContent = `${name}'s Outfit`;
 		}
-		this.render();
+		this.renderTabsAndActiveContent();
 
 		this.updateCharBus.call();
 	}

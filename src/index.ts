@@ -63,7 +63,7 @@ async function initializeExtension() {
         // @ts-ignore
         registerSlashCommand('outfit-bot', (...args) => {
             console.log('Bot Outfit command triggered');
-            botPanel.toggle();
+            botPanel.toggle(true);
             toastr.info('Toggled character outfit panel', 'Outfit System');
             return '';
         }, [], 'Toggle character outfit tracker', true, true);
@@ -71,7 +71,7 @@ async function initializeExtension() {
         // @ts-ignore
         registerSlashCommand('outfit-user', (...args) => {
             console.log('User Outfit command triggered');
-            userPanel.toggle();
+            userPanel.toggle(true);
             toastr.info('Toggled user outfit panel', 'Outfit System');
             return '';
         }, [], 'Toggle user outfit tracker', true, true);

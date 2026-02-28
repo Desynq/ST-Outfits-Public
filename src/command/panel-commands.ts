@@ -110,7 +110,7 @@ export function registerPanelCommands(panelRegistry: OutfitPanelRegistry, saveSe
 			}
 
 			const openResult = attempt(
-				() => panel.autoOpen(undefined, 170),
+				() => panel.autoOpen(20, 170),
 				{
 					toastr: `Panel opened but failed for render for ${charName}`,
 					log: '[Outfits] panel.autoOpen failed:',

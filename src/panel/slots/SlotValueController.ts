@@ -1,6 +1,7 @@
 import { OutfitSlotState } from "../../data/model/OutfitSnapshots.js";
 import { isWideScreen, scrollIntoViewAboveKeyboard } from "../../shared.js";
 import { PanelType } from "../../types/maps.js";
+import { SlotValueText } from "../../ui/components/SlotValueText.js";
 import { popupConfirm } from "../../util/adapter/popup-adapter.js";
 import { substituteParams } from "../../util/adapter/script-adapter.js";
 import { addDoubleTapListener } from "../../util/element/click-actions.js";
@@ -98,8 +99,16 @@ export class SlotValueController extends OutfitPanelContext {
 			...[disabledClass, noneClass].filter(Boolean)
 		);
 
+		const valueRenderer = new SlotValueText({
+			showPromptModal: this.showPromptModal.bind(this),
+			expandValue: () => {
+				valueEl.classList.add('--reveal');
+				this.updateOverflowState(valueEl);
+			}
+		});
+
 		valueEl.replaceChildren(
-			this.renderInlineCode(ctx.slot.value)
+			valueRenderer.createFrag(ctx.slot.value)
 		);
 
 		addDoubleTapListener(
@@ -141,241 +150,6 @@ export class SlotValueController extends OutfitPanelContext {
 			const isOverflowing = el.scrollHeight > el.clientHeight;
 			el.classList.toggle('--overflowing', isOverflowing);
 		});
-	}
-
-	private renderInlineCode(value: string): DocumentFragment {
-		const frag = document.createDocumentFragment();
-		const appendText = (start: number, end?: number) => {
-			const text = value.slice(start, end);
-			frag.append(...this.renderTextWithRules(text));
-		};
-
-		let lastIndex = 0;
-
-		for (const macro of iterateMacros(value)) {
-			// Plain text before token
-			if (macro.index > lastIndex) {
-				appendText(lastIndex, macro.index);
-			}
-
-			const span = this.createMacroSpan(macro);
-
-			frag.append(span);
-
-			lastIndex = macro.end;
-		}
-
-		// Trailing text
-		if (lastIndex < value.length) {
-			appendText(lastIndex);
-		}
-
-		return frag;
-	}
-
-	private renderTextWithRules(text: string): Node[] {
-		const nodes: Node[] = [];
-
-		const lines = text.split('\n');
-
-		for (let i = 0; i < lines.length; i++) {
-			const rawLine = lines[i];
-			const line = rawLine.trim();
-
-			// --- Horizontal Rule
-			if (line === '---') {
-				const hr = el('hr', {
-					className: 'slot-value-hr'
-				});
-				nodes.push(hr);
-			}
-			// ### Header
-			else if (line.startsWith('### ')) {
-				const h3 = el('h3', {
-					className: 'slot-value-h3',
-					children: [
-						...this.renderInlineFormatting(line.slice(4))
-					]
-				});
-				nodes.push(h3);
-			}
-			// > Quote
-			else if (line.startsWith('> ')) {
-				const block = el('blockquote', {
-					className: 'slot-value-quote',
-					children: [
-						...this.renderInlineFormatting(line.slice(2))
-					]
-				});
-				nodes.push(block);
-			}
-			// Normal line
-			else {
-				nodes.push(...this.renderInlineFormatting(rawLine));
-			}
-
-			// Preserves line breaks (except for the last line)
-			if (i < lines.length - 1) {
-				nodes.push(document.createTextNode('\n'));
-			}
-		}
-
-		return nodes;
-	}
-
-	private renderInlineFormatting(text: string): Node[] {
-		const nodes: Node[] = [];
-		const boldRegex = /\*\*(.*?)\*\*/g;
-
-		let lastIndex = 0;
-		let match: RegExpExecArray | null;
-
-		while ((match = boldRegex.exec(text)) !== null) {
-			const [full, content] = match;
-			const start = match.index;
-
-			// Plain text before bold
-			if (start > lastIndex) {
-				nodes.push(document.createTextNode(text.slice(lastIndex, start)));
-			}
-
-			// Bold node
-			const strong = el('strong', {
-				className: 'slot-value-bold',
-				text: content
-			});
-			nodes.push(strong);
-
-			lastIndex = start + full.length;
-		}
-
-		// Trailing text
-		if (lastIndex < text.length) {
-			nodes.push(document.createTextNode(text.slice(lastIndex)));
-		}
-
-		return nodes;
-	}
-
-	private createMacroSpan(macro: MacroMatch): HTMLSpanElement {
-		// macro static content does not change until rerender
-		const text = macro.full;
-		const isOutlet = macro.content.startsWith('outlet::');
-		const isNSFW = macro.content.startsWith('spoiler::');
-
-		const span = el('span', {
-			className: 'slot-macro-span',
-			text
-		});
-
-		if (isNSFW) {
-			const inner = macro.content.slice('spoiler::'.length);
-
-			span.classList.add('--spoiler');
-
-			const placeholder = el('span', {
-				className: 'spoiler-placeholder',
-				text: '[Spoiler]'
-			});
-
-			const content = el('span', {
-				className: 'spoiler-content'
-			});
-
-			const nodes = this.renderMacroText(inner);
-			content.append(...nodes);
-
-			span.replaceChildren(placeholder, content);
-
-			const toggleReveal = () => {
-				span.classList.toggle('--revealed');
-			};
-
-			span.addEventListener('click', e => {
-				e.stopPropagation();
-				toggleReveal();
-			});
-
-			return span;
-		}
-
-
-
-
-		const getPrompt = (): string | null => {
-			const prompt = substituteParams(text);
-			return prompt === text ? null : prompt;
-		};
-
-		const updateFromPrompt = (): string | null => {
-			span.classList.remove('--error', '--char', '--user');
-
-			const addClass = (...tokens: string[]) => span.classList.add(...tokens);
-
-			const prompt = getPrompt();
-			if (!prompt) {
-				span.title = 'Error: No Prompt Found';
-				addClass('--error');
-				return null;
-			}
-
-			span.title = prompt;
-
-			if (isOutlet) {
-				span.textContent = prompt;
-				return prompt;
-			}
-
-			branch(macro.content)
-				.on('char', 'user', () => span.textContent = prompt)
-				.on('char', () => addClass('--char'))
-				.on('user', () => addClass('--user'))
-				.run(() => addClass('--unknown'));
-
-			return prompt;
-		};
-
-		updateFromPrompt();
-
-		if (isOutlet) {
-			const key = macro.content.slice('outlet::'.length);
-			span.classList.add('--outlet');
-			span.dataset.outletKey = key;
-		}
-
-		addLongPressAction(span, 300, () => {
-			const prompt = updateFromPrompt();
-			if (!prompt)
-				this.showPromptModal('No Prompt Found!');
-			else
-				this.showPromptModal(prompt);
-		}, { stopImmediatePropagation: true });
-
-		return span;
-	}
-
-	private renderMacroText(text: string): Node[] {
-		const nodes: Node[] = [];
-		let lastIndex = 0;
-
-		for (const macro of iterateMacros(text)) {
-			if (macro.index > lastIndex) {
-				nodes.push(
-					document.createTextNode(text.slice(lastIndex, macro.index))
-				);
-			}
-
-			nodes.push(this.createMacroSpan(macro));
-			lastIndex = macro.end;
-		}
-
-		if (lastIndex < text.length) {
-			nodes.push(
-				document.createTextNode(text.slice(lastIndex))
-			);
-		}
-
-		return nodes;
 	}
 
 	private async showPromptModal(promptText: string): Promise<void> {

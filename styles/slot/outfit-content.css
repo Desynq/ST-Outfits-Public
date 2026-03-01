@@ -226,25 +226,49 @@
 
 
 .slot-value-hr {
+	border: block;
 	border: none;
 	border-top: 1px solid rgba(255,255,255,0.5);
+	margin: 0.4rem 0;
+	line-height: 0;
 }
 
 .slot-value-header {
+	display: block;
 	font-size: 1rem;
 	font-weight: 600;
 	margin: 0.4rem 0;
+	line-height: 1.2;
 }
 
 .slot-value-quote {
+	display: block;
 	border-left: 3px solid rgba(255,255,255,0.25);
 	padding-left: 0.6rem;
 	opacity: 0.9;
 	margin: 0.3rem 0;
+	line-height: 1.35;
 }
 
 .slot-value-bold {
-	font-weight: 1200;
+	font-weight: 700;
+}
+
+.slot-value-italic {
+	font-style: italic;
+}
+
+.slot-value-strike {
+	text-decoration: line-through;
+	opacity: 0.8;
+}
+
+.slot-value-code {
+	font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+	background: rgba(255, 25, 255, 0.08);
+	padding: 0 0.25rem;
+	border-radius: 4px;
+	font-size: 0.95rem;
 }
 
 

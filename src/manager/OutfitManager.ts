@@ -3,8 +3,7 @@ import { OutfitTracker } from "../data/tracker.js";
 import { MutableOutfitView } from "../data/view/MutableOutfitView.js";
 import { IOutfitCollectionView } from "../data/view/OutfitCollectionView.js";
 import { OutfitSnapshotsView } from "../data/view/OutfitSnapshotsView.js";
-import { FullSummaryTag } from "../data/view/PanelViews.js";
-import { formatAccessorySlotName, serializeRecord, toSlotName } from "../shared.js";
+import { formatAccessorySlotName, toSlotName } from "../shared.js";
 import { indentString, toKebabCase } from "../util/StringHelper.js";
 import { toSummaryKey } from "../util/SummaryHelper.js";
 import { deleteGlobalVariable, getGlobalVariable, setGlobalVariable } from "./GlobalVarManager.js";
@@ -97,14 +96,14 @@ Cancel to keep the current value.`,
 
 
 
-	public buildPromptSlotValuesFromKind(kind: string): Record<string, string> {
+	public buildSlotSummariesFromKind(kind: string): Record<string, string> {
 		return this.outfit.mapSlots(
-			s => this.formatSlotForPrompt(s),
+			s => this.formatSlotSummary(s),
 			s => s.kind === kind && s.enabled
 		);
 	}
 
-	private formatSlotForPrompt(s: OutfitSlot): string {
+	private formatSlotSummary(s: OutfitSlot): string {
 		return (!s.equipped ? '((REMOVED))\n' : '') + s.value;
 	}
 
@@ -167,24 +166,52 @@ Cancel to keep the current value.`,
 		};
 	}
 
+	private buildSlotKindSummary(
+		record: Record<string, string>,
+		openingTag: (k: string, v: string) => string,
+		closingTag: (k: string, v: string) => string,
+	): string {
+		return Object.entries(record)
+			.map(([k, v]) => {
+				const ot = openingTag(k, v);
+				const tc = indentString(v);
+				const ct = closingTag(k, v);
+				return `${ot}\n${tc}\n${ct}`;
+			})
+			.join("\n\n");
+	}
+
 	public createOutfitSummary(out?: Map<string, string>): string {
 		const { openingTag, closingTag } = this.getFullSummaryTag();
 		let fullSummary = openingTag;
 		let isFirst = true;
 
-		for (const kind of this.getOutfitView().getSlotKinds()) {
-			const value = serializeRecord(
-				this.buildPromptSlotValuesFromKind(kind),
-				kind === 'accessory' ? formatAccessorySlotName : toSlotName,
-				toKebabCase(kind)
+		for (const kind of this.outfit.getSlotKinds()) {
+			const tag = toKebabCase(kind);
+			const toType = (k: string): string => toKebabCase(kind === 'accessory'
+				? formatAccessorySlotName(k)
+				: toSlotName(k)
 			);
 
-			out?.set(kind, value);
+			const openingTag = (k: string): string => {
+				const s = this.outfit.getSlotById(k);
+				if (s === undefined) throw new Error();
+				const state = s.equipped ? 'present' : 'absent';
+				return `<${tag} type="${toType(k)}" state="${state}">`;
+			};
 
-			if (value !== '') {
+			const kindSummary = this.buildSlotKindSummary(
+				this.buildSlotSummariesFromKind(kind),
+				openingTag,
+				() => `</${tag}>`
+			);
+
+			out?.set(kind, kindSummary);
+
+			if (kindSummary !== '') {
 				fullSummary += isFirst
-					? `\n${indentString(value)}`
-					: `\n\n${indentString(value)}`;
+					? `\n${indentString(kindSummary)}`
+					: `\n\n${indentString(kindSummary)}`;
 
 				isFirst = false;
 			}
@@ -251,7 +278,7 @@ Cancel to keep the current value.`,
 		if (!slot.resolved) return;
 
 		const varName = this.getVarName(slot.id);
-		const prompt = this.formatSlotForPrompt(slot.raw);
+		const prompt = this.formatSlotSummary(slot.raw);
 
 		setGlobalVariable(varName, prompt);
 		this.updateSummaries();

@@ -1,3 +1,4 @@
+import { RegexPipeline } from "./util/Regex.js";
 import { indentString, toKebabCase } from "./util/StringHelper.js";
 
 export function mouseDragElement(element: JQuery<any>) {
@@ -68,12 +69,18 @@ export function pruneRecord(record: Record<string, string>, predicate: (value: s
 	}
 }
 
+
+
+const slotNamePipe = new RegexPipeline()
+	.addStep(/([a-z])([A-Z])/g, '$1 $2', 'camelCase -> camel Case')
+	.hyphensToSpaces()
+	.titleCase()
+	.addStep(/([a-zA-Z])underwear/i, '$1 Underwear', 'legacy slots fix')
+	.untitleSmallWords()
+	.titleFirstWord();
+
 export function toSlotName(slotId: string): string {
-	return slotId
-		.replace(/([a-z])([A-Z])/g, '$1 $2') // camelCase -> camel Case
-		.replace(/-/g, ' ') // hyphens -> spaces
-		.replace(/\b\w/g, str => str.toUpperCase()) // capitalize every word
-		.replace(/([a-zA-Z])underwear/i, '$1 Underwear'); // legacy fix for old slot names like topunderwear -> Top Underwear
+	return slotNamePipe.run(slotId);
 }
 
 export function formatAccessorySlotName(name: string): string {

@@ -151,6 +151,7 @@ export class SlotRenderer extends OutfitPanelContext {
 			if (valueEl.hidden) {
 				labelDiv.classList.add('minimized');
 			}
+			this.createMenuBtn(ctx).appendTo(ctx.labelRightDiv);
 		}
 
 		switch (mode) {
@@ -271,7 +272,11 @@ export class SlotRenderer extends OutfitPanelContext {
 
 		const editBtn = this.appendEditBtn(ctx.actionsRightEl, ctx, valueEl);
 
-		const overflowElement = new SlotActionsMenuElement(
+		this.createMenuBtn(ctx).appendTo(ctx.actionsRightEl);
+	}
+
+	private createMenuBtn(ctx: SlotContext): SlotActionsMenuElement {
+		return new SlotActionsMenuElement(
 			{
 				mountEl: ctx.slotElement,
 				getViewBoundary: () => ctx.scroller.getBoundingClientRect(),
@@ -289,8 +294,7 @@ export class SlotRenderer extends OutfitPanelContext {
 		)
 			.onClopen(open =>
 				ctx.slotElement.classList.toggle('--menu-open', open)
-			)
-			.appendTo(ctx.actionsRightEl);
+			);
 	}
 
 	private createToggleBtn(slot: OutfitSlotState): HTMLButtonElement {

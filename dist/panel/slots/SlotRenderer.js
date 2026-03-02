@@ -84,6 +84,7 @@ export class SlotRenderer extends OutfitPanelContext {
             if (valueEl.hidden) {
                 labelDiv.classList.add('minimized');
             }
+            this.createMenuBtn(ctx).appendTo(ctx.labelRightDiv);
         }
         switch (mode) {
             case 'hidden-empty':
@@ -175,7 +176,10 @@ export class SlotRenderer extends OutfitPanelContext {
             ctx.actionsLeftEl.append(unequipBtn);
         }
         const editBtn = this.appendEditBtn(ctx.actionsRightEl, ctx, valueEl);
-        const overflowElement = new SlotActionsMenuElement({
+        this.createMenuBtn(ctx).appendTo(ctx.actionsRightEl);
+    }
+    createMenuBtn(ctx) {
+        return new SlotActionsMenuElement({
             mountEl: ctx.slotElement,
             getViewBoundary: () => ctx.scroller.getBoundingClientRect(),
             onDispose: this.panel.onDispose,
@@ -184,8 +188,7 @@ export class SlotRenderer extends OutfitPanelContext {
             moveSlot: () => this.moveSlot(ctx.slot),
             showPresets: () => SlotPresetsModal.show(ctx.slot, this.outfitManager, () => this.panel.saveAndRender()),
         }, this.overflowMenuFactory)
-            .onClopen(open => ctx.slotElement.classList.toggle('--menu-open', open))
-            .appendTo(ctx.actionsRightEl);
+            .onClopen(open => ctx.slotElement.classList.toggle('--menu-open', open));
     }
     createToggleBtn(slot) {
         const toggleBtn = document.createElement('button');

@@ -38,6 +38,10 @@
 	padding-bottom: 10px; /* 6px scrollbar + 4px breathing room */
 }
 
+.outfit-tab-list.--expanded {
+	flex-wrap: wrap;
+}
+
 .outfit-tab-list::-webkit-scrollbar {
 	height: 6px;
 }
@@ -123,6 +127,14 @@
 	margin-left: auto;
 	width: 4em;
 
+	padding: 4px 8px;
+	font-size: 1em;
+	line-height: 1;
+	border-radius: 6px;
+	background: rgba(255, 255, 255, 0.12);
+}
+
+.expand-tabs {
 	padding: 4px 8px;
 	font-size: 1em;
 	line-height: 1;

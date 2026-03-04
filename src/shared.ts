@@ -80,7 +80,7 @@ const slotNamePipe = new RegexPipeline()
 	.titleFirstWord();
 
 export function toSlotName(slotId: string): string {
-	return slotNamePipe.run(slotId);
+	return slotNamePipe.transform(slotId);
 }
 
 export function formatAccessorySlotName(name: string): string {

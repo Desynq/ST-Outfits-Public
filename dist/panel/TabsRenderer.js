@@ -1,5 +1,5 @@
 import { assertNever } from "../shared.js";
-import { addHorizontalScroll, createElement } from "../util/ElementHelper.js";
+import { addHorizontalScroll, createElement, el } from "../util/ElementHelper.js";
 import { CacheTab } from "./tab/CacheTab.js";
 import { OutfitsTab } from "./tab/OutfitsTab.js";
 import { VisibilityTab } from "./tab/VisibilityTab.js";
@@ -15,6 +15,7 @@ export class OutfitTabsRenderer {
             kind: 'Clothing'
         };
         this.draggedTab = null;
+        this.expanded = false;
         this.outfitsTab = new OutfitsTab(this.panel);
         this.cacheTab = new CacheTab(this.panel);
         this.visibilityTab = new VisibilityTab(this.panel, formatKind);
@@ -108,9 +109,24 @@ export class OutfitTabsRenderer {
         const systemTabListEl = createTabListEl('system-tab-list', systemTabEls);
         const outfitTabListEl = createTabListEl('outfit-tab-list', kindTabEls);
         addHorizontalScroll(outfitTabListEl, 0.5);
-        systemTabListEl.append(this.createAddTabButton());
+        systemTabListEl.append(this.createAddTabButton(), this.createExpandTabsBtn(outfitTabListEl));
         tabsContainer.append(systemTabListEl, outfitTabListEl);
         restoreScroll?.(outfitTabListEl);
+    }
+    createExpandTabsBtn(tabListEl) {
+        const btn = el('button', {
+            className: 'outfit-tab expand-tabs'
+        });
+        const update = () => {
+            btn.textContent = this.expanded ? '▴' : '▾';
+            tabListEl.classList.toggle('--expanded', this.expanded);
+        };
+        update();
+        btn.addEventListener('click', () => {
+            this.expanded = !this.expanded;
+            update();
+        });
+        return btn;
     }
     setupDissipateBehavior(tabList, tabEls) {
         tabList.addEventListener('focusin', () => {

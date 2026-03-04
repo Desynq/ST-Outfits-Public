@@ -10,7 +10,7 @@ interface Step {
 
 
 
-const smallWords = ['and', 'of', 'the', 'or', 'in', 'on', 'at'];
+const smallWords = ['and', 'of', 'the', 'or', 'in', 'on', 'at'] as const;
 
 const smallWordsRegex = new RegExp(
 	`\\b(${smallWords.join('|')})\\b`,
@@ -46,7 +46,7 @@ export class RegexPipeline {
 		return this.addStep(/^./, word => word.toUpperCase(), 'title first word');
 	}
 
-	public run(str: string): string {
+	public transform(str: string): string {
 		for (const { search, replace } of this.steps) {
 			if (typeof replace === 'string') {
 				str = str.replace(search, replace);

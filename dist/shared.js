@@ -63,7 +63,7 @@ const slotNamePipe = new RegexPipeline()
     .untitleSmallWords()
     .titleFirstWord();
 export function toSlotName(slotId) {
-    return slotNamePipe.run(slotId);
+    return slotNamePipe.transform(slotId);
 }
 export function formatAccessorySlotName(name) {
     return toSlotName(name).replace(/\s+Accessory$/, '');

@@ -20,7 +20,7 @@ export class RegexPipeline {
     titleFirstWord() {
         return this.addStep(/^./, word => word.toUpperCase(), 'title first word');
     }
-    run(str) {
+    transform(str) {
         for (const { search, replace } of this.steps) {
             if (typeof replace === 'string') {
                 str = str.replace(search, replace);

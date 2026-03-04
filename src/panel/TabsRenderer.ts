@@ -4,7 +4,7 @@ import { OutfitManager } from "../manager/OutfitManager.js";
 import { assertNever } from "../shared.js";
 import { PanelType } from "../types/maps.js";
 import { addDoubleTapListener } from "../util/element/click-actions.js";
-import { addContextActionListener, addHorizontalScroll, createElement } from "../util/ElementHelper.js";
+import { addContextActionListener, addHorizontalScroll, createElement, el } from "../util/ElementHelper.js";
 import { OutfitTabsHost } from "./OutfitTabsHost.js";
 import { CacheTab } from "./tab/CacheTab.js";
 import { OutfitsTab } from "./tab/OutfitsTab.js";
@@ -48,6 +48,7 @@ export class OutfitTabsRenderer {
 		kind: 'Clothing'
 	};
 	private draggedTab: HTMLButtonElement | null = null;
+	private expanded: boolean = false;
 
 	private readonly outfitsTab: OutfitsTab;
 	private readonly cacheTab: CacheTab;
@@ -176,7 +177,10 @@ export class OutfitTabsRenderer {
 		const outfitTabListEl = createTabListEl('outfit-tab-list', kindTabEls);
 		addHorizontalScroll(outfitTabListEl, 0.5);
 
-		systemTabListEl.append(this.createAddTabButton());
+		systemTabListEl.append(
+			this.createAddTabButton(),
+			this.createExpandTabsBtn(outfitTabListEl)
+		);
 
 		tabsContainer.append(
 			systemTabListEl,
@@ -184,6 +188,25 @@ export class OutfitTabsRenderer {
 		);
 
 		restoreScroll?.(outfitTabListEl);
+	}
+
+	private createExpandTabsBtn(tabListEl: HTMLDivElement): HTMLButtonElement {
+		const btn = el('button', {
+			className: 'outfit-tab expand-tabs'
+		});
+
+		const update = () => {
+			btn.textContent = this.expanded ? '▴' : '▾';
+			tabListEl.classList.toggle('--expanded', this.expanded);
+		};
+		update();
+
+		btn.addEventListener('click', () => {
+			this.expanded = !this.expanded;
+			update();
+		});
+
+		return btn;
 	}
 
 	private setupDissipateBehavior(tabList: HTMLDivElement, tabEls: HTMLButtonElement[]): void {

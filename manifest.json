@@ -1,9 +1,9 @@
 {
     "display_name": "Outfit System",
-    "author": "Lucanna",
+    "author": "Lucanna, Desynq",
     "version": "1.0.0",
-    "homePage": "https://github.com/lannashelton/ST-Outfits",
+    "homePage": "https://github.com/Desynq/ST-Outfits-Public",
     "js": "dist/index.js",
-    "css": "./styles/base.css",
+    "css": "dist/css/base.css",
     "loading_order": 15
 }

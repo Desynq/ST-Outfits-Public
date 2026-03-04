@@ -2,12 +2,18 @@
   "devDependencies": {
     "@types/jquery": "^3.5.33",
     "@types/toastr": "^2.1.43",
+    "concurrently": "^9.2.1",
+    "sass": "^1.97.3",
     "typescript": "^5.9.3",
     "typescript-lit-html-plugin": "^0.9.0"
   },
   "scripts": {
-    "build": "tsc",
-    "watch": "tsc --watch"
+    "build": "npm run build:ts && npm run build:scss",
+    "watch": "concurrently \"npm run watch:ts\" \"npm run watch:scss\"",
+    "build:ts": "tsc",
+    "watch:ts": "tsc --watch",
+    "build:scss": "sass src/scss/base.scss dist/css/base.css",
+    "watch:scss": "sass --watch src/scss/base.scss:dist/css/base.css"
   },
   "dependencies": {
     "lit": "^3.3.2",

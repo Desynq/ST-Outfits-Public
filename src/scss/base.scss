@@ -1,16 +1,16 @@
-@import "./outfit-preview.css";
+@use "./outfit-preview.scss";
 
-@import "./outfit-slot.css";
-@import "./slot/overflow-menu.css";
-@import "./slot/outfit-content.css";
+@use "./outfit-slot.scss";
+@use "./slot/overflow-menu.scss";
+@use "./slot/outfit-content.scss";
 
-@import "./outfit-tabs.css";
-@import "./outfit-presets-tab.css";
-@import "./outfit-cache-tab.css";
-@import "./visibility-tab.css";
-@import './image-picker.css';
-@import './slot-presets-modal.css';
-@import './shared.css';
+@use "./outfit-tabs.scss";
+@use "./outfit-presets-tab.scss";
+@use "./outfit-cache-tab.scss";
+@use "./visibility-tab.scss";
+@use './image-picker.scss';
+@use './slot-presets-modal.scss';
+@use './shared.scss';
 
 .outfit-panel {
     position: fixed;
@@ -34,11 +34,9 @@
     resize: both;
     overflow: auto;
 
-    background: linear-gradient(
-        135deg,
-        var(--panel-bg-1, #2a1f26),
-        var(--panel-bg-2, #33242d)
-    );
+    background: linear-gradient(135deg,
+            var(--panel-bg-1, #2a1f26),
+            var(--panel-bg-2, #33242d));
     border: 1px solid var(--panel-border, #4a3540);
 }
 
@@ -56,16 +54,16 @@
     align-items: center;
     border-bottom: 1px solid rgba(255, 255, 255, 0.3);
     flex-shrink: 0;
-}
 
-.outfit-header h3 {
-    touch-action: manipulation;
-    pointer-events: auto;
-    cursor: pointer;
-    margin: 0;
-    font-size: 1.3em;
-    font-weight: 700;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    h3 {
+        touch-action: manipulation;
+        pointer-events: auto;
+        cursor: pointer;
+        margin: 0;
+        font-size: 1.3em;
+        font-weight: 700;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
 }
 
 
@@ -186,8 +184,7 @@
     overflow-y: auto;
     padding-right: 4px;
     min-height: 0;
-    max-height: 40vh;
-    /* Limit height for scroll */
+    max-height: 40vh; // limit height for scroll
 }
 
 .outfit-actions {
@@ -268,14 +265,10 @@
 
 
 .no-highlight {
-    -webkit-user-select: none;
-    /* iOS Safari */
-    -moz-user-select: none;
-    /* Firefox */
-    -ms-user-select: none;
-    /* old Edge */
-    user-select: none;
-    /* spec */
+    -webkit-user-select: none; // iOS Safari
+    -moz-user-select: none; // Firefox
+    -ms-user-select: none; // Old Edge
+    user-select: none; // Spec
 }
 
 [hidden] {

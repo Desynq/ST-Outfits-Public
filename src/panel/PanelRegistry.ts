@@ -17,6 +17,7 @@ export interface ICharPanelGrouper {
 
 	onGroupAppend(name: string, listener: (parent: CharOutfitPanel, child: CharOutfitPanel) => void): void;
 	onGroupRemove(name: string, listener: (panel: CharOutfitPanel) => void): void;
+	onGroupFocus(name: string, listener: (panel: CharOutfitPanel) => void): void;
 }
 
 
@@ -28,6 +29,7 @@ export class OutfitPanelRegistry implements ICharPanelGrouper {
 
 	private readonly groupAppendBus = new MappedEventBus<string, (parent: CharOutfitPanel, child: CharOutfitPanel) => void>();
 	private readonly groupRemoveBus = new MappedEventBus<string, (panel: CharOutfitPanel) => void>();
+	private readonly groupFocusBus = new MappedEventBus<string, (panel: CharOutfitPanel) => void>();
 
 	private botAutoOpenTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -76,6 +78,10 @@ export class OutfitPanelRegistry implements ICharPanelGrouper {
 
 	public onGroupRemove(name: string, listener: (panel: CharOutfitPanel) => void): void {
 		this.groupRemoveBus.set(name, listener);
+	}
+
+	public onGroupFocus(name: string, listener: (panel: CharOutfitPanel) => void): void {
+		this.groupFocusBus.set(name, listener);
 	}
 
 	private viewGroups(): CharPanelGroupsView {
@@ -280,6 +286,7 @@ export class OutfitPanelRegistry implements ICharPanelGrouper {
 		panel.setMinimize(false);
 
 		this.saveSettings();
+		this.groupFocusBus.emit(panel);
 		return true;
 	}
 

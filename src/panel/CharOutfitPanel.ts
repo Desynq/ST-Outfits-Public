@@ -242,6 +242,11 @@ export class CharOutfitPanel extends OutfitPanel<'char'> {
 			dropdown.hidden = false;
 		};
 
+		const groupFocus = (panel: CharOutfitPanel) => {
+			if (panel !== this) return;
+			dropdown.hidden = false;
+		};
+
 		const groupRemove = (panel: CharOutfitPanel) => {
 			if (panel !== this) return;
 			dropdown.hidden = true;
@@ -249,6 +254,7 @@ export class CharOutfitPanel extends OutfitPanel<'char'> {
 
 		this.grouper.onGroupAppend(this.character, groupAppend);
 		this.grouper.onGroupRemove(this.character, groupRemove);
+		this.grouper.onGroupFocus(this.character, groupFocus);
 
 		if (this.grouper.getGroup(this).length === 0) {
 			dropdown.hidden = true;

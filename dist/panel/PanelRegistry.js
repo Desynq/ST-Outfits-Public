@@ -10,6 +10,7 @@ export class OutfitPanelRegistry {
         this.charPanels = new Map();
         this.groupAppendBus = new MappedEventBus();
         this.groupRemoveBus = new MappedEventBus();
+        this.groupFocusBus = new MappedEventBus();
         this.botAutoOpenTimer = null;
         this.panels
             .add(userPanel)
@@ -43,6 +44,9 @@ export class OutfitPanelRegistry {
     }
     onGroupRemove(name, listener) {
         this.groupRemoveBus.set(name, listener);
+    }
+    onGroupFocus(name, listener) {
+        this.groupFocusBus.set(name, listener);
     }
     viewGroups() {
         return OutfitTracker.viewCharPanels().viewGroups();
@@ -188,6 +192,7 @@ export class OutfitPanelRegistry {
         });
         panel.setMinimize(false);
         this.saveSettings();
+        this.groupFocusBus.emit(panel);
         return true;
     }
     getGroup(panel) {

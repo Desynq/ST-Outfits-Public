@@ -1,7 +1,7 @@
-import { asObject, asStringArray, ensureObject } from "../../ObjectHelper.js";
+import { asObject, asObjectArray, asStringArray, ensureObject } from "../../ObjectHelper.js";
 import { ensureRecordProperty } from "../../util/narrowing.js";
-import { CharPanelsTree, OutfitTrackerModel, PanelSettings, XY } from "../model/Outfit.js";
-import { CharPanelSettings, PartialPanelSettings } from "../view/PanelViews.js";
+import { OutfitTrackerModel, XY } from "../model/Outfit.js";
+import { CharPanelSettings, CharPanelsTree, PanelGroup, PanelSettings } from "../model/Panels.js";
 
 export function normalizeXY(value: unknown, fallback: XY): XY {
 	if (
@@ -42,7 +42,8 @@ export function normalizePanelSettings(
 export function normalizeCharPanels(obj: unknown): CharPanelsTree {
 	const raw = ensureObject(obj, {
 		active: asStringArray(),
-		panels: asObject({} as Record<string, any>)
+		panels: asObject({} as Record<string, any>),
+		groups: asObjectArray()
 	});
 
 	const panels: Record<string, CharPanelSettings> = {};
@@ -110,11 +111,62 @@ export function normalizeCharPanels(obj: unknown): CharPanelsTree {
 		if (name in panels) active.push(name);
 	}
 
+	const groups = normalizePanelGroups(raw.groups, panels);
+
 	return {
+		panels,
 		active,
-		panels
+		groups
 	};
 }
+
+
+export function normalizePanelGroups(
+	rawGroups: unknown,
+	validPanels: Record<string, CharPanelSettings>
+): PanelGroup[] {
+	if (!Array.isArray(rawGroups)) return [];
+
+	const groups: PanelGroup[] = [];
+	const seen = new Set<string>(); // enforce one group per panel
+
+	for (const g of rawGroups) {
+		if (!g || typeof g !== 'object') continue;
+
+		const rawPanels = Array.isArray((g as any).panels)
+			? (g as any).panels
+			: [];
+
+		const panels: string[] = [];
+
+		for (const p of rawPanels) {
+			if (typeof p === 'string' && p in validPanels && !seen.has(p)) {
+				panels.push(p);
+				seen.add(p);
+			}
+		}
+
+		if (panels.length === 0) continue;
+
+		const desktop = isXY((g as any).layout?.desktop)
+			? (g as any).layout.desktop
+			: { x: 0, y: 0 };
+
+		const mobile = isXY((g as any).layout?.mobile)
+			? (g as any).layout.mobile
+			: { x: 0, y: 0 };
+
+		groups.push({
+			panels,
+			layout: { desktop, mobile }
+		});
+	}
+
+	return groups;
+}
+
+
+
 
 function normalizeHexColor(value: unknown): string | undefined {
 	if (typeof value !== 'string') return undefined;

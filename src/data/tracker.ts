@@ -49,7 +49,7 @@ class Tracker {
 		return new BotPanelSettingsView(this.settings.botPanel);
 	}
 
-	public charPanels(): CharPanelsView {
+	public viewCharPanels(): CharPanelsView {
 		return new CharPanelsView(this.settings.charPanels);
 	}
 

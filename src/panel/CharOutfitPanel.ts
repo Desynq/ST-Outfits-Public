@@ -1,13 +1,15 @@
+import { XY } from "../data/model/Outfit.js";
 import { OutfitTracker } from "../data/tracker.js";
 import { CharPanelsView } from "../data/view/CharPanelsView.js";
-import { BotPanelSettingsView, CharPanelSettingsView } from "../data/view/PanelViews.js";
+import { CharPanelSettingsView, LayoutMode } from "../data/view/PanelViews.js";
 import { CharOutfitManager } from "../manager/CharOutfitManager.js";
 import { ShowOptions } from "../types/OutfitPanel.js";
 import { el } from "../util/ElementHelper.js";
 import { EventBus } from "../util/EventBus.js";
 import { fromKebabCase } from "../util/StringHelper.js";
+import { Disposer } from "./Disposer.js";
 import { OutfitPanel } from "./OutfitPanel.js";
-import { ICharPanelSwapper } from "./PanelRegistry.js";
+import { ICharPanelGrouper } from "./PanelRegistry.js";
 
 export class CharOutfitPanel extends OutfitPanel<'char'> {
 
@@ -15,7 +17,7 @@ export class CharOutfitPanel extends OutfitPanel<'char'> {
 
 	private constructor(
 		outfitManager: CharOutfitManager,
-		private readonly swapper: ICharPanelSwapper
+		private readonly grouper: ICharPanelGrouper
 	) {
 		super(outfitManager);
 	}
@@ -23,10 +25,10 @@ export class CharOutfitPanel extends OutfitPanel<'char'> {
 	public static from(
 		character: string,
 		saveSettings: () => void,
-		swapper: ICharPanelSwapper
+		grouper: ICharPanelGrouper
 	): CharOutfitPanel {
 		const manager = new CharOutfitManager(saveSettings, character);
-		const panel = new CharOutfitPanel(manager, swapper);
+		const panel = new CharOutfitPanel(manager, grouper);
 
 		manager.setFullSummaryTagResolver(() => panel.getPanelSettings().getFullSummaryTag());
 
@@ -44,7 +46,7 @@ export class CharOutfitPanel extends OutfitPanel<'char'> {
 	}
 
 	private get panelsView(): CharPanelsView {
-		return OutfitTracker.charPanels();
+		return OutfitTracker.viewCharPanels();
 	}
 
 	protected override initializePanel(): boolean {
@@ -139,7 +141,7 @@ export class CharOutfitPanel extends OutfitPanel<'char'> {
 		return 'char';
 	}
 
-	public override show(options: ShowOptions): boolean {
+	public override show(options: ShowOptions = {}): boolean {
 		if (!super.show(options)) return false;
 
 		this.panelsView.setActive(this.character);
@@ -156,13 +158,14 @@ export class CharOutfitPanel extends OutfitPanel<'char'> {
 	private destroy(): void {
 		this.panelEl?.remove();
 		this.panelEl = null;
+		this.disposer.dispose();
 
 		this.outfitManager.clearSummaries();
 
 		this.panelsView.removeActive(this.character);
 		this.outfitManager.saveSettings();
 
-		this.destroyBus.call();
+		this.destroyBus.emit();
 	}
 
 	protected override createOutfitActions(): HTMLDivElement {
@@ -183,20 +186,38 @@ export class CharOutfitPanel extends OutfitPanel<'char'> {
 		});
 
 		const rebuildMenu = (): void => {
-			const panels = this.swapper.getCharPanels().filter(o => o !== this);
+			const panels = this.grouper.getGroup(this).filter(p => p !== this);
 
-			const optionEls = panels.map(panel =>
-				el('div', {
+			const optionEls = panels.map(panel => {
+				const remove = el('span', {
+					className: 'panel-switch-remove no-highlight',
+					text: '-',
+					events: {
+						click: (e: MouseEvent): void => {
+							e.stopPropagation();
+							this.grouper.ungroup(panel);
+							rebuildMenu();
+						}
+					}
+				});
+
+				const label = el('span', {
+					className: 'panel-switch-label',
+					text: panel.getHeaderTitle()
+				});
+
+				return el('div', {
 					className: 'panel-switch-option',
-					text: panel.getHeaderTitle(),
 					events: {
 						click: (): void => {
 							menu.classList.remove('--open');
-							this.swapper.switchPanel(this, panel);
+							this.grouper.focus(panel);
 						}
-					}
-				})
-			);
+					},
+					children: [label, remove]
+				});
+			});
+
 			menu.replaceChildren(...optionEls);
 		};
 
@@ -206,8 +227,32 @@ export class CharOutfitPanel extends OutfitPanel<'char'> {
 
 		const dropdown = el('div', {
 			className: 'panel-switch-dropdown',
-			children: [button, menu]
+			tabIndex: 0,
+			children: [button, menu],
+			events: {
+				focusout: () => {
+					menu.classList.remove('--open');
+					menu.replaceChildren();
+				}
+			}
 		});
+
+		const groupAppend = (parent: CharOutfitPanel, child: CharOutfitPanel) => {
+			if (parent !== this) return;
+			dropdown.hidden = false;
+		};
+
+		const groupRemove = (panel: CharOutfitPanel) => {
+			if (panel !== this) return;
+			dropdown.hidden = true;
+		};
+
+		this.grouper.onGroupAppend(this.character, groupAppend);
+		this.grouper.onGroupRemove(this.character, groupRemove);
+
+		if (this.grouper.getGroup(this).length === 0) {
+			dropdown.hidden = true;
+		}
 
 		actionsEl.prepend(dropdown);
 

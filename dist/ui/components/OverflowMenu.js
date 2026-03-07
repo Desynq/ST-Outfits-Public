@@ -34,7 +34,7 @@ export class OverflowMenu {
     openMenu() {
         if (this.menu)
             return;
-        this.openBus.call();
+        this.openBus.emit();
         this.menu = this.buildMenu();
         document.addEventListener('click', this.handleOutsideClick);
         this.deps.onDispose(() => this.closeMenu());
@@ -45,7 +45,7 @@ export class OverflowMenu {
         this.menu.remove();
         this.menu = null;
         document.removeEventListener('click', this.handleOutsideClick);
-        this.closeBus.call();
+        this.closeBus.emit();
     }
     toggleMenu() {
         return this.menu ? this.closeMenu() : this.openMenu();
@@ -69,7 +69,7 @@ export class OverflowMenu {
     }
     buildMenu() {
         const menu = el('div', this.deps.options);
-        this.buildBus.call(menu);
+        this.buildBus.emit(menu);
         this.positionMenu(menu);
         return menu;
     }

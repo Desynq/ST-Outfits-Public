@@ -8,27 +8,41 @@ import { ShowOptions } from "../types/OutfitPanel.js";
 import { mergeClassNames } from "../util/element/css.js";
 import { clampPosition, enforceViewportBounds } from "../util/element/position.js";
 import { createConfiguredElements, el, ElementOptions, toggleClasses } from "../util/ElementHelper.js";
-import { EventBus } from "../util/EventBus.js";
+import { EventBus, Listener } from "../util/EventBus.js";
 import { Disposer } from "./Disposer.js";
 import { OutfitSlotsHost } from "./OutfitSlotsHost.js";
 import { OutfitTabsHost } from "./OutfitTabsHost.js";
 import { SlotsRenderer } from "./SlotsRenderer.js";
 import { OutfitTabsRenderer as TabsRenderer } from "./TabsRenderer.js";
 
+export interface DropPacket {
+	mode: LayoutMode;
+	cursor: {
+		x: number;
+		y: number;
+	};
+	panel: {
+		x: number;
+		y: number;
+	};
+}
+
 export abstract class OutfitPanel<T extends PanelType = PanelType> implements OutfitSlotsHost, OutfitTabsHost<T> {
 
 	protected panelEl: HTMLDivElement | null = null;
 	protected minimized: boolean = false;
-	protected isVisible: boolean = false;
+	protected visible: boolean = false;
 	protected disabled: boolean = false;
 
 	protected readonly slotsRenderer: SlotsRenderer = new SlotsRenderer(this);
 	protected readonly tabsRenderer: TabsRenderer = new TabsRenderer(this);
 
-	private readonly disposer: Disposer = new Disposer();
+	protected readonly disposer: Disposer = new Disposer();
 
-	private readonly hideBus = new EventBus<() => void>();
-	private readonly expandedBus = new EventBus<() => void>();
+	protected readonly hideBus = new EventBus();
+	protected readonly expandedBus = new EventBus();
+	protected readonly dropBus = new EventBus<(packet: DropPacket) => void>();
+	protected readonly focusBus = new EventBus();
 
 	public constructor(
 		public readonly outfitManager: OutfitManagerMap[T]
@@ -46,11 +60,23 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 		this.expandedBus.add(listener);
 	}
 
+	public onDrop(listener: Parameters<typeof this.dropBus.add>[0]): void {
+		this.dropBus.add(listener);
+	}
+
+	public onFocus(listener: Listener<typeof this.focusBus>): void {
+		this.focusBus.add(listener);
+	}
+
 
 
 
 	public isMinimized(): boolean {
 		return this.minimized;
+	}
+
+	public isVisible(): boolean {
+		return this.visible;
 	}
 
 	public isFullscreen(): boolean {
@@ -79,6 +105,15 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 		this.collection.hideEmptySlots(!this.areEmptySlotsHidden());
 		this.saveAndRender();
 	}
+
+
+	public setFront(front: boolean): void {
+		this.panelEl?.classList.toggle('--front', front);
+	}
+
+
+
+
 
 	public getLayoutMode(): LayoutMode {
 		return isWideScreen() ? 'desktop' : 'mobile';
@@ -125,6 +160,14 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 		const [x, y] = this.getSavedXY(mode);
 		if (restoreX) this.setX(x);
 		if (restoreY) this.setY(y);
+	}
+
+	private forcePos(): void {
+		const mode = this.getLayoutMode();
+
+		const [x, y] = this.getPanelSettings().getXY(mode);
+		this.setX(x);
+		this.setY(y);
 	}
 
 	public setX(x: number): void {
@@ -259,15 +302,28 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 			handle.removeEventListener("pointercancel", stop);
 
 			if (!this.panelEl) return;
+
 			const left = parseFloat(this.panelEl.style.left);
 			const top = parseFloat(this.panelEl.style.top);
+			const mode = isWideScreen() ? 'desktop' : 'mobile';
 
 			const panelSettings = this.getPanelSettings();
 			if (panelSettings.isXYSaved()) {
-				const mode = isWideScreen() ? 'desktop' : 'mobile';
 				panelSettings.setXY(mode, left, top);
 				this.outfitManager.saveSettings();
 			}
+
+			this.dropBus.emit({
+				mode,
+				cursor: {
+					x: e.clientX,
+					y: e.clientY
+				},
+				panel: {
+					x: left,
+					y: top
+				}
+			});
 		};
 
 		handle.addEventListener("pointerdown", (e) => {
@@ -436,7 +492,7 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 		}
 
 		if (changed && !this.minimized) {
-			this.expandedBus.call();
+			this.expandedBus.emit();
 		}
 	}
 
@@ -470,7 +526,33 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 
 	public abstract exportButtonClickListener(): Promise<void>;
 
+
+
+
+
+
 	protected abstract initializePanel(): boolean;
+
+	protected wireEvents(): void {
+		if (!this.panelEl) {
+			throw new Error('Panel must be initialized before wiring events.');
+		}
+
+		this.panelEl.addEventListener(
+			'pointerdown',
+			() => {
+				this.focusBus.emit();
+			},
+			true // capture phase
+		);
+	}
+
+
+
+
+
+
+
 
 	public canShow(): boolean {
 		return !this.disabled;
@@ -484,7 +566,7 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 		const {
 			restoreX = false,
 			restoreY = false,
-			forceSizeAndPos = false,
+			forcePos = false,
 			resetSizeAndPos = false
 		} = options;
 
@@ -493,8 +575,9 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 		if (resetSizeAndPos) {
 			this.resetSizeAndPos();
 		}
-		else if (forceSizeAndPos) {
-			this.restoreSizeAndPos(true, true);
+		else if (forcePos) {
+			this.restoreSize();
+			this.forcePos();
 		}
 		else if (initialized) {
 			this.restoreSizeAndPos(restoreX, restoreY);
@@ -504,7 +587,7 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 			this.panelEl.hidden = false;
 		}
 
-		this.isVisible = true;
+		this.visible = true;
 		this.renderTabsAndActiveContent();
 		return true;
 	}
@@ -516,24 +599,24 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 		if (this.panelEl) {
 			this.panelEl.hidden = true;
 		}
-		this.isVisible = false;
+		this.visible = false;
 		this.minimized = false;
 
-		this.hideBus.call();
+		this.hideBus.emit();
 	}
 
 	public hide(): void {
 		if (this.panelEl) {
 			this.panelEl.hidden = true;
 		}
-		this.isVisible = false;
+		this.visible = false;
 		this.minimized = false;
 
-		this.hideBus.call();
+		this.hideBus.emit();
 	}
 
 	public toggle(resetSizeAndPos = false) {
-		this.isVisible
+		this.visible
 			? this.close()
 			: this.show({
 				resetSizeAndPos

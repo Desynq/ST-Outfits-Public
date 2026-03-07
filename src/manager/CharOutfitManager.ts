@@ -1,8 +1,8 @@
 import { areOutfitSnapshotsEqual } from "../data/model/OutfitSnapshots.js";
+import { FullSummaryTag } from "../data/model/Panels.js";
 import { OutfitTracker } from "../data/tracker.js";
 import { IOutfitCollectionView } from "../data/view/OutfitCollectionView.js";
-import { FullSummaryTag } from "../data/view/PanelViews.js";
-import { toCamelCase, toPascalCase } from "../util/StringHelper.js";
+import { toPascalCase } from "../util/StringHelper.js";
 import { OutfitManager } from "./OutfitManager.js";
 
 

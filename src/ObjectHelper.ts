@@ -56,6 +56,10 @@ export const asStringArray = () =>
 export const asBoolean = (fallback: boolean) =>
 	(v: any): boolean => (typeof v === 'boolean' ? v : fallback);
 
+export const asObjectArray = () =>
+	(v: any): object[] =>
+		Array.isArray(v) ? v.filter(x => x && typeof x === 'object') : [];
+
 
 
 

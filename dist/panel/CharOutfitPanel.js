@@ -5,14 +5,14 @@ import { EventBus } from "../util/EventBus.js";
 import { fromKebabCase } from "../util/StringHelper.js";
 import { OutfitPanel } from "./OutfitPanel.js";
 export class CharOutfitPanel extends OutfitPanel {
-    constructor(outfitManager, swapper) {
+    constructor(outfitManager, grouper) {
         super(outfitManager);
-        this.swapper = swapper;
+        this.grouper = grouper;
         this.destroyBus = new EventBus();
     }
-    static from(character, saveSettings, swapper) {
+    static from(character, saveSettings, grouper) {
         const manager = new CharOutfitManager(saveSettings, character);
-        const panel = new CharOutfitPanel(manager, swapper);
+        const panel = new CharOutfitPanel(manager, grouper);
         manager.setFullSummaryTagResolver(() => panel.getPanelSettings().getFullSummaryTag());
         return panel;
     }
@@ -24,7 +24,7 @@ export class CharOutfitPanel extends OutfitPanel {
         return this.outfitManager.character;
     }
     get panelsView() {
-        return OutfitTracker.charPanels();
+        return OutfitTracker.viewCharPanels();
     }
     initializePanel() {
         if (this.panelEl)
@@ -98,7 +98,7 @@ export class CharOutfitPanel extends OutfitPanel {
     getPanelType() {
         return 'char';
     }
-    show(options) {
+    show(options = {}) {
         if (!super.show(options))
             return false;
         this.panelsView.setActive(this.character);
@@ -113,10 +113,11 @@ export class CharOutfitPanel extends OutfitPanel {
     destroy() {
         this.panelEl?.remove();
         this.panelEl = null;
+        this.disposer.dispose();
         this.outfitManager.clearSummaries();
         this.panelsView.removeActive(this.character);
         this.outfitManager.saveSettings();
-        this.destroyBus.call();
+        this.destroyBus.emit();
     }
     createOutfitActions() {
         const actionsEl = super.createOutfitActions();
@@ -133,24 +134,63 @@ export class CharOutfitPanel extends OutfitPanel {
             className: 'panel-switch-menu'
         });
         const rebuildMenu = () => {
-            const panels = this.swapper.getCharPanels().filter(o => o !== this);
-            const optionEls = panels.map(panel => el('div', {
-                className: 'panel-switch-option',
-                text: panel.getHeaderTitle(),
-                events: {
-                    click: () => {
-                        menu.classList.remove('--open');
-                        this.swapper.switchPanel(this, panel);
+            const panels = this.grouper.getGroup(this).filter(p => p !== this);
+            const optionEls = panels.map(panel => {
+                const remove = el('span', {
+                    className: 'panel-switch-remove no-highlight',
+                    text: '-',
+                    events: {
+                        click: (e) => {
+                            e.stopPropagation();
+                            this.grouper.ungroup(panel);
+                            rebuildMenu();
+                        }
                     }
-                }
-            }));
+                });
+                const label = el('span', {
+                    className: 'panel-switch-label',
+                    text: panel.getHeaderTitle()
+                });
+                return el('div', {
+                    className: 'panel-switch-option',
+                    events: {
+                        click: () => {
+                            menu.classList.remove('--open');
+                            this.grouper.focus(panel);
+                        }
+                    },
+                    children: [label, remove]
+                });
+            });
             menu.replaceChildren(...optionEls);
         };
         button.addEventListener('click', rebuildMenu);
         const dropdown = el('div', {
             className: 'panel-switch-dropdown',
-            children: [button, menu]
+            tabIndex: 0,
+            children: [button, menu],
+            events: {
+                focusout: () => {
+                    menu.classList.remove('--open');
+                    menu.replaceChildren();
+                }
+            }
         });
+        const groupAppend = (parent, child) => {
+            if (parent !== this)
+                return;
+            dropdown.hidden = false;
+        };
+        const groupRemove = (panel) => {
+            if (panel !== this)
+                return;
+            dropdown.hidden = true;
+        };
+        this.grouper.onGroupAppend(this.character, groupAppend);
+        this.grouper.onGroupRemove(this.character, groupRemove);
+        if (this.grouper.getGroup(this).length === 0) {
+            dropdown.hidden = true;
+        }
         actionsEl.prepend(dropdown);
         return actionsEl;
     }

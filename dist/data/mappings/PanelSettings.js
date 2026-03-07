@@ -1,4 +1,4 @@
-import { asObject, asStringArray, ensureObject } from "../../ObjectHelper.js";
+import { asObject, asObjectArray, asStringArray, ensureObject } from "../../ObjectHelper.js";
 import { ensureRecordProperty } from "../../util/narrowing.js";
 export function normalizeXY(value, fallback) {
     if (Array.isArray(value) &&
@@ -26,7 +26,8 @@ export function normalizePanelSettings(holder, key, fallback) {
 export function normalizeCharPanels(obj) {
     const raw = ensureObject(obj, {
         active: asStringArray(),
-        panels: asObject({})
+        panels: asObject({}),
+        groups: asObjectArray()
     });
     const panels = {};
     for (const [k, v] of Object.entries(raw.panels)) {
@@ -88,10 +89,45 @@ export function normalizeCharPanels(obj) {
         if (name in panels)
             active.push(name);
     }
+    const groups = normalizePanelGroups(raw.groups, panels);
     return {
+        panels,
         active,
-        panels
+        groups
     };
+}
+export function normalizePanelGroups(rawGroups, validPanels) {
+    if (!Array.isArray(rawGroups))
+        return [];
+    const groups = [];
+    const seen = new Set(); // enforce one group per panel
+    for (const g of rawGroups) {
+        if (!g || typeof g !== 'object')
+            continue;
+        const rawPanels = Array.isArray(g.panels)
+            ? g.panels
+            : [];
+        const panels = [];
+        for (const p of rawPanels) {
+            if (typeof p === 'string' && p in validPanels && !seen.has(p)) {
+                panels.push(p);
+                seen.add(p);
+            }
+        }
+        if (panels.length === 0)
+            continue;
+        const desktop = isXY(g.layout?.desktop)
+            ? g.layout.desktop
+            : { x: 0, y: 0 };
+        const mobile = isXY(g.layout?.mobile)
+            ? g.layout.mobile
+            : { x: 0, y: 0 };
+        groups.push({
+            panels,
+            layout: { desktop, mobile }
+        });
+    }
+    return groups;
 }
 function normalizeHexColor(value) {
     if (typeof value !== 'string')

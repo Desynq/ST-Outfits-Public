@@ -150,4 +150,10 @@ export class CharPanelSettingsView extends PanelSettingsView {
             borderColor: '#4a3540'
         };
     }
+    setXYSaving(enabled) {
+        return;
+    }
+    isXYSaved() {
+        return true;
+    }
 }

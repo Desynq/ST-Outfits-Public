@@ -96,7 +96,7 @@ export class BotOutfitPanel extends OutfitPanel<'bot'> {
 		}
 		this.renderTabsAndActiveContent();
 
-		this.updateCharBus.call();
+		this.updateCharBus.emit();
 	}
 
 	public override getPanelType(): 'bot' {

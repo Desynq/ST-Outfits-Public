@@ -49,7 +49,7 @@ export class SlotImageElement extends OutfitPanelContext {
         if (this.singleTap) {
             this.imgWrapper.removeEventListener('click', this.singleTap);
         }
-        this.doubleTap = addDoubleTapListener(this.imgWrapper, () => this.doubleTapBus.call(), 300, this.singleTap);
+        this.doubleTap = addDoubleTapListener(this.imgWrapper, () => this.doubleTapBus.emit(), 300, this.singleTap);
     }
     /**
      * @throws if there's no shown image to observe

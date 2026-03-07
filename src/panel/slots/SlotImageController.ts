@@ -127,7 +127,7 @@ export class SlotImageElement extends OutfitPanelContext {
 
 		this.doubleTap = addDoubleTapListener(
 			this.imgWrapper,
-			() => this.doubleTapBus.call(),
+			() => this.doubleTapBus.emit(),
 			300,
 			this.singleTap
 		);

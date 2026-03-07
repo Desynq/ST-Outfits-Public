@@ -12,13 +12,15 @@ export class OutfitPanel {
         this.outfitManager = outfitManager;
         this.panelEl = null;
         this.minimized = false;
-        this.isVisible = false;
+        this.visible = false;
         this.disabled = false;
         this.slotsRenderer = new SlotsRenderer(this);
         this.tabsRenderer = new TabsRenderer(this);
         this.disposer = new Disposer();
         this.hideBus = new EventBus();
         this.expandedBus = new EventBus();
+        this.dropBus = new EventBus();
+        this.focusBus = new EventBus();
         // Event registration
         this.onDispose = (fn) => this.disposer.add(fn);
     }
@@ -28,8 +30,17 @@ export class OutfitPanel {
     onExpand(listener) {
         this.expandedBus.add(listener);
     }
+    onDrop(listener) {
+        this.dropBus.add(listener);
+    }
+    onFocus(listener) {
+        this.focusBus.add(listener);
+    }
     isMinimized() {
         return this.minimized;
+    }
+    isVisible() {
+        return this.visible;
     }
     isFullscreen() {
         return !this.isMinimized() && !isWideScreen();
@@ -50,6 +61,9 @@ export class OutfitPanel {
     toggleHideEmpty() {
         this.collection.hideEmptySlots(!this.areEmptySlotsHidden());
         this.saveAndRender();
+    }
+    setFront(front) {
+        this.panelEl?.classList.toggle('--front', front);
     }
     getLayoutMode() {
         return isWideScreen() ? 'desktop' : 'mobile';
@@ -86,6 +100,12 @@ export class OutfitPanel {
             this.setX(x);
         if (restoreY)
             this.setY(y);
+    }
+    forcePos() {
+        const mode = this.getLayoutMode();
+        const [x, y] = this.getPanelSettings().getXY(mode);
+        this.setX(x);
+        this.setY(y);
     }
     setX(x) {
         if (!this.panelEl)
@@ -200,12 +220,23 @@ export class OutfitPanel {
                 return;
             const left = parseFloat(this.panelEl.style.left);
             const top = parseFloat(this.panelEl.style.top);
+            const mode = isWideScreen() ? 'desktop' : 'mobile';
             const panelSettings = this.getPanelSettings();
             if (panelSettings.isXYSaved()) {
-                const mode = isWideScreen() ? 'desktop' : 'mobile';
                 panelSettings.setXY(mode, left, top);
                 this.outfitManager.saveSettings();
             }
+            this.dropBus.emit({
+                mode,
+                cursor: {
+                    x: e.clientX,
+                    y: e.clientY
+                },
+                panel: {
+                    x: left,
+                    y: top
+                }
+            });
         };
         handle.addEventListener("pointerdown", (e) => {
             if (e.target !== handle)
@@ -345,7 +376,7 @@ export class OutfitPanel {
             this.renderTabsAndActiveContent();
         }
         if (changed && !this.minimized) {
-            this.expandedBus.call();
+            this.expandedBus.emit();
         }
     }
     getSavedXY(mode) {
@@ -368,19 +399,29 @@ export class OutfitPanel {
         this.panelEl.style.left = `${x}px`;
         this.panelEl.style.top = `${y}px`;
     }
+    wireEvents() {
+        if (!this.panelEl) {
+            throw new Error('Panel must be initialized before wiring events.');
+        }
+        this.panelEl.addEventListener('pointerdown', () => {
+            this.focusBus.emit();
+        }, true // capture phase
+        );
+    }
     canShow() {
         return !this.disabled;
     }
     show(options = {}) {
         if (!this.canShow())
             return false;
-        const { restoreX = false, restoreY = false, forceSizeAndPos = false, resetSizeAndPos = false } = options;
+        const { restoreX = false, restoreY = false, forcePos = false, resetSizeAndPos = false } = options;
         const initialized = this.initializePanel();
         if (resetSizeAndPos) {
             this.resetSizeAndPos();
         }
-        else if (forceSizeAndPos) {
-            this.restoreSizeAndPos(true, true);
+        else if (forcePos) {
+            this.restoreSize();
+            this.forcePos();
         }
         else if (initialized) {
             this.restoreSizeAndPos(restoreX, restoreY);
@@ -388,7 +429,7 @@ export class OutfitPanel {
         if (this.panelEl) {
             this.panelEl.hidden = false;
         }
-        this.isVisible = true;
+        this.visible = true;
         this.renderTabsAndActiveContent();
         return true;
     }
@@ -399,20 +440,20 @@ export class OutfitPanel {
         if (this.panelEl) {
             this.panelEl.hidden = true;
         }
-        this.isVisible = false;
+        this.visible = false;
         this.minimized = false;
-        this.hideBus.call();
+        this.hideBus.emit();
     }
     hide() {
         if (this.panelEl) {
             this.panelEl.hidden = true;
         }
-        this.isVisible = false;
+        this.visible = false;
         this.minimized = false;
-        this.hideBus.call();
+        this.hideBus.emit();
     }
     toggle(resetSizeAndPos = false) {
-        this.isVisible
+        this.visible
             ? this.close()
             : this.show({
                 resetSizeAndPos

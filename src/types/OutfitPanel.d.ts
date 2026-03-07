@@ -3,6 +3,6 @@
 export interface ShowOptions {
 	restoreX?: boolean;
 	restoreY?: boolean;
-	forceSizeAndPos?: boolean;
+	forcePos?: boolean;
 	resetSizeAndPos?: boolean;
 }

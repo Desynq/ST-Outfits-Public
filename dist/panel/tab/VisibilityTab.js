@@ -157,6 +157,9 @@ export class VisibilityTab extends PanelTab {
     }
     renderPositionButtons(contentArea) {
         const panelSettings = this.panel.getPanelSettings();
+        if (this.panel instanceof CharOutfitPanel) {
+            return;
+        }
         const toggleSavingXYButton = createDerivedToggleButton('visibility-tab-button toggle-saving-xy-button', () => panelSettings.isXYSaved(), (enabled) => enabled
             ? 'Disable Saving XY'
             : 'Enable Saving XY', (enabled) => {

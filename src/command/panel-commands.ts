@@ -67,7 +67,7 @@ function attempt<T>(
 
 
 
-export function registerPanelCommands(panelRegistry: OutfitPanelRegistry, saveSettings: () => void): void {
+export function registerPanelCommands(panelRegistry: OutfitPanelRegistry): void {
 
 	// Current fix for outlet macros going away on command use is to reload the current chat
 
@@ -82,7 +82,7 @@ export function registerPanelCommands(panelRegistry: OutfitPanelRegistry, saveSe
 			}
 
 			const createResult = attempt(
-				() => panelRegistry.getOrCreate(charName, saveSettings),
+				() => panelRegistry.getOrCreate(charName),
 				{
 					toastr: `Failed to create panel for ${charName}`,
 					log: '[Outfits] getOrCreate failed:',

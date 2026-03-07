@@ -35,7 +35,7 @@ class Tracker {
     botPanel() {
         return new BotPanelSettingsView(this.settings.botPanel);
     }
-    charPanels() {
+    viewCharPanels() {
         return new CharPanelsView(this.settings.charPanels);
     }
     images() {

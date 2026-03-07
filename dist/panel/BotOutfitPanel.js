@@ -71,7 +71,7 @@ export class BotOutfitPanel extends OutfitPanel {
                 header.textContent = `${name}'s Outfit`;
         }
         this.renderTabsAndActiveContent();
-        this.updateCharBus.call();
+        this.updateCharBus.emit();
     }
     getPanelType() {
         return 'bot';

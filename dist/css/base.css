@@ -707,12 +707,27 @@
   display: flex;
 }
 .panel-switch-menu .panel-switch-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   padding: 4px 8px;
   cursor: pointer;
   white-space: nowrap;
 }
 .panel-switch-menu .panel-switch-option:hover {
   background: rgba(255, 255, 255, 0.1);
+}
+.panel-switch-menu .panel-switch-option .panel-switch-label {
+  flex: 1;
+}
+.panel-switch-menu .panel-switch-option .panel-switch-remove {
+  cursor: pointer;
+  opacity: 0.7;
+  padding: 0 4px;
+}
+.panel-switch-menu .panel-switch-option .panel-switch-remove:hover {
+  opacity: 1;
 }
 
 /* Tabs Navigation */
@@ -1377,13 +1392,13 @@
 
 .outfit-panel {
   position: fixed;
+  z-index: 100;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
   border-radius: 10px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   padding: 6px;
-  z-index: 100;
   /* Only one display property */
   color: #ffffff;
   user-select: none;
@@ -1393,6 +1408,36 @@
   overflow: auto;
   background: linear-gradient(135deg, var(--panel-bg-1, #2a1f26), var(--panel-bg-2, #33242d));
   border: 1px solid var(--panel-border, #4a3540);
+}
+.outfit-panel.fullscreen {
+  position: fixed;
+  inset: var(--topBarBlockSize) 0 0 0;
+  width: 100vw;
+  height: calc(100vh - var(--topBarBlockSize));
+}
+.outfit-panel.minimized {
+  z-index: 99;
+  width: 48px !important;
+  height: 48px !important;
+  padding: 0;
+  border-radius: 12px;
+  justify-content: center;
+  align-items: center;
+  resize: none;
+}
+.outfit-panel.--front {
+  z-index: 101;
+}
+@media (min-width: 720px) {
+  .outfit-panel {
+    z-index: 10000;
+  }
+  .outfit-panel.minimized {
+    z-index: 9999;
+  }
+  .outfit-panel.--front {
+    z-index: 10001;
+  }
 }
 
 /* Main Content Area - Scrollable */
@@ -1470,16 +1515,6 @@
 .outfit-panel.minimized .outfit-content,
 .outfit-panel.minimized .outfit-tabs {
   display: none !important;
-}
-
-.outfit-panel.minimized {
-  width: 48px !important;
-  height: 48px !important;
-  padding: 0 !important;
-  border-radius: 12px;
-  justify-content: center;
-  align-items: center;
-  resize: none;
 }
 
 .outfit-panel.minimized .outfit-header {
@@ -1563,19 +1598,8 @@
   background: rgba(255, 255, 255, 0.3);
 }
 
-.outfit-panel.fullscreen {
-  position: fixed !important;
-  inset: var(--topBarBlockSize) 0 0 0 !important;
-  width: 100vw !important;
-  height: calc(100vh - var(--topBarBlockSize)) !important;
-}
-
 .outfit-content {
   max-height: 80vh;
-}
-
-.outfit-panel.minimized {
-  z-index: 99;
 }
 
 .no-highlight {

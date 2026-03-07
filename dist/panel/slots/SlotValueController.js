@@ -85,7 +85,7 @@ export class SlotValueController extends OutfitPanelContext {
         });
         container.appendChild(valueEl);
         this.updateOverflowState(valueEl);
-        this.renderBus.call(valueEl);
+        this.renderBus.emit(valueEl);
         return valueEl;
     }
     updateOverflowState(el) {

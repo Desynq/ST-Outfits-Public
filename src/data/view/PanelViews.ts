@@ -1,5 +1,6 @@
 import { assertNever } from "../../shared.js";
-import { PanelSettings, XY } from "../model/Outfit.js";
+import { XY } from "../model/Outfit.js";
+import { CharPanelSettings, FullPanelSettings, FullSummaryTag, PanelSettings, PanelSettingsBase, PartialPanelSettings } from "../model/Panels.js";
 
 export type LayoutMode = 'desktop' | 'mobile';
 
@@ -27,37 +28,7 @@ export const defaultCharPanelSettings: PanelSettings = {
 	mobileXY: [20, 170]
 };
 
-interface PanelSettingsBase {
-	saveXY: boolean;
-
-	bgColor1?: string;
-	bgColor2?: string;
-	borderColor?: string;
-}
-
 export type PanelColorKey = keyof Pick<PanelSettingsBase, 'bgColor1' | 'bgColor2' | 'borderColor'>;
-
-export interface FullPanelSettings extends PanelSettingsBase {
-	desktopXY: XY;
-	mobileXY: XY;
-}
-
-export interface PartialPanelSettings extends PanelSettingsBase {
-	desktopXY?: XY;
-	mobileXY?: XY;
-}
-
-export interface FullSummaryTag {
-	tag: string;
-	attributes: string;
-	openingTag: string;
-	closingTag: string;
-}
-
-export interface CharPanelSettings extends PartialPanelSettings {
-	fullSummaryTag?: FullSummaryTag;
-}
-
 
 export abstract class PanelSettingsView<TSettings extends PartialPanelSettings> {
 	public constructor(
@@ -248,5 +219,13 @@ export class CharPanelSettingsView extends PanelSettingsView<CharPanelSettings> 
 			bgColor2: '#33242d',
 			borderColor: '#4a3540'
 		};
+	}
+
+	public override setXYSaving(enabled: boolean): void {
+		return;
+	}
+
+	public override isXYSaved(): boolean {
+		return true;
 	}
 }

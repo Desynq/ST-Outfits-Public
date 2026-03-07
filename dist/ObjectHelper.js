@@ -33,6 +33,7 @@ export const asStringRecord = () => (v) => {
 };
 export const asStringArray = () => (v) => Array.isArray(v) ? v.filter(x => typeof x === 'string') : [];
 export const asBoolean = (fallback) => (v) => (typeof v === 'boolean' ? v : fallback);
+export const asObjectArray = () => (v) => Array.isArray(v) ? v.filter(x => x && typeof x === 'object') : [];
 export const resolveString = (v) => typeof v === 'string' && v.trim() !== '' ? v.trim() : undefined;
 export function resolvePositiveNumber(v, fallback) {
     if (typeof v === 'number' && Number.isFinite(v) && v > 0)

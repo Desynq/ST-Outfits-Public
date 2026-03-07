@@ -16,7 +16,7 @@ function attempt(fn, options) {
         return { ok: false, error };
     }
 }
-export function registerPanelCommands(panelRegistry, saveSettings) {
+export function registerPanelCommands(panelRegistry) {
     // Current fix for outlet macros going away on command use is to reload the current chat
     SlashCommandParser.addCommandObject(SlashCommand.fromProps({
         name: 'outfit-char',
@@ -27,7 +27,7 @@ export function registerPanelCommands(panelRegistry, saveSettings) {
                 toastr.error(msg);
                 return msg;
             }
-            const createResult = attempt(() => panelRegistry.getOrCreate(charName, saveSettings), {
+            const createResult = attempt(() => panelRegistry.getOrCreate(charName), {
                 toastr: `Failed to create panel for ${charName}`,
                 log: '[Outfits] getOrCreate failed:',
                 meta: () => ({ character: charName })

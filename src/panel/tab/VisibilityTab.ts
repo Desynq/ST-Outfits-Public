@@ -236,6 +236,10 @@ export class VisibilityTab extends PanelTab {
 	private renderPositionButtons(contentArea: HTMLDivElement): void {
 		const panelSettings = this.panel.getPanelSettings();
 
+		if (this.panel instanceof CharOutfitPanel) {
+			return;
+		}
+
 		const toggleSavingXYButton = createDerivedToggleButton(
 			'visibility-tab-button toggle-saving-xy-button',
 			() => panelSettings.isXYSaved(),

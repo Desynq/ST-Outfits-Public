@@ -1,4 +1,5 @@
-import { CharPanelSettings, PartialPanelSettings } from "../view/PanelViews";
+import { PartialPanelSettings } from "../view/PartialPanelSettings";
+import { CharPanelsTree, PanelSettings } from "./Panels";
 import { SlotPreset } from "./SlotPreset";
 
 export type KnownSlotKind =
@@ -48,14 +49,6 @@ export interface OutfitCollectionsTree {
 
 export type XY = readonly [number, number];
 
-export interface PanelSettings {
-	desktopXY: XY;
-	mobileXY: XY;
-	saveXY: boolean;
-}
-
-
-
 export interface OutfitCachedSnapshot {
 	namespace: string;
 	slots: Record<string, string>;
@@ -76,10 +69,6 @@ export interface ImageBlob {
 	width: number;
 }
 
-export interface CharPanelsTree {
-	active: string[];
-	panels: Record<string, CharPanelSettings>;
-}
 
 
 export interface OutfitTrackerModel {

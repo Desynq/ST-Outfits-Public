@@ -13,32 +13,83 @@
 @use './slot-presets-modal.scss';
 @use './shared.scss';
 
+$z-layers: (
+	panel: 100,
+	panel-minimized: 99,
+	panel-front: 101,
+
+	panel-desktop: 10000,
+	panel-desktop-minimized: 9999,
+	panel-desktop-front: 10001
+);
+
+@function z($layer) {
+	@return map-get($z-layers, $layer);
+}
+
 .outfit-panel {
-    position: fixed;
+	position: fixed;
+	z-index: z(panel);
 
-    display: flex;
-    flex-direction: column;
+	display: flex;
+	flex-direction: column;
 
-    overflow-y: auto;
+	overflow-y: auto;
 
-    border-radius: 10px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-    padding: 6px;
-    z-index: 100;
-    /* Only one display property */
-    color: #ffffff;
-    user-select: none;
-    font-size: 0.9em;
-    /* Now we only have one display property */
+	border-radius: 10px;
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+	padding: 6px;
+	/* Only one display property */
+	color: #ffffff;
+	user-select: none;
+	font-size: 0.9em;
+	/* Now we only have one display property */
 
 
-    resize: both;
-    overflow: auto;
+	resize: both;
+	overflow: auto;
 
-    background: linear-gradient(135deg,
-            var(--panel-bg-1, #2a1f26),
-            var(--panel-bg-2, #33242d));
-    border: 1px solid var(--panel-border, #4a3540);
+	background: linear-gradient(135deg,
+			var(--panel-bg-1, #2a1f26),
+			var(--panel-bg-2, #33242d));
+	border: 1px solid var(--panel-border, #4a3540);
+
+	&.fullscreen {
+		position: fixed;
+		inset: var(--topBarBlockSize) 0 0 0;
+		width: 100vw;
+		height: calc(100vh - var(--topBarBlockSize));
+	}
+
+	&.minimized {
+		z-index: z(panel-minimized);
+
+		width: 48px !important;
+		height: 48px !important;
+		padding: 0;
+		border-radius: 12px;
+		justify-content: center;
+		align-items: center;
+		resize: none;
+	}
+
+	&.--front {
+		z-index: z(panel-front);
+	}
+
+	@media (min-width: 720px) {
+		& {
+			z-index: z(panel-desktop);
+		}
+
+		&.minimized {
+			z-index: z(panel-desktop-minimized);
+		}
+
+		&.--front {
+			z-index: z(panel-desktop-front);
+		}
+	}
 }
 
 
@@ -46,73 +97,73 @@
 
 /* Main Content Area - Scrollable */
 .outfit-content {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    /* Takes remaining space */
-    overflow-y: auto;
-    /* ACTIVE scrollbar */
-    padding-right: 4px;
-    min-height: 0;
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	/* Takes remaining space */
+	overflow-y: auto;
+	/* ACTIVE scrollbar */
+	padding-right: 4px;
+	min-height: 0;
 
-    gap: 6px;
+	gap: 6px;
 }
 
 
 
 .system-tab-button {
-    width: 100%;
-    margin-top: 10px;
-    padding: 8px;
-    border: none;
-    border-radius: 6px;
-    background: rgba(255, 255, 255, 0.1);
-    color: #fff;
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 0.8em;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+	width: 100%;
+	margin-top: 10px;
+	padding: 8px;
+	border: none;
+	border-radius: 6px;
+	background: rgba(255, 255, 255, 0.1);
+	color: #fff;
+	cursor: pointer;
+	font-weight: 600;
+	font-size: 0.8em;
+	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .system-tab-button:hover {
-    background: rgba(255, 255, 255, 0.2);
+	background: rgba(255, 255, 255, 0.2);
 }
 
 /* Icons styling */
 .outfit-actions span {
-    cursor: pointer;
-    font-size: 1.1em;
-    padding: 4px 8px;
-    border-radius: 4px;
+	cursor: pointer;
+	font-size: 1.1em;
+	padding: 4px 8px;
+	border-radius: 4px;
 }
 
 .outfit-actions span:hover {
-    background: rgba(255, 255, 255, 0.2);
+	background: rgba(255, 255, 255, 0.2);
 }
 
 /* Scrollbar styling */
 .outfit-content::-webkit-scrollbar {
-    width: 6px;
+	width: 6px;
 }
 
 .outfit-content::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.1);
-    border-radius: 3px;
+	background: rgba(0, 0, 0, 0.1);
+	border-radius: 3px;
 }
 
 .outfit-content::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 3px;
+	background: rgba(255, 255, 255, 0.2);
+	border-radius: 3px;
 }
 
 .outfit-content::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.3);
+	background: rgba(255, 255, 255, 0.3);
 }
 
 /* Hover effects */
 .outfit-slot:hover,
 .outfit-preset:hover {
-    background: rgba(255, 255, 255, 0.15);
+	background: rgba(255, 255, 255, 0.15);
 }
 
 /* Minimized state styles */
@@ -121,131 +172,108 @@
 .outfit-panel.minimized .close-button,
 .outfit-panel.minimized .outfit-content,
 .outfit-panel.minimized .outfit-tabs {
-    display: none !important;
-}
-
-.outfit-panel.minimized {
-    width: 48px !important;
-    height: 48px !important;
-    padding: 0 !important;
-    border-radius: 12px;
-    justify-content: center;
-    align-items: center;
-    resize: none;
+	display: none !important;
 }
 
 .outfit-panel.minimized .outfit-header {
-    border-bottom: none !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+	border-bottom: none !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	width: 100%;
+	height: 100%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
 }
 
 .outfit-panel.minimized .minimize-button {
-    font-size: 1.6em;
-    padding: 0;
-    margin: 0;
+	font-size: 1.6em;
+	padding: 0;
+	margin: 0;
 }
 
 
 
 /* Ensure outfits page has proper scroll */
 .outfit-content {
-    flex: 1;
-    overflow-y: auto;
-    padding-right: 4px;
-    min-height: 0;
-    max-height: 40vh; // limit height for scroll
+	flex: 1;
+	overflow-y: auto;
+	padding-right: 4px;
+	min-height: 0;
+	max-height: 40vh; // limit height for scroll
 }
 
 .outfit-actions {
-    display: flex;
-    align-items: center;
-    gap: 6px;
+	display: flex;
+	align-items: center;
+	gap: 6px;
 }
 
 .outfit-actions .outfit-action {
-    font-weight: bold;
-    font-size: 1.6em;
+	font-weight: bold;
+	font-size: 1.6em;
 
-    height: 1.6em;
+	height: 1.6em;
 
-    padding: 12px;
-    display: inline-flex;
-    justify-content: center;
-    align-items: center;
-    border-radius: 6px;
+	padding: 12px;
+	display: inline-flex;
+	justify-content: center;
+	align-items: center;
+	border-radius: 6px;
 }
 
 /* Minimize button styling */
 .minimize-button {
-    outline: none;
+	outline: none;
 }
 
 .minimize-button:hover,
 .minimize-button:active {
-    background: none !important;
+	background: none !important;
 }
 
 .minimize-button:focus {
-    outline: none;
+	outline: none;
 }
 
 /* Ensure proper spacing in header */
 .outfit-actions span {
-    margin: 0 2px;
+	margin: 0 2px;
 }
 
 /* Better scrollbar for outfits */
 .outfit-content::-webkit-scrollbar {
-    width: 6px;
+	width: 6px;
 }
 
 .outfit-content::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.1);
-    border-radius: 3px;
+	background: rgba(0, 0, 0, 0.1);
+	border-radius: 3px;
 }
 
 .outfit-content::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 3px;
+	background: rgba(255, 255, 255, 0.2);
+	border-radius: 3px;
 }
 
 .outfit-content::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.3);
-}
-
-
-
-.outfit-panel.fullscreen {
-    position: fixed !important;
-    inset: var(--topBarBlockSize) 0 0 0 !important;
-    width: 100vw !important;
-    height: calc(100vh - var(--topBarBlockSize)) !important;
+	background: rgba(255, 255, 255, 0.3);
 }
 
 .outfit-content {
-    max-height: 80vh;
-}
-
-.outfit-panel.minimized {
-    z-index: 99;
+	max-height: 80vh;
 }
 
 
 
 
 .no-highlight {
-    -webkit-user-select: none; // iOS Safari
-    -moz-user-select: none; // Firefox
-    -ms-user-select: none; // Old Edge
-    user-select: none; // Spec
+	-webkit-user-select: none; // iOS Safari
+	-moz-user-select: none; // Firefox
+	-ms-user-select: none; // Old Edge
+	user-select: none; // Spec
 }
 
 [hidden] {
-    display: none !important;
+	display: none !important;
 }

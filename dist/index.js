@@ -61,7 +61,7 @@ async function initializeExtension() {
             toastr.info('Toggled user outfit panel', 'Outfit System');
             return '';
         }, [], 'Toggle user outfit tracker', true, true);
-        registerPanelCommands(panelRegistry, saveSettings);
+        registerPanelCommands(panelRegistry);
         // Only register auto commands if AutoOutfitSystem loaded successfully
         // @ts-ignore
         if (AutoOutfitSystem.name !== 'DummyAutoOutfitSystem') {

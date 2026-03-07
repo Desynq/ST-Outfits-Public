@@ -1,7 +1,8 @@
 import { OutfitTracker } from "../data/tracker.js";
 import { isWideScreen } from "../shared.js";
+import { mergeClassNames } from "../util/element/css.js";
 import { clampPosition, enforceViewportBounds } from "../util/element/position.js";
-import { createConfiguredElements, toggleClasses } from "../util/ElementHelper.js";
+import { el, toggleClasses } from "../util/ElementHelper.js";
 import { EventBus } from "../util/EventBus.js";
 import { Disposer } from "./Disposer.js";
 import { SlotsRenderer } from "./SlotsRenderer.js";
@@ -82,9 +83,19 @@ export class OutfitPanel {
         const mode = this.getLayoutMode();
         const [x, y] = this.getSavedXY(mode);
         if (restoreX)
-            this.panelEl.style.left = `${x}px`;
+            this.setX(x);
         if (restoreY)
-            this.panelEl.style.top = `${y}px`;
+            this.setY(y);
+    }
+    setX(x) {
+        if (!this.panelEl)
+            return;
+        this.panelEl.style.left = `${x}px`;
+    }
+    setY(y) {
+        if (!this.panelEl)
+            return;
+        this.panelEl.style.top = `${y}px`;
     }
     restoreSizeAndPos(restoreX = true, restoreY = true) {
         this.restoreSize();
@@ -265,31 +276,38 @@ export class OutfitPanel {
         });
     }
     createOutfitActions() {
-        const div = document.createElement('div');
-        div.classList.add('outfit-actions');
-        const createSpan = () => document.createElement('span');
-        const actions = createConfiguredElements(createSpan, (minimizeBtn) => {
-            minimizeBtn.classList.add('minimize-button');
-            minimizeBtn.textContent = '−';
-            minimizeBtn.addEventListener('click', () => this.toggleMinimize());
-        }, (refreshBtn) => {
-            refreshBtn.classList.add('refresh-button');
-            refreshBtn.textContent = '↻';
-            refreshBtn.addEventListener('click', () => {
-                this.reinitialize();
-            });
-        }, (closeBtn) => {
-            closeBtn.classList.add('close-button');
-            closeBtn.textContent = '×';
-            closeBtn.addEventListener('click', () => {
-                this.hide();
-            });
+        const action = (options) => el('span', {
+            ...options,
+            className: mergeClassNames('outfit-action', 'no-highlight', options.className)
         });
-        for (const action of actions) {
-            action.classList.add('outfit-action', 'no-highlight');
-        }
-        div.append(...actions);
-        return div;
+        const actions = [
+            action({
+                className: 'minimize-button',
+                text: '−',
+                events: {
+                    click: () => this.toggleMinimize()
+                }
+            }),
+            action({
+                className: 'refresh-button',
+                text: '↻',
+                events: {
+                    click: () => this.reinitialize()
+                }
+            }),
+            action({
+                className: 'close-button',
+                text: '×',
+                events: {
+                    click: () => this.close()
+                }
+            })
+        ];
+        const actionsEl = el('div', {
+            className: 'outfit-actions',
+            children: actions
+        });
+        return actionsEl;
     }
     expandHeader() {
         if (!this.panelEl)
@@ -350,13 +368,19 @@ export class OutfitPanel {
         this.panelEl.style.left = `${x}px`;
         this.panelEl.style.top = `${y}px`;
     }
+    canShow() {
+        return !this.disabled;
+    }
     show(options = {}) {
-        if (this.disabled)
+        if (!this.canShow())
             return false;
-        const { restoreX = false, restoreY = false, resetSizeAndPos = false } = options;
+        const { restoreX = false, restoreY = false, forceSizeAndPos = false, resetSizeAndPos = false } = options;
         const initialized = this.initializePanel();
         if (resetSizeAndPos) {
             this.resetSizeAndPos();
+        }
+        else if (forceSizeAndPos) {
+            this.restoreSizeAndPos(true, true);
         }
         else if (initialized) {
             this.restoreSizeAndPos(restoreX, restoreY);
@@ -368,6 +392,17 @@ export class OutfitPanel {
         this.renderTabsAndActiveContent();
         return true;
     }
+    /**
+     * Hides the DOM until `show()` is called
+     */
+    close() {
+        if (this.panelEl) {
+            this.panelEl.hidden = true;
+        }
+        this.isVisible = false;
+        this.minimized = false;
+        this.hideBus.call();
+    }
     hide() {
         if (this.panelEl) {
             this.panelEl.hidden = true;
@@ -378,14 +413,14 @@ export class OutfitPanel {
     }
     toggle(resetSizeAndPos = false) {
         this.isVisible
-            ? this.hide()
+            ? this.close()
             : this.show({
                 resetSizeAndPos
             });
     }
     disable() {
         this.disabled = true;
-        this.hide();
+        this.close();
     }
     enable() {
         this.disabled = false;

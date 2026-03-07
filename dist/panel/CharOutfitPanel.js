@@ -1,17 +1,24 @@
 import { OutfitTracker } from "../data/tracker.js";
 import { CharOutfitManager } from "../manager/CharOutfitManager.js";
 import { el } from "../util/ElementHelper.js";
+import { EventBus } from "../util/EventBus.js";
 import { fromKebabCase } from "../util/StringHelper.js";
 import { OutfitPanel } from "./OutfitPanel.js";
 export class CharOutfitPanel extends OutfitPanel {
-    constructor(outfitManager) {
+    constructor(outfitManager, swapper) {
         super(outfitManager);
+        this.swapper = swapper;
+        this.destroyBus = new EventBus();
     }
-    static from(character, saveSettings) {
+    static from(character, saveSettings, swapper) {
         const manager = new CharOutfitManager(saveSettings, character);
-        const panel = new CharOutfitPanel(manager);
+        const panel = new CharOutfitPanel(manager, swapper);
         manager.setFullSummaryTagResolver(() => panel.getPanelSettings().getFullSummaryTag());
         return panel;
+    }
+    onDestroy(listener) {
+        this.destroyBus.add(listener);
+        return this;
     }
     get character() {
         return this.outfitManager.character;
@@ -98,12 +105,53 @@ export class CharOutfitPanel extends OutfitPanel {
         this.outfitManager.saveSettings();
         return true;
     }
-    hide() {
-        super.hide();
+    close({ destroy = true } = {}) {
+        super.close();
+        if (destroy)
+            this.destroy();
+    }
+    destroy() {
         this.panelEl?.remove();
         this.panelEl = null;
         this.outfitManager.clearSummaries();
         this.panelsView.removeActive(this.character);
         this.outfitManager.saveSettings();
+        this.destroyBus.call();
+    }
+    createOutfitActions() {
+        const actionsEl = super.createOutfitActions();
+        const button = el('span', {
+            className: 'outfit-action switch-panel-button no-highlight',
+            text: '▼',
+            events: {
+                click: () => {
+                    menu.classList.toggle('--open');
+                }
+            }
+        });
+        const menu = el('div', {
+            className: 'panel-switch-menu'
+        });
+        const rebuildMenu = () => {
+            const panels = this.swapper.getCharPanels().filter(o => o !== this);
+            const optionEls = panels.map(panel => el('div', {
+                className: 'panel-switch-option',
+                text: panel.getHeaderTitle(),
+                events: {
+                    click: () => {
+                        menu.classList.remove('--open');
+                        this.swapper.switchPanel(this, panel);
+                    }
+                }
+            }));
+            menu.replaceChildren(...optionEls);
+        };
+        button.addEventListener('click', rebuildMenu);
+        const dropdown = el('div', {
+            className: 'panel-switch-dropdown',
+            children: [button, menu]
+        });
+        actionsEl.prepend(dropdown);
+        return actionsEl;
     }
 }

@@ -6,3 +6,7 @@ export function removeTokenFromAllIn(container: HTMLElement, token: string): voi
 		el.classList.remove(token);
 	}
 }
+
+export function mergeClassNames(...classNames: (string | false | undefined | null)[]): string {
+	return classNames.filter(Boolean).join(' ');
+}

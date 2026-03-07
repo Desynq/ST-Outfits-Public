@@ -81,7 +81,7 @@ export class BotOutfitPanel extends OutfitPanel<'bot'> {
 		this.saveAndRender();
 	}
 
-	protected override getHeaderTitle(): string {
+	public override getHeaderTitle(): string {
 		return `${this.outfitManager.character}'s Outfit`;
 	}
 

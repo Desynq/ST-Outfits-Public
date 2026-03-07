@@ -36,7 +36,7 @@ export function registerPanelCommands(panelRegistry, saveSettings) {
                 return createResult.toastr;
             const { panel, created } = createResult.value;
             if (!created) {
-                const hideResult = attempt(() => panel.hide(), {
+                const hideResult = attempt(() => panel.close(), {
                     toastr: `Panel removal failed for ${charName}`,
                     log: '[Outfits] panel.hide failed:',
                     meta: () => ({ character: charName })

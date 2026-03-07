@@ -95,7 +95,7 @@ export function registerPanelCommands(panelRegistry: OutfitPanelRegistry, saveSe
 
 			if (!created) {
 				const hideResult = attempt(
-					() => panel.hide(),
+					() => panel.close(),
 					{
 						toastr: `Panel removal failed for ${charName}`,
 						log: '[Outfits] panel.hide failed:',

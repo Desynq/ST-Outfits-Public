@@ -7,7 +7,7 @@ export class BotOutfitManager extends OutfitManager {
     public character!: string;
 
     public constructor(
-        saveSettings: Function,
+        saveSettings: () => void,
         defaultCharacter?: string
     ) {
         super(saveSettings, 'char');

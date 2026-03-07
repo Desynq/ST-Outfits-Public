@@ -1,0 +1,60 @@
+.outfit-header {
+	touch-action: none;
+	cursor: move;
+	padding-bottom: 8px;
+	margin-bottom: 8px;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+	flex-shrink: 0;
+
+	> h3 {
+		touch-action: manipulation;
+		pointer-events: auto;
+		cursor: pointer;
+		margin: 0;
+		font-size: 1.3em;
+		font-weight: 700;
+		text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+	}
+}
+
+
+
+.panel-switch-dropdown {
+	position: relative;
+
+	.outfit-panel.minimized & {
+		display: none;
+	}
+}
+
+.panel-switch-menu {
+	position: absolute;
+	top: 100%;
+	left: 0;
+
+	display: none;
+	flex-direction: column;
+
+	background: #222;
+	border: 1px solid rgba(255, 255, 255, 0.2);
+	border-radius: 6px;
+	padding: 4px;
+	z-index: 1000;
+
+	&.--open {
+		display: flex;
+	}
+
+	.panel-switch-option {
+		padding: 4px 8px;
+		cursor: pointer;
+		white-space: nowrap;
+
+		&:hover {
+			background: rgba(255, 255, 255, 0.1);
+		}
+	}
+}

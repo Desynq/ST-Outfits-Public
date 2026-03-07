@@ -69,7 +69,7 @@ export class UserOutfitPanel extends OutfitPanel<'user'> {
 		this.saveAndRender();
 	}
 
-	protected override getHeaderTitle(): string {
+	public override getHeaderTitle(): string {
 		return 'Your Outfit';
 	}
 

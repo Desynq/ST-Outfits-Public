@@ -3,3 +3,6 @@ export function removeTokenFromAllIn(container, token) {
         el.classList.remove(token);
     }
 }
+export function mergeClassNames(...classNames) {
+    return classNames.filter(Boolean).join(' ');
+}

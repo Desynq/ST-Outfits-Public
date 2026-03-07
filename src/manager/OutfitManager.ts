@@ -19,7 +19,7 @@ export abstract class OutfitManager {
 	protected readonly summaryMacros: OutfitMacroManager;
 
 	public constructor(
-		public readonly saveSettings: Function,
+		public readonly saveSettings: () => void,
 		macroOwner: string
 	) {
 		this.summaryMacros = new OutfitMacroManager(macroOwner, 'summary', 'outfit');

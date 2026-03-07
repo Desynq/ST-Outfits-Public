@@ -7,7 +7,14 @@ import { UserOutfitPanel } from "./UserOutfitPanel.js";
 
 
 
-export class OutfitPanelRegistry {
+export interface ICharPanelSwapper {
+	getCharPanels(): readonly CharOutfitPanel[];
+	switchPanel(from: CharOutfitPanel, to: CharOutfitPanel): boolean;
+}
+
+
+
+export class OutfitPanelRegistry implements ICharPanelSwapper {
 
 	private readonly panels = new Set<OutfitPanel<PanelType>>();
 	private readonly charPanels = new Map<string, CharOutfitPanel>();
@@ -16,8 +23,8 @@ export class OutfitPanelRegistry {
 
 	public constructor(
 		saveSettings: () => void,
-		private userPanel: UserOutfitPanel,
-		private botPanel: BotOutfitPanel
+		private readonly userPanel: UserOutfitPanel,
+		private readonly botPanel: BotOutfitPanel
 	) {
 		this.panels
 			.add(userPanel)
@@ -44,6 +51,8 @@ export class OutfitPanelRegistry {
 		for (const panel of this.panels) {
 			panel.onExpand(() => this.handlePanelExpanded(panel));
 		}
+
+		this.resolveOverlaps();
 	}
 
 	private handlePanelExpanded(panel: OutfitPanel<PanelType>): void {
@@ -55,9 +64,13 @@ export class OutfitPanelRegistry {
 		}
 	}
 
+	public getCharPanels(): readonly CharOutfitPanel[] {
+		return Array.from(this.charPanels.values());
+	}
+
 	public getOrCreate(
 		character: string,
-		saveSettings: Function
+		saveSettings: () => void
 	): { panel: CharOutfitPanel; created: boolean; } {
 		if (this.botPanel.character === character) {
 			this.botPanel.disable();
@@ -67,9 +80,13 @@ export class OutfitPanelRegistry {
 
 		if (panel) return { panel, created: false };
 
-		panel = CharOutfitPanel.from(character, saveSettings);
+		panel = CharOutfitPanel.from(
+			character,
+			saveSettings,
+			this
+		);
 
-		panel.onHide(() => this.unregister(character));
+		panel.onDestroy(() => this.unregister(character));
 
 		this.panels.add(panel);
 		this.charPanels.set(character, panel);
@@ -93,6 +110,28 @@ export class OutfitPanelRegistry {
 
 	public isReserved(character: string): boolean {
 		return character === 'Unknown' || this.charPanels.has(character);
+	}
+
+
+
+	public switchPanel(from: CharOutfitPanel, to: CharOutfitPanel): boolean {
+		if (from === to) return false;
+		if (!to.canShow()) return false;
+
+		from.close({ destroy: false });
+
+		const mode = from.getLayoutMode();
+		const fromXY = from.getPanelSettings().getXY(mode);
+
+		// set x, y so other shows in place of this when restoring from saved x, y
+		to.getPanelSettings().setXY(mode, ...fromXY);
+		to.outfitManager.saveSettings();
+
+		to.show({
+			forceSizeAndPos: true
+		});
+		to.setMinimize(false);
+		return true;
 	}
 
 
@@ -125,5 +164,23 @@ export class OutfitPanelRegistry {
 
 		clearTimeout(this.botAutoOpenTimer);
 		this.botAutoOpenTimer = null;
+	}
+
+	private resolveOverlaps(): void {
+		const Y_OFFSET = 48;
+
+		let prev: OutfitPanel | null = null;
+		for (const panel of this.panels) {
+			if (prev) {
+				const mode = panel.getLayoutMode();
+				const settings = panel.getPanelSettings();
+				const [x, y] = settings.getXY(mode);
+				const [ox, oy] = prev.getPanelSettings().getXY(mode); // mode is global
+				if (x === ox && y === oy) {
+					prev.hide();
+				}
+			}
+			prev = panel;
+		}
 	}
 }

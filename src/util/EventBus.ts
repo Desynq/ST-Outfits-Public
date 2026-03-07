@@ -2,7 +2,7 @@
 
 
 
-export class EventBus<T extends (...args: any[]) => void> {
+export class EventBus<T extends (...args: any[]) => void = () => void> {
 
 	private readonly listeners = new Set<T>();
 

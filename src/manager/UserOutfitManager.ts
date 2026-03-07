@@ -5,7 +5,7 @@ import { OutfitManager } from "./OutfitManager.js";
 
 export class UserOutfitManager extends OutfitManager {
     constructor(
-        saveSettings: Function
+        saveSettings: () => void
     ) {
         super(saveSettings, 'user');
         this.onActiveOutfitChanged();

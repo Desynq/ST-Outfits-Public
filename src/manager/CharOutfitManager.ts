@@ -12,7 +12,7 @@ export class CharOutfitManager extends OutfitManager {
 	private resolveFullSummaryTag?: () => FullSummaryTag | undefined;
 
 	public constructor(
-		saveSettings: Function,
+		saveSettings: () => void,
 		public readonly character: string,
 	) {
 		super(saveSettings, toPascalCase(character));

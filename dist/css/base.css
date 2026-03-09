@@ -1411,9 +1411,9 @@
 }
 .outfit-panel.fullscreen {
   position: fixed;
-  inset: var(--topBarBlockSize) 0 0 0;
-  width: 100vw;
-  height: calc(100vh - var(--topBarBlockSize));
+  inset: var(--topBarBlockSize) 0 0 0 !important;
+  width: 100vw !important;
+  height: calc(100vh - var(--topBarBlockSize)) !important;
 }
 .outfit-panel.minimized {
   z-index: 99;

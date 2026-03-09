@@ -13,6 +13,8 @@
 @use './slot-presets-modal.scss';
 @use './shared.scss';
 
+@use "sass:map";
+
 $z-layers: (
 	panel: 100,
 	panel-minimized: 99,
@@ -24,7 +26,7 @@ $z-layers: (
 );
 
 @function z($layer) {
-	@return map-get($z-layers, $layer);
+	@return map.get($z-layers, $layer);
 }
 
 .outfit-panel {
@@ -56,9 +58,9 @@ $z-layers: (
 
 	&.fullscreen {
 		position: fixed;
-		inset: var(--topBarBlockSize) 0 0 0;
-		width: 100vw;
-		height: calc(100vh - var(--topBarBlockSize));
+		inset: var(--topBarBlockSize) 0 0 0 !important;
+		width: 100vw !important;
+		height: calc(100vh - var(--topBarBlockSize)) !important;
 	}
 
 	&.minimized {

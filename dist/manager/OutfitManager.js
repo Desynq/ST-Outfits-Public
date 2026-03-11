@@ -169,6 +169,9 @@ Cancel to keep the current value.`, currentValue);
         view.setValue(slot.id, value);
         await this.updateOutfitValue(slotId);
     }
+    /**
+     * Updates summaries and global variables tied to slot id
+     */
     async updateOutfitValue(slotId) {
         const view = this.getOutfitView();
         const slot = await view.resolveSlot(slotId);
@@ -195,13 +198,9 @@ Cancel to keep the current value.`, currentValue);
             return 'slot-not-found';
         if (view.getSlotById(newId))
             return 'slot-already-exists';
-        // Capture everything BEFORE mutation
-        const oldIndex = view.getIndexById(oldSlot.id);
-        const value = oldSlot.value;
-        this.deleteOutfitSlot(oldSlot.id);
-        view.addSlot(newId, oldSlot.kind);
-        view.shiftSlotByIndex(view.slots.length - 1, oldIndex);
-        this.setOutfitItem(newId, value);
+        deleteGlobalVariable(this.getVarName(slotId));
+        view.renameSlot(slotId, newId);
+        this.updateOutfitValue(newId);
         return 'slot-renamed';
     }
 }

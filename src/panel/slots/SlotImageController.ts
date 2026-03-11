@@ -6,7 +6,7 @@ import { OutfitGalleryView } from "../../data/view/OutfitGalleryView.js";
 import { assertNever } from "../../shared.js";
 import { PanelType } from "../../types/maps.js";
 import { ImageLightbox } from "../../ui/components/ImageLightbox.js";
-import { popupConfirm } from "../../util/adapter/popup-adapter.js";
+import { multiConfirm, popupConfirm } from "../../util/adapter/popup-adapter.js";
 import { addDoubleTapListener } from "../../util/element/click-actions.js";
 import { createElement, setElementSize } from "../../util/ElementHelper.js";
 import { EventBus } from "../../util/EventBus.js";
@@ -410,8 +410,8 @@ export class SlotImageElement extends OutfitPanelContext {
 		}
 
 		if (this.slot.hasImageState(tag)) {
-			toastr.error('Tag already used.');
-			return;
+			const overwrite = await multiConfirm('Tag already used. Overwrite?');
+			if (!overwrite) return;
 		}
 
 		const { base64, height, width } = await resizeImage(file, 2048);

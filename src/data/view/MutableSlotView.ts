@@ -8,7 +8,7 @@ export type MoveSlotResult =
 	| 'noop'
 	| 'moved';
 
-export type RenameResult =
+export type RenameSlotResult =
 	| 'slot-not-found'
 	| 'slot-already-exists'
 	| 'renamed';
@@ -291,7 +291,7 @@ export class MutableSlotView {
 		return this.moveIndex(i, targetIndex);
 	}
 
-	public rename(oldId: string, newId: string): RenameResult {
+	public renameSlot(oldId: string, newId: string): RenameSlotResult {
 		const i = this.indexById[oldId];
 		if (i === undefined) return 'slot-not-found';
 

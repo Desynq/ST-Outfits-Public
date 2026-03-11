@@ -85,7 +85,7 @@ export class OutfitView {
 	}
 
 	/**
-	 * @returns a shallow copy of the outfit slot or `undefined` if the outfit does not have the slot
+	 * @returns a readonly of the outfit slot or `undefined` if the outfit does not have the slot
 	 */
 	public getSlotById(slotId: string): Readonly<OutfitSlot> | undefined {
 		return this.slotView.getSlotById(slotId);

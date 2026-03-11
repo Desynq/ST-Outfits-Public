@@ -1,5 +1,5 @@
 import { SlotKind } from "../model/Outfit.js";
-import { AddSlotResult, AttachImageResult, DeleteImageResponse, MoveSlotResult, MoveToKindResult, RenameKindResult, ResizeImageResult, SetActiveImageResult, ToggleImageResult } from "./MutableSlotView.js";
+import { AddSlotResult, AttachImageResult, DeleteImageResponse, MoveSlotResult, MoveToKindResult, RenameKindResult, RenameSlotResult, ResizeImageResult, SetActiveImageResult, ToggleImageResult } from "./MutableSlotView.js";
 import { OutfitView } from "./OutfitView.js";
 
 export class MutableOutfitView extends OutfitView {
@@ -30,6 +30,10 @@ export class MutableOutfitView extends OutfitView {
 
 	public deleteSlot(slotId: string): boolean {
 		return this.slotView.deleteSlot(slotId);
+	}
+
+	public renameSlot(slotId: string, newSlotId: string): RenameSlotResult {
+		return this.slotView.renameSlot(slotId, newSlotId);
 	}
 
 

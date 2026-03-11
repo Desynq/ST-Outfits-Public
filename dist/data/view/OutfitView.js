@@ -56,7 +56,7 @@ export class OutfitView {
         return this.slots.length === 0;
     }
     /**
-     * @returns a shallow copy of the outfit slot or `undefined` if the outfit does not have the slot
+     * @returns a readonly of the outfit slot or `undefined` if the outfit does not have the slot
      */
     getSlotById(slotId) {
         return this.slotView.getSlotById(slotId);

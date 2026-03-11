@@ -193,7 +193,7 @@ export class MutableSlotView {
             return 'slot-not-found';
         return this.moveIndex(i, targetIndex);
     }
-    rename(oldId, newId) {
+    renameSlot(oldId, newId) {
         const i = this.indexById[oldId];
         if (i === undefined)
             return 'slot-not-found';

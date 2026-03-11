@@ -272,6 +272,9 @@ Cancel to keep the current value.`,
 		await this.updateOutfitValue(slotId);
 	}
 
+	/**
+	 * Updates summaries and global variables tied to slot id
+	 */
 	public async updateOutfitValue(slotId: string): Promise<void> {
 		const view = this.getOutfitView();
 		const slot = await view.resolveSlot(slotId);
@@ -306,19 +309,11 @@ Cancel to keep the current value.`,
 
 		if (view.getSlotById(newId)) return 'slot-already-exists';
 
-		// Capture everything BEFORE mutation
-		const oldIndex = view.getIndexById(oldSlot.id)!;
-		const value = oldSlot.value;
+		deleteGlobalVariable(this.getVarName(slotId));
 
-		this.deleteOutfitSlot(oldSlot.id);
+		view.renameSlot(slotId, newId);
 
-		view.addSlot(newId, oldSlot.kind);
-		view.shiftSlotByIndex(
-			view.slots.length - 1,
-			oldIndex
-		);
-
-		this.setOutfitItem(newId, value);
+		this.updateOutfitValue(newId);
 
 		return 'slot-renamed';
 	}

@@ -79,7 +79,7 @@ export class SlotImageElement extends OutfitPanelContext {
         };
     }
     get imagesView() {
-        return OutfitTracker.images();
+        return OutfitTracker.viewGallery();
     }
     get state() {
         return this._state;
@@ -91,6 +91,7 @@ export class SlotImageElement extends OutfitPanelContext {
             return {
                 imgEl: null,
                 noDoubleTap: true,
+                singleTap: () => this.changeImage(),
                 state: 'empty'
             };
         }
@@ -181,13 +182,13 @@ export class SlotImageElement extends OutfitPanelContext {
         this.outfitManager.saveSettings();
     }
     createImage(imageState) {
-        const { tag, image, blob } = imageState;
+        const { tag, image, ref: blob } = imageState;
         if (image.hidden) {
             this.imgWrapper.classList.add('--hidden');
             return { ok: false, reason: 'image-hidden' };
         }
         const imgEl = createElement('img', 'slot-image');
-        imgEl.src = blob.base64;
+        imgEl.src = blob.url;
         this.clampImage(image);
         imgEl.addEventListener('error', () => {
             this.imgWrapper.classList.add('--error');
@@ -233,7 +234,8 @@ export class SlotImageElement extends OutfitPanelContext {
         return handle;
     }
     clampImage(image) {
-        const scale = Math.min(this.boundaryWidth / image.width, 1);
+        const maxWidth = this.boundaryWidth / 2;
+        const scale = Math.min(maxWidth / image.width, 1);
         const newWidth = image.width * scale;
         const newHeight = image.height * scale;
         setElementSize(this.imgWrapper, newWidth, newHeight);
@@ -269,7 +271,7 @@ export class SlotImageElement extends OutfitPanelContext {
             toastr.error('Tag already used.');
             return;
         }
-        const { base64, height, width } = await resizeImage(file, 768);
+        const { base64, height, width } = await resizeImage(file, 2048);
         const key = await this.imagesView.addImage(base64, width, height);
         const slotId = this.slot.id;
         const added = this.outfitView.attachImage(slotId, tag, key);

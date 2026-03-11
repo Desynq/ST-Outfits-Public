@@ -1,4 +1,4 @@
-import { ImageBlob } from "../../data/model/Outfit.js";
+import { ImageBlob, ImageRef } from "../../data/model/Outfit.js";
 import { createElement } from "../../util/ElementHelper.js";
 
 
@@ -11,14 +11,14 @@ export class ImageLightbox {
 	private zoomed: boolean = false;
 
 	private constructor(
-		private imgBlob: ImageBlob,
+		private imgBlob: ImageRef,
 		private tag: string
 	) {
 		this.overlay = createElement('div', 'sto-overlay');
 		this.stage = createElement('div', 'outfit-lightbox-stage');
 
 		this.img = createElement('img', 'outfit-lightbox-image');
-		this.img.src = this.imgBlob.base64;
+		this.img.src = this.imgBlob.url;
 		this.img.alt = this.tag;
 		this.img.addEventListener('click', (e) => this.onImgClick(e));
 
@@ -28,7 +28,7 @@ export class ImageLightbox {
 		this.overlay.append(this.stage);
 	}
 
-	public static show(blob: ImageBlob, tag: string): void {
+	public static show(blob: ImageRef, tag: string): void {
 		const instance = new ImageLightbox(blob, tag);
 		instance.append(document.body);
 	}

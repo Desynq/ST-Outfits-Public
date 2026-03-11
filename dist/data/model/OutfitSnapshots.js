@@ -11,11 +11,11 @@ export class OutfitSlotState extends OutfitSlotBase {
         this.resolved = true;
         const images = {};
         for (const [tag, image] of Object.entries(raw.images)) {
-            const blob = imageRegistry.getImage(image.key);
-            if (!blob) {
+            const ref = imageRegistry.getImageRef(image.key);
+            if (!ref) {
                 throw new Error(`Missing blob for image key ${image.key}`);
             }
-            images[tag] = new OutfitImageState(tag, image, blob);
+            images[tag] = new OutfitImageState(tag, image, ref);
         }
         this.kind = raw.kind;
         this.value = raw.value;

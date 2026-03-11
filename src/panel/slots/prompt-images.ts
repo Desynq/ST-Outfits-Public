@@ -20,12 +20,12 @@ export async function showImagePicker(
 	let selected: string | null = null;
 
 	for (const state of imageStates) {
-		const { tag, image, blob } = state;
+		const { tag, image, ref: blob } = state;
 
 		const wrapper = createElement('div', 'image-picker-item');
 
 		const img = createElement('img');
-		img.src = blob.base64;
+		img.src = blob.url;
 		img.width = 96;
 		img.height = Math.round(96 * (blob.height / blob.width));
 

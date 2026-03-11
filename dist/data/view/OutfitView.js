@@ -68,7 +68,7 @@ export class OutfitView {
         const slot = this.getSlotById(slotId);
         return !slot
             ? new UnresolvedOutfitSlot(slotId)
-            : new OutfitSlotState(slot, OutfitTracker.images());
+            : new OutfitSlotState(slot, OutfitTracker.viewGallery());
     }
     getValue(slot) {
         const realSlot = this.slotView.getSlotById(slot.id);

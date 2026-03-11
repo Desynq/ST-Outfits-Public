@@ -111,12 +111,13 @@ export class SlotRenderer extends OutfitPanelContext {
             'label-right': ctx.labelRightDiv,
             'content': ctx.contentEl
         }[parent];
-        const menu = this.createImageMenu(ctx, imageElement, imgWrapper);
-        imageElement
-            .onDoubleTap(() => menu.toggleMenu())
-            .appendTo(target);
+        if (imageElement.state === 'shown') {
+            const menu = this.createImageMenu(ctx, imageElement, imgWrapper);
+            imageElement.onDoubleTap(() => menu.toggleMenu());
+        }
+        imageElement.appendTo(target);
         this.valueElement.onRender(valueEl => {
-            if (parent !== 'content')
+            if (imageElement.state !== 'shown')
                 return;
             const observer = imageElement.observe(ctx.contentEl);
             this.panel.onDispose(observer.disconnect);

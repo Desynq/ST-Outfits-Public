@@ -263,18 +263,18 @@ Cancel to keep the current value.`,
 		return true;
 	}
 
-	protected applyOutfitValue(slotId: string, value: string): void {
+	protected async applyOutfitValue(slotId: string, value: string): Promise<void> {
 		const view = this.getOutfitView();
 		const slot = view.getSlotById(slotId);
 		if (slot === undefined) return;
 
 		view.setValue(slot.id, value);
-		this.updateOutfitValue(slotId);
+		await this.updateOutfitValue(slotId);
 	}
 
-	public updateOutfitValue(slotId: string): void {
+	public async updateOutfitValue(slotId: string): Promise<void> {
 		const view = this.getOutfitView();
-		const slot = view.resolveSlot(slotId);
+		const slot = await view.resolveSlot(slotId);
 		if (!slot.resolved) return;
 
 		const varName = this.getVarName(slot.id);

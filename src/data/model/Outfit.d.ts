@@ -69,6 +69,18 @@ export interface ImageBlob {
 	width: number;
 }
 
+export interface ImageRef {
+	url: string;
+	height: number;
+	width: number;
+}
+
+export interface ImageCacheEntry {
+	base64: string;
+	height: number;
+	width: number;
+}
+
 
 
 export interface OutfitTrackerModel {
@@ -83,7 +95,7 @@ export interface OutfitTrackerModel {
 	charPanels: CharPanelsTree;
 
 	// key: base64
-	images: Record<string, ImageBlob>;
+	images: Record<string, ImageRef>;
 
 	slotPresets: Record<string, SlotPreset>;
 }

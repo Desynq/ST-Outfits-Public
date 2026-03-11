@@ -1,7 +1,7 @@
 import { asBoolean, asObject, resolvePositiveNumber, resolveString, asStringRecord, ensureObject, notObject, resolveObject, resolveTimestamp } from "../ObjectHelper.js";
 import { assertString } from "../util/narrowing.js";
 import { normalizeOutfitSnapshots } from "./mappings/OutfitCache.js";
-import { ImageBlob, Outfit, OutfitCollection, OutfitImage, OutfitSlot, OutfitTrackerModel, SlotKind } from "./model/Outfit.js";
+import { ImageBlob, ImageRef, Outfit, OutfitCollection, OutfitImage, OutfitSlot, OutfitTrackerModel, SlotKind } from "./model/Outfit.js";
 import { SlotPreset } from "./model/SlotPreset.js";
 
 
@@ -197,14 +197,19 @@ export function normalizeImageBlobs(
 		return;
 	}
 
-	for (const k of Object.keys(holder.images)) {
-		if (!isValidImageBlob(holder.images[k])) {
+	for (const [k, v] of Object.entries(holder.images)) {
+		if (isLegacyBlob(v)) {
+			// keep temporarily; migration will convert
+			continue;
+		}
+
+		if (!isValidImageRef(holder.images[k])) {
 			delete holder.images[k];
 		}
 	}
 }
 
-function isValidImageBlob(v: unknown): v is ImageBlob {
+function isLegacyBlob(v: unknown): v is ImageBlob {
 	if (!v || typeof v !== 'object') return false;
 
 	const blob = v as Record<string, unknown>;
@@ -213,6 +218,18 @@ function isValidImageBlob(v: unknown): v is ImageBlob {
 		typeof blob.base64 === 'string' &&
 		typeof blob.width === 'number' &&
 		typeof blob.height === 'number'
+	);
+}
+
+function isValidImageRef(v: unknown): v is ImageRef {
+	if (!v || typeof v !== 'object') return false;
+
+	const ref = v as Record<string, unknown>;
+
+	return (
+		typeof ref.url === 'string' &&
+		typeof ref.width === 'number' &&
+		typeof ref.height === 'number'
 	);
 }
 

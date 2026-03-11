@@ -1,7 +1,7 @@
 export class OutfitImageState {
-    constructor(tag, image, blob) {
+    constructor(tag, image, ref) {
         this.tag = tag;
         this.image = image;
-        this.blob = blob;
+        this.ref = ref;
     }
 }

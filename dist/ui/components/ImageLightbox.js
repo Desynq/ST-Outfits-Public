@@ -7,7 +7,7 @@ export class ImageLightbox {
         this.overlay = createElement('div', 'sto-overlay');
         this.stage = createElement('div', 'outfit-lightbox-stage');
         this.img = createElement('img', 'outfit-lightbox-image');
-        this.img.src = this.imgBlob.base64;
+        this.img.src = this.imgBlob.url;
         this.img.alt = this.tag;
         this.img.addEventListener('click', (e) => this.onImgClick(e));
         this.overlay.addEventListener('click', () => this.close());

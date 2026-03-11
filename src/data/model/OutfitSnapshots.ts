@@ -1,5 +1,5 @@
-import { ImageRegistry } from "../view/OutfitImagesView.js";
 import { OutfitSlot, SlotKind } from "./Outfit.js";
+import { ImageRegistry } from "./OutfitGallery.js";
 import { OutfitImageState } from "./OutfitImageState.js";
 import { KeyedSlotPreset } from "./SlotPreset.js";
 
@@ -31,12 +31,12 @@ export class OutfitSlotState extends OutfitSlotBase {
 
 		const images: Record<string, OutfitImageState> = {};
 		for (const [tag, image] of Object.entries(raw.images)) {
-			const blob = imageRegistry.getImage(image.key);
-			if (!blob) {
+			const ref = imageRegistry.getImageRef(image.key);
+			if (!ref) {
 				throw new Error(`Missing blob for image key ${image.key}`);
 			}
 
-			images[tag] = new OutfitImageState(tag, image, blob);
+			images[tag] = new OutfitImageState(tag, image, ref);
 		}
 
 		this.kind = raw.kind;

@@ -74,17 +74,17 @@ export class MutableSlotView {
         slot.equipped = equipped;
         return true;
     }
-    attachImage(id, tag, blobKey) {
+    attachImage(id, tag, refKey) {
         const i = this.indexById[id];
         if (i === undefined)
             return 'slot-not-found';
-        const blob = OutfitTracker.images().getImage(blobKey);
-        if (blob === undefined)
+        const ref = OutfitTracker.viewGallery().getImageRef(refKey);
+        if (ref === undefined)
             return 'blob-does-not-exist';
         this._slots[i].images[tag] = {
-            key: blobKey,
-            width: blob.width,
-            height: blob.height,
+            key: refKey,
+            width: ref.width,
+            height: ref.height,
             hidden: false
         };
         return 'attached-image';

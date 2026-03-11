@@ -1,8 +1,8 @@
-import { ImageBlob, OutfitImage } from "../../data/model/Outfit.js";
+import { ImageBlob, ImageRef, OutfitImage } from "../../data/model/Outfit.js";
 import { OutfitImageState } from "../../data/model/OutfitImageState.js";
 import { OutfitSlotState } from "../../data/model/OutfitSnapshots.js";
 import { OutfitTracker } from "../../data/tracker.js";
-import { OutfitImagesView } from "../../data/view/OutfitImagesView.js";
+import { OutfitGalleryView } from "../../data/view/OutfitGalleryView.js";
 import { assertNever } from "../../shared.js";
 import { PanelType } from "../../types/maps.js";
 import { ImageLightbox } from "../../ui/components/ImageLightbox.js";
@@ -12,14 +12,13 @@ import { createElement, setElementSize } from "../../util/ElementHelper.js";
 import { EventBus } from "../../util/EventBus.js";
 import { promptImageUpload, resizeImage } from "../../util/image-utils.js";
 import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
-import { Disposer } from "../Disposer.js";
 import { OutfitPanel } from "../OutfitPanel.js";
 import { showImagePicker } from "./prompt-images.js";
 
 
 interface ImageContext {
 	imgEl: HTMLImageElement;
-	imgBlob: ImageBlob;
+	imgBlob: ImageRef;
 	imgRecord: OutfitImage;
 	imgTag: string;
 };
@@ -118,6 +117,9 @@ export class SlotImageElement extends OutfitPanelContext {
 		return this;
 	}
 
+
+
+
 	private ensureDoubleTap(): void {
 		if (this.doubleTap) return;
 
@@ -169,8 +171,8 @@ export class SlotImageElement extends OutfitPanelContext {
 		};
 	}
 
-	private get imagesView(): OutfitImagesView {
-		return OutfitTracker.images();
+	private get imagesView(): OutfitGalleryView {
+		return OutfitTracker.viewGallery();
 	}
 
 	public get state(): ImageState {
@@ -184,6 +186,7 @@ export class SlotImageElement extends OutfitPanelContext {
 			return {
 				imgEl: null,
 				noDoubleTap: true,
+				singleTap: () => this.changeImage(),
 				state: 'empty'
 			};
 		}
@@ -298,7 +301,7 @@ export class SlotImageElement extends OutfitPanelContext {
 	}
 
 	private createImage(imageState: OutfitImageState): CreateImageResult {
-		const { tag, image, blob } = imageState;
+		const { tag, image, ref: blob } = imageState;
 		if (image.hidden) {
 			this.imgWrapper.classList.add('--hidden');
 			return { ok: false, reason: 'image-hidden' };
@@ -307,7 +310,7 @@ export class SlotImageElement extends OutfitPanelContext {
 
 		const imgEl = createElement('img', 'slot-image');
 
-		imgEl.src = blob.base64;
+		imgEl.src = blob.url;
 		this.clampImage(image);
 
 		imgEl.addEventListener('error', () => {
@@ -367,7 +370,8 @@ export class SlotImageElement extends OutfitPanelContext {
 	}
 
 	private clampImage(image: OutfitImage): void {
-		const scale = Math.min(this.boundaryWidth / image.width, 1);
+		const maxWidth = this.boundaryWidth / 2;
+		const scale = Math.min(maxWidth / image.width, 1);
 		const newWidth = image.width * scale;
 		const newHeight = image.height * scale;
 
@@ -410,7 +414,7 @@ export class SlotImageElement extends OutfitPanelContext {
 			return;
 		}
 
-		const { base64, height, width } = await resizeImage(file, 768);
+		const { base64, height, width } = await resizeImage(file, 2048);
 		const key = await this.imagesView.addImage(base64, width, height);
 
 		const slotId = this.slot.id;

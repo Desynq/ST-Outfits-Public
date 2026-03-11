@@ -49,19 +49,19 @@ export class SlotPresetsModal {
     get registry() {
         return OutfitTracker.slotPresets();
     }
-    getBlob(blobKey) {
-        return OutfitTracker.images().getImage(blobKey);
+    getRef(blobKey) {
+        return OutfitTracker.viewGallery().getImageRef(blobKey);
     }
     get outfit() {
         return this.manager.getOutfitView();
     }
     createPresetElement(preset) {
-        const imageBlob = this.getBlob(preset.imageKey);
+        const imageBlob = this.getRef(preset.imageKey);
         if (!imageBlob)
             return null;
         const el = createElement('div', 'slot-preset-item');
         const img = createElement('img', 'slot-preset-thumb');
-        img.src = imageBlob.base64;
+        img.src = imageBlob.url;
         img.alt = preset.value;
         const label = createElement('div', 'slot-preset-label', preset.key);
         const value = createElement('div', 'slot-preset-value', preset.value);

@@ -1,4 +1,4 @@
-import { ImageBlob } from "../../data/model/Outfit.js";
+import { ImageBlob, ImageRef } from "../../data/model/Outfit.js";
 import { OutfitSlotState } from "../../data/model/OutfitSnapshots.js";
 import { KeyedSlotPreset } from "../../data/model/SlotPreset.js";
 import { OutfitTracker } from "../../data/tracker.js";
@@ -85,8 +85,8 @@ export class SlotPresetsModal {
 		return OutfitTracker.slotPresets();
 	}
 
-	private getBlob(blobKey: string): ImageBlob | undefined {
-		return OutfitTracker.images().getImage(blobKey);
+	private getRef(blobKey: string): ImageRef | undefined {
+		return OutfitTracker.viewGallery().getImageRef(blobKey);
 	}
 
 	private get outfit(): MutableOutfitView {
@@ -95,13 +95,13 @@ export class SlotPresetsModal {
 
 
 	private createPresetElement(preset: KeyedSlotPreset): HTMLDivElement | null {
-		const imageBlob = this.getBlob(preset.imageKey);
+		const imageBlob = this.getRef(preset.imageKey);
 		if (!imageBlob) return null;
 
 		const el = createElement('div', 'slot-preset-item');
 
 		const img = createElement('img', 'slot-preset-thumb');
-		img.src = imageBlob.base64;
+		img.src = imageBlob.url;
 		img.alt = preset.value;
 
 		const label = createElement('div', 'slot-preset-label', preset.key);

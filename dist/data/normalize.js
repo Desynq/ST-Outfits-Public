@@ -150,19 +150,31 @@ export function normalizeImageBlobs(holder) {
         holder.images = {};
         return;
     }
-    for (const k of Object.keys(holder.images)) {
-        if (!isValidImageBlob(holder.images[k])) {
+    for (const [k, v] of Object.entries(holder.images)) {
+        if (isLegacyBlob(v)) {
+            // keep temporarily; migration will convert
+            continue;
+        }
+        if (!isValidImageRef(holder.images[k])) {
             delete holder.images[k];
         }
     }
 }
-function isValidImageBlob(v) {
+function isLegacyBlob(v) {
     if (!v || typeof v !== 'object')
         return false;
     const blob = v;
     return (typeof blob.base64 === 'string' &&
         typeof blob.width === 'number' &&
         typeof blob.height === 'number');
+}
+function isValidImageRef(v) {
+    if (!v || typeof v !== 'object')
+        return false;
+    const ref = v;
+    return (typeof ref.url === 'string' &&
+        typeof ref.width === 'number' &&
+        typeof ref.height === 'number');
 }
 export function normalizeSlotPresets(holder) {
     holder.slotPresets = normalizeRecord(holder.slotPresets, v => normalizeRawSlotPreset(v, holder.images));

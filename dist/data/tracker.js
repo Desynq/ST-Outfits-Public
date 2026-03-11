@@ -1,15 +1,17 @@
 // @ts-ignore
 import { extension_settings } from "../../../../../extensions.js";
+import { saveSettings } from "../api/settings.js";
 import { normalizeCharPanels, normalizePanelSettings } from "./mappings/PanelSettings.js";
 import { normalizeImageBlobs, normalizeSlotPresets, validatePresets } from "./normalize.js";
 import { CharPanelsView } from "./view/CharPanelsView.js";
 import { CharacterOutfitCollectionView, UserOutfitCollectionView } from "./view/OutfitCollectionView.js";
-import { OutfitImagesView } from "./view/OutfitImagesView.js";
+import { OutfitGalleryView } from "./view/OutfitGalleryView.js";
 import { BotPanelSettingsView, defaultBotPanelSettings, defaultUserPanelSettings, UserPanelSettingsView } from "./view/PanelViews.js";
 import { SlotPresetRegistry } from "./view/SlotPresetsView.js";
 class Tracker {
     constructor(settings) {
         this.settings = settings;
+        this.imageCache = new Map();
     }
     areSystemMessagesEnabled() {
         return this.settings.enableSysMessages;
@@ -38,11 +40,35 @@ class Tracker {
     viewCharPanels() {
         return new CharPanelsView(this.settings.charPanels);
     }
-    images() {
-        return new OutfitImagesView(this.settings.images);
+    viewGallery() {
+        return new OutfitGalleryView(this.settings.images, this.imageCache, 'st-outfits');
     }
     slotPresets() {
         return new SlotPresetRegistry(this.settings.slotPresets);
+    }
+    async migrate() {
+        const images = this.settings.images;
+        const gallery = this.viewGallery();
+        const tasks = Object.entries(images)
+            .filter(([, blob]) => 'base64' in blob)
+            .map(async ([key, blob]) => {
+            const legacy = blob;
+            const newKey = await gallery.addImage(legacy.base64, legacy.width, legacy.height, true);
+            return { oldKey: key, newKey };
+        });
+        if (tasks.length === 0)
+            return;
+        const results = await Promise.all(tasks);
+        let changed = false;
+        for (const { oldKey, newKey } of results) {
+            if (newKey !== oldKey) {
+                delete images[oldKey];
+                changed = true;
+            }
+        }
+        if (changed) {
+            saveSettings();
+        }
     }
 }
 class CharacterOutfitMapView {
@@ -74,3 +100,4 @@ function loadTracker() {
     return new Tracker(raw);
 }
 export const OutfitTracker = loadTracker();
+await OutfitTracker.migrate();

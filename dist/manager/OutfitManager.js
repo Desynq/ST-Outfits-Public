@@ -161,17 +161,17 @@ Cancel to keep the current value.`, currentValue);
         this.updateSummaries();
         return true;
     }
-    applyOutfitValue(slotId, value) {
+    async applyOutfitValue(slotId, value) {
         const view = this.getOutfitView();
         const slot = view.getSlotById(slotId);
         if (slot === undefined)
             return;
         view.setValue(slot.id, value);
-        this.updateOutfitValue(slotId);
+        await this.updateOutfitValue(slotId);
     }
-    updateOutfitValue(slotId) {
+    async updateOutfitValue(slotId) {
         const view = this.getOutfitView();
-        const slot = view.resolveSlot(slotId);
+        const slot = await view.resolveSlot(slotId);
         if (!slot.resolved)
             return;
         const varName = this.getVarName(slot.id);

@@ -1,16 +1,10 @@
+import { hashBase64 } from "../../util/image-utils.js";
 import { OutfitTracker } from "../tracker.js";
-async function hashBase64(base64) {
-    const bytes = Uint8Array.from(atob(base64.split(',')[1]), c => c.charCodeAt(0));
-    const digest = await crypto.subtle.digest('SHA-256', bytes);
-    return Array.from(new Uint8Array(digest))
-        .map(b => b.toString(16).padStart(2, '0'))
-        .join('');
-}
 export class OutfitImagesView {
     constructor(images) {
         this.images = images;
     }
-    getImage(key) {
+    getImageBlob(key) {
         return this.images[key];
     }
     async addImage(base64, width, height) {

@@ -314,7 +314,7 @@ export class SlotRenderer extends OutfitPanelContext {
 
 	private toggle(slot: OutfitSlotState): void {
 		this.outfitView.toggleSlot(slot.id);
-		this.outfitManager.updateOutfitValue(slot.id);
+		this.outfitManager.updateSlotContext(slot.id);
 		this.panel.saveAndRender();
 	}
 

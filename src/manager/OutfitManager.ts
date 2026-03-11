@@ -269,13 +269,13 @@ Cancel to keep the current value.`,
 		if (slot === undefined) return;
 
 		view.setValue(slot.id, value);
-		await this.updateOutfitValue(slotId);
+		await this.updateSlotContext(slotId);
 	}
 
 	/**
 	 * Updates summaries and global variables tied to slot id
 	 */
-	public async updateOutfitValue(slotId: string): Promise<void> {
+	public async updateSlotContext(slotId: string): Promise<void> {
 		const view = this.getOutfitView();
 		const slot = await view.resolveSlot(slotId);
 		if (!slot.resolved) return;
@@ -313,7 +313,7 @@ Cancel to keep the current value.`,
 
 		view.renameSlot(slotId, newId);
 
-		this.updateOutfitValue(newId);
+		void this.updateSlotContext(newId).catch(console.error);
 
 		return 'slot-renamed';
 	}

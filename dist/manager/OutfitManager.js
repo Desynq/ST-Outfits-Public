@@ -167,12 +167,12 @@ Cancel to keep the current value.`, currentValue);
         if (slot === undefined)
             return;
         view.setValue(slot.id, value);
-        await this.updateOutfitValue(slotId);
+        await this.updateSlotContext(slotId);
     }
     /**
      * Updates summaries and global variables tied to slot id
      */
-    async updateOutfitValue(slotId) {
+    async updateSlotContext(slotId) {
         const view = this.getOutfitView();
         const slot = await view.resolveSlot(slotId);
         if (!slot.resolved)
@@ -200,7 +200,7 @@ Cancel to keep the current value.`, currentValue);
             return 'slot-already-exists';
         deleteGlobalVariable(this.getVarName(slotId));
         view.renameSlot(slotId, newId);
-        this.updateOutfitValue(newId);
+        void this.updateSlotContext(newId).catch(console.error);
         return 'slot-renamed';
     }
 }

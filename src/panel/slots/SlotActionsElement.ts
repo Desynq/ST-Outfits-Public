@@ -12,7 +12,7 @@ export class SlotActionsElement extends OutfitPanelContext {
 
 		const click = () => {
 			this.outfitView.setEquipped(slot.id, !slot.equipped);
-			this.outfitManager.updateOutfitValue(slot.id);
+			this.outfitManager.updateSlotContext(slot.id);
 			this.panel.saveAndRender();
 		};
 

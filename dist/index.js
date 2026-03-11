@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 const getContext = SillyTavern.getContext;
 // @ts-ignore
 import { extension_settings } from '../../../../extensions.js';

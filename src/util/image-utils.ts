@@ -45,9 +45,15 @@ export async function resizeImage(file: File, maxWidth: number = 512): Promise<I
 	await new Promise(r => img.onload = r);
 
 	const maxPixels = maxWidth ** 2;
-	const pixels = img.width * img.height;
+	const scaleDim = Math.min(
+		maxWidth / img.width,
+		maxWidth / img.height
+	);
 
-	let scale = 1;
+	const pixels = img.width * img.height;
+	const scalePix = Math.sqrt(maxPixels / pixels);
+
+	let scale = Math.min(1, scaleDim, scalePix);
 
 	if (pixels > maxPixels) {
 		scale = Math.sqrt(maxPixels / pixels);

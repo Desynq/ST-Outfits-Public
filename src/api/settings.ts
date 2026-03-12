@@ -1,7 +1,6 @@
 
 
 
-
 export function saveSettings(): void {
 	SillyTavern.getContext().saveSettingsDebounced();
 }

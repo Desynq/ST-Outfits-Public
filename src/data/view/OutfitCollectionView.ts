@@ -1,3 +1,4 @@
+import { ChatOutfitStorage } from "../../api/chat-metadata.js";
 import { DEFAULT_SLOTS } from "../../Constants.js";
 import { OutfitCollection, Outfit, CharactersOutfitMap } from "../model/Outfit.js";
 import { OutfitSnapshot } from "../model/OutfitSnapshots.js";
@@ -17,6 +18,11 @@ export interface IOutfitCollectionView {
 	hideEmptySlots(hide: boolean): void;
 
 	getSnapshotView(): OutfitSnapshotsView;
+}
+
+export interface ICharacterOutfitCollectionView extends IOutfitCollectionView {
+	commitAutosave(): void;
+	loadFromChat(): void;
 }
 
 export abstract class OutfitCollectionView implements IOutfitCollectionView {
@@ -66,6 +72,7 @@ export abstract class OutfitCollectionView implements IOutfitCollectionView {
 		return new OutfitSnapshotsView(c.snapshots);
 	}
 }
+
 export class UserOutfitCollectionView extends OutfitCollectionView {
 	public constructor(
 		private collection: OutfitCollection
@@ -101,7 +108,7 @@ export class UserOutfitCollectionView extends OutfitCollectionView {
 		delete this.collection.outfits[outfitName];
 	}
 }
-export class CharacterOutfitCollectionView extends OutfitCollectionView {
+export class CharacterOutfitCollectionView extends OutfitCollectionView implements ICharacterOutfitCollectionView {
 	public constructor(
 		private map: CharactersOutfitMap,
 		private character: string
@@ -159,6 +166,20 @@ export class CharacterOutfitCollectionView extends OutfitCollectionView {
 
 	public clear(): void {
 		delete this.map[this.character];
+	}
+
+
+
+	public loadFromChat(): void {
+		const c = this.getOrCreateCollection();
+
+		c.autoOutfit ??= this.createDefaultOutfit();
+		ChatOutfitStorage.loadInto(c.autoOutfit, this.character);
+	}
+
+	public commitAutosave(): void {
+		const c = this.getOrCreateCollection();
+		ChatOutfitStorage.saveFrom(c.autoOutfit, this.character);
 	}
 }
 

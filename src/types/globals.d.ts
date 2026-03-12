@@ -1,6 +1,6 @@
 export { };
 
-// import('../../../../../global');
+// import('../../../../../../global');
 import { BotOutfitPanel } from './panel/BotOutfitPanel';
 import { UserOutfitPanel } from './panel/UserOutfitPanel';
 import { SillyTavernContext } from './context';

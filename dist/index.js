@@ -1,12 +1,13 @@
 const getContext = SillyTavern.getContext;
 // @ts-ignore
 import { extension_settings } from '../../../../extensions.js';
+import { saveSettings as saveSettingsBase } from './api/settings.js';
 import { registerPanelCommands } from './command/panel-commands.js';
+import { OutfitTracker } from './data/tracker.js';
 import { OutfitPanelRegistry } from './panel/PanelRegistry.js';
 console.log('[OutfitTracker] Starting extension loading...');
 async function initializeExtension() {
     const MODULE_NAME = 'outfit_tracker';
-    const saveSettings = getContext().saveSettingsDebounced;
     const { BotOutfitManager } = await import('./manager/BotOutfitManager.js');
     const { BotOutfitPanel } = await import('./panel/BotOutfitPanel.js');
     const { UserOutfitManager } = await import('./manager/UserOutfitManager.js');
@@ -34,11 +35,22 @@ async function initializeExtension() {
             showPopup() { }
         };
     }
+    let panelRegistryHook = null;
+    const saveSettings = () => {
+        if (panelRegistryHook) {
+            for (const charPanel of panelRegistryHook.getCharPanels()) {
+                const name = charPanel.character;
+                OutfitTracker.characterOutfits(name).commitAutosave();
+            }
+        }
+        saveSettingsBase();
+    };
     const botManager = new BotOutfitManager(saveSettings);
     const userManager = new UserOutfitManager(saveSettings);
     const botPanel = new BotOutfitPanel(botManager);
     const userPanel = new UserOutfitPanel(userManager);
     const panelRegistry = new OutfitPanelRegistry(saveSettings, userPanel, botPanel);
+    panelRegistryHook = panelRegistry;
     const autoOutfitSystem = new AutoOutfitSystem(botManager);
     // Store panels globally for access in other functions
     // TODO: haha this needs to get removed at some point
@@ -144,7 +156,13 @@ async function initializeExtension() {
             // @ts-ignore
             autoOutfitSystem.markAppInitialized();
         });
-        eventSource.on(event_types.CHAT_CHANGED, updateForCurrentCharacter);
+        eventSource.on(event_types.CHAT_CHANGED, () => {
+            updateForCurrentCharacter();
+            for (const charPanel of panelRegistry.getCharPanels()) {
+                charPanel.outfitManager.getOutfitCollection().loadFromChat();
+                charPanel.renderTabsAndActiveContent();
+            }
+        });
         eventSource.on(event_types.CHARACTER_CHANGED, updateForCurrentCharacter);
     }
     function initSettings() {

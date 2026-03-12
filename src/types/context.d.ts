@@ -130,7 +130,13 @@ type MacroSource = {
 	isThirdParty: boolean;
 };
 
-
+interface ChatMetadata {
+	tainted?: boolean;
+	integrity?: string;
+	scenario?: string;
+	persona?: string;
+	[key: string]: any;
+}
 
 export interface SillyTavernContext {
 	characterId: number;
@@ -173,4 +179,7 @@ export interface SillyTavernContext {
 		dynamicMacros?: Record<string, string | MacroHandler>;
 		postProcessFn?: (x: string) => string;
 	}, ...args: any[]): string;
+
+	saveMetadataDebounced(): void;
+	chatMetadata: ChatMetadata;
 }

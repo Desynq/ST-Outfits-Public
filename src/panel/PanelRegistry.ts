@@ -133,6 +133,8 @@ export class OutfitPanelRegistry implements ICharPanelGrouper {
 			this.saveSettings,
 			this
 		);
+		// char panels can be created mid-chat
+		panel.outfitManager.getOutfitCollection().loadFromChat();
 
 		panel.onDestroy(() => this.unregister(character));
 		panel.onDrop((packet) => this.handleCharPanelDrop(panel, packet));

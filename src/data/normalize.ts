@@ -105,7 +105,7 @@ function normalizeKind(kind: unknown): string {
 	return kind;
 }
 
-function normalizeOutfit(value: any): Outfit {
+export function normalizeOutfit(value: unknown): Outfit {
 	if (isLegacyOutfit(value)) {
 		return normalizeLegacyOutfit(value);
 	}

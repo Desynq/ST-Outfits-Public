@@ -1,3 +1,4 @@
+import { ChatOutfitStorage } from "../../api/chat-metadata.js";
 import { DEFAULT_SLOTS } from "../../Constants.js";
 import { normalizeOutfitCollection } from "../normalize.js";
 import { MutableOutfitView } from "./MutableOutfitView.js";
@@ -112,5 +113,14 @@ export class CharacterOutfitCollectionView extends OutfitCollectionView {
     }
     clear() {
         delete this.map[this.character];
+    }
+    loadFromChat() {
+        const c = this.getOrCreateCollection();
+        c.autoOutfit ?? (c.autoOutfit = this.createDefaultOutfit());
+        ChatOutfitStorage.loadInto(c.autoOutfit, this.character);
+    }
+    commitAutosave() {
+        const c = this.getOrCreateCollection();
+        ChatOutfitStorage.saveFrom(c.autoOutfit, this.character);
     }
 }

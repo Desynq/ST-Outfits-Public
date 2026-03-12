@@ -1,7 +1,7 @@
 import { areOutfitSnapshotsEqual } from "../data/model/OutfitSnapshots.js";
 import { FullSummaryTag } from "../data/model/Panels.js";
 import { OutfitTracker } from "../data/tracker.js";
-import { IOutfitCollectionView } from "../data/view/OutfitCollectionView.js";
+import { ICharacterOutfitCollectionView, IOutfitCollectionView } from "../data/view/OutfitCollectionView.js";
 import { toPascalCase } from "../util/StringHelper.js";
 import { OutfitManager } from "./OutfitManager.js";
 
@@ -105,7 +105,7 @@ export class CharOutfitManager extends OutfitManager {
 		return outfits;
 	}
 
-	public override getOutfitCollection(): IOutfitCollectionView {
+	public override getOutfitCollection(): ICharacterOutfitCollectionView {
 		return OutfitTracker.characterOutfits(this.character);
 	}
 

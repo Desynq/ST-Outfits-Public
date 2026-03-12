@@ -84,6 +84,8 @@ export class OutfitPanelRegistry {
             return { panel, created: false };
         }
         panel = CharOutfitPanel.from(character, this.saveSettings, this);
+        // char panels can be created mid-chat
+        panel.outfitManager.getOutfitCollection().loadFromChat();
         panel.onDestroy(() => this.unregister(character));
         panel.onDrop((packet) => this.handleCharPanelDrop(panel, packet));
         this.panels.add(panel);

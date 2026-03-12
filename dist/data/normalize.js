@@ -77,7 +77,7 @@ function normalizeKind(kind) {
         return 'Clothing';
     return kind;
 }
-function normalizeOutfit(value) {
+export function normalizeOutfit(value) {
     if (isLegacyOutfit(value)) {
         return normalizeLegacyOutfit(value);
     }

@@ -98,7 +98,7 @@ export class SlotsRenderer extends OutfitPanelContext {
 			return;
 		}
 
-		this.outfitManager.updateSlotContext(id);
+		void this.outfitManager.updateSlotContext(id);
 		this.panel.saveAndRender();
 	}
 }

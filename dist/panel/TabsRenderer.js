@@ -44,7 +44,7 @@ export class OutfitTabsRenderer {
                         return assertNever(this.currentTab.id);
                 }
                 break;
-            case 'kind':
+            case 'kind': {
                 const kind = this.currentTab.kind;
                 const slots = this.outfitView.slots
                     .filter(s => s.kind === kind)
@@ -55,6 +55,7 @@ export class OutfitTabsRenderer {
                 }
                 this.panel.getSlotsRenderer().renderSlots(kind, slots, contentArea);
                 break;
+            }
             default:
                 return assertNever(this.currentTab);
         }

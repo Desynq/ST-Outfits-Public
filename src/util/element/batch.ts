@@ -11,7 +11,7 @@ export function addEvents(
 			options?: boolean | AddEventListenerOptions
 		]
 	}[keyof HTMLElementEventMap][]
-) {
+): void {
 	for (const [type, listener, options] of adds) {
 		el.addEventListener(type, listener as EventListener, options);
 	}

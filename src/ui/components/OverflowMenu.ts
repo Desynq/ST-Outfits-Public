@@ -33,7 +33,7 @@ export class OverflowMenu {
 	private readonly closeBus = new EventBus<() => void>();
 	private readonly buildBus = new EventBus<(menu: HTMLDivElement) => void>();
 
-	private readonly handleOutsideClick = (e: MouseEvent) => {
+	private readonly handleOutsideClick = (e: MouseEvent): void => {
 		if (!this.menu) return;
 		if (this.menu.contains(e.target as Node)) return;
 		if (this.deps.openerEl.contains(e.target as Node)) return;

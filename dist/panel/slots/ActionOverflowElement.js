@@ -51,16 +51,15 @@ export class SlotActionsMenuElement {
         ];
     }
     createBtn(options) {
-        const self = this;
         const { events, ...rest } = options;
-        const subClick = events?.click;
         return el('button', {
             ...rest,
             events: {
                 ...events,
-                click: function (e) {
-                    self.menu.closeMenu();
-                    subClick?.call(this, e);
+                click: (e) => {
+                    const btn = e.currentTarget;
+                    this.menu.closeMenu();
+                    events?.click?.call(btn, e);
                 }
             }
         });

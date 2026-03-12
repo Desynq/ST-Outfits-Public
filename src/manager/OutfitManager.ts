@@ -25,7 +25,7 @@ export abstract class OutfitManager {
 		this.summaryMacros = new OutfitMacroManager(macroOwner, 'summary', 'outfit');
 	}
 
-	protected get outfit() {
+	protected get outfit(): MutableOutfitView {
 		return this.getOutfitView();
 	}
 

@@ -29,6 +29,7 @@ function coerceOutfitSnapshot(x) {
 }
 export function normalizeOutfitDiffs(diffs) {
     for (const [namespace, diff] of Object.entries(diffs)) {
+        //
     }
 }
 function coerceOutfitDiff(x) {

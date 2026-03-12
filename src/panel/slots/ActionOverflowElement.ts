@@ -83,17 +83,16 @@ export class SlotActionsMenuElement {
 
 
 	private createBtn(options: ElementOptions<'button'>): HTMLButtonElement {
-		const self = this;
 		const { events, ...rest } = options;
-		const subClick = events?.click;
 
 		return el('button', {
 			...rest,
 			events: {
 				...events,
-				click: function (this: HTMLButtonElement, e) {
-					self.menu.closeMenu();
-					subClick?.call(this, e);
+				click: (e) => {
+					const btn = e.currentTarget as HTMLButtonElement;
+					this.menu.closeMenu();
+					events?.click?.call(btn, e);
 				}
 			}
 		});

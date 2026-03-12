@@ -1,17 +1,17 @@
 import { OutfitManager } from "../manager/OutfitManager";
 
 export interface OutfitSlotsHost {
-	public isMinimized(): boolean;
+	isMinimized(): boolean;
 
-	public areDisabledSlotsHidden(): boolean;
+	areDisabledSlotsHidden(): boolean;
 
-	public areEmptySlotsHidden(): boolean;
+	areEmptySlotsHidden(): boolean;
 
-	public getOutfitManager(): OutfitManager;
+	getOutfitManager(): OutfitManager;
 
-	public renderTabsAndActiveContent(): void;
+	renderTabsAndActiveContent(): void;
 
-	public saveAndRender(): void;
+	saveAndRender(): void;
 
-	public sendSystemMessage(message: string): void;
+	sendSystemMessage(message: string): void;
 }

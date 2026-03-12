@@ -111,7 +111,7 @@ export class SlotPresetsModal {
 		const textWrap = createElement('div', 'slot-preset-text');
 		textWrap.append(label, value);
 
-		const createBtn = (token: string, text: string, click: () => void) => {
+		const createBtn = (token: string, text: string, click: () => void): HTMLButtonElement => {
 			const btn = createElement('button', 'slot-preset-btn', text);
 			btn.classList.add(token);
 			btn.addEventListener('click', click);
@@ -133,7 +133,7 @@ export class SlotPresetsModal {
 		return el;
 	}
 
-	private usePreset(preset: KeyedSlotPreset): void {
+	private async usePreset(preset: KeyedSlotPreset): Promise<void> {
 		const imageAttachOutcome = this.outfit.attachImage(this.slot.id, preset.key, preset.imageKey);
 		switch (imageAttachOutcome) {
 			case 'slot-not-found':
@@ -166,7 +166,7 @@ export class SlotPresetsModal {
 			default: assertNever(imageActivateOutcome);
 		}
 
-		this.manager.setOutfitItem(this.slot.id, preset.value);
+		await this.manager.setOutfitItem(this.slot.id, preset.value);
 		this.close();
 		this.saveAndRender();
 	}

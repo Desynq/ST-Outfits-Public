@@ -15,7 +15,7 @@ export function clampPosition({
 	y,
 	width,
 	height
-}: ClampPositionOptions) {
+}: ClampPositionOptions): void {
 	const maxX = Math.max(0, window.innerWidth - width);
 	const maxY = Math.max(0, window.innerHeight - height);
 

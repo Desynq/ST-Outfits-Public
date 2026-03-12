@@ -1,8 +1,3 @@
-// @ts-ignore
-import { getContext as _getContext } from '../../../../../../extensions.js';
-export function substituteParams(str) {
-    return _getContext().substituteParams(str);
-}
-export function getContext() {
-    return _getContext();
+export function substituteParams(content) {
+    return SillyTavern.getContext().substituteParams(content);
 }

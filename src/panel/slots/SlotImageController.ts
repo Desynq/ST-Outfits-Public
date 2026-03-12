@@ -143,7 +143,7 @@ export class SlotImageElement extends OutfitPanelContext {
 			throw new Error('No shown image to observe');
 		}
 
-		const updateLayout = () => {
+		const updateLayout = (): void => {
 			const imageRect = this.imgWrapper.getBoundingClientRect();
 			const containerRect = flexParent.getBoundingClientRect();
 
@@ -261,7 +261,7 @@ export class SlotImageElement extends OutfitPanelContext {
 	private async promptResize(): Promise<void> {
 		const container = createElement('div', 'resize-prompt');
 
-		const createInput = (value: number) => {
+		const createInput = (value: number): HTMLInputElement => {
 			const input = createElement('input');
 			input.type = 'number';
 			input.value = value.toString();
@@ -345,7 +345,7 @@ export class SlotImageElement extends OutfitPanelContext {
 			let width = startRect.width;
 			let height = startRect.height;
 
-			const onMove = (moveEvent: PointerEvent) => {
+			const onMove = (moveEvent: PointerEvent): void => {
 				const dx = moveEvent.clientX - startX;
 				const dy = moveEvent.clientY - startY;
 
@@ -355,8 +355,8 @@ export class SlotImageElement extends OutfitPanelContext {
 				setElementSize(this.imgWrapper, width, height);
 			};
 
-			const onUp = () => {
-				this.saveImageResize(width, height);
+			const onUp = (): void => {
+				void this.saveImageResize(width, height);
 				handle.releasePointerCapture(e.pointerId);
 				window.removeEventListener('pointermove', onMove);
 				window.removeEventListener('pointerup', onUp);
@@ -388,10 +388,10 @@ export class SlotImageElement extends OutfitPanelContext {
 		});
 
 		if (uploading) {
-			this.uploadImage();
+			await this.uploadImage();
 		}
 		else {
-			this.chooseImage();
+			await this.chooseImage();
 		}
 	}
 
@@ -464,7 +464,7 @@ export class SlotImageElement extends OutfitPanelContext {
 			: null;
 	}
 
-	private toggleImage() {
+	private toggleImage(): void {
 		const imageState = this.slot.getActiveImageState();
 		if (!imageState) return;
 
@@ -475,7 +475,7 @@ export class SlotImageElement extends OutfitPanelContext {
 
 	// delete active image, setting active image key to null
 	// requires double confirmation
-	private async deleteImage() {
+	private async deleteImage(): Promise<void> {
 		const key = this.slot.activeImageTag;
 
 		if (!key) return;
@@ -489,7 +489,7 @@ export class SlotImageElement extends OutfitPanelContext {
 		const result = this.outfitView.deleteImage(this.slot.id, key);
 
 		if (result.status === 'deleted-image') {
-			this.imagesView.tryDeleteImage(result.blobKey);
+			void this.imagesView.tryDeleteImage(result.blobKey);
 		}
 		else {
 			toastr.error('Failed to delete image.');

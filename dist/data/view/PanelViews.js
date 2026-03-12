@@ -112,11 +112,11 @@ export class CharPanelSettingsView extends PanelSettingsView {
             };
             return 'ok';
         }
-        if (!/^[A-Za-z_][A-Za-z0-9_\-]*$/.test(tag)) {
+        if (!/^[A-Za-z_][A-Za-z0-9_-]*$/.test(tag)) {
             return 'invalid-tag-name';
         }
         if (attributes !== '') {
-            const attrPattern = /^(\s*[A-Za-z_][A-Za-z0-9_\-]*="[^"]*"\s*)*$/;
+            const attrPattern = /^(\s*[A-Za-z_][A-Za-z0-9_-]*="[^"]*"\s*)*$/;
             if (!attrPattern.test(attributes)) {
                 return 'invalid-attributes';
             }

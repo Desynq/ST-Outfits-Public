@@ -223,7 +223,7 @@ export class SlotImageElement extends OutfitPanelContext {
                 setElementSize(this.imgWrapper, width, height);
             };
             const onUp = () => {
-                this.saveImageResize(width, height);
+                void this.saveImageResize(width, height);
                 handle.releasePointerCapture(e.pointerId);
                 window.removeEventListener('pointermove', onMove);
                 window.removeEventListener('pointerup', onUp);
@@ -249,10 +249,10 @@ export class SlotImageElement extends OutfitPanelContext {
             cancelText: 'Choose'
         });
         if (uploading) {
-            this.uploadImage();
+            await this.uploadImage();
         }
         else {
-            this.chooseImage();
+            await this.chooseImage();
         }
     }
     async uploadImage() {
@@ -331,7 +331,7 @@ export class SlotImageElement extends OutfitPanelContext {
             return;
         const result = this.outfitView.deleteImage(this.slot.id, key);
         if (result.status === 'deleted-image') {
-            this.imagesView.tryDeleteImage(result.blobKey);
+            void this.imagesView.tryDeleteImage(result.blobKey);
         }
         else {
             toastr.error('Failed to delete image.');

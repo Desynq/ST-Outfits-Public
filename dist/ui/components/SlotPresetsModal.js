@@ -84,7 +84,7 @@ export class SlotPresetsModal {
         }
         return el;
     }
-    usePreset(preset) {
+    async usePreset(preset) {
         const imageAttachOutcome = this.outfit.attachImage(this.slot.id, preset.key, preset.imageKey);
         switch (imageAttachOutcome) {
             case 'slot-not-found':
@@ -114,7 +114,7 @@ export class SlotPresetsModal {
                 break;
             default: assertNever(imageActivateOutcome);
         }
-        this.manager.setOutfitItem(this.slot.id, preset.value);
+        await this.manager.setOutfitItem(this.slot.id, preset.value);
         this.close();
         this.saveAndRender();
     }

@@ -56,7 +56,7 @@ export class VisibilityTab extends PanelTab {
 		const messageEl = el('div', {
 			className: msgClassName
 		});
-		const updateMsgEl = (text: string, className: string) => {
+		const updateMsgEl = (text: string, className: string): void => {
 			messageEl.textContent = text;
 			messageEl.className = `${msgClassName} ${className}`;
 		};
@@ -66,7 +66,7 @@ export class VisibilityTab extends PanelTab {
 			text: 'Reset'
 		});
 
-		const apply = () => {
+		const apply = (): void => {
 			const old = settings.getFullSummaryTag();
 
 			if (old === undefined && tagInput.value === '' && attrInput.value === '') {
@@ -271,7 +271,7 @@ export class VisibilityTab extends PanelTab {
 			labelText: string,
 			key: 'bgColor1' | 'bgColor2' | 'borderColor',
 			value: string
-		) => {
+		): HTMLDivElement => {
 			const wrapper = document.createElement('div');
 			wrapper.className = 'visibility-theme-row';
 

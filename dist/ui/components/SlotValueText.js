@@ -226,9 +226,9 @@ export class SlotValueText {
         addLongPressAction(span, 300, () => {
             const prompt = updateFromPrompt();
             if (!prompt)
-                this.deps.showPromptModal('No Prompt Found!');
+                void this.deps.showPromptModal('No Prompt Found!');
             else
-                this.deps.showPromptModal(prompt);
+                void this.deps.showPromptModal(prompt);
         }, { stopImmediatePropagation: true });
         return span;
     }

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
 
 const getContext = SillyTavern.getContext;
 // @ts-ignore
@@ -9,7 +8,7 @@ import { el } from './util/ElementHelper.js';
 
 console.log('[OutfitTracker] Starting extension loading...');
 
-async function initializeExtension() {
+async function initializeExtension(): Promise<void> {
     const MODULE_NAME = 'outfit_tracker';
 
     const saveSettings = getContext().saveSettingsDebounced as () => void;
@@ -31,15 +30,15 @@ async function initializeExtension() {
         // Create a dummy class if AutoOutfitSystem fails to load
         AutoOutfitSystem = class DummyAutoOutfitSystem {
             // @ts-ignore
-            constructor() { this.isEnabled = false; }
-            enable() { return '[Outfit System] Auto outfit system not available'; }
-            disable() { return '[Outfit System] Auto outfit system not available'; }
-            setPrompt() { return '[Outfit System] Auto outfit system not available'; }
-            resetToDefaultPrompt() { return '[Outfit System] Auto outfit system not available'; }
-            getStatus() { return { enabled: false, hasPrompt: false }; }
+            public constructor() { this.isEnabled = false; }
+            public enable(): string { return '[Outfit System] Auto outfit system not available'; }
+            public disable(): string { return '[Outfit System] Auto outfit system not available'; }
+            public setPrompt(): string { return '[Outfit System] Auto outfit system not available'; }
+            public resetToDefaultPrompt(): string { return '[Outfit System] Auto outfit system not available'; }
+            public getStatus(): { enabled: false; hasPrompt: false; } { return { enabled: false, hasPrompt: false }; }
             // @ts-ignore
-            manualTrigger() { this.showPopup('Auto outfit system not available', 'error'); }
-            showPopup() { }
+            public manualTrigger(): void { this.showPopup('Auto outfit system not available', 'error'); }
+            public showPopup(): void { }
         };
     }
 
@@ -58,7 +57,7 @@ async function initializeExtension() {
     window.userOutfitPanel = userPanel;
     window.autoOutfitSystem = autoOutfitSystem;
 
-    function registerOutfitCommands() {
+    function registerOutfitCommands(): void {
         const { registerSlashCommand, SlashCommandParser, SlashCommand, SlashCommandNamedArgument, ARGUMENT_TYPE } = SillyTavern.getContext();
 
         // @ts-ignore
@@ -150,13 +149,13 @@ async function initializeExtension() {
         }
     }
 
-    function updateForCurrentCharacter() {
+    function updateForCurrentCharacter(): void {
         const context = getContext();
         const charName = context.characters[context.characterId]?.name || 'Unknown';
         botPanel.updateCharacter(charName);
     }
 
-    function setupEventListeners() {
+    function setupEventListeners(): void {
         const context = getContext();
         const { eventSource, event_types } = context;
 
@@ -171,7 +170,7 @@ async function initializeExtension() {
         eventSource.on(event_types.CHARACTER_CHANGED, updateForCurrentCharacter);
     }
 
-    function initSettings() {
+    function initSettings(): void {
         if (!extension_settings[MODULE_NAME]) {
             extension_settings[MODULE_NAME] = {
                 autoOpenBot: true,
@@ -208,7 +207,7 @@ async function initializeExtension() {
         }
     }
 
-    function createSettingsUI() {
+    function createSettingsUI(): void {
         // @ts-ignore
         const hasAutoSystem = AutoOutfitSystem.name !== 'DummyAutoOutfitSystem';
         const autoSettingsHtml = hasAutoSystem ? `

@@ -1,7 +1,7 @@
 
 
 
-export function notObject(value: any): boolean {
+export function notObject(value: unknown): boolean {
 	return !value || typeof value !== 'object';
 }
 

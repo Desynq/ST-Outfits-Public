@@ -56,7 +56,7 @@ export class OutfitsTab extends PanelTab {
 	}
 
 	private renderSaveButton(contentArea: HTMLDivElement): void {
-		const saveOutfit = async () => {
+		const saveOutfit = async (): Promise<void> => {
 			const presetName = prompt('Name this outfit:');
 			if (presetName) {
 				const message = await this.outfitManager.savePreset(presetName.trim());

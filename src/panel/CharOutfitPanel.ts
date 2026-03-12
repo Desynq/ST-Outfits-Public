@@ -237,17 +237,17 @@ export class CharOutfitPanel extends OutfitPanel<'char'> {
 			}
 		});
 
-		const groupAppend = (parent: CharOutfitPanel, child: CharOutfitPanel) => {
+		const groupAppend = (parent: CharOutfitPanel, child: CharOutfitPanel): void => {
 			if (parent !== this) return;
 			dropdown.hidden = false;
 		};
 
-		const groupFocus = (panel: CharOutfitPanel) => {
+		const groupFocus = (panel: CharOutfitPanel): void => {
 			if (panel !== this) return;
 			dropdown.hidden = false;
 		};
 
-		const groupRemove = (panel: CharOutfitPanel) => {
+		const groupRemove = (panel: CharOutfitPanel): void => {
 			if (panel !== this) return;
 			dropdown.hidden = true;
 		};

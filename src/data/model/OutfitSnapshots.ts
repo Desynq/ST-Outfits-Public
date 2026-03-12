@@ -97,7 +97,7 @@ export class OutfitSlotState extends OutfitSlotBase {
 }
 
 export class UnresolvedOutfitSlot extends OutfitSlotBase {
-	readonly resolved = false as const;
+	public readonly resolved = false as const;
 
 	public constructor(id: string) {
 		super(id);

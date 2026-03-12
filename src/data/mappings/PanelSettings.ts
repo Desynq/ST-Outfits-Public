@@ -87,7 +87,7 @@ export function normalizeCharPanels(obj: unknown): CharPanelsTree {
 					};
 				}
 				// Structured tag mode
-				else if (/^[A-Za-z_][A-Za-z0-9_\-]*$/.test(tag)) {
+				else if (/^[A-Za-z_][A-Za-z0-9_-]*$/.test(tag)) {
 					const openingTag =
 						attributes === ''
 							? `<${tag}>`

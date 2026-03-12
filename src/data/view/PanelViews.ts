@@ -107,13 +107,18 @@ export abstract class PanelSettingsView<TSettings extends PartialPanelSettings> 
 }
 
 
+interface PanelTheme {
+	bgColor1: string;
+	bgColor2: string;
+	borderColor: string;
+}
 
 export class UserPanelSettingsView extends PanelSettingsView<FullPanelSettings> {
 	protected override getDefaultSettings(): FullPanelSettings {
 		return defaultUserPanelSettings;
 	}
 
-	protected override getDefaultTheme() {
+	protected override getDefaultTheme(): PanelTheme {
 		return {
 			bgColor1: '#1e88e5',
 			bgColor2: '#3d5afe',
@@ -128,7 +133,7 @@ export class BotPanelSettingsView extends PanelSettingsView<FullPanelSettings> {
 		return defaultBotPanelSettings;
 	}
 
-	protected override getDefaultTheme() {
+	protected override getDefaultTheme(): PanelTheme {
 		return {
 			bgColor1: '#7a57d1',
 			bgColor2: '#6559e0',
@@ -174,12 +179,12 @@ export class CharPanelSettingsView extends PanelSettingsView<CharPanelSettings> 
 			return 'ok';
 		}
 
-		if (!/^[A-Za-z_][A-Za-z0-9_\-]*$/.test(tag)) {
+		if (!/^[A-Za-z_][A-Za-z0-9_-]*$/.test(tag)) {
 			return 'invalid-tag-name';
 		}
 
 		if (attributes !== '') {
-			const attrPattern = /^(\s*[A-Za-z_][A-Za-z0-9_\-]*="[^"]*"\s*)*$/;
+			const attrPattern = /^(\s*[A-Za-z_][A-Za-z0-9_-]*="[^"]*"\s*)*$/;
 			if (!attrPattern.test(attributes)) {
 				return 'invalid-attributes';
 			}
@@ -213,7 +218,7 @@ export class CharPanelSettingsView extends PanelSettingsView<CharPanelSettings> 
 		};
 	}
 
-	protected override getDefaultTheme() {
+	protected override getDefaultTheme(): PanelTheme {
 		return {
 			bgColor1: '#2a1f26',
 			bgColor2: '#33242d',

@@ -77,7 +77,7 @@ export class SlotValueText {
 
 	public createFrag(value: string): DocumentFragment {
 		const frag = document.createDocumentFragment();
-		const appendText = (start: number, end?: number) => {
+		const appendText = (start: number, end?: number): void => {
 			const text = value.slice(start, end);
 			frag.append(...this.renderTextWithRules(text));
 		};
@@ -268,7 +268,7 @@ export class SlotValueText {
 		const updateFromPrompt = (): string | null => {
 			span.classList.remove('--error', '--char', '--user');
 
-			const addClass = (...tokens: string[]) => span.classList.add(...tokens);
+			const addClass = (...tokens: string[]): void => span.classList.add(...tokens);
 
 			const prompt = getPrompt();
 			if (!prompt) {
@@ -304,9 +304,9 @@ export class SlotValueText {
 		addLongPressAction(span, 300, () => {
 			const prompt = updateFromPrompt();
 			if (!prompt)
-				this.deps.showPromptModal('No Prompt Found!');
+				void this.deps.showPromptModal('No Prompt Found!');
 			else
-				this.deps.showPromptModal(prompt);
+				void this.deps.showPromptModal(prompt);
 		}, { stopImmediatePropagation: true });
 
 		return span;
@@ -336,7 +336,7 @@ export class SlotValueText {
 
 		span.replaceChildren(placeholder, content);
 
-		const toggleReveal = () => {
+		const toggleReveal = (): void => {
 			span.classList.toggle('--revealed');
 			this.deps.expandValue();
 		};

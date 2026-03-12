@@ -10,9 +10,9 @@ export class SlotActionsElement extends OutfitPanelContext {
 	public createUnequipButton(slot: OutfitSlotState): HTMLButtonElement {
 		const text = slot.equipped ? 'Unequip' : 'Equip';
 
-		const click = () => {
+		const click = (): void => {
 			this.outfitView.setEquipped(slot.id, !slot.equipped);
-			this.outfitManager.updateSlotContext(slot.id);
+			void this.outfitManager.updateSlotContext(slot.id);
 			this.panel.saveAndRender();
 		};
 

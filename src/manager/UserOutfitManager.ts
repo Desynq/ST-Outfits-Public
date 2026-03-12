@@ -4,7 +4,7 @@ import { IOutfitCollectionView } from "../data/view/OutfitCollectionView.js";
 import { OutfitManager } from "./OutfitManager.js";
 
 export class UserOutfitManager extends OutfitManager {
-    constructor(
+    public constructor(
         saveSettings: () => void
     ) {
         super(saveSettings, 'user');
@@ -23,13 +23,13 @@ export class UserOutfitManager extends OutfitManager {
         return '{{user}}';
     }
 
-    public override getVarName(namespace: string) {
+    public override getVarName(namespace: string): string {
         return `User_${namespace}`;
     }
 
     public override async setOutfitItem(slotId: string, value: string): Promise<string> {
         const previousValue = this.getValue(slotId);
-        this.applyOutfitValue(slotId, value);
+        void this.applyOutfitValue(slotId, value);
 
         if (previousValue === 'None' && value !== 'None') {
             return `You put on ${value}.`;
@@ -42,7 +42,7 @@ export class UserOutfitManager extends OutfitManager {
         }
     }
 
-    public async savePreset(outfitName: string) {
+    public async savePreset(outfitName: string): Promise<string> {
         const outfit = this.getOutfitView().snapshot();
 
         OutfitTracker.userOutfits().saveOutfit(outfitName, outfit);
@@ -53,7 +53,7 @@ export class UserOutfitManager extends OutfitManager {
         return '';
     }
 
-    public async loadPreset(outfitName: string) {
+    public async loadPreset(outfitName: string): Promise<string> {
         const newOutfit = OutfitTracker.userOutfits().getSavedOutfit(outfitName)?.snapshot();
         if (newOutfit === undefined) {
             return `[Outfit System] Preset "${outfitName}" not found.`;
@@ -67,15 +67,14 @@ export class UserOutfitManager extends OutfitManager {
 
         OutfitTracker.userOutfits().setAutosavedOutfit(newOutfit);
 
-        this.getOutfitView().values;
         for (const [slotId, value] of Object.entries(this.getOutfitView().values)) {
-            this.applyOutfitValue(slotId, value);
+            void this.applyOutfitValue(slotId, value);
         }
 
         return `You changed into the "${outfitName}" outfit.`;
     }
 
-    public deletePreset(outfitName: string) {
+    public deletePreset(outfitName: string): string {
         const outfit = OutfitTracker.userOutfits().getSavedOutfit(outfitName);
         if (outfit === undefined) {
             return `[Outfit System] Preset "${outfitName}" not found.`;

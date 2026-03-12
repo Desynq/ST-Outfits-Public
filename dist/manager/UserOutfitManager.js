@@ -20,7 +20,7 @@ export class UserOutfitManager extends OutfitManager {
     }
     async setOutfitItem(slotId, value) {
         const previousValue = this.getValue(slotId);
-        this.applyOutfitValue(slotId, value);
+        void this.applyOutfitValue(slotId, value);
         if (previousValue === 'None' && value !== 'None') {
             return `You put on ${value}.`;
         }
@@ -49,9 +49,8 @@ export class UserOutfitManager extends OutfitManager {
             return `You are already wearing the "${outfitName}" outfit.`;
         }
         OutfitTracker.userOutfits().setAutosavedOutfit(newOutfit);
-        this.getOutfitView().values;
         for (const [slotId, value] of Object.entries(this.getOutfitView().values)) {
-            this.applyOutfitValue(slotId, value);
+            void this.applyOutfitValue(slotId, value);
         }
         return `You changed into the "${outfitName}" outfit.`;
     }

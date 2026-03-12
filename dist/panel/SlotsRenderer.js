@@ -63,7 +63,7 @@ export class SlotsRenderer extends OutfitPanelContext {
             this.panel.sendSystemMessage(`Slot with id ${id} already exists.`);
             return;
         }
-        this.outfitManager.updateSlotContext(id);
+        void this.outfitManager.updateSlotContext(id);
         this.panel.saveAndRender();
     }
 }

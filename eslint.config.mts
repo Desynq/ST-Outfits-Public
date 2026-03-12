@@ -1,28 +1,43 @@
 import js from "@eslint/js";
-import globals from "globals";
 import tseslint from "typescript-eslint";
 import { defineConfig } from "eslint/config";
 
+
 export default defineConfig([
   {
-    files: ["**/*.{js,mjs,cjs,ts,mts,cts}"],
-    plugins: { js },
-    extends: ["js/recommended"],
+    ignores: [
+      "dist/**"
+    ]
+  },
+
+  js.configs.recommended,
+
+  ...tseslint.configs.recommended,
+
+  {
+    files: ["src/**/*.{ts,mts,cts}"],
     languageOptions: {
-      globals: globals.browser,
       parserOptions: {
-        projectService: true,
-        allowDefaultProject: true
+        projectService: true
       }
+    },
+    rules: {
+      "@typescript-eslint/no-floating-promises": "error"
     }
   },
-  tseslint.configs.recommended,
+
   {
-    files: ["**/*.{ts,mts,cts}"],
     rules: {
-      "@typescript-eslint/no-floating-promises": "error",
-      "no-unused-vars": "off",
+      "@typescript-eslint/explicit-function-return-type": ["warn", {
+        allowExpressions: true,
+        allowTypedFunctionExpressions: true,
+        allowHigherOrderFunctions: true
+      }],
+      "@typescript-eslint/explicit-member-accessibility": "error",
       "@typescript-eslint/no-unused-vars": "off",
+      "@typescript-eslint/ban-ts-comment": "off",
+      "@typescript-eslint/no-explicit-any": "off",
+      "no-unused-vars": "off",
       "no-useless-assignment": "off"
     }
   }

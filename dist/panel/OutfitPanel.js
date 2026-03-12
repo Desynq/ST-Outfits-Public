@@ -453,11 +453,13 @@ export class OutfitPanel {
         this.hideBus.emit();
     }
     toggle(resetSizeAndPos = false) {
-        this.visible
-            ? this.close()
-            : this.show({
-                resetSizeAndPos
-            });
+        if (this.visible) {
+            this.close();
+            return;
+        }
+        this.show({
+            resetSizeAndPos
+        });
     }
     disable() {
         this.disabled = true;

@@ -1,5 +1,6 @@
 import { html } from "../util/lint.js";
 const { SlashCommandParser, SlashCommand, SlashCommandNamedArgument, ARGUMENT_TYPE, characters, reloadCurrentChat } = SillyTavern.getContext();
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 function attempt(fn, options) {
     try {
         return { ok: true, value: fn() };
@@ -43,7 +44,7 @@ export function registerPanelCommands(panelRegistry) {
                 });
                 if (!hideResult.ok)
                     return hideResult.toastr;
-                reloadCurrentChat();
+                void reloadCurrentChat();
                 return `Removed character panel for ${charName}`;
             }
             const openResult = attempt(() => panel.autoOpen(20, 170), {
@@ -53,7 +54,7 @@ export function registerPanelCommands(panelRegistry) {
             });
             if (!openResult.ok)
                 return openResult.toastr;
-            reloadCurrentChat();
+            void reloadCurrentChat();
             return `Showed character panel for ${charName}`;
         },
         aliases: ['outfit-char'],

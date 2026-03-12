@@ -18,7 +18,7 @@ class Tracker {
 		private readonly settings: OutfitTrackerModel
 	) { }
 
-	public areSystemMessagesEnabled() {
+	public areSystemMessagesEnabled(): boolean {
 		return this.settings.enableSysMessages;
 	}
 

@@ -17,7 +17,7 @@ export class CacheTab extends PanelTab {
 	}
 
 	private renderCacheButton(contentArea: HTMLDivElement): void {
-		const startCacheWrite = () => {
+		const startCacheWrite = (): void => {
 			const box = createElement('div', 'cache-write-container');
 
 			const input = document.createElement('input');
@@ -35,7 +35,7 @@ export class CacheTab extends PanelTab {
 			});
 
 			// John_Doe.cache_0 -> John_Doe.outfit.cache.cache_0
-			const commit = () => {
+			const commit = (): void => {
 				const raw = input.value.trim();
 				if (!raw) {
 					cancel();
@@ -52,7 +52,7 @@ export class CacheTab extends PanelTab {
 				this.panel.saveAndRender();
 			};
 
-			const cancel = () => {
+			const cancel = (): void => {
 				restoreButton();
 			};
 
@@ -63,7 +63,7 @@ export class CacheTab extends PanelTab {
 
 			// input.addEventListener('blur', cancel);
 
-			const restoreButton = () => {
+			const restoreButton = (): void => {
 				box.replaceWith(cacheButton);
 			};
 

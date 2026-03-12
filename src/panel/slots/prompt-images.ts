@@ -33,13 +33,13 @@ export async function showImagePicker(
 
 		wrapper.append(img, label);
 
-		const onReleaseAfterNormalPress = () => {
+		const onReleaseAfterNormalPress = (): void => {
 			selected = tag;
 			removeTokenFromAllIn(container, 'selected');
 			wrapper.classList.add('selected');
 		};
 
-		const onLongPress = async () => {
+		const onLongPress = async (): Promise<void> => {
 			const confirm = await multiConfirm(
 				'Delete this image?',
 				'This action cannot be undone. Confirm?'

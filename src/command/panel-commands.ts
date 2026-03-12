@@ -40,6 +40,7 @@ function attempt<T>(
 	}
 ): AttemptSuccess<T> | AttemptFailure;
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 function attempt<T>(
 	fn: () => T,
 	options: {
@@ -105,7 +106,7 @@ export function registerPanelCommands(panelRegistry: OutfitPanelRegistry): void 
 
 				if (!hideResult.ok) return hideResult.toastr;
 
-				reloadCurrentChat();
+				void reloadCurrentChat();
 				return `Removed character panel for ${charName}`;
 			}
 
@@ -120,7 +121,7 @@ export function registerPanelCommands(panelRegistry: OutfitPanelRegistry): void 
 
 			if (!openResult.ok) return openResult.toastr;
 
-			reloadCurrentChat();
+			void reloadCurrentChat();
 			return `Showed character panel for ${charName}`;
 		},
 		aliases: ['outfit-char'],

@@ -5,30 +5,30 @@ import { SlotsRenderer } from "./SlotsRenderer";
 
 
 export interface OutfitTabsHost<T extends PanelType> {
-	public getOutfitManager(): OutfitManagerMap[T];
+	getOutfitManager(): OutfitManagerMap[T];
 
-	public getSlotsRenderer(): SlotsRenderer;
+	getSlotsRenderer(): SlotsRenderer;
 
-	public renderTabsAndActiveContent(): void;
+	renderTabsAndActiveContent(): void;
 
-	public saveAndRender(): void;
+	saveAndRender(): void;
 
-	public sendSystemMessage(message: string): void;
+	sendSystemMessage(message: string): void;
 
-	public exportButtonClickListener(): Promise<void>;
-
-
-
-	public areDisabledSlotsHidden(): boolean;
-
-	public toggleHideDisabled(): void;
+	exportButtonClickListener(): Promise<void>;
 
 
-	public areEmptySlotsHidden(): boolean;
 
-	public toggleHideEmpty(): void;
+	areDisabledSlotsHidden(): boolean;
 
-	public getPanelSettings(): PanelSettingsViewMap[T];
+	toggleHideDisabled(): void;
 
-	public applyTheme(): void;
+
+	areEmptySlotsHidden(): boolean;
+
+	toggleHideEmpty(): void;
+
+	getPanelSettings(): PanelSettingsViewMap[T];
+
+	applyTheme(): void;
 }

@@ -240,7 +240,7 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 		this.renderTabsAndActiveContent();
 	}
 
-	protected makePanelDraggable() {
+	protected makePanelDraggable(): void {
 		if (!this.panelEl) return;
 
 		const handle = this.panelEl.querySelector(".outfit-header") as HTMLElement;
@@ -251,7 +251,7 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 		let width = 0;
 		let height = 0;
 
-		const start = (e: PointerEvent) => {
+		const start = (e: PointerEvent): void => {
 			if (!this.panelEl) return;
 
 			if (this.isFullscreen()) return;
@@ -274,7 +274,7 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 			handle.addEventListener("pointercancel", stop);
 		};
 
-		const move = (e: PointerEvent) => {
+		const move = (e: PointerEvent): void => {
 			if (!this.panelEl) return;
 
 			if (e.pointerType === 'touch') {
@@ -293,7 +293,7 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 			});
 		};
 
-		const stop = (e: PointerEvent) => {
+		const stop = (e: PointerEvent): void => {
 			if (handle.hasPointerCapture(e.pointerId)) {
 				handle.releasePointerCapture(e.pointerId);
 			}
@@ -332,7 +332,7 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 		});
 	}
 
-	protected beginDragFromEvent(e: PointerEvent) {
+	protected beginDragFromEvent(e: PointerEvent): void {
 		const handle = this.panelEl?.querySelector(".outfit-header") as HTMLElement;
 
 		if (!handle) return;
@@ -414,7 +414,7 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 
 	protected createOutfitActions(): HTMLDivElement {
 
-		const action = (options: ElementOptions<'span'>) => el('span', {
+		const action = (options: ElementOptions<'span'>): HTMLSpanElement => el('span', {
 			...options,
 			className: mergeClassNames('outfit-action', 'no-highlight', options.className)
 		});
@@ -464,7 +464,7 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 	}
 
 
-	protected toggleMinimize() {
+	protected toggleMinimize(): void {
 		this.setMinimize(!this.minimized);
 	}
 
@@ -595,7 +595,7 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 	/**
 	 * Hides the DOM until `show()` is called
 	 */
-	public close() {
+	public close(): void {
 		if (this.panelEl) {
 			this.panelEl.hidden = true;
 		}
@@ -615,12 +615,15 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 		this.hideBus.emit();
 	}
 
-	public toggle(resetSizeAndPos = false) {
-		this.visible
-			? this.close()
-			: this.show({
-				resetSizeAndPos
-			});
+	public toggle(resetSizeAndPos = false): void {
+		if (this.visible) {
+			this.close();
+			return;
+		}
+
+		this.show({
+			resetSizeAndPos
+		});
 	}
 
 	public disable(): void {

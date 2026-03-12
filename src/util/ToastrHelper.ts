@@ -10,7 +10,7 @@ export function toastrClipboard(
 	copyToast: { message: string; type?: ToastrType; } =
 		{ type: 'success', message: `Copied ${copyText} to clipboard` }
 ): void {
-	const onclick = async () => {
+	const onclick = async (): Promise<void> => {
 		try {
 			await navigator.clipboard.writeText(copyText);
 			if (copyToast)

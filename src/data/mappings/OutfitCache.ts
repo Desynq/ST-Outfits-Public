@@ -39,6 +39,7 @@ function coerceOutfitSnapshot(x: unknown): x is OutfitCachedSnapshot {
 
 export function normalizeOutfitDiffs(diffs: Record<string, any>): void {
 	for (const [namespace, diff] of Object.entries(diffs)) {
+		//
 	}
 }
 

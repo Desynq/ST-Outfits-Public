@@ -22,7 +22,7 @@ export class CharOutfitManager extends OutfitManager {
     }
     async setOutfitItem(slotId, value) {
         const previousValue = this.getValue(slotId);
-        this.applyOutfitValue(slotId, value);
+        void this.applyOutfitValue(slotId, value);
         if (previousValue === 'None' && value !== 'None') {
             return `${this.character} put on ${value}.`;
         }
@@ -55,7 +55,7 @@ export class CharOutfitManager extends OutfitManager {
         }
         collectionView.loadOutfit(newOutfit);
         for (const [slot, value] of Object.entries(this.getOutfitView().values)) {
-            this.applyOutfitValue(slot, value);
+            void this.applyOutfitValue(slot, value);
         }
         return `${this.character} changed into the "${outfitName}" outfit.`;
     }

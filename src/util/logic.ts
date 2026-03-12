@@ -35,6 +35,7 @@ export class Conditional<K extends string> {
 
 type LazyValue<T> = T | (() => T);
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export function branch<K extends string>(expression: LazyValue<K>) {
 	const handlers: {
 		keys: readonly K[];

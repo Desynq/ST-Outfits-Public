@@ -77,7 +77,7 @@ export class SlotValueController extends OutfitPanelContext {
         addLongPressAction(valueEl, 300, () => {
             const text = valueEl.textContent;
             const prompt = substituteParams(text);
-            this.showPromptModal(prompt);
+            void this.showPromptModal(prompt);
         }, { stopImmediatePropagation: true });
         valueEl.addEventListener('click', () => {
             valueEl.classList.toggle('--reveal');
@@ -160,7 +160,7 @@ export class SlotValueController extends OutfitPanelContext {
                 return;
             if (isWideScreen() && e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                this.commitValueEdit(textarea, ctx.displaySlot.slot);
+                void this.commitValueEdit(textarea, ctx.displaySlot.slot);
             }
             else if (e.key === 'Escape') {
                 e.preventDefault();
@@ -206,7 +206,7 @@ export class SlotValueController extends OutfitPanelContext {
         saveBtn.textContent = 'Save';
         saveBtn.addEventListener('click', async () => {
             cleanup();
-            this.commitValueEdit(textarea, ctx.slot);
+            void this.commitValueEdit(textarea, ctx.slot);
         });
         preventBlur(saveBtn);
         ctx.actionsRightEl.appendChild(saveBtn);

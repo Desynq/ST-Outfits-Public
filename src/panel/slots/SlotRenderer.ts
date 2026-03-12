@@ -112,12 +112,12 @@ export class SlotRenderer extends OutfitPanelContext {
 			actionsRightEl,
 		};
 
-		const armTap = (delay: number) => {
+		const armTap = (delay: number): void => {
 			slotNameEl.dataset.delay = delay.toString();
 			slotNameEl.style.setProperty("--tap-delay", `${slotNameEl.dataset.delay}ms`);
 			slotNameEl.classList.add('tap-armed');
 		};
-		const disarmTap = () => slotNameEl.classList.remove('tap-armed');
+		const disarmTap = (): void => slotNameEl.classList.remove('tap-armed');
 
 		addDoubleTapListener(
 			slotNameEl,
@@ -130,12 +130,15 @@ export class SlotRenderer extends OutfitPanelContext {
 		this.renderImageElement(ctx);
 
 
-		const appendInlineToggleBtn = () => {
+		const appendInlineToggleBtn = (): void => {
 			const toggleBtn = this.createToggleBtn(slot);
 			labelRightDiv.append(toggleBtn);
 		};
 
-		const appendInlineEdit = () => {
+		const appendInlineEdit = (): {
+			valueEl: HTMLDivElement;
+			editBtn: HTMLButtonElement;
+		} => {
 			const valueEl = this.valueElement.render(contentEl, ctx);
 			if (slot.isEmpty()) valueEl.hidden = true;
 			const editBtn = this.appendEditBtn(labelRightDiv, ctx, valueEl);
@@ -314,7 +317,7 @@ export class SlotRenderer extends OutfitPanelContext {
 
 	private toggle(slot: OutfitSlotState): void {
 		this.outfitView.toggleSlot(slot.id);
-		this.outfitManager.updateSlotContext(slot.id);
+		void this.outfitManager.updateSlotContext(slot.id);
 		this.panel.saveAndRender();
 	}
 
@@ -502,7 +505,7 @@ export class SlotRenderer extends OutfitPanelContext {
 		const saveBtn = createElement('button', 'slot-button save-button', 'Save');
 
 		// Wiring
-		const cancelRename = () => {
+		const cancelRename = (): void => {
 			this.panel.renderTabsAndActiveContent();
 		};
 

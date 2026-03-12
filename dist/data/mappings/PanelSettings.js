@@ -69,7 +69,7 @@ export function normalizeCharPanels(obj) {
                     };
                 }
                 // Structured tag mode
-                else if (/^[A-Za-z_][A-Za-z0-9_\-]*$/.test(tag)) {
+                else if (/^[A-Za-z_][A-Za-z0-9_-]*$/.test(tag)) {
                     const openingTag = attributes === ''
                         ? `<${tag}>`
                         : `<${tag} ${attributes}>`;

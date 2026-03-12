@@ -122,7 +122,7 @@ export class SlotValueController extends OutfitPanelContext {
 			() => {
 				const text = valueEl.textContent;
 				const prompt = substituteParams(text);
-				this.showPromptModal(prompt);
+				void this.showPromptModal(prompt);
 			},
 			{ stopImmediatePropagation: true }
 		);
@@ -177,7 +177,7 @@ export class SlotValueController extends OutfitPanelContext {
 	public beginInlineEdit(
 		ctx: SlotContext,
 		valueEl: HTMLDivElement,
-	) {
+	): void {
 		valueEl.hidden = false;
 		const scrollTop = ctx.scroller.scrollTop;
 		const rect = valueEl.getBoundingClientRect();
@@ -198,7 +198,7 @@ export class SlotValueController extends OutfitPanelContext {
 		valueEl.replaceWith(textarea);
 		ctx.scroller.scrollTop = scrollTop;
 
-		const autoResize = () => {
+		const autoResize = (): void => {
 			const prevScroll = ctx.scroller.scrollTop;
 
 			// Temporarily reset height to allow shrink
@@ -220,12 +220,12 @@ export class SlotValueController extends OutfitPanelContext {
 		});
 
 		const vv = window.visualViewport;
-		const onVvChange = () => scrollIntoViewAboveKeyboard(ctx.scroller, textarea);
+		const onVvChange = (): void => scrollIntoViewAboveKeyboard(ctx.scroller, textarea);
 
 		vv?.addEventListener('resize', onVvChange);
 		vv?.addEventListener('scroll', onVvChange);
 
-		const cleanup = () => {
+		const cleanup = (): void => {
 			vv?.removeEventListener('resize', onVvChange);
 			vv?.removeEventListener('scroll', onVvChange);
 		};
@@ -237,7 +237,7 @@ export class SlotValueController extends OutfitPanelContext {
 
 			if (isWideScreen() && e.key === 'Enter' && !e.shiftKey) {
 				e.preventDefault();
-				this.commitValueEdit(textarea, ctx.displaySlot.slot);
+				void this.commitValueEdit(textarea, ctx.displaySlot.slot);
 			}
 			else if (e.key === 'Escape') {
 				e.preventDefault();
@@ -245,7 +245,7 @@ export class SlotValueController extends OutfitPanelContext {
 			}
 		});
 
-		const preventBlur = (btn: HTMLButtonElement) =>
+		const preventBlur = (btn: HTMLButtonElement): void =>
 			btn.addEventListener('pointerdown', e => e.preventDefault());
 
 		if (!empty) {
@@ -268,7 +268,7 @@ export class SlotValueController extends OutfitPanelContext {
 			parent: ctx.actionsLeftEl
 		});
 
-		const updateTokenCount = () =>
+		const updateTokenCount = (): string =>
 			tokenCounter.textContent = `Tokens:\n${Math.ceil(textarea.value.length / 4)}`;
 
 		updateTokenCount();
@@ -298,7 +298,7 @@ export class SlotValueController extends OutfitPanelContext {
 
 		saveBtn.addEventListener('click', async () => {
 			cleanup();
-			this.commitValueEdit(textarea, ctx.slot);
+			void this.commitValueEdit(textarea, ctx.slot);
 		});
 		preventBlur(saveBtn);
 

@@ -22,7 +22,7 @@ export function addContextActionListener(element: HTMLElement, listener: () => v
 		}, longPressMs);
 	});
 
-	const cancel = () => {
+	const cancel = (): void => {
 		if (timer !== null) {
 			clearTimeout(timer);
 			timer = null;
@@ -61,10 +61,10 @@ export function addLongPressAction(
 
 	const tolerance = options?.jitterTolerance ?? 6; // default 6px
 
-	const getDelay = () =>
+	const getDelay = (): number =>
 		typeof delay === 'function' ? delay() : delay;
 
-	const getPoint = (e: TouchEvent | MouseEvent) => {
+	const getPoint = (e: TouchEvent | MouseEvent): { x: number; y: number; } => {
 		if ('touches' in e && e.touches.length > 0) {
 			return {
 				x: e.touches[0].clientX,
@@ -86,14 +86,14 @@ export function addLongPressAction(
 		}
 	};
 
-	const exceededJitter = (e: TouchEvent | MouseEvent) => {
+	const exceededJitter = (e: TouchEvent | MouseEvent): boolean => {
 		const { x, y } = getPoint(e);
 		const dx = x - startX;
 		const dy = y - startY;
 		return (dx * dx + dy * dy) > (tolerance * tolerance);
 	};
 
-	const start = (e: TouchEvent | MouseEvent) => {
+	const start = (e: TouchEvent | MouseEvent): void => {
 		if (timer !== null) return;
 		if (options?.stopImmediatePropagation) e.stopImmediatePropagation();
 
@@ -113,7 +113,7 @@ export function addLongPressAction(
 		}, getDelay());
 	};
 
-	const move = (e: TouchEvent | MouseEvent) => {
+	const move = (e: TouchEvent | MouseEvent): void => {
 		if (timer === null) return;
 
 		if (exceededJitter(e)) {
@@ -122,7 +122,7 @@ export function addLongPressAction(
 		}
 	};
 
-	const cancel = (e: TouchEvent | MouseEvent) => {
+	const cancel = (e: TouchEvent | MouseEvent): void => {
 		if (timer !== null) {
 			clearTimeout(timer);
 			timer = null;
@@ -163,8 +163,8 @@ export function addLongPressAction(
 }
 
 
-export function addHorizontalScroll(el: HTMLElement, scale: number = 1.0) {
-	const listener = (e: WheelEvent) => {
+export function addHorizontalScroll(el: HTMLElement, scale: number = 1.0): () => void {
+	const listener = (e: WheelEvent): void => {
 		if (el.scrollWidth <= el.clientWidth) return;
 
 		e.preventDefault();
@@ -261,7 +261,7 @@ type NativeProps<K extends keyof HTMLElementTagNameMap> =
 type ContentOptions =
 	| { text: string; children?: never; }
 	| { children: Node[]; text?: never; }
-	| {};
+	| object;
 
 export type ElementOptions<K extends keyof HTMLElementTagNameMap> =
 	{
@@ -414,10 +414,10 @@ export function addOrRemoveClass(
 		? undefined
 		: forceArray(negativeTokens);
 
-	const add = (tokens: string[] | undefined) => {
+	const add = (tokens: string[] | undefined): void => {
 		if (tokens) element.classList.add(...tokens);
 	};
-	const remove = (tokens: string[] | undefined) => {
+	const remove = (tokens: string[] | undefined): void => {
 		if (tokens) element.classList.remove(...tokens);
 	};
 

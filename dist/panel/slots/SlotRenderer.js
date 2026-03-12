@@ -202,7 +202,7 @@ export class SlotRenderer extends OutfitPanelContext {
     }
     toggle(slot) {
         this.outfitView.toggleSlot(slot.id);
-        this.outfitManager.updateSlotContext(slot.id);
+        void this.outfitManager.updateSlotContext(slot.id);
         this.panel.saveAndRender();
     }
     appendEditBtn(container, ctx, valueEl) {

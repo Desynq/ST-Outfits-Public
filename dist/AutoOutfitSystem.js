@@ -1,3 +1,4 @@
+/* eslint-disable */
 // @ts-nocheck
 import { getContext } from '../../../../extensions.js';
 import { extension_settings } from '../../../../extensions.js';

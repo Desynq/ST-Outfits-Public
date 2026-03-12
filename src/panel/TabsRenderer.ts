@@ -89,7 +89,7 @@ export class OutfitTabsRenderer {
 						return assertNever(this.currentTab.id);
 				}
 				break;
-			case 'kind':
+			case 'kind': {
 				const kind = this.currentTab.kind;
 				const slots = this.outfitView.slots
 					.filter(s => s.kind === kind)
@@ -101,12 +101,13 @@ export class OutfitTabsRenderer {
 
 				this.panel.getSlotsRenderer().renderSlots(kind, slots, contentArea);
 				break;
+			}
 			default:
 				return assertNever(this.currentTab);
 		}
 	}
 
-	private renderFallback() {
+	private renderFallback(): void {
 		const kinds = this.outfitView.getSlotKinds();
 
 		if (kinds.length > 0) {
@@ -135,7 +136,7 @@ export class OutfitTabsRenderer {
 		}
 
 		const systemTabEls: HTMLButtonElement[] = [];
-		const createSystemTabEl = (id: OutfitSystemTabId) => {
+		const createSystemTabEl = (id: OutfitSystemTabId): void => {
 			const el = this.createTab({ type: 'system', id });
 			tabEls.push(el);
 			systemTabEls.push(el);
@@ -195,7 +196,7 @@ export class OutfitTabsRenderer {
 			className: 'outfit-tab expand-tabs'
 		});
 
-		const update = () => {
+		const update = (): void => {
 			btn.textContent = this.expanded ? '▴' : '▾';
 			tabListEl.classList.toggle('--expanded', this.expanded);
 		};
@@ -224,7 +225,7 @@ export class OutfitTabsRenderer {
 
 			tabList.classList.add('fading');
 
-			const onTransitionEnd = (ev: TransitionEvent) => {
+			const onTransitionEnd = (ev: TransitionEvent): void => {
 				if (ev.propertyName !== 'opacity') return;
 
 				tabList.classList.remove('fading');
@@ -303,7 +304,7 @@ export class OutfitTabsRenderer {
 		return this.normalizeKindInput(raw);
 	}
 
-	private addDragCapabilityToTab(tab: HTMLButtonElement) {
+	private addDragCapabilityToTab(tab: HTMLButtonElement): void {
 		tab.addEventListener('dragstart', () => {
 			this.draggedTab = tab;
 			tab.classList.add('dragging');
@@ -379,7 +380,7 @@ export class OutfitTabsRenderer {
 		return element;
 	}
 
-	private configureSystemTab(element: HTMLButtonElement, tabId: OutfitSystemTabId) {
+	private configureSystemTab(element: HTMLButtonElement, tabId: OutfitSystemTabId): void {
 		element.dataset.tabId = tabId;
 		switch (tabId) {
 			case 'outfits':

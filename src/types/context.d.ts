@@ -163,4 +163,14 @@ export interface SillyTavernContext {
 		};
 		category: MacroCategories;
 	};
+
+	substituteParams(content: string, options?: {
+		name1Override?: string;
+		name2Override?: string;
+		original?: string;
+		groupOverride?: string;
+		replaceCharacterCard?: boolean;
+		dynamicMacros?: Record<string, string | MacroHandler>;
+		postProcessFn?: (x: string) => string;
+	}, ...args: any[]): string;
 }

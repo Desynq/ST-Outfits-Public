@@ -1,13 +1,13 @@
 import { RegexPipeline } from "./util/Regex.js";
 import { indentString, toKebabCase } from "./util/StringHelper.js";
 
-export function mouseDragElement(element: JQuery<any>) {
+export function mouseDragElement(element: JQuery<any>): void {
 	let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
 	const header = element.find('.outfit-header')[0];
 
 	if (header) header.onmousedown = dragMouseDown;
 
-	function dragMouseDown(e: MouseEvent) {
+	function dragMouseDown(e: MouseEvent): void {
 		e.preventDefault();
 		pos3 = e.clientX;
 		pos4 = e.clientY;
@@ -15,7 +15,7 @@ export function mouseDragElement(element: JQuery<any>) {
 		document.onmousemove = elementDrag;
 	}
 
-	function elementDrag(e: MouseEvent) {
+	function elementDrag(e: MouseEvent): void {
 		e.preventDefault();
 		pos1 = pos3 - e.clientX;
 		pos2 = pos4 - e.clientY;
@@ -25,7 +25,7 @@ export function mouseDragElement(element: JQuery<any>) {
 		element[0].style.left = (element[0].offsetLeft - pos1) + "px";
 	}
 
-	function closeDragElement() {
+	function closeDragElement(): void {
 		document.onmouseup = null;
 		document.onmousemove = null;
 	}
@@ -101,7 +101,7 @@ function isTouchEvent(e: MouseEvent | TouchEvent): e is TouchEvent {
 	return "touches" in e;
 }
 
-export function isWideScreen() {
+export function isWideScreen(): boolean {
 	return window.matchMedia('(min-width: 1024px)').matches;
 }
 

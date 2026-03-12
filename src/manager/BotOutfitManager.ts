@@ -26,11 +26,11 @@ export class BotOutfitManager extends OutfitManager {
         return '{{char}}';
     }
 
-    public override getVarName(namespace: string) {
+    public override getVarName(namespace: string): string {
         return `${this.character.replace(/\s+/g, ' ')}_${namespace}`;
     }
 
-    public setCharacter(name: string) {
+    public setCharacter(name: string): void {
         if (name === this.character) return;
         this.character = name;
         this.onActiveOutfitChanged();
@@ -38,7 +38,7 @@ export class BotOutfitManager extends OutfitManager {
 
     public override async setOutfitItem(slotId: string, value: string): Promise<string> {
         const previousValue = this.getValue(slotId);
-        this.applyOutfitValue(slotId, value);
+        void this.applyOutfitValue(slotId, value);
 
         if (previousValue === 'None' && value !== 'None') {
             return `${this.character} put on ${value}.`;
@@ -51,7 +51,7 @@ export class BotOutfitManager extends OutfitManager {
         }
     }
 
-    public override async savePreset(outfitName: string) {
+    public override async savePreset(outfitName: string): Promise<string> {
         const outfit = this.getOutfitView().snapshot();
 
         OutfitTracker.characterOutfits(this.character).saveOutfit(outfitName, outfit);
@@ -62,7 +62,7 @@ export class BotOutfitManager extends OutfitManager {
         return '';
     }
 
-    public exportPresetToUser(outfitName: string) {
+    public exportPresetToUser(outfitName: string): string {
         const outfit = this.getOutfitView().snapshot();
 
         OutfitTracker.userOutfits().saveOutfit(outfitName, outfit);
@@ -73,7 +73,7 @@ export class BotOutfitManager extends OutfitManager {
         return "";
     }
 
-    public override async loadPreset(outfitName: string) {
+    public override async loadPreset(outfitName: string): Promise<string> {
         const collectionView = OutfitTracker.characterOutfits(this.character);
         const newOutfit = collectionView.getSavedOutfit(outfitName)?.snapshot();
         if (newOutfit === undefined) {
@@ -88,13 +88,13 @@ export class BotOutfitManager extends OutfitManager {
         collectionView.loadOutfit(newOutfit);
 
         for (const [slot, value] of Object.entries(this.getOutfitView().values)) {
-            this.applyOutfitValue(slot, value);
+            void this.applyOutfitValue(slot, value);
         }
 
         return `${this.character} changed into the "${outfitName}" outfit.`;
     }
 
-    public override deletePreset(outfitName: string) {
+    public override deletePreset(outfitName: string): string {
         const outfit = OutfitTracker.characterOutfits(this.character).getSavedOutfit(outfitName);
         if (outfit === undefined) {
             return `[Outfit System] Preset "${outfitName}" not found.`;
@@ -108,7 +108,7 @@ export class BotOutfitManager extends OutfitManager {
         return '';
     }
 
-    public override getPresets() {
+    public override getPresets(): string[] {
         const outfits = OutfitTracker.characterOutfits(this.character).getSavedOutfitNames();
 
         return outfits;

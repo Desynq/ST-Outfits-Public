@@ -11,7 +11,7 @@ export function addDoubleTapListener(
 	let lastTapTime = 0;
 	let singleTapTimer: number | null = null;
 
-	const listener = (e: PointerEvent) => {
+	const listener = (e: PointerEvent): void => {
 		const now = performance.now();
 		const delta = now - lastTapTime;
 
@@ -73,7 +73,7 @@ export function addOnPointerDownOutside(
 			? [onExcludedHitOrFirstExcluded, ...restExcluded]
 			: restExcluded;
 
-	const listener = (e: PointerEvent) => {
+	const listener = (e: PointerEvent): void => {
 		const target = e.target as Node;
 		if (!target) return;
 

@@ -1,9 +1,17 @@
 
 
+export type Procedure = (...args: any[]) => void;
 
 export type Listener<T extends EventBus<any>> = Parameters<T['add']>[0];
 
-export class EventBus<T extends (...args: any[]) => void = () => void> {
+
+export interface EventSubscriber<T extends Procedure = () => void> {
+
+	add(listener: T): void;
+}
+
+export class EventBus<T extends Procedure = () => void>
+	implements EventSubscriber<T> {
 
 	private readonly listeners = new Set<T>();
 
@@ -27,7 +35,7 @@ export class EventBus<T extends (...args: any[]) => void = () => void> {
 }
 
 
-export class MappedEventBus<K, V extends (...args: any[]) => void = () => void> {
+export class MappedEventBus<K, V extends Procedure = () => void> {
 	private readonly listeners = new Map<K, V>();
 
 	public has(key: K): boolean {

@@ -1429,7 +1429,7 @@
     z-index: 10000;
   }
   .outfit-panel.minimized {
-    z-index: 9999;
+    z-index: 2999;
   }
   .outfit-panel.--front {
     z-index: 10001;

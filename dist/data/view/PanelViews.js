@@ -2,7 +2,8 @@ import { assertNever } from "../../shared.js";
 export const defaultUserPanelSettings = {
     desktopXY: [20, 50],
     mobileXY: [20, 50],
-    saveXY: false
+    saveXY: false,
+    canLoadFromChat: true
 };
 export const defaultBotPanelSettings = {
     ...defaultUserPanelSettings,
@@ -63,6 +64,12 @@ export class PanelSettingsView {
     }
     setXYSaving(enabled) {
         this.settings.saveXY = enabled;
+    }
+    canLoadFromChat() {
+        return this.settings.canLoadFromChat;
+    }
+    setCanLoadFromChat(canLoad) {
+        this.settings.canLoadFromChat = canLoad;
     }
 }
 export class UserPanelSettingsView extends PanelSettingsView {
@@ -140,7 +147,8 @@ export class CharPanelSettingsView extends PanelSettingsView {
         return {
             saveXY: false,
             desktopXY: [20, 170],
-            mobileXY: [20, 170]
+            mobileXY: [20, 170],
+            canLoadFromChat: true
         };
     }
     getDefaultTheme() {

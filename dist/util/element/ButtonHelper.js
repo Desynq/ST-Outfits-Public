@@ -13,7 +13,8 @@ export function createDerivedToggleButton(className, predicate, getText, click) 
     btn.addEventListener('click', (e) => {
         const enabled = predicate();
         click(enabled, e);
-        btn.textContent = getText(enabled);
+        // reflect the new state
+        btn.textContent = getText(!enabled);
     });
     return btn;
 }

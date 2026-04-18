@@ -13,7 +13,8 @@ export type PanelSettingsViewMap = {
 export const defaultUserPanelSettings: PanelSettings = {
 	desktopXY: [20, 50],
 	mobileXY: [20, 50],
-	saveXY: false
+	saveXY: false,
+	canLoadFromChat: true
 };
 
 export const defaultBotPanelSettings: PanelSettings = {
@@ -103,6 +104,14 @@ export abstract class PanelSettingsView<TSettings extends PartialPanelSettings> 
 
 	public setXYSaving(enabled: boolean): void {
 		this.settings.saveXY = enabled;
+	}
+
+	public canLoadFromChat(): boolean {
+		return this.settings.canLoadFromChat;
+	}
+
+	public setCanLoadFromChat(canLoad: boolean): void {
+		this.settings.canLoadFromChat = canLoad;
 	}
 }
 
@@ -214,7 +223,8 @@ export class CharPanelSettingsView extends PanelSettingsView<CharPanelSettings> 
 		return {
 			saveXY: false,
 			desktopXY: [20, 170],
-			mobileXY: [20, 170]
+			mobileXY: [20, 170],
+			canLoadFromChat: true
 		};
 	}
 

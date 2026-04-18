@@ -3,7 +3,6 @@ const getContext = SillyTavern.getContext;
 import { extension_settings } from '../../../../extensions.js';
 import { saveSettings as saveSettingsBase } from './api/settings.js';
 import { registerPanelCommands } from './command/panel-commands.js';
-import { OutfitTracker } from './data/tracker.js';
 import { OutfitPanelRegistry } from './panel/PanelRegistry.js';
 console.log('[OutfitTracker] Starting extension loading...');
 async function initializeExtension() {
@@ -39,8 +38,7 @@ async function initializeExtension() {
     const saveSettings = () => {
         if (panelRegistryHook) {
             for (const charPanel of panelRegistryHook.getCharPanels()) {
-                const name = charPanel.character;
-                OutfitTracker.characterOutfits(name).commitAutosave();
+                charPanel.saveToChat();
             }
         }
         saveSettingsBase();
@@ -159,8 +157,7 @@ async function initializeExtension() {
         eventSource.on(event_types.CHAT_CHANGED, () => {
             updateForCurrentCharacter();
             for (const charPanel of panelRegistry.getCharPanels()) {
-                charPanel.outfitManager.getOutfitCollection().loadFromChat();
-                charPanel.renderTabsAndActiveContent();
+                charPanel.loadFromChat();
             }
         });
         eventSource.on(event_types.CHARACTER_CHANGED, updateForCurrentCharacter);

@@ -10,7 +10,8 @@ export class CharPanelsView {
     getOrCreate(name) {
         var _a;
         return new CharPanelSettingsView(name, (_a = this.tree.panels)[name] ?? (_a[name] = {
-            saveXY: false
+            saveXY: false,
+            canLoadFromChat: true
         }));
     }
     isActive(name) {

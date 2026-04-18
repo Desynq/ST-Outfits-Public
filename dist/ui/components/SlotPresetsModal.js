@@ -27,14 +27,24 @@ export class SlotPresetsModal {
                 otherSection.append(presetEl);
             }
         }
-        const saveSection = div('slot-presets-save-section', this.root);
+        const footer = div('footer', this.root);
+        const footerLeft = div('footer-left', footer);
+        const footerRight = div('footer-right', footer);
+        const closeBtn = el('button', {
+            className: 'slot-preset-btn close-button',
+            text: 'X',
+            events: {
+                click: () => this.close()
+            },
+            parent: footerRight
+        });
         el('button', {
             className: 'slot-preset-btn slot-presets-save-btn',
             text: 'Save',
             events: {
                 click: () => this.savePreset()
             },
-            parent: saveSection
+            parent: footerLeft
         });
         el('button', {
             className: 'slot-preset-btn slot-presets-save-btn',
@@ -42,7 +52,7 @@ export class SlotPresetsModal {
             events: {
                 click: () => this.autoSavePreset()
             },
-            parent: saveSection
+            parent: footerLeft
         });
     }
     static show(slot, manager, saveAndRender) {
@@ -142,7 +152,7 @@ export class SlotPresetsModal {
         }
         const old = this.registry.get(imageState.tag);
         const preset = this.buildPresetFromImage(imageState.tag, imageState.image);
-        if (old || this.slot.hasPreset(preset)) {
+        if (old) {
             const ok = confirm(`Overwrite ${imageState.tag}?`);
             if (!ok)
                 return;

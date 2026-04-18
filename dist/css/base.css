@@ -674,7 +674,7 @@
   touch-action: manipulation;
   pointer-events: auto;
   cursor: pointer;
-  margin: 0;
+  margin: 0 0 0 8px;
   font-size: 1.3em;
   font-weight: 700;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
@@ -702,7 +702,7 @@
 .panel-switch-menu.--open {
   display: flex;
 }
-.panel-switch-menu .panel-switch-option {
+.panel-switch-menu > .panel-switch-option {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -710,20 +710,59 @@
   padding: 4px 8px;
   cursor: pointer;
   white-space: nowrap;
+  background: linear-gradient(135deg, var(--panel-bg-1, #2a1f26), var(--panel-bg-2, #33242d));
+  border: 1px solid var(--panel-border, #4a3540);
+  position: relative;
+  overflow: hidden;
 }
-.panel-switch-menu .panel-switch-option:hover {
+.panel-switch-menu > .panel-switch-option::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+}
+.panel-switch-menu > .panel-switch-option > * {
+  position: relative;
+  z-index: 1;
+}
+.panel-switch-menu > .panel-switch-option.is-current-panel {
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6), 0 0 6px var(--panel-border), 0 0 10px var(--panel-border);
+}
+.panel-switch-menu > .panel-switch-option:hover {
   background: rgba(255, 255, 255, 0.1);
 }
-.panel-switch-menu .panel-switch-option .panel-switch-label {
+.panel-switch-menu > .panel-switch-option > .panel-switch-lock {
+  pointer-events: none;
+  width: 1.4em;
+  flex: 0 0 1.4em;
+  text-align: center;
+  opacity: 0.8;
+}
+.panel-switch-menu > .panel-switch-option > .panel-switch-lock.is-hidden {
+  visibility: hidden;
+}
+.panel-switch-option:hover .panel-switch-menu > .panel-switch-option > .panel-switch-lock {
+  opacity: 1;
+}
+.panel-switch-menu > .panel-switch-option > .panel-switch-label {
+  pointer-events: none;
   flex: 1;
 }
-.panel-switch-menu .panel-switch-option .panel-switch-remove {
+.panel-switch-menu > .panel-switch-option > .panel-switch-remove {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
   cursor: pointer;
   opacity: 0.7;
   padding: 0 4px;
 }
-.panel-switch-menu .panel-switch-option .panel-switch-remove:hover {
+.panel-switch-menu > .panel-switch-option > .panel-switch-remove:hover {
   opacity: 1;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 /* Tabs Navigation */
@@ -1235,9 +1274,8 @@
   background: rgba(30, 30, 30, 0.95);
   border-radius: 12px;
   padding: 16px;
-  max-width: 600px;
-  width: 90vw;
-  max-height: 80vh;
+  max-width: 40dvw;
+  max-height: 80dvh;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -1250,10 +1288,23 @@
   flex-direction: column;
   gap: 16px;
 }
-.slot-presets-modal > .slot-presets-save-section {
-  margin-top: 12px;
+.slot-presets-modal > .footer {
   display: flex;
-  justify-content: flex-end;
+}
+.slot-presets-modal > .footer > .footer-left {
+  display: flex;
+  gap: 8px;
+}
+.slot-presets-modal > .footer > .footer-right {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+@media (max-width: 720px) {
+  .slot-presets-modal {
+    max-width: 90dvw;
+    max-height: 90dvh;
+  }
 }
 
 .slot-presets-slot-section,
@@ -1265,9 +1316,7 @@
 }
 
 .slot-presets-save-btn {
-  align-self: flex-end;
-  margin-top: 16px;
-  padding: 8px 14px;
+  padding: 8px 16px;
   font-size: 0.9rem;
   font-weight: 600;
   background: rgba(120, 200, 255, 0.15);

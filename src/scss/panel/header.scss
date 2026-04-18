@@ -13,7 +13,7 @@
 		touch-action: manipulation;
 		pointer-events: auto;
 		cursor: pointer;
-		margin: 0;
+		margin: 0 0 0 8px;
 		font-size: 1.3em;
 		font-weight: 700;
 		text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
@@ -49,7 +49,7 @@
 	}
 
 
-	.panel-switch-option {
+	> .panel-switch-option {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
@@ -59,21 +59,80 @@
 		cursor: pointer;
 		white-space: nowrap;
 
+
+		background: linear-gradient(135deg,
+				var(--panel-bg-1, #2a1f26),
+				var(--panel-bg-2, #33242d));
+		border: 1px solid var(--panel-border, #4a3540);
+
+		position: relative;
+		overflow: hidden;
+
+		&::before {
+			content: '';
+			position: absolute;
+			inset: 0;
+			background: rgba(0, 0, 0, 0.4); // darken
+			pointer-events: none;
+		}
+
+		> * {
+			position: relative;
+			z-index: 1;
+		}
+
+
+
+		&.is-current-panel {
+			box-shadow:
+				inset 0 0 0 1px rgba(255, 255, 255, 0.6),
+				0 0 6px var(--panel-border),
+				0 0 10px var(--panel-border);
+		}
+
+
 		&:hover {
 			background: rgba(255, 255, 255, 0.1);
 		}
 
-		.panel-switch-label {
+		> .panel-switch-lock {
+			pointer-events: none;
+			width: 1.4em;
+			flex: 0 0 1.4em;
+			text-align: center;
+			opacity: 0.8;
+
+			&.is-hidden {
+				visibility: hidden;
+			}
+
+			.panel-switch-option:hover & {
+				opacity: 1;
+			}
+		}
+
+		> .panel-switch-label {
+			pointer-events: none;
 			flex: 1
 		}
 
-		.panel-switch-remove {
+		> .panel-switch-remove {
+			flex: 0 0 auto;
+
+			display: flex;
+			align-items: center;
+			justify-content: center;
+
+			width: 32px;
+			height: 32px;
+
 			cursor: pointer;
 			opacity: 0.7;
 			padding: 0 4px;
 
 			&:hover {
 				opacity: 1;
+				background: rgba(255, 255, 255, 0.1);
 			}
 		}
 	}

@@ -12,6 +12,7 @@ export class VisibilityTab extends PanelTab {
     render(contentArea) {
         contentArea.innerHTML = '';
         this.renderPositionButtons(contentArea);
+        this.renderLoadSettings(contentArea);
         this.renderTagInputs(contentArea);
         this.renderPreviewButton(contentArea);
         this.renderVisibilityButtons(contentArea);
@@ -164,9 +165,23 @@ export class VisibilityTab extends PanelTab {
             ? 'Disable Saving XY'
             : 'Enable Saving XY', (enabled) => {
             panelSettings.setXYSaving(!enabled);
-            this.panel.saveAndRender();
+            this.outfitManager.saveSettings();
         });
         contentArea.append(toggleSavingXYButton);
+    }
+    renderLoadSettings(contentArea) {
+        const panelSettings = this.panel.getPanelSettings();
+        const toggleLoadFromChat = createDerivedToggleButton('visibility-tab-button toggle-load-from-chat', () => panelSettings.canLoadFromChat(), (canLoad) => canLoad
+            ? 'Disable Loading From Chat'
+            : 'Enable Loading From Chat', (canLoad) => {
+            const next = !canLoad;
+            panelSettings.setCanLoadFromChat(next);
+            if (next && this.panel instanceof CharOutfitPanel) {
+                this.panel.saveToChat();
+            }
+            this.outfitManager.saveSettings();
+        });
+        contentArea.append(toggleLoadFromChat);
     }
     renderThemeInputs(contentArea) {
         const panelSettings = this.panel.getPanelSettings();

@@ -30,6 +30,7 @@ export interface PanelGroup {
 
 export interface PanelSettingsBase {
 	saveXY: boolean;
+	canLoadFromChat: boolean;
 
 	bgColor1?: string;
 	bgColor2?: string;
@@ -41,6 +42,7 @@ export interface PanelSettings {
 	desktopXY: XY;
 	mobileXY: XY;
 	saveXY: boolean;
+	canLoadFromChat: boolean;
 }
 
 

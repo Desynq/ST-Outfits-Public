@@ -35,6 +35,10 @@ export function normalizePanelSettings(
 	target.saveXY = typeof target.saveXY === 'boolean'
 		? target.saveXY
 		: fallback.saveXY;
+
+	target.canLoadFromChat = typeof target.canLoadFromChat === 'boolean'
+		? target.canLoadFromChat
+		: fallback.canLoadFromChat;
 }
 
 
@@ -51,7 +55,8 @@ export function normalizeCharPanels(obj: unknown): CharPanelsTree {
 		if (!v || typeof v !== 'object') continue;
 
 		const panel: CharPanelSettings = {
-			saveXY: typeof v.saveXY === 'boolean' ? v.saveXY : false
+			saveXY: typeof v.saveXY === 'boolean' ? v.saveXY : false,
+			canLoadFromChat: typeof v.canLoadFromChat === 'boolean' ? v.canLoadFromChat : true
 		};
 
 		if (isXY(v.desktopXY)) panel.desktopXY = v.desktopXY;

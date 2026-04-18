@@ -1,13 +1,11 @@
-import { XY } from "../data/model/Outfit.js";
 import { OutfitTracker } from "../data/tracker.js";
 import { CharPanelsView } from "../data/view/CharPanelsView.js";
-import { CharPanelSettingsView, LayoutMode } from "../data/view/PanelViews.js";
+import { CharPanelSettingsView } from "../data/view/PanelViews.js";
 import { CharOutfitManager } from "../manager/CharOutfitManager.js";
 import { ShowOptions } from "../types/OutfitPanel.js";
 import { el } from "../util/ElementHelper.js";
 import { EventBus } from "../util/EventBus.js";
 import { fromKebabCase } from "../util/StringHelper.js";
-import { Disposer } from "./Disposer.js";
 import { OutfitPanel } from "./OutfitPanel.js";
 import { ICharPanelGrouper } from "./PanelRegistry.js";
 
@@ -176,7 +174,7 @@ export class CharOutfitPanel extends OutfitPanel<'char'> {
 			text: '▼',
 			events: {
 				click: (): void => {
-					menu.classList.toggle('--open');
+					openMenu();
 				}
 			}
 		});
@@ -186,7 +184,7 @@ export class CharOutfitPanel extends OutfitPanel<'char'> {
 		});
 
 		const rebuildMenu = (): void => {
-			const panels = this.grouper.getGroup(this).filter(p => p !== this);
+			const panels = this.grouper.getGroup(this);
 
 			const optionEls = panels.map(panel => {
 				const remove = el('span', {
@@ -201,12 +199,20 @@ export class CharOutfitPanel extends OutfitPanel<'char'> {
 					}
 				});
 
+				const canLoad = panel.getPanelSettings().canLoadFromChat();
+
+				const lock = el('span', {
+					className: `panel-switch-lock`,
+					text: canLoad ? '📖' : '🌐'
+				});
+				// lock.classList.toggle('is-hidden', canLoad);
+
 				const label = el('span', {
 					className: 'panel-switch-label',
 					text: panel.getHeaderTitle()
 				});
 
-				return el('div', {
+				const option = el('div', {
 					className: 'panel-switch-option',
 					events: {
 						click: (): void => {
@@ -214,14 +220,48 @@ export class CharOutfitPanel extends OutfitPanel<'char'> {
 							this.grouper.focus(panel);
 						}
 					},
-					children: [label, remove]
+					children: [lock, label, remove]
 				});
+
+				option.classList.toggle('is-current-panel', panel === this);
+
+				const s = panel.getPanelSettings();
+				option.style.setProperty('--panel-bg-1', s.bgColor1);
+				option.style.setProperty('--panel-bg-2', s.bgColor2);
+				option.style.setProperty('--panel-border', s.borderColor);
+
+				return option;
 			});
 
 			menu.replaceChildren(...optionEls);
 		};
 
 		button.addEventListener('click', rebuildMenu);
+
+
+		const positionMenu = (): void => {
+			menu.style.left = '0px';
+			menu.style.right = 'auto';
+
+			const menuRect = menu.getBoundingClientRect();
+			const panelRect = this.getBoundingClientRect();
+			const overflowRight = menuRect.right - panelRect.right;
+
+			if (overflowRight > 0) {
+				menu.style.left = `${-overflowRight - 8}px`;
+			}
+
+			const adjustedRect = menu.getBoundingClientRect();
+			if (adjustedRect.left < 8) {
+				menu.style.left = `${parseFloat(menu.style.left || '0') + (8 - adjustedRect.left)}px`;
+			}
+		};
+
+		const openMenu = (): void => {
+			rebuildMenu();
+			menu.classList.toggle('--open');
+			positionMenu();
+		};
 
 
 
@@ -263,5 +303,24 @@ export class CharOutfitPanel extends OutfitPanel<'char'> {
 		actionsEl.prepend(dropdown);
 
 		return actionsEl;
+	}
+
+	/**
+	 * Saves to chat only if this panel is in chat-enabled mode.
+	 * @returns `false` if chat persistence is disabled.
+	 */
+	public saveToChat(): boolean {
+		if (!this.getPanelSettings().canLoadFromChat()) return false;
+
+		OutfitTracker.characterOutfits(this.character).commitAutosave();
+		return true;
+	}
+
+	public loadFromChat(): boolean {
+		if (!this.getPanelSettings().canLoadFromChat()) return false;
+
+		this.outfitManager.getOutfitCollection().loadFromChat();
+		this.renderTabsAndActiveContent();
+		return true;
 	}
 }

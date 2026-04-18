@@ -1,6 +1,6 @@
 import { OutfitTracker } from "../../data/tracker.js";
 import { assertNever } from "../../shared.js";
-import { createElement } from "../../util/ElementHelper.js";
+import { createElement, el } from "../../util/ElementHelper.js";
 import { resolveKebabCase } from "../../util/StringHelper.js";
 export class SlotPresetsModal {
     constructor(slot, manager, saveAndRender, close) {
@@ -9,9 +9,11 @@ export class SlotPresetsModal {
         this.saveAndRender = saveAndRender;
         this.close = close;
         this.root = createElement('div', 'slot-presets-modal');
+        const div = (className, parent) => el('div', { className, parent });
         const presets = this.registry.getAllSorted();
-        const slotSection = createElement('div', 'slot-presets-slot-section');
-        const otherSection = createElement('div', 'slot-presets-other-section');
+        const content = div('slot-presets-content', this.root);
+        const slotSection = div('slot-presets-slot-section', content);
+        const otherSection = div('slot-presets-other-section', content);
         for (const preset of presets) {
             const presetEl = this.createPresetElement(preset);
             if (!presetEl) {
@@ -25,9 +27,23 @@ export class SlotPresetsModal {
                 otherSection.append(presetEl);
             }
         }
-        const saveBtn = createElement('button', 'slot-preset-btn slot-presets-save-btn', 'Save');
-        saveBtn.addEventListener('click', () => this.saveSlotAsPreset());
-        this.root.append(slotSection, otherSection, saveBtn);
+        const saveSection = div('slot-presets-save-section', this.root);
+        el('button', {
+            className: 'slot-preset-btn slot-presets-save-btn',
+            text: 'Save',
+            events: {
+                click: () => this.savePreset()
+            },
+            parent: saveSection
+        });
+        el('button', {
+            className: 'slot-preset-btn slot-presets-save-btn',
+            text: 'Autosave',
+            events: {
+                click: () => this.autoSavePreset()
+            },
+            parent: saveSection
+        });
     }
     static show(slot, manager, saveAndRender) {
         const overlay = createElement('div', 'slot-presets-overlay');
@@ -118,11 +134,28 @@ export class SlotPresetsModal {
         this.close();
         this.saveAndRender();
     }
-    saveSlotAsPreset() {
+    autoSavePreset() {
+        const imageState = this.slot.getActiveImageState();
+        if (!imageState) {
+            toastr.error('Slot must have an image in order to be saved as a preset.');
+            return;
+        }
+        const old = this.registry.get(imageState.tag);
+        const preset = this.buildPresetFromImage(imageState.tag, imageState.image);
+        if (old || this.slot.hasPreset(preset)) {
+            const ok = confirm(`Overwrite ${imageState.tag}?`);
+            if (!ok)
+                return;
+        }
+        this.registry.set(preset);
+        this.manager.saveSettings();
+        this.reshow();
+    }
+    savePreset() {
         const imageState = this.slot.getActiveImageState();
         if (!imageState) {
             // No image, no preset
-            toastr.error('Slot must have an image in order to be saved as a preset');
+            toastr.error('Slot must have an image in order to be saved as a preset.');
             return;
         }
         const raw = prompt('Enter image tag (kebab-case only):');
@@ -133,17 +166,8 @@ export class SlotPresetsModal {
         if (!key) {
             return;
         }
-        const { key: blobKey, width, height } = imageState.image;
         const old = this.registry.get(key);
-        const preset = {
-            key,
-            value: this.slot.value,
-            imageKey: blobKey,
-            imageWidth: width,
-            imageHeight: height,
-            createdAt: Date.now(),
-            lastUsedAt: Date.now()
-        };
+        const preset = this.buildPresetFromImage(key, imageState.image);
         if (old || this.slot.hasPreset(preset)) {
             const ok = confirm(`Preset "${key}" exists. Overwrite?`);
             if (!ok) {
@@ -154,6 +178,18 @@ export class SlotPresetsModal {
         // no need to re-render
         this.manager.saveSettings();
         this.reshow();
+    }
+    buildPresetFromImage(key, image) {
+        const { key: imageKey, width: imageWidth, height: imageHeight } = image;
+        return {
+            key,
+            value: this.slot.value,
+            imageKey,
+            imageWidth,
+            imageHeight,
+            createdAt: Date.now(),
+            lastUsedAt: Date.now()
+        };
     }
     deletePreset(preset) {
         const ok = confirm(`Are you sure you want to delete ${preset.key}?`);

@@ -38,7 +38,8 @@ export default defineConfig([
       "@typescript-eslint/ban-ts-comment": "off",
       "@typescript-eslint/no-explicit-any": "off",
       "no-unused-vars": "off",
-      "no-useless-assignment": "off"
+      "no-useless-assignment": "off",
+      "no-empty": "off"
     }
   }
 ]);

@@ -16,3 +16,5 @@ declare global {
 		getContext(): SillyTavernContext;
 	};
 }
+
+declare const toastr: typeof import('toastr');

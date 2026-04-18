@@ -1,4 +1,4 @@
-import { ImageBlob, ImageRef } from "../../data/model/Outfit.js";
+import { ImageBlob, ImageRef, OutfitImage } from "../../data/model/Outfit.js";
 import { OutfitSlotState } from "../../data/model/OutfitSnapshots.js";
 import { KeyedSlotPreset } from "../../data/model/SlotPreset.js";
 import { OutfitTracker } from "../../data/tracker.js";
@@ -6,7 +6,7 @@ import { MutableOutfitView } from "../../data/view/MutableOutfitView.js";
 import { SlotPresetRegistry } from "../../data/view/SlotPresetsView.js";
 import { OutfitManager } from "../../manager/OutfitManager.js";
 import { assertNever } from "../../shared.js";
-import { createElement } from "../../util/ElementHelper.js";
+import { createDiv, createElement, el } from "../../util/ElementHelper.js";
 import { resolveKebabCase } from "../../util/StringHelper.js";
 
 
@@ -24,11 +24,17 @@ export class SlotPresetsModal {
 		private readonly close: () => void
 	) {
 		this.root = createElement('div', 'slot-presets-modal');
+		const div = (className: string, parent: HTMLElement): HTMLDivElement => el('div', { className, parent });
+
 
 		const presets = this.registry.getAllSorted();
 
-		const slotSection = createElement('div', 'slot-presets-slot-section');
-		const otherSection = createElement('div', 'slot-presets-other-section');
+
+		const content = div('slot-presets-content', this.root);
+
+
+		const slotSection = div('slot-presets-slot-section', content);
+		const otherSection = div('slot-presets-other-section', content);
 
 		for (const preset of presets) {
 			const presetEl = this.createPresetElement(preset);
@@ -45,14 +51,25 @@ export class SlotPresetsModal {
 			}
 		}
 
-		const saveBtn = createElement('button', 'slot-preset-btn slot-presets-save-btn', 'Save');
-		saveBtn.addEventListener('click', () => this.saveSlotAsPreset());
+		const saveSection = div('slot-presets-save-section', this.root);
 
-		this.root.append(
-			slotSection,
-			otherSection,
-			saveBtn
-		);
+		el('button', {
+			className: 'slot-preset-btn slot-presets-save-btn',
+			text: 'Save',
+			events: {
+				click: () => this.savePreset()
+			},
+			parent: saveSection
+		});
+
+		el('button', {
+			className: 'slot-preset-btn slot-presets-save-btn',
+			text: 'Autosave',
+			events: {
+				click: () => this.autoSavePreset()
+			},
+			parent: saveSection
+		});
 	}
 
 	public static show(
@@ -171,12 +188,34 @@ export class SlotPresetsModal {
 		this.saveAndRender();
 	}
 
-	private saveSlotAsPreset(): void {
+	private autoSavePreset(): void {
+		const imageState = this.slot.getActiveImageState();
+
+		if (!imageState) {
+			toastr.error('Slot must have an image in order to be saved as a preset.');
+			return;
+		}
+
+		const old = this.registry.get(imageState.tag);
+
+		const preset = this.buildPresetFromImage(imageState.tag, imageState.image);
+
+		if (old || this.slot.hasPreset(preset)) {
+			const ok = confirm(`Overwrite ${imageState.tag}?`);
+			if (!ok) return;
+		}
+
+		this.registry.set(preset);
+		this.manager.saveSettings();
+		this.reshow();
+	}
+
+	private savePreset(): void {
 		const imageState = this.slot.getActiveImageState();
 
 		if (!imageState) {
 			// No image, no preset
-			toastr.error('Slot must have an image in order to be saved as a preset');
+			toastr.error('Slot must have an image in order to be saved as a preset.');
 			return;
 		}
 
@@ -190,18 +229,8 @@ export class SlotPresetsModal {
 			return;
 		}
 
-		const { key: blobKey, width, height } = imageState.image;
-
 		const old = this.registry.get(key);
-		const preset: KeyedSlotPreset = {
-			key,
-			value: this.slot.value,
-			imageKey: blobKey,
-			imageWidth: width,
-			imageHeight: height,
-			createdAt: Date.now(),
-			lastUsedAt: Date.now()
-		};
+		const preset = this.buildPresetFromImage(key, imageState.image);
 
 		if (old || this.slot.hasPreset(preset)) {
 			const ok = confirm(`Preset "${key}" exists. Overwrite?`);
@@ -214,6 +243,20 @@ export class SlotPresetsModal {
 		// no need to re-render
 		this.manager.saveSettings();
 		this.reshow();
+	}
+
+	private buildPresetFromImage(key: string, image: OutfitImage): KeyedSlotPreset {
+		const { key: imageKey, width: imageWidth, height: imageHeight } = image;
+
+		return {
+			key,
+			value: this.slot.value,
+			imageKey,
+			imageWidth,
+			imageHeight,
+			createdAt: Date.now(),
+			lastUsedAt: Date.now()
+		};
 	}
 
 	private deletePreset(preset: KeyedSlotPreset): void {

@@ -1,7 +1,5 @@
 import { KeyedSlotPreset, SlotPreset } from "../model/SlotPreset.js";
 
-
-
 export class SlotPresetRegistry {
 
 	public constructor(

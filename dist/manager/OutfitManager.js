@@ -24,25 +24,6 @@ export class OutfitManager {
     getSnapshotsView() {
         return this.getOutfitCollection().getSnapshotView();
     }
-    async changeOutfitItem(slotId) {
-        const currentValue = this.getValue(slotId);
-        let newValue = currentValue;
-        const choice = prompt(`${slotId}: ${currentValue}
-
-Enter a new value.
-Leave blank to remove.
-Enter "Disabled" to dereference the slot from the character's list for outfit/accessories.
-Cancel to keep the current value.`, currentValue);
-        if (choice === null)
-            return null;
-        newValue = choice.trim() === ""
-            ? "None"
-            : choice;
-        if (newValue !== currentValue) {
-            return this.setOutfitItem(slotId, newValue);
-        }
-        return null;
-    }
     getValue(slotId) {
         return this.getOutfitView().values[slotId];
     }
@@ -161,7 +142,7 @@ Cancel to keep the current value.`, currentValue);
         this.updateSummaries();
         return true;
     }
-    async applyOutfitValue(slotId, value) {
+    async setSlotValue(slotId, value) {
         const view = this.getOutfitView();
         const slot = view.getSlotById(slotId);
         if (slot === undefined)

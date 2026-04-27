@@ -41,7 +41,7 @@ export abstract class OutfitManager {
 		return '';
 	}
 
-	public abstract setOutfitItem(slotId: string, newValue: string): Promise<string>;
+	public abstract updateSlotValue(slotId: string, newValue: string): Promise<string>;
 
 	public abstract getName(): string;
 
@@ -51,35 +51,6 @@ export abstract class OutfitManager {
 
 	public getSnapshotsView(): OutfitSnapshotsView {
 		return this.getOutfitCollection().getSnapshotView();
-	}
-
-
-
-
-	public async changeOutfitItem(slotId: string): Promise<string | null> {
-		const currentValue = this.getValue(slotId);
-		let newValue: string | null = currentValue;
-
-		const choice = prompt(
-			`${slotId}: ${currentValue}
-
-Enter a new value.
-Leave blank to remove.
-Enter "Disabled" to dereference the slot from the character's list for outfit/accessories.
-Cancel to keep the current value.`,
-			currentValue
-		);
-
-		if (choice === null) return null;
-
-		newValue = choice.trim() === ""
-			? "None"
-			: choice;
-
-		if (newValue !== currentValue) {
-			return this.setOutfitItem(slotId, newValue);
-		}
-		return null;
 	}
 
 	public getValue(slotId: string): string {
@@ -263,7 +234,7 @@ Cancel to keep the current value.`,
 		return true;
 	}
 
-	protected async applyOutfitValue(slotId: string, value: string): Promise<void> {
+	protected async setSlotValue(slotId: string, value: string): Promise<void> {
 		const view = this.getOutfitView();
 		const slot = view.getSlotById(slotId);
 		if (slot === undefined) return;

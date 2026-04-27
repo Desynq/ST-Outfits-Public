@@ -36,9 +36,9 @@ export class BotOutfitManager extends OutfitManager {
         this.onActiveOutfitChanged();
     }
 
-    public override async setOutfitItem(slotId: string, value: string): Promise<string> {
+    public override async updateSlotValue(slotId: string, value: string): Promise<string> {
         const previousValue = this.getValue(slotId);
-        void this.applyOutfitValue(slotId, value);
+        void this.setSlotValue(slotId, value);
 
         if (previousValue === 'None' && value !== 'None') {
             return `${this.character} put on ${value}.`;
@@ -88,7 +88,7 @@ export class BotOutfitManager extends OutfitManager {
         collectionView.loadOutfit(newOutfit);
 
         for (const [slot, value] of Object.entries(this.getOutfitView().values)) {
-            void this.applyOutfitValue(slot, value);
+            void this.setSlotValue(slot, value);
         }
 
         return `${this.character} changed into the "${outfitName}" outfit.`;

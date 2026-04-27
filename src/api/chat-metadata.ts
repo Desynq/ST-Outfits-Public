@@ -1,4 +1,4 @@
-import { ChatAutosave } from "../data/model/Autosave.js";
+import { ChatData } from "../data/model/Autosave.js";
 import { Outfit } from "../data/model/Outfit.js";
 import { normalizeOutfit } from "../data/normalize.js";
 import { ChatMetadata } from "../types/context.js";
@@ -28,7 +28,7 @@ const CURRENT_OUTFIT_KEY = 'st-outfit.current-outfit';
 
 class _ChatOutfitStorage {
 
-	private loadAutosave(): ChatAutosave {
+	private loadAutosave(): ChatData {
 		const raw = fetchChatMetadata()[CURRENT_OUTFIT_KEY];
 
 		if (!raw || typeof raw !== 'object') {

@@ -27,9 +27,9 @@ export class UserOutfitManager extends OutfitManager {
         return `User_${namespace}`;
     }
 
-    public override async setOutfitItem(slotId: string, value: string): Promise<string> {
+    public override async updateSlotValue(slotId: string, value: string): Promise<string> {
         const previousValue = this.getValue(slotId);
-        void this.applyOutfitValue(slotId, value);
+        void this.setSlotValue(slotId, value);
 
         if (previousValue === 'None' && value !== 'None') {
             return `You put on ${value}.`;
@@ -68,7 +68,7 @@ export class UserOutfitManager extends OutfitManager {
         OutfitTracker.userOutfits().setAutosavedOutfit(newOutfit);
 
         for (const [slotId, value] of Object.entries(this.getOutfitView().values)) {
-            void this.applyOutfitValue(slotId, value);
+            void this.setSlotValue(slotId, value);
         }
 
         return `You changed into the "${outfitName}" outfit.`;

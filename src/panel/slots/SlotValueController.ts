@@ -1,5 +1,5 @@
 import { OutfitSlotState } from "../../data/model/OutfitSnapshots.js";
-import { isWideScreen, scrollIntoViewAboveKeyboard } from "../../shared.js";
+import { assertNever, isWideScreen, scrollIntoViewAboveKeyboard } from "../../shared.js";
 import { PanelType } from "../../types/maps.js";
 import { SlotValueText } from "../../ui/components/SlotValueText.js";
 import { popupConfirm } from "../../util/adapter/popup-adapter.js";
@@ -7,70 +7,9 @@ import { substituteParams } from "../../util/adapter/script-adapter.js";
 import { addDoubleTapListener } from "../../util/element/click-actions.js";
 import { addLongPressAction, createElement, el } from "../../util/ElementHelper.js";
 import { EventBus } from "../../util/EventBus.js";
-import { branch } from "../../util/logic.js";
 import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
 import { OutfitPanel } from "../OutfitPanel.js";
 import { SlotContext } from "./SlotRenderer.js";
-
-
-interface MacroMatch {
-	full: string;
-	content: string;
-	index: number;
-	end: number;
-}
-
-function iterateMacros(value: string): Iterable<MacroMatch> {
-	return (function* () {
-		let i = 0;
-
-		while (i < value.length) {
-			// Find opening {{
-			if (value[i] === '{' && value[i + 1] === '{') {
-				const start = i;
-				i += 2;
-
-				let depth = 1;
-
-				while (i < value.length && depth > 0) {
-					if (value[i] === '{' && value[i + 1] === '{') {
-						depth++;
-						i += 2;
-						continue;
-					}
-
-					if (value[i] === '}' && value[i + 1] === '}') {
-						depth--;
-						i += 2;
-						continue;
-					}
-
-					i++;
-				}
-
-				if (depth === 0) {
-					const end = i;
-					const full = value.slice(start, end);
-					const content = full.slice(2, -2);
-
-					yield {
-						full,
-						content,
-						index: start,
-						end
-					};
-				}
-				else {
-					// Unbalanced braces — stop parsing
-					break;
-				}
-			}
-			else {
-				i++;
-			}
-		}
-	})();
-}
 
 export class SlotValueController extends OutfitPanelContext {
 
@@ -254,7 +193,7 @@ export class SlotValueController extends OutfitPanelContext {
 				text: 'Clear',
 				events: {
 					click: async () => {
-						await this.outfitManager.setOutfitItem(ctx.slot.id, 'None');
+						await this.outfitManager.updateSlotValue(ctx.slot.id, 'None');
 						cleanup();
 						this.panel.renderTabsAndActiveContent();
 					}
@@ -310,7 +249,7 @@ export class SlotValueController extends OutfitPanelContext {
 			? 'None'
 			: textarea.value.trim();
 
-		await this.outfitManager.setOutfitItem(slot.id, newValue);
+		await this.outfitManager.updateSlotValue(slot.id, newValue);
 		this.panel.saveAndRender();
 	}
 

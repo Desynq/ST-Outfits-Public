@@ -192,7 +192,7 @@ export class SlotPresetsModal {
 			default: assertNever(imageActivateOutcome);
 		}
 
-		await this.manager.setOutfitItem(this.slot.id, preset.value);
+		await this.manager.updateSlotValue(this.slot.id, preset.value);
 		this.close();
 		this.saveAndRender();
 	}

@@ -2,6 +2,6 @@ import { Outfit } from "./Outfit.js";
 
 
 
-export interface ChatAutosave {
+export interface ChatData {
 	outfits: Record<string, Outfit>;
 }

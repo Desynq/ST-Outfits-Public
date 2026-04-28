@@ -1,6 +1,6 @@
 import { areOutfitSnapshotsEqual } from "../data/model/OutfitSnapshots.js";
 import { OutfitTracker } from "../data/tracker.js";
-import { IOutfitCollectionView } from "../data/view/OutfitCollectionView.js";
+import { ICharacterOutfitCollectionView, IOutfitCollectionView } from "../data/view/OutfitCollectionView.js";
 import { OutfitManager } from "./OutfitManager.js";
 
 export class BotOutfitManager extends OutfitManager {
@@ -114,7 +114,7 @@ export class BotOutfitManager extends OutfitManager {
         return outfits;
     }
 
-    public override getOutfitCollection(): IOutfitCollectionView {
+    public override getOutfitCollection(): ICharacterOutfitCollectionView {
         return OutfitTracker.characterOutfits(this.character);
     }
 }

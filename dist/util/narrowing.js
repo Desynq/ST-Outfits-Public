@@ -1,10 +1,26 @@
 export function isRecord(x) {
-    return typeof x === 'object' && x !== null && !Array.isArray(x);
+    return x != null && typeof x === 'object' && !Array.isArray(x);
 }
 export function assertRecord(x) {
     if (!isRecord(x)) {
         throw new Error(`Expected record, got ${x}`);
     }
+}
+export function isRecordOf(inputValue, fn) {
+    if (!isRecord(inputValue))
+        return false;
+    for (const v of Object.values(inputValue)) {
+        if (!fn(v))
+            return false;
+    }
+    return true;
+}
+export function isArrayOf(inputValue, fn) {
+    if (!Array.isArray(inputValue))
+        return false;
+    if (inputValue.every(fn))
+        return true;
+    return false;
 }
 export function assertArray(x) {
     if (!Array.isArray(x)) {

@@ -38,8 +38,12 @@ async function initializeExtension() {
     const saveSettings = () => {
         if (panelRegistryHook) {
             for (const charPanel of panelRegistryHook.getCharPanels()) {
+                // avoid saving twice
+                if (charPanel.character === botPanel.character)
+                    continue;
                 charPanel.saveToChat();
             }
+            botPanel.saveToChat();
         }
         saveSettingsBase();
     };
@@ -159,6 +163,7 @@ async function initializeExtension() {
             for (const charPanel of panelRegistry.getCharPanels()) {
                 charPanel.loadFromChat();
             }
+            botPanel.loadFromChat();
         });
         eventSource.on(event_types.CHARACTER_CHANGED, updateForCurrentCharacter);
     }

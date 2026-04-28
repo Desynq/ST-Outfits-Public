@@ -2,13 +2,32 @@
 
 
 export function isRecord(x: unknown): x is Record<string, unknown> {
-	return typeof x === 'object' && x !== null && !Array.isArray(x);
+	return x != null && typeof x === 'object' && !Array.isArray(x);
 }
 
 export function assertRecord(x: unknown): asserts x is Record<string, unknown> {
 	if (!isRecord(x)) {
 		throw new Error(`Expected record, got ${x}`);
 	}
+}
+
+
+export function isRecordOf<T>(inputValue: unknown, fn: (x: unknown) => x is T): inputValue is Record<string, T> {
+	if (!isRecord(inputValue)) return false;
+
+	for (const v of Object.values(inputValue)) {
+		if (!fn(v)) return false;
+	}
+
+	return true;
+}
+
+export function isArrayOf<T>(inputValue: unknown, fn: (x: unknown) => x is T): inputValue is T[] {
+	if (!Array.isArray(inputValue)) return false;
+
+	if (inputValue.every(fn)) return true;
+
+	return false;
 }
 
 

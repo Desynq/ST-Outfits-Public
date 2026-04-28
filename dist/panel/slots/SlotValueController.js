@@ -178,3 +178,5 @@ export class SlotValueController extends OutfitPanelContext {
         this.panel.renderTabsAndActiveContent();
     }
 }
+export class SlotChatAddendumController extends SlotValueController {
+}

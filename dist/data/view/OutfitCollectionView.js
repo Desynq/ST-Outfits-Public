@@ -117,10 +117,10 @@ export class CharacterOutfitCollectionView extends OutfitCollectionView {
     loadFromChat() {
         const c = this.getOrCreateCollection();
         c.autoOutfit ?? (c.autoOutfit = this.createDefaultOutfit());
-        ChatOutfitStorage.loadInto(c.autoOutfit, this.character);
+        ChatOutfitStorage.loadOutfitInto(c.autoOutfit, this.character);
     }
     commitAutosave() {
         const c = this.getOrCreateCollection();
-        ChatOutfitStorage.saveFrom(c.autoOutfit, this.character);
+        ChatOutfitStorage.saveOutfit(c.autoOutfit, this.character);
     }
 }

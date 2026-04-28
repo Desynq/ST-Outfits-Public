@@ -79,4 +79,17 @@ export class BotOutfitPanel extends OutfitPanel {
     onUpdateCharacter(listener) {
         this.updateCharBus.add(listener);
     }
+    saveToChat() {
+        if (!this.getPanelSettings().canLoadFromChat())
+            return false;
+        OutfitTracker.characterOutfits(this.character).commitAutosave();
+        return true;
+    }
+    loadFromChat() {
+        if (!this.getPanelSettings().canLoadFromChat())
+            return false;
+        this.outfitManager.getOutfitCollection().loadFromChat();
+        this.renderTabsAndActiveContent();
+        return true;
+    }
 }

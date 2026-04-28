@@ -46,8 +46,12 @@ async function initializeExtension(): Promise<void> {
     const saveSettings = (): void => {
         if (panelRegistryHook) {
             for (const charPanel of panelRegistryHook.getCharPanels()) {
+                // avoid saving twice
+                if (charPanel.character === botPanel.character) continue;
+
                 charPanel.saveToChat();
             }
+            botPanel.saveToChat();
         }
         saveSettingsBase();
     };
@@ -183,6 +187,8 @@ async function initializeExtension(): Promise<void> {
             for (const charPanel of panelRegistry.getCharPanels()) {
                 charPanel.loadFromChat();
             }
+
+            botPanel.loadFromChat();
         });
 
         eventSource.on(event_types.CHARACTER_CHANGED, updateForCurrentCharacter);

@@ -97,16 +97,16 @@ export class SlotValueController extends OutfitPanelContext {
             value: empty ? '' : originalValue,
         });
         textarea.style.width = `${rect.width}px`;
-        textarea.style.height = `${rect.height}px`;
+        textarea.style.minHeight = `${rect.height}px`;
         // Swap value box with editor
         valueEl.replaceWith(textarea);
         ctx.scroller.scrollTop = scrollTop;
         const autoResize = () => {
             const prevScroll = ctx.scroller.scrollTop;
             // Temporarily reset height to allow shrink
-            textarea.style.height = '0px';
+            textarea.style.minHeight = '0px';
             const next = textarea.scrollHeight;
-            textarea.style.height = `${next}px`;
+            textarea.style.minHeight = `${next}px`;
             // Restore scroll to prevent browser compensation
             ctx.scroller.scrollTop = prevScroll;
         };

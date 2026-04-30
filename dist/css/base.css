@@ -467,7 +467,6 @@
   word-break: break-word;
   background: rgba(0, 0, 0, 0.5);
   border: rgba(255, 255, 255, 0.25);
-  overflow: hidden;
   resize: none;
   transition: max-height 180ms ease;
 }
@@ -476,11 +475,16 @@
   min-height: calc(1lh + 12px);
 }
 
+.slot-editbox {
+  overflow: visible;
+}
+
 .slot-textbox {
   display: flow-root;
   cursor: text;
   user-select: text;
   -webkit-user-select: text;
+  overflow: hidden;
   max-height: calc(6lh + 12px);
 }
 .slot-textbox.--reveal {

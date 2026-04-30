@@ -1,4 +1,5 @@
 import { el } from "../../util/ElementHelper.js";
+import { conditionalList } from "../../util/list-utils.js";
 export class SlotActionsMenuElement {
     constructor(deps, factory) {
         this.deps = deps;
@@ -43,12 +44,7 @@ export class SlotActionsMenuElement {
         return this;
     }
     buildMenuChildren() {
-        return [
-            this.createDeleteBtn(),
-            this.createShiftBtn(),
-            this.createMoveBtn(),
-            this.createPresetsBtn()
-        ];
+        return conditionalList(this.createDeleteBtn(), this.createShiftBtn(), this.createMoveBtn(), this.createPresetsBtn(), [this.deps.canAddNote(), () => this.createAddNoteBtn()]);
     }
     createBtn(options) {
         const { events, ...rest } = options;
@@ -97,6 +93,15 @@ export class SlotActionsMenuElement {
             text: 'Presets',
             events: {
                 click: () => this.deps.showPresets()
+            }
+        });
+    }
+    createAddNoteBtn() {
+        return this.createBtn({
+            className: 'slot-button slot-add-addendum-button',
+            text: 'Add Note',
+            events: {
+                click: () => this.deps.addNote()
             }
         });
     }

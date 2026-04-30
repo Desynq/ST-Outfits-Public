@@ -1,6 +1,7 @@
 import { OverflowMenu, OverflowMenuFactory } from "../../ui/components/OverflowMenu.js";
 import { el, ElementOptions } from "../../util/ElementHelper.js";
 import { EventBus } from "../../util/EventBus.js";
+import { conditionalList } from "../../util/list-utils.js";
 import { Disposer } from "../Disposer.js";
 
 
@@ -14,6 +15,8 @@ export interface SlotActionMenuDeps {
 	shiftSlot(): void;
 	moveSlot(): void;
 	showPresets(): void;
+	canAddNote(): boolean;
+	addNote(): void;
 }
 
 export class SlotActionsMenuElement {
@@ -73,12 +76,13 @@ export class SlotActionsMenuElement {
 	}
 
 	private buildMenuChildren(): HTMLElement[] {
-		return [
+		return conditionalList(
 			this.createDeleteBtn(),
 			this.createShiftBtn(),
 			this.createMoveBtn(),
-			this.createPresetsBtn()
-		];
+			this.createPresetsBtn(),
+			[this.deps.canAddNote(), () => this.createAddNoteBtn()]
+		);
 	}
 
 
@@ -134,6 +138,16 @@ export class SlotActionsMenuElement {
 			text: 'Presets',
 			events: {
 				click: () => this.deps.showPresets()
+			}
+		});
+	}
+
+	private createAddNoteBtn(): HTMLButtonElement {
+		return this.createBtn({
+			className: 'slot-button slot-add-addendum-button',
+			text: 'Add Note',
+			events: {
+				click: () => this.deps.addNote()
 			}
 		});
 	}

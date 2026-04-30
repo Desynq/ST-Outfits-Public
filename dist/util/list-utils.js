@@ -3,7 +3,7 @@ export function conditionalList(...items) {
     for (const item of items) {
         if (Array.isArray(item)) {
             if (item[0]) {
-                list.push(item[1]);
+                list.push(item[1]());
             }
         }
         else {

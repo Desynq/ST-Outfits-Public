@@ -1,3 +1,4 @@
+import { ChatOutfitStorage } from "../api/chat-metadata.js";
 import { OutfitSlot } from "../data/model/Outfit.js";
 import { OutfitTracker } from "../data/tracker.js";
 import { MutableOutfitView } from "../data/view/MutableOutfitView.js";
@@ -75,7 +76,10 @@ export abstract class OutfitManager {
 	}
 
 	private formatSlotSummary(s: OutfitSlot): string {
-		return (!s.equipped ? '((REMOVED))\n' : '') + s.value;
+		const note = ChatOutfitStorage.getAddendum(this.getName(), s.id);
+		return (!s.equipped ? '((REMOVED))\n' : '')
+			+ s.value
+			+ (note ? `\n\nNote:\n${note}` : '');
 	}
 
 

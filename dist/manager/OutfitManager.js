@@ -1,3 +1,4 @@
+import { ChatOutfitStorage } from "../api/chat-metadata.js";
 import { OutfitTracker } from "../data/tracker.js";
 import { formatAccessorySlotName, toSlotName } from "../shared.js";
 import { indentString, toKebabCase } from "../util/StringHelper.js";
@@ -31,7 +32,10 @@ export class OutfitManager {
         return this.outfit.mapSlots(s => this.formatSlotSummary(s), s => s.kind === kind && s.enabled);
     }
     formatSlotSummary(s) {
-        return (!s.equipped ? '((REMOVED))\n' : '') + s.value;
+        const note = ChatOutfitStorage.getAddendum(this.getName(), s.id);
+        return (!s.equipped ? '((REMOVED))\n' : '')
+            + s.value
+            + (note ? `\n\nNote:\n${note}` : '');
     }
     getVisibleSlotMap() {
         return this.getOutfitView().getSlotValueMap(s => s.enabled);

@@ -93,6 +93,15 @@ class _ChatOutfitStorage {
 
 		this.saveChatData(data);
 	}
+
+	public removeAddendum(character: string, slot: string): void {
+		const data = this.getChatData();
+
+		const outfit = data.addendums[character] ??= {};
+		delete outfit[slot];
+
+		this.saveChatData(data);
+	}
 }
 
 export const ChatOutfitStorage = new _ChatOutfitStorage();

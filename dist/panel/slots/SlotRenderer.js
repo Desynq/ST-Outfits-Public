@@ -5,14 +5,21 @@ import { appendElement, createDiv, createElement, el } from "../../util/ElementH
 import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
 import { SlotActionsMenuElement } from "./ActionOverflowElement.js";
 import { SlotActionsElement } from "./SlotActionsElement.js";
-import { SlotValueController } from "./SlotValueController.js";
+import { SlotChatAddendumController, SlotValueController } from "./SlotValueController.js";
 export class SlotRenderer extends OutfitPanelContext {
-    constructor(panel, displaySlots, imageElementFactory, overflowMenuFactory) {
-        super(panel);
-        this.displaySlots = displaySlots;
-        this.imageElementFactory = imageElementFactory;
-        this.overflowMenuFactory = overflowMenuFactory;
-        this.valueElement = new SlotValueController(this.panel, (ctx) => this.removeActionButtons(ctx));
+    constructor(deps) {
+        super(deps.panel);
+        this.deps = deps;
+        this.valueElement = new SlotValueController({
+            panel: this.panel,
+            removeActionButtons: (ctx) => this.removeActionButtons(ctx),
+            editCoordinator: this.deps.editCoordinator
+        });
+        this.addendumElement = new SlotChatAddendumController({
+            panel: this.panel,
+            removeActionButtons: (ctx) => this.removeActionButtons(ctx),
+            editCoordinator: this.deps.editCoordinator
+        });
     }
     isValueHidden(mode) {
         return mode !== 'normal';
@@ -36,6 +43,7 @@ export class SlotRenderer extends OutfitPanelContext {
         const slotNameEl = appendElement(titleRow, 'div', 'slot-name', name);
         slotNameEl.dataset.text = name;
         const contentEl = createDiv('slot-content');
+        const contentTextEl = createDiv('slot-content-text');
         const imageActionsEl = createDiv('slot-image-actions');
         const actionsEl = document.createElement('div');
         actionsEl.className = 'slot-actions';
@@ -48,10 +56,12 @@ export class SlotRenderer extends OutfitPanelContext {
             mode,
             scroller: container,
             slotElement,
+            labelDiv,
             labelLeftDiv,
             slotNameEl,
             labelRightDiv,
             contentEl,
+            contentTextEl,
             imageActionsEl,
             actionsLeftEl,
             actionsRightEl,
@@ -64,37 +74,23 @@ export class SlotRenderer extends OutfitPanelContext {
         const disarmTap = () => slotNameEl.classList.remove('tap-armed');
         addDoubleTapListener(slotNameEl, () => { disarmTap(); this.beginRename(slotNameEl, ctx); }, 300, () => { disarmTap(); this.toggle(ctx.slot); }, armTap);
         this.renderImageElement(ctx);
-        const appendInlineToggleBtn = () => {
-            const toggleBtn = this.createToggleBtn(slot);
-            labelRightDiv.append(toggleBtn);
-        };
-        const appendInlineEdit = () => {
-            const valueEl = this.valueElement.render(contentEl, ctx);
-            if (slot.isEmpty())
-                valueEl.hidden = true;
-            const editBtn = this.appendEditBtn(labelRightDiv, ctx, valueEl);
-            return {
-                valueEl,
-                editBtn
-            };
-        };
-        if (mode !== 'normal') {
-            appendInlineToggleBtn();
-            const { valueEl } = appendInlineEdit();
-            if (valueEl.hidden) {
-                labelDiv.classList.add('minimized');
-            }
-            this.createMenuBtn(ctx).appendTo(ctx.labelRightDiv);
+        contentEl.append(contentTextEl);
+        const { valueEl } = this.valueElement.render(contentTextEl, ctx);
+        if (mode !== 'normal' && this.valueElement.isEmpty(slot)) {
+            valueEl.hidden = true;
+        }
+        const { valueEl: addendumEl } = this.addendumElement.render(contentTextEl, ctx);
+        if (mode !== 'normal' && this.addendumElement.isEmpty(slot)) {
+            addendumEl.hidden = true;
         }
         switch (mode) {
             case 'hidden-empty':
-                break;
             case 'hidden-disabled':
-                break;
             case 'disabled-empty':
+                this.decorateMinimal(ctx, valueEl, addendumEl);
                 break;
             case 'normal':
-                this.decorateSlot(ctx);
+                this.decorate(ctx, valueEl, addendumEl);
                 break;
             default: assertNever(mode);
         }
@@ -102,7 +98,7 @@ export class SlotRenderer extends OutfitPanelContext {
         return slotElement;
     }
     renderImageElement(ctx) {
-        const imageElement = this.imageElementFactory.build(ctx.slot);
+        const imageElement = this.deps.imageFactory.build(ctx.slot);
         const { imgWrapper } = imageElement;
         const parent = this.resolveImageParent(imageElement.state, ctx);
         if (parent === 'none')
@@ -125,7 +121,7 @@ export class SlotRenderer extends OutfitPanelContext {
         return imageElement;
     }
     createImageMenu(ctx, imageElement, opener) {
-        return this.overflowMenuFactory.create({
+        return this.deps.overflowMenuFactory.create({
             openerEl: opener,
             onDispose: this.panel.onDispose,
             align: 'left',
@@ -167,19 +163,31 @@ export class SlotRenderer extends OutfitPanelContext {
         }
         return 'normal';
     }
-    decorateSlot(ctx) {
+    decorateMinimal(ctx, valueEl, addendumEl) {
+        const toggleBtn = this.createToggleBtn(ctx.slot);
+        ctx.labelRightDiv.append(toggleBtn);
+        this.appendEditBtn(ctx.labelRightDiv, ctx, valueEl);
+        if (valueEl.hidden) {
+            ctx.labelDiv.classList.add('minimized');
+            addendumEl.hidden = true;
+        }
+        this.createMenuBtn(ctx, addendumEl).appendTo(ctx.labelRightDiv);
+    }
+    decorate(ctx, valueEl, addendumEl) {
         const actionsElement = new SlotActionsElement(this.panel);
-        const valueEl = this.valueElement.render(ctx.contentEl, ctx);
         const toggleBtn = this.createToggleBtn(ctx.slot);
         ctx.actionsLeftEl.append(toggleBtn);
         if (ctx.slot.enabled) {
             const unequipBtn = actionsElement.createUnequipButton(ctx.slot);
             ctx.actionsLeftEl.append(unequipBtn);
         }
-        const editBtn = this.appendEditBtn(ctx.actionsRightEl, ctx, valueEl);
-        this.createMenuBtn(ctx).appendTo(ctx.actionsRightEl);
+        if (this.addendumElement.isEmpty(ctx.slot)) {
+            addendumEl.hidden = true;
+        }
+        this.appendEditBtn(ctx.actionsRightEl, ctx, valueEl);
+        this.createMenuBtn(ctx, addendumEl).appendTo(ctx.actionsRightEl);
     }
-    createMenuBtn(ctx) {
+    createMenuBtn(ctx, addendumEl) {
         return new SlotActionsMenuElement({
             mountEl: ctx.slotElement,
             getViewBoundary: () => ctx.scroller.getBoundingClientRect(),
@@ -188,7 +196,9 @@ export class SlotRenderer extends OutfitPanelContext {
             shiftSlot: () => this.beginSlotShift(ctx),
             moveSlot: () => this.moveSlot(ctx.slot),
             showPresets: () => SlotPresetsModal.show(ctx.slot, this.outfitManager, () => this.panel.saveAndRender()),
-        }, this.overflowMenuFactory)
+            canAddNote: () => this.getSlotRenderMode(ctx.slot, this.panel) === 'normal' && this.addendumElement.isEmpty(ctx.slot),
+            addNote: () => this.addendumElement.beginInlineEdit(ctx, addendumEl)
+        }, this.deps.overflowMenuFactory)
             .onClopen(open => ctx.slotElement.classList.toggle('--menu-open', open));
     }
     createToggleBtn(slot) {
@@ -266,7 +276,7 @@ export class SlotRenderer extends OutfitPanelContext {
         const select = document.createElement('select');
         select.className = 'slot-shift-select';
         const options = [];
-        const displaySlots = this.displaySlots;
+        const displaySlots = this.deps.displaySlots;
         const placeholder = document.createElement('option');
         placeholder.textContent = 'Move slot...';
         placeholder.disabled = true;
@@ -304,7 +314,7 @@ export class SlotRenderer extends OutfitPanelContext {
         });
     }
     shiftSlot(select, display) {
-        const displaySlots = this.displaySlots;
+        const displaySlots = this.deps.displaySlots;
         const value = select.value;
         const sourceSlotIndex = display.slotIndex;
         let targetSlotIndex;

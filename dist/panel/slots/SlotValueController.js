@@ -1,3 +1,4 @@
+import { ChatOutfitStorage } from "../../api/chat-metadata.js";
 import { isWideScreen, scrollIntoViewAboveKeyboard } from "../../shared.js";
 import { SlotValueText } from "../../ui/components/SlotValueText.js";
 import { popupConfirm } from "../../util/adapter/popup-adapter.js";
@@ -7,20 +8,27 @@ import { addLongPressAction, createElement, el } from "../../util/ElementHelper.
 import { EventBus } from "../../util/EventBus.js";
 import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
 export class SlotValueController extends OutfitPanelContext {
-    constructor(panel, removeActionButtons) {
-        super(panel);
-        this.removeActionButtons = removeActionButtons;
+    constructor(deps) {
+        super(deps.panel);
+        this.deps = deps;
         this.renderBus = new EventBus();
+        this.editBus = new EventBus();
     }
     onRender(listener) {
         this.renderBus.add(listener);
         return this;
     }
+    onEdit(listener) {
+        this.editBus.add(listener);
+        return this;
+    }
     render(container, ctx) {
         const disabledClass = ctx.slot.isDisabled() ? 'disabled' : '';
-        const noneClass = ctx.slot.isEmpty() ? 'none' : '';
-        const valueEl = document.createElement('div');
-        valueEl.classList.add('slot-value', ...[disabledClass, noneClass].filter(Boolean));
+        const noneClass = this.isEmpty(ctx.slot) ? 'none' : '';
+        const valueEl = el('div', {
+            className: this.getValueElClassName(),
+            classes: [disabledClass, noneClass].filter(Boolean)
+        });
         const valueRenderer = new SlotValueText({
             showPromptModal: this.showPromptModal.bind(this),
             expandValue: () => {
@@ -28,7 +36,7 @@ export class SlotValueController extends OutfitPanelContext {
                 this.updateOverflowState(valueEl);
             }
         });
-        valueEl.replaceChildren(valueRenderer.createFrag(ctx.slot.value));
+        valueEl.replaceChildren(valueRenderer.createFrag(this.getSlotText(ctx.slot)));
         addDoubleTapListener(valueEl, () => this.beginInlineEdit(ctx, valueEl));
         addLongPressAction(valueEl, 300, () => {
             const text = valueEl.textContent;
@@ -42,7 +50,9 @@ export class SlotValueController extends OutfitPanelContext {
         container.appendChild(valueEl);
         this.updateOverflowState(valueEl);
         this.renderBus.emit(valueEl);
-        return valueEl;
+        return {
+            valueEl
+        };
     }
     updateOverflowState(el) {
         requestAnimationFrame(() => {
@@ -72,16 +82,20 @@ export class SlotValueController extends OutfitPanelContext {
         });
     }
     beginInlineEdit(ctx, valueEl) {
+        if (!this.deps.editCoordinator.canEdit(valueEl))
+            return false;
+        this.deps.editCoordinator.beginEdit(valueEl);
         valueEl.hidden = false;
         const scrollTop = ctx.scroller.scrollTop;
         const rect = valueEl.getBoundingClientRect();
-        const originalValue = ctx.slot.value;
-        const empty = originalValue === 'None';
+        const originalValue = this.getSlotText(ctx.slot);
+        const empty = this.isEmpty(ctx.slot);
         // Create editable textarea
-        const textarea = document.createElement('textarea');
-        textarea.className = 'slot-editbox';
-        textarea.rows = 1;
-        textarea.value = empty ? '' : originalValue;
+        const textarea = el('textarea', {
+            className: this.getEditBoxClassName(),
+            rows: 1,
+            value: empty ? '' : originalValue,
+        });
         textarea.style.width = `${rect.width}px`;
         textarea.style.height = `${rect.height}px`;
         // Swap value box with editor
@@ -110,7 +124,7 @@ export class SlotValueController extends OutfitPanelContext {
             vv?.removeEventListener('resize', onVvChange);
             vv?.removeEventListener('scroll', onVvChange);
         };
-        this.removeActionButtons(ctx);
+        this.deps.removeActionButtons(ctx);
         textarea.addEventListener('keydown', (e) => {
             if (e.isComposing)
                 return;
@@ -130,7 +144,7 @@ export class SlotValueController extends OutfitPanelContext {
                 text: 'Clear',
                 events: {
                     click: async () => {
-                        await this.outfitManager.updateSlotValue(ctx.slot.id, 'None');
+                        await this.updateSlotText(ctx.slot, this.getEmptyText());
                         cleanup();
                         this.panel.renderTabsAndActiveContent();
                     }
@@ -166,17 +180,58 @@ export class SlotValueController extends OutfitPanelContext {
         });
         preventBlur(saveBtn);
         ctx.actionsRightEl.appendChild(saveBtn);
+        return true;
     }
     async commitValueEdit(textarea, slot) {
-        const newValue = textarea.value.trim() === ''
-            ? 'None'
+        const text = textarea.value.trim() === ''
+            ? this.getEmptyText()
             : textarea.value.trim();
-        await this.outfitManager.updateSlotValue(slot.id, newValue);
+        await this.updateSlotText(slot, text);
         this.panel.saveAndRender();
     }
     cancelValueEdit() {
         this.panel.renderTabsAndActiveContent();
     }
+    getValueElClassName() {
+        return 'slot-value slot-textbox';
+    }
+    getEditBoxClassName() {
+        return 'slot-editbox';
+    }
+    getSlotText(slot) {
+        return slot.value;
+    }
+    isEmpty(slot) {
+        return this.getSlotText(slot) === this.getEmptyText();
+    }
+    async updateSlotText(slot, text) {
+        await this.outfitManager.updateSlotValue(slot.id, text);
+    }
+    getEmptyText() {
+        return 'None';
+    }
 }
 export class SlotChatAddendumController extends SlotValueController {
+    getValueElClassName() {
+        return 'slot-addendum slot-textbox';
+    }
+    getEditBoxClassName() {
+        return 'slot-editbox';
+    }
+    getSlotText(slot) {
+        return ChatOutfitStorage.getAddendum(this.getCharacter(), slot.id) ?? this.getEmptyText();
+    }
+    async updateSlotText(slot, text) {
+        if (!text || text === this.getEmptyText()) {
+            ChatOutfitStorage.removeAddendum(this.getCharacter(), slot.id);
+            return;
+        }
+        ChatOutfitStorage.saveAddendum(this.getCharacter(), slot.id, text);
+    }
+    getEmptyText() {
+        return '(+)';
+    }
+    getCharacter() {
+        return this.panel.outfitManager.getName();
+    }
 }

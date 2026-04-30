@@ -406,7 +406,8 @@
   position: relative;
   display: grid;
   grid-template-columns: auto 1fr;
-  grid-template-rows: auto auto; /* 2 rows */
+  grid-template-rows: auto auto;
+  /* 2 rows */
   grid-template-areas: "image value" "image value";
   gap: 6px;
   margin-bottom: 8px;
@@ -427,7 +428,7 @@
   grid-area: image;
 }
 
-.slot-value {
+.slot-content-text {
   grid-area: value;
 }
 
@@ -442,8 +443,16 @@
 }
 
 /* Slot Value */
-.slot-editbox,
-.slot-value {
+.slot-content-text {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.slot-textbox,
+.slot-editbox {
   position: relative;
   flex: 1;
   width: 100%;
@@ -463,20 +472,22 @@
   transition: max-height 180ms ease;
 }
 
-.slot-value {
+.slot-addendum {
+  min-height: calc(1lh + 12px);
+}
+
+.slot-textbox {
   display: flow-root;
   cursor: text;
   user-select: text;
   -webkit-user-select: text;
   max-height: calc(6lh + 12px);
 }
-
-.slot-value.--reveal {
+.slot-textbox.--reveal {
   max-height: none;
   overflow: visible;
 }
-
-.slot-value.--overflowing:not(.--reveal)::after {
+.slot-textbox.--overflowing:not(.--reveal)::after {
   content: "";
   position: absolute;
   left: 0;
@@ -486,22 +497,24 @@
   pointer-events: none;
   background: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(64, 64, 64, 0.5) 50%, rgb(128, 128, 128) 100%);
 }
-
-.slot-value.disabled {
+.slot-textbox.disabled {
   color: rgba(255, 255, 255, 0.75);
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.15);
   font-weight: normal;
 }
-
-.slot-value.none {
+.slot-textbox.none {
   background: rgba(0, 0, 0, 0.25);
   border: 1px solid rgba(255, 255, 255, 0.05);
   font-weight: bold;
   min-height: auto;
 }
+.slot-textbox:is(:hover, :focus-within) {
+  /* subtle focus ring */
+  box-shadow: 0 0 0 2px rgba(196, 181, 253, 0.25);
+}
 
-.outfit-slot.--unequipped .slot-value {
+.outfit-slot.--unequipped .slot-textbox {
   font-style: italic;
   background: rgba(0, 0, 0, 0.25);
   border: 1px solid rgba(255, 255, 255, 0.05);
@@ -633,29 +646,28 @@
 }
 
 /* Base disabled */
-.slot-value.disabled {
+.slot-textbox.disabled {
   opacity: 0.5;
   transition: opacity 120ms ease, box-shadow 120ms ease, background-color 120ms ease, border-color 120ms ease;
+  /* Reveal on hover/focus (temporary attention) */
 }
-
-/* Reveal on hover/focus (temporary attention) */
-.slot-value.disabled:is(:hover, :focus-within) {
+.slot-textbox.disabled:is(:hover, :focus-within) {
   opacity: 0.75;
-  box-shadow: 0 0 0 2px rgba(196, 181, 253, 0.25);
   /* subtle focus ring */
+  box-shadow: 0 0 0 2px rgba(196, 181, 253, 0.25);
 }
-
-/* Reveal toggled (persistent state, stronger) */
-.slot-value.disabled.--reveal {
+.slot-textbox.disabled {
+  /* Reveal toggled (persistent state, stronger) */
+}
+.slot-textbox.disabled.--reveal {
   opacity: 1;
   background: rgba(196, 181, 253, 0.18);
   border-left-color: #c4b5fd;
   border-right-color: #c4b5fd;
   box-shadow: 0 0 0 2px rgba(196, 181, 253, 0.55), 0 6px 18px rgba(196, 181, 253, 0.25);
+  /* If it's both focused and revealed, make it *extra* obvious */
 }
-
-/* If it's both focused and revealed, make it *extra* obvious */
-.slot-value.disabled.--reveal:focus-within {
+.slot-textbox.disabled.--reveal:focus-within {
   box-shadow: 0 0 0 3px rgba(196, 181, 253, 0.8), 0 10px 28px rgba(196, 181, 253, 0.28);
 }
 

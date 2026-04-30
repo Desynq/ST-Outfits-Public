@@ -3,6 +3,7 @@ import { OverflowMenuFactory } from "../ui/components/OverflowMenu.js";
 import { setScroll } from "../util/element/scroll.js";
 import { OutfitPanelContext } from "./base/OutfitPanelContext.js";
 import { DisplaySlot } from "./slots/DisplaySlot.js";
+import { EditCoordinator } from "./slots/edit-coordinator.js";
 import { SlotImageElementFactory } from "./slots/SlotImageController.js";
 import { SlotRenderer } from "./slots/SlotRenderer.js";
 
@@ -32,12 +33,15 @@ export class SlotsRenderer extends OutfitPanelContext {
 
 		const overflowMenuFactory = new OverflowMenuFactory();
 
-		const slotFactory = new SlotRenderer(
-			this.panel,
+		const editCoordinator = new EditCoordinator();
+
+		const slotFactory = new SlotRenderer({
+			panel: this.panel,
 			displaySlots,
 			imageFactory,
-			overflowMenuFactory
-		);
+			overflowMenuFactory,
+			editCoordinator
+		});
 
 		const fragment = document.createDocumentFragment();
 

@@ -7,6 +7,7 @@ export interface PopupConfirmOptions {
 	wide?: boolean;
 	large?: boolean;
 	leftAlign?: boolean;
+	onOpen?: ((popup: Popup) => void) | null;
 }
 
 export async function popupConfirm(
@@ -20,6 +21,7 @@ export async function popupConfirm(
 		wide: false,
 		large: false,
 		leftAlign: false,
+		onOpen: null,
 		...options
 	} satisfies Required<PopupConfirmOptions>;
 
@@ -33,6 +35,7 @@ export async function popupConfirm(
 			wide: config.wide,
 			large: config.large,
 			leftAlign: config.leftAlign,
+			onOpen: config.onOpen
 		}
 	);
 

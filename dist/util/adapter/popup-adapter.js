@@ -7,6 +7,7 @@ export async function popupConfirm(content, options = {}) {
         wide: false,
         large: false,
         leftAlign: false,
+        onOpen: null,
         ...options
     };
     const popup = new Popup(content, POPUP_TYPE.CONFIRM, config.title, {
@@ -15,6 +16,7 @@ export async function popupConfirm(content, options = {}) {
         wide: config.wide,
         large: config.large,
         leftAlign: config.leftAlign,
+        onOpen: config.onOpen
     });
     const result = await popup.show();
     return result === POPUP_RESULT.AFFIRMATIVE;

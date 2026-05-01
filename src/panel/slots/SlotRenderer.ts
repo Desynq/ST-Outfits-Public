@@ -13,7 +13,7 @@ import { DisplaySlot } from "./DisplaySlot.js";
 import { EditCoordinator } from "./edit-coordinator.js";
 import { SlotActionsElement } from "./SlotActionsElement.js";
 import { ImageState, SlotImageElement, SlotImageElementFactory } from "./SlotImageController.js";
-import { SlotChatAddendumController, SlotValueController } from "./SlotValueController.js";
+import { RenderEvent, SlotChatAddendumController, SlotValueController } from "./SlotValueController.js";
 
 export interface SlotContext {
 	slot: OutfitSlotState;
@@ -50,7 +50,7 @@ export interface SlotRendererDeps {
 
 export class SlotRenderer extends OutfitPanelContext {
 	private readonly valueElement: SlotValueController;
-	private readonly addendumElement: SlotChatAddendumController;
+	private readonly noteElement: SlotChatAddendumController;
 
 	public constructor(
 		private readonly deps: SlotRendererDeps
@@ -63,7 +63,7 @@ export class SlotRenderer extends OutfitPanelContext {
 			editCoordinator: this.deps.editCoordinator
 		});
 
-		this.addendumElement = new SlotChatAddendumController({
+		this.noteElement = new SlotChatAddendumController({
 			panel: this.panel,
 			removeActionButtons: (ctx: SlotContext) => this.removeActionButtons(ctx),
 			editCoordinator: this.deps.editCoordinator
@@ -155,8 +155,8 @@ export class SlotRenderer extends OutfitPanelContext {
 			valueEl.hidden = true;
 		}
 
-		const { valueEl: addendumEl } = this.addendumElement.render(contentTextEl, ctx);
-		if (mode !== 'normal' && this.addendumElement.isEmpty(slot)) {
+		const { valueEl: addendumEl } = this.noteElement.render(contentTextEl, ctx);
+		if (mode !== 'normal' && this.noteElement.isEmpty(slot)) {
 			addendumEl.hidden = true;
 		}
 
@@ -193,21 +193,53 @@ export class SlotRenderer extends OutfitPanelContext {
 			'content': ctx.contentEl
 		}[parent];
 
-		if (imageElement.state === 'shown') {
-			const menu = this.createImageMenu(ctx, imageElement, imgWrapper);
-			imageElement.onDoubleTap(() => menu.toggleMenu());
-		}
-
 		imageElement.appendTo(target);
 
-		this.valueElement.onRender(valueEl => {
-			if (imageElement.state !== 'shown') return;
-
-			const observer = imageElement.observe(ctx.contentEl);
-			this.panel.onDispose(observer.disconnect);
-		});
+		if (imageElement.state === 'shown') {
+			this.bindShownImageElement(ctx, imageElement, imgWrapper);
+		}
 
 		return imageElement;
+	}
+
+	private bindShownImageElement(ctx: SlotContext, imageElement: SlotImageElement, imgWrapper: HTMLElement): void {
+		const menu = this.createImageMenu(ctx, imageElement, imgWrapper);
+		imageElement.onDoubleTap(() => menu.toggleMenu());
+
+		const observer = imageElement.trackResizeChanges(ctx.contentEl);
+		this.panel.onDispose(observer.disconnect);
+
+		let noteEl: HTMLElement | null = null;
+		let valueEl: HTMLElement | null = null;
+
+		observer.onResize(event => {
+			if (!valueEl) return;
+
+			if (event.imageWide) {
+				this.valueElement.setCollapsedMaxHeight(valueEl, null);
+				return;
+			}
+
+			const noteHeight = noteEl?.getBoundingClientRect().height ?? 0;
+			const height = Math.max(0, event.imageRect.height - noteHeight);
+
+			this.valueElement.setCollapsedMaxHeight(valueEl, height);
+		});
+
+		const updateOnRender = (
+			controller: SlotValueController,
+			set: (el: HTMLElement) => void,
+		): void => {
+			controller.onRender(event => {
+				if (!event.isFor(ctx)) return;
+
+				set(event.valueEl);
+				observer.update();
+			});
+		};
+
+		updateOnRender(this.noteElement, el => noteEl = el);
+		updateOnRender(this.valueElement, el => valueEl = el);
 	}
 
 	private createImageMenu(ctx: SlotContext, imageElement: SlotImageElement, opener: HTMLElement): OverflowMenu {
@@ -291,7 +323,7 @@ export class SlotRenderer extends OutfitPanelContext {
 			ctx.actionsLeftEl.append(unequipBtn);
 		}
 
-		if (this.addendumElement.isEmpty(ctx.slot)) {
+		if (this.noteElement.isEmpty(ctx.slot)) {
 			addendumEl.hidden = true;
 		}
 
@@ -315,8 +347,8 @@ export class SlotRenderer extends OutfitPanelContext {
 					() => this.panel.saveAndRender()
 				),
 
-				canAddNote: () => this.getSlotRenderMode(ctx.slot, this.panel) === 'normal' && this.addendumElement.isEmpty(ctx.slot),
-				addNote: () => this.addendumElement.beginInlineEdit(ctx, addendumEl)
+				canAddNote: () => this.getSlotRenderMode(ctx.slot, this.panel) === 'normal' && this.noteElement.isEmpty(ctx.slot),
+				addNote: () => this.noteElement.beginInlineEdit(ctx, addendumEl)
 			},
 			this.deps.overflowMenuFactory
 		)

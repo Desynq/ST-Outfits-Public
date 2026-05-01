@@ -19,27 +19,35 @@
 
 
 
-.resize-prompt {
+.resize-prompt-content {
 	display: flex;
-	gap: 8px;
-}
+	flex-direction: column;
+	gap: 4px;
 
-.resize-prompt input[type="number"] {
-	width: 100px;
+	.inputs-row,
+	.actions-row {
+		display: flex;
+		flex-direction: row;
+		gap: 8px;
+	}
 
-	padding: 6px 8px;
+	input[type="number"] {
+		width: 100px;
 
-	background: rgba(255, 255, 255, 0.08);
-	border: 1px solid rgba(255, 255, 255, 0.15);
-	border-radius: 6px;
+		padding: 6px 8px;
 
-	color: #ffffff;
-	font-size: 0.9rem;
+		background: rgba(255, 255, 255, 0.08);
+		border: 1px solid rgba(255, 255, 255, 0.15);
+		border-radius: 6px;
 
-	outline: none;
-	transition:
-		border-color 0.15s ease,
-		box-shadow 0.15s ease;
+		color: #ffffff;
+		font-size: 0.9rem;
+
+		outline: none;
+		transition:
+			border-color 0.15s ease,
+			box-shadow 0.15s ease;
+	}
 }
 
 

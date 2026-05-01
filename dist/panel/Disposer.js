@@ -1,13 +1,13 @@
-export class Disposer {
+export class ResourceCleaner {
     constructor() {
         this.disposers = [];
     }
-    add(fn) {
-        this.disposers.push(fn);
+    add(disposer) {
+        this.disposers.push(disposer);
     }
     dispose() {
-        for (const fn of this.disposers)
-            fn();
+        for (const disposer of this.disposers)
+            disposer();
         this.disposers.length = 0;
     }
 }

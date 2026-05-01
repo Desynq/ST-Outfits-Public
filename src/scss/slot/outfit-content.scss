@@ -91,6 +91,7 @@
 	border: rgba(255, 255, 255, 0.25);
 
 	resize: none;
+	overflow: hidden;
 	transition: max-height 180ms ease;
 }
 
@@ -99,7 +100,9 @@
 }
 
 .slot-editbox {
-	overflow: visible;
+	flex: 1 1 auto;
+
+	max-height: none;
 }
 
 .slot-textbox {
@@ -108,9 +111,8 @@
 	user-select: text;
 	-webkit-user-select: text;
 
-	overflow: hidden;
-
-	max-height: calc(6lh + 12px);
+	// default to 6lh + padding if no image
+	max-height: var(--collapsed-max-height, calc(6lh + 12px));
 
 	&.--reveal {
 		max-height: none;
@@ -154,9 +156,7 @@
 }
 
 .outfit-slot.--unequipped .slot-textbox {
-	font-style: italic;
-	background: rgba(0, 0, 0, 0.25);
-	border: 1px solid rgba(255, 255, 255, 0.05);
+	color: rgba(160, 160, 160, 0.9);
 }
 
 

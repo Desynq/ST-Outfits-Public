@@ -4,6 +4,7 @@ import { SlotValueText } from "../../ui/components/SlotValueText.js";
 import { popupConfirm } from "../../util/adapter/popup-adapter.js";
 import { substituteParams } from "../../util/adapter/script-adapter.js";
 import { addDoubleTapListener } from "../../util/element/click-actions.js";
+import { triggerAfterLayout, triggerAfterTransition } from "../../util/element/css.js";
 import { addLongPressAction, createElement, el } from "../../util/ElementHelper.js";
 import { EventBus } from "../../util/EventBus.js";
 import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
@@ -12,14 +13,9 @@ export class SlotValueController extends OutfitPanelContext {
         super(deps.panel);
         this.deps = deps;
         this.renderBus = new EventBus();
-        this.editBus = new EventBus();
     }
     onRender(listener) {
         this.renderBus.add(listener);
-        return this;
-    }
-    onEdit(listener) {
-        this.editBus.add(listener);
         return this;
     }
     render(container, ctx) {
@@ -36,6 +32,7 @@ export class SlotValueController extends OutfitPanelContext {
                 this.updateOverflowState(valueEl);
             }
         });
+        // set text
         valueEl.replaceChildren(valueRenderer.createFrag(this.getSlotText(ctx.slot)));
         addDoubleTapListener(valueEl, () => this.beginInlineEdit(ctx, valueEl));
         addLongPressAction(valueEl, 300, () => {
@@ -48,22 +45,40 @@ export class SlotValueController extends OutfitPanelContext {
             this.updateOverflowState(valueEl);
         });
         container.appendChild(valueEl);
-        this.updateOverflowState(valueEl);
-        this.renderBus.emit(valueEl);
+        triggerAfterLayout(valueEl, () => this.updateOverflowState(valueEl));
+        this.renderBus.emit({
+            ctx,
+            valueEl,
+            isFor: (otherCtx) => otherCtx.slot.id === ctx.slot.id
+        });
         return {
             valueEl
         };
     }
+    setCollapsedMaxHeight(valueEl, height) {
+        if (height === null) {
+            valueEl.style.removeProperty('--collapsed-max-height');
+        }
+        else {
+            valueEl.style.setProperty('--collapsed-max-height', `${height}px`);
+        }
+        triggerAfterTransition(valueEl, 'max-height', () => this.updateOverflowState(valueEl));
+    }
     updateOverflowState(el) {
-        requestAnimationFrame(() => {
-            const wasRevealed = el.classList.contains('--reveal');
-            if (wasRevealed) {
-                el.classList.remove('--overflowing');
-                return;
-            }
-            const isOverflowing = el.scrollHeight > el.clientHeight;
-            el.classList.toggle('--overflowing', isOverflowing);
-        });
+        if (el.classList.contains('--reveal')) {
+            el.classList.remove('--overflowing');
+            return;
+        }
+        const isActuallyOverflowing = el.scrollHeight - el.clientHeight > 1;
+        const isVisuallyLarge = this.isHeightAboveDefault(el);
+        el.classList.toggle('--overflowing', isActuallyOverflowing || isVisuallyLarge);
+    }
+    isHeightAboveDefault(el) {
+        const style = getComputedStyle(el);
+        const lineHeight = parseFloat(style.lineHeight);
+        const defaultMaxHeight = (lineHeight * 6) + 12;
+        const height = el.getBoundingClientRect().height;
+        return height > defaultMaxHeight + 1; // +1 to dodge subpixel noise
     }
     async showPromptModal(promptText) {
         const container = createElement('div', 'flex-container flexFlowColumn height100p');
@@ -96,17 +111,14 @@ export class SlotValueController extends OutfitPanelContext {
             rows: 1,
             value: empty ? '' : originalValue,
         });
-        textarea.style.width = `${rect.width}px`;
-        textarea.style.minHeight = `${rect.height}px`;
+        textarea.style.height = `${rect.height}px`;
         // Swap value box with editor
         valueEl.replaceWith(textarea);
         ctx.scroller.scrollTop = scrollTop;
         const autoResize = () => {
             const prevScroll = ctx.scroller.scrollTop;
-            // Temporarily reset height to allow shrink
-            textarea.style.minHeight = '0px';
-            const next = textarea.scrollHeight;
-            textarea.style.minHeight = `${next}px`;
+            textarea.style.height = 'auto';
+            textarea.style.height = `${textarea.scrollHeight}px`;
             // Restore scroll to prevent browser compensation
             ctx.scroller.scrollTop = prevScroll;
         };

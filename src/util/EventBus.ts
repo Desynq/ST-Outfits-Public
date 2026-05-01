@@ -15,8 +15,9 @@ export class EventBus<T extends Procedure = () => void>
 
 	private readonly listeners = new Set<T>();
 
-	public add(listener: T): void {
+	public add(listener: T): Disposer {
 		this.listeners.add(listener);
+		return (): void => this.remove(listener);
 	}
 
 	public remove(listener: T): void {

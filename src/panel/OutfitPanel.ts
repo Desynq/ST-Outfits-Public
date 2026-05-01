@@ -9,7 +9,7 @@ import { mergeClassNames } from "../util/element/css.js";
 import { clampPosition, enforceViewportBounds } from "../util/element/position.js";
 import { createConfiguredElements, el, ElementOptions, toggleClasses } from "../util/ElementHelper.js";
 import { EventBus, Listener } from "../util/EventBus.js";
-import { Disposer } from "./Disposer.js";
+import { ResourceCleaner } from "./Disposer.js";
 import { OutfitSlotsHost } from "./OutfitSlotsHost.js";
 import { OutfitTabsHost } from "./OutfitTabsHost.js";
 import { SlotsRenderer } from "./SlotsRenderer.js";
@@ -37,7 +37,7 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 	protected readonly slotsRenderer: SlotsRenderer = new SlotsRenderer(this);
 	protected readonly tabsRenderer: TabsRenderer = new TabsRenderer(this);
 
-	protected readonly disposer: Disposer = new Disposer();
+	protected readonly disposer: ResourceCleaner = new ResourceCleaner();
 
 	protected readonly hideBus = new EventBus();
 	protected readonly expandedBus = new EventBus();
@@ -50,7 +50,7 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 
 	// Event registration
 
-	public readonly onDispose = (fn: () => void): void => this.disposer.add(fn);
+	public readonly onDispose = (disposer: Disposer): void => this.disposer.add(disposer);
 
 	public onHide(listener: () => void): void {
 		this.hideBus.add(listener);

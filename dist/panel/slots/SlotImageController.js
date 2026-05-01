@@ -3,7 +3,7 @@ import { assertNever } from "../../shared.js";
 import { ImageLightbox } from "../../ui/components/ImageLightbox.js";
 import { multiConfirm, popupConfirm } from "../../util/adapter/popup-adapter.js";
 import { addDoubleTapListener } from "../../util/element/click-actions.js";
-import { createElement, setElementSize } from "../../util/ElementHelper.js";
+import { createElement, el, setElementSize } from "../../util/ElementHelper.js";
 import { EventBus } from "../../util/EventBus.js";
 import { promptImageUpload, resizeImage } from "../../util/image-utils.js";
 import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
@@ -52,30 +52,35 @@ export class SlotImageElement extends OutfitPanelContext {
         this.doubleTap = addDoubleTapListener(this.imgWrapper, () => this.doubleTapBus.emit(), 300, this.singleTap);
     }
     /**
+     * Updates the container's css classes based on how tall and wide the image is within the container
      * @throws if there's no shown image to observe
      */
-    observe(flexParent) {
+    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+    trackResizeChanges(flexParent) {
         if (this._state !== 'shown') {
             throw new Error('No shown image to observe');
         }
+        const resizeBus = new EventBus();
         const updateLayout = () => {
             const imageRect = this.imgWrapper.getBoundingClientRect();
             const containerRect = flexParent.getBoundingClientRect();
             const widthRatio = imageRect.width / containerRect.width;
             const heightRatio = imageRect.height / (containerRect.height);
-            const imageWider = widthRatio > 0.4;
+            const imageWide = widthRatio > 0.4;
             const imageShort = heightRatio < 0.8;
-            flexParent.classList.toggle('--image-wider', imageWider);
+            flexParent.classList.toggle('--image-wider', imageWide);
             flexParent.classList.toggle('--value-taller', imageShort);
+            resizeBus.emit({ imageRect, containerRect, imageWide, imageShort });
         };
         const observer = new ResizeObserver(() => {
             updateLayout();
         });
         observer.observe(this.imgWrapper);
         observer.observe(flexParent);
-        updateLayout();
         return {
-            disconnect: () => observer.disconnect()
+            disconnect: () => observer.disconnect(),
+            onResize: (listener) => resizeBus.add(listener),
+            update: () => updateLayout()
         };
     }
     get imagesView() {
@@ -150,29 +155,67 @@ export class SlotImageElement extends OutfitPanelContext {
         return btn;
     }
     async promptResize() {
-        const container = createElement('div', 'resize-prompt');
-        const createInput = (value) => {
-            const input = createElement('input');
-            input.type = 'number';
-            input.value = value.toString();
-            input.min = '1';
+        const image = this.slot.getActiveImageState();
+        if (!image) {
+            throw new Error('Attempted resizing undefined image.');
+        }
+        const content = el('div', {
+            className: 'resize-prompt-content'
+        });
+        const inputsRow = el('div', {
+            className: 'inputs-row',
+            parent: content
+        });
+        const actionsRow = el('div', {
+            className: 'actions-row',
+            parent: content
+        });
+        const renderInput = (text, value) => {
+            const div = el('div', {
+                className: 'input-div',
+                parent: inputsRow
+            });
+            const caption = el('div', {
+                text: text,
+                parent: div
+            });
+            const input = el('input', {
+                type: 'number',
+                value: value.toString(),
+                min: '1',
+                parent: div
+            });
             return input;
         };
-        const widthInput = createInput(this.imgWrapper.offsetWidth);
-        const heightInput = createInput(this.imgWrapper.offsetHeight);
-        container.append(widthInput, heightInput);
-        const confirmed = await popupConfirm(container, {
+        const widthInput = renderInput('Width', this.imgWrapper.offsetWidth);
+        const heightInput = renderInput('Height', this.imgWrapper.offsetHeight);
+        const matchAspectRatio = () => {
+            const width = Number(widthInput.value);
+            const height = Math.round(width * image.ref.height / image.ref.width);
+            heightInput.value = height.toString();
+        };
+        el('button', {
+            className: 'menu_button',
+            text: '⇅ Fit Height',
+            events: {
+                click: () => matchAspectRatio()
+            },
+            parent: actionsRow
+        });
+        const confirmed = await popupConfirm(content, {
             title: 'Resize Image',
             okText: 'Apply'
         });
         if (!confirmed)
             return;
-        const width = Number(widthInput.value);
-        const height = Number(heightInput.value);
-        if (!width || !height)
-            return;
-        await this.saveImageResize(width, height);
-        this.panel.renderTabsAndActiveContent();
+        {
+            const width = Number(widthInput.value);
+            const height = Number(heightInput.value);
+            if (!width || !height)
+                return;
+            await this.saveImageResize(width, height);
+            this.panel.renderTabsAndActiveContent();
+        }
     }
     async saveImageResize(width, height) {
         const tag = this.slot.activeImageTag;

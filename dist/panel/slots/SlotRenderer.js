@@ -15,7 +15,7 @@ export class SlotRenderer extends OutfitPanelContext {
             removeActionButtons: (ctx) => this.removeActionButtons(ctx),
             editCoordinator: this.deps.editCoordinator
         });
-        this.addendumElement = new SlotChatAddendumController({
+        this.noteElement = new SlotChatAddendumController({
             panel: this.panel,
             removeActionButtons: (ctx) => this.removeActionButtons(ctx),
             editCoordinator: this.deps.editCoordinator
@@ -79,8 +79,8 @@ export class SlotRenderer extends OutfitPanelContext {
         if (mode !== 'normal' && this.valueElement.isEmpty(slot)) {
             valueEl.hidden = true;
         }
-        const { valueEl: addendumEl } = this.addendumElement.render(contentTextEl, ctx);
-        if (mode !== 'normal' && this.addendumElement.isEmpty(slot)) {
+        const { valueEl: addendumEl } = this.noteElement.render(contentTextEl, ctx);
+        if (mode !== 'normal' && this.noteElement.isEmpty(slot)) {
             addendumEl.hidden = true;
         }
         switch (mode) {
@@ -107,18 +107,40 @@ export class SlotRenderer extends OutfitPanelContext {
             'label-right': ctx.labelRightDiv,
             'content': ctx.contentEl
         }[parent];
-        if (imageElement.state === 'shown') {
-            const menu = this.createImageMenu(ctx, imageElement, imgWrapper);
-            imageElement.onDoubleTap(() => menu.toggleMenu());
-        }
         imageElement.appendTo(target);
-        this.valueElement.onRender(valueEl => {
-            if (imageElement.state !== 'shown')
-                return;
-            const observer = imageElement.observe(ctx.contentEl);
-            this.panel.onDispose(observer.disconnect);
-        });
+        if (imageElement.state === 'shown') {
+            this.bindShownImageElement(ctx, imageElement, imgWrapper);
+        }
         return imageElement;
+    }
+    bindShownImageElement(ctx, imageElement, imgWrapper) {
+        const menu = this.createImageMenu(ctx, imageElement, imgWrapper);
+        imageElement.onDoubleTap(() => menu.toggleMenu());
+        const observer = imageElement.trackResizeChanges(ctx.contentEl);
+        this.panel.onDispose(observer.disconnect);
+        let noteEl = null;
+        let valueEl = null;
+        observer.onResize(event => {
+            if (!valueEl)
+                return;
+            if (event.imageWide) {
+                this.valueElement.setCollapsedMaxHeight(valueEl, null);
+                return;
+            }
+            const noteHeight = noteEl?.getBoundingClientRect().height ?? 0;
+            const height = Math.max(0, event.imageRect.height - noteHeight);
+            this.valueElement.setCollapsedMaxHeight(valueEl, height);
+        });
+        const updateOnRender = (controller, set) => {
+            controller.onRender(event => {
+                if (!event.isFor(ctx))
+                    return;
+                set(event.valueEl);
+                observer.update();
+            });
+        };
+        updateOnRender(this.noteElement, el => noteEl = el);
+        updateOnRender(this.valueElement, el => valueEl = el);
     }
     createImageMenu(ctx, imageElement, opener) {
         return this.deps.overflowMenuFactory.create({
@@ -181,7 +203,7 @@ export class SlotRenderer extends OutfitPanelContext {
             const unequipBtn = actionsElement.createUnequipButton(ctx.slot);
             ctx.actionsLeftEl.append(unequipBtn);
         }
-        if (this.addendumElement.isEmpty(ctx.slot)) {
+        if (this.noteElement.isEmpty(ctx.slot)) {
             addendumEl.hidden = true;
         }
         this.appendEditBtn(ctx.actionsRightEl, ctx, valueEl);
@@ -196,8 +218,8 @@ export class SlotRenderer extends OutfitPanelContext {
             shiftSlot: () => this.beginSlotShift(ctx),
             moveSlot: () => this.moveSlot(ctx.slot),
             showPresets: () => SlotPresetsModal.show(ctx.slot, this.outfitManager, () => this.panel.saveAndRender()),
-            canAddNote: () => this.getSlotRenderMode(ctx.slot, this.panel) === 'normal' && this.addendumElement.isEmpty(ctx.slot),
-            addNote: () => this.addendumElement.beginInlineEdit(ctx, addendumEl)
+            canAddNote: () => this.getSlotRenderMode(ctx.slot, this.panel) === 'normal' && this.noteElement.isEmpty(ctx.slot),
+            addNote: () => this.noteElement.beginInlineEdit(ctx, addendumEl)
         }, this.deps.overflowMenuFactory)
             .onClopen(open => ctx.slotElement.classList.toggle('--menu-open', open));
     }

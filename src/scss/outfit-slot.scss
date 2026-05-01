@@ -125,11 +125,14 @@
 	transition: background-image 100ms ease;
 
 	.outfit-slot.--unequipped & {
-		font-style: italic;
-		color: rgba(200, 200, 200, 0.8);
+		color: rgba(160, 160, 160, 0.9);
 		text-shadow:
 			0 0 4px rgba(100, 100, 100, 0.4),
 			0 0 8px rgba(100, 100, 100, 0.4);
+	}
+
+	.outfit-slot.--disabled & {
+		color: rgba(255, 255, 255, 0.5);
 	}
 }
 
@@ -298,7 +301,6 @@
 .slot-button.slot-toggle.is-enabled {
 	background-color: rgba(80, 200, 160, 0.12);
 	color: rgba(200, 255, 230, 0.9);
-	border: 1px solid rgba(80, 200, 160, 0.35);
 }
 
 .slot-button.slot-toggle.is-enabled:hover {
@@ -324,20 +326,12 @@
 	transition: background 0.15s ease, transform 0.05s ease, opacity 0.15s ease;
 }
 
-.unequip-button--unequip {
-	background: rgba(220, 80, 80, 0.25);
+.unequip-button.--equip {
+	background: rgba(0, 240, 120, 0.35);
 }
 
-.unequip-button--unequip:hover {
-	background: rgba(220, 80, 80, 0.4);
-}
-
-.unequip-button--equip {
-	background: rgba(80, 180, 120, 0.25);
-}
-
-.unequip-button--equip:hover {
-	background: rgba(80, 180, 120, 0.4);
+.unequip-button.--equip:hover {
+	background: rgba(0, 240, 120, 0.7);
 }
 
 

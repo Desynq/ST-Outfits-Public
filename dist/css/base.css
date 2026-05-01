@@ -184,9 +184,11 @@
   transition: background-image 100ms ease;
 }
 .outfit-slot.--unequipped .slot-name {
-  font-style: italic;
-  color: rgba(200, 200, 200, 0.8);
+  color: rgba(160, 160, 160, 0.9);
   text-shadow: 0 0 4px rgba(100, 100, 100, 0.4), 0 0 8px rgba(100, 100, 100, 0.4);
+}
+.outfit-slot.--disabled .slot-name {
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .slot-name::after {
@@ -324,7 +326,6 @@
 .slot-button.slot-toggle.is-enabled {
   background-color: rgba(80, 200, 160, 0.12);
   color: rgba(200, 255, 230, 0.9);
-  border: 1px solid rgba(80, 200, 160, 0.35);
 }
 
 .slot-button.slot-toggle.is-enabled:hover {
@@ -349,20 +350,12 @@
   transition: background 0.15s ease, transform 0.05s ease, opacity 0.15s ease;
 }
 
-.unequip-button--unequip {
-  background: rgba(220, 80, 80, 0.25);
+.unequip-button.--equip {
+  background: rgba(0, 240, 120, 0.35);
 }
 
-.unequip-button--unequip:hover {
-  background: rgba(220, 80, 80, 0.4);
-}
-
-.unequip-button--equip {
-  background: rgba(80, 180, 120, 0.25);
-}
-
-.unequip-button--equip:hover {
-  background: rgba(80, 180, 120, 0.4);
+.unequip-button.--equip:hover {
+  background: rgba(0, 240, 120, 0.7);
 }
 
 .slot-token-count {
@@ -468,6 +461,7 @@
   background: rgba(0, 0, 0, 0.5);
   border: rgba(255, 255, 255, 0.25);
   resize: none;
+  overflow: hidden;
   transition: max-height 180ms ease;
 }
 
@@ -476,7 +470,8 @@
 }
 
 .slot-editbox {
-  overflow: visible;
+  flex: 1 1 auto;
+  max-height: none;
 }
 
 .slot-textbox {
@@ -484,8 +479,7 @@
   cursor: text;
   user-select: text;
   -webkit-user-select: text;
-  overflow: hidden;
-  max-height: calc(6lh + 12px);
+  max-height: var(--collapsed-max-height, calc(6lh + 12px));
 }
 .slot-textbox.--reveal {
   max-height: none;
@@ -519,9 +513,7 @@
 }
 
 .outfit-slot.--unequipped .slot-textbox {
-  font-style: italic;
-  background: rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: rgba(160, 160, 160, 0.9);
 }
 
 .slot-macro-span {
@@ -1150,12 +1142,18 @@
   border-color: #fff;
 }
 
-.resize-prompt {
+.resize-prompt-content {
   display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.resize-prompt-content .inputs-row,
+.resize-prompt-content .actions-row {
+  display: flex;
+  flex-direction: row;
   gap: 8px;
 }
-
-.resize-prompt input[type=number] {
+.resize-prompt-content input[type=number] {
   width: 100px;
   padding: 6px 8px;
   background: rgba(255, 255, 255, 0.08);

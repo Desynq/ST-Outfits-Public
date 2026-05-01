@@ -4,7 +4,7 @@ import { mergeClassNames } from "../util/element/css.js";
 import { clampPosition, enforceViewportBounds } from "../util/element/position.js";
 import { el, toggleClasses } from "../util/ElementHelper.js";
 import { EventBus } from "../util/EventBus.js";
-import { Disposer } from "./Disposer.js";
+import { ResourceCleaner } from "./Disposer.js";
 import { SlotsRenderer } from "./SlotsRenderer.js";
 import { OutfitTabsRenderer as TabsRenderer } from "./TabsRenderer.js";
 export class OutfitPanel {
@@ -16,13 +16,13 @@ export class OutfitPanel {
         this.disabled = false;
         this.slotsRenderer = new SlotsRenderer(this);
         this.tabsRenderer = new TabsRenderer(this);
-        this.disposer = new Disposer();
+        this.disposer = new ResourceCleaner();
         this.hideBus = new EventBus();
         this.expandedBus = new EventBus();
         this.dropBus = new EventBus();
         this.focusBus = new EventBus();
         // Event registration
-        this.onDispose = (fn) => this.disposer.add(fn);
+        this.onDispose = (disposer) => this.disposer.add(disposer);
     }
     onHide(listener) {
         this.hideBus.add(listener);

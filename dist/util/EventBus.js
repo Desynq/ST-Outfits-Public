@@ -4,6 +4,7 @@ export class EventBus {
     }
     add(listener) {
         this.listeners.add(listener);
+        return () => this.remove(listener);
     }
     remove(listener) {
         this.listeners.delete(listener);

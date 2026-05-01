@@ -2,7 +2,7 @@ import { OverflowMenu, OverflowMenuFactory } from "../../ui/components/OverflowM
 import { el, ElementOptions } from "../../util/ElementHelper.js";
 import { EventBus } from "../../util/EventBus.js";
 import { conditionalList } from "../../util/list-utils.js";
-import { Disposer } from "../Disposer.js";
+import { ResourceCleaner } from "../Disposer.js";
 
 
 

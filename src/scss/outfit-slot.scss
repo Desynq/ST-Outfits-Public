@@ -125,7 +125,7 @@
 	transition: background-image 100ms ease;
 
 	.outfit-slot.--unequipped & {
-		color: rgba(160, 160, 160, 0.9);
+		color: rgb(180, 180, 180);
 		text-shadow:
 			0 0 4px rgba(100, 100, 100, 0.4),
 			0 0 8px rgba(100, 100, 100, 0.4);

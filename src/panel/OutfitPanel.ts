@@ -50,7 +50,7 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 
 	// Event registration
 
-	public readonly onDispose = (disposer: Disposer): void => this.disposer.add(disposer);
+	public readonly onRenderDispose = (disposer: Disposer): void => this.disposer.add(disposer);
 
 	public onHide(listener: () => void): void {
 		this.hideBus.add(listener);

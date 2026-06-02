@@ -23,6 +23,7 @@ export class OutfitSlotState extends OutfitSlotBase {
         this.images = images;
         this.activeImageTag = raw.activeImageTag;
         this.equipped = raw.equipped;
+        this.conditions = raw.conditions;
     }
     isEnabled() {
         return this.enabled;

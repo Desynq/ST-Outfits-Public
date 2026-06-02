@@ -17,6 +17,7 @@ export interface SlotActionMenuDeps {
 	showPresets(): void;
 	canAddNote(): boolean;
 	addNote(): void;
+	showConditions(): void;
 }
 
 export class SlotActionsMenuElement {
@@ -81,6 +82,7 @@ export class SlotActionsMenuElement {
 			this.createShiftBtn(),
 			this.createMoveBtn(),
 			this.createPresetsBtn(),
+			this.createConditionsBtn(),
 			[this.deps.canAddNote(), () => this.createAddNoteBtn()]
 		);
 	}
@@ -138,6 +140,16 @@ export class SlotActionsMenuElement {
 			text: 'Presets',
 			events: {
 				click: () => this.deps.showPresets()
+			}
+		});
+	}
+
+	private createConditionsBtn(): HTMLButtonElement {
+		return this.createBtn({
+			className: 'slot-button slot-conditions-button',
+			text: 'Conditions',
+			events: {
+				click: () => this.deps.showConditions()
 			}
 		});
 	}

@@ -27,19 +27,27 @@ export const DEFAULT_ACCESSORY_SLOTS = [
 	'foot-accessory'
 ] as const;
 
-function slot(id: string, kind: SlotKind): OutfitSlot {
+export function toSlot(from: {
+	id: string;
+	kind: SlotKind;
+	value?: string;
+}): OutfitSlot {
 	return {
-		id,
-		value: 'None',
-		kind,
+		id: from.id,
+		value: from.value ?? 'None',
+		kind: from.kind,
 		enabled: true,
 		images: {},
 		activeImageTag: null,
-		equipped: true
+		equipped: true,
+		conditions: {
+			mode: 'none',
+			items: []
+		}
 	};
 }
 
 export const DEFAULT_SLOTS = [
-	...DEFAULT_CLOTHING_SLOTS.map(id => slot(id, 'clothing')),
-	...DEFAULT_ACCESSORY_SLOTS.map(id => slot(id, 'accessory'))
+	...DEFAULT_CLOTHING_SLOTS.map(id => toSlot({ id, kind: 'clothing' })),
+	...DEFAULT_ACCESSORY_SLOTS.map(id => toSlot({ id, kind: 'accessory' }))
 ];

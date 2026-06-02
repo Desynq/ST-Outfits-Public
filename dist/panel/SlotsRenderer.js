@@ -5,19 +5,23 @@ import { DisplaySlot } from "./slots/DisplaySlot.js";
 import { EditCoordinator } from "./slots/edit-coordinator.js";
 import { SlotImageElementFactory } from "./slots/SlotImageController.js";
 import { SlotRenderer } from "./slots/SlotRenderer.js";
+function updateBottomPadding(container, child, topOffset = 48) {
+    const padding = Math.max(0, container.clientHeight - child.offsetHeight - topOffset);
+    container.style.paddingBottom = `${padding}px`;
+}
 export class SlotsRenderer extends OutfitPanelContext {
     constructor() {
         super(...arguments);
         this.scrollPositions = new Map();
     }
-    renderSlots(kind, slots, contentArea) {
+    renderSlots(kind, slots, slotContainer) {
         // Always store current scroll before replacing
         if (this.currentKind !== undefined) {
-            this.scrollPositions.set(this.currentKind, contentArea.scrollTop);
+            this.scrollPositions.set(this.currentKind, slotContainer.scrollTop);
         }
         this.currentKind = kind;
         const displaySlots = this.buildDisplaySlots(slots);
-        const imageFactory = new SlotImageElementFactory(this.panel, contentArea.getBoundingClientRect().width);
+        const imageFactory = new SlotImageElementFactory(this.panel, slotContainer.getBoundingClientRect().width);
         const overflowMenuFactory = new OverflowMenuFactory();
         const editCoordinator = new EditCoordinator();
         const slotFactory = new SlotRenderer({
@@ -28,14 +32,22 @@ export class SlotsRenderer extends OutfitPanelContext {
             editCoordinator
         });
         const fragment = document.createDocumentFragment();
-        for (const display of displaySlots) {
-            const el = slotFactory.createSlotElement(contentArea, display);
-            fragment.append(el);
+        let lastSlotEl = null;
+        for (let i = 0; i < displaySlots.length; i++) {
+            const display = displaySlots[i];
+            const slotEl = slotFactory.createSlotElement(slotContainer, display);
+            if (i === displaySlots.length - 1) {
+                lastSlotEl = slotEl;
+            }
+            fragment.append(slotEl);
         }
         const addSlotBtn = this.createAddSlotButton(kind);
         fragment.append(addSlotBtn);
-        contentArea.replaceChildren(fragment);
-        setScroll(contentArea, this.scrollPositions.get(kind));
+        slotContainer.replaceChildren(fragment);
+        if (lastSlotEl) {
+            this.observeLastSlot(slotContainer, lastSlotEl);
+        }
+        setScroll(slotContainer, this.scrollPositions.get(kind) ?? 0);
     }
     buildDisplaySlots(slots) {
         const resolvedSlots = this.outfitView.resolve(slots);
@@ -52,6 +64,9 @@ export class SlotsRenderer extends OutfitPanelContext {
             displayIndex++;
         }
         return displaySlots;
+    }
+    observeLastSlot(slotContainer, slotEl) {
+        updateBottomPadding(slotContainer, slotEl);
     }
     createAddSlotButton(kind) {
         const addSlotButton = document.createElement('button');

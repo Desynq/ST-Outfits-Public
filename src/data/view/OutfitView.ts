@@ -46,27 +46,27 @@ export class OutfitView {
 	}
 
 	public mapSlots<T>(
-		map: (s: Readonly<OutfitSlot>) => T,
-		filter?: (s: Readonly<OutfitSlot>) => boolean
+		map: (slot: Readonly<OutfitSlot>) => T,
+		filter?: (slot: Readonly<OutfitSlot>, slots: readonly Readonly<OutfitSlot>[]) => boolean
 	): Readonly<Record<OutfitSlot['id'], T>> {
 		const out: Record<OutfitSlot['id'], T> = {};
 
-		for (const s of this.slots) {
-			if (filter && !filter(s)) continue;
-			out[s.id] = map(s);
+		for (const slot of this.slots) {
+			if (filter && !filter(slot, this.slots)) continue;
+			out[slot.id] = map(slot);
 		}
 
 		return out;
 	}
 
 	public getSlotValueMap(
-		filter?: (s: Readonly<OutfitSlot>) => boolean
+		filter?: (slot: Readonly<OutfitSlot>, slots: readonly Readonly<OutfitSlot>[]) => boolean
 	): Readonly<Record<string, string>> {
 		const out: Record<string, string> = {};
 
-		for (const s of this.slots) {
-			if (filter && !filter(s)) continue;
-			out[s.id] = s.value;
+		for (const slot of this.slots) {
+			if (filter && !filter(slot, this.slots)) continue;
+			out[slot.id] = slot.value;
 		}
 
 		return out;

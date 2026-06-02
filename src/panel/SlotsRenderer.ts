@@ -7,6 +7,15 @@ import { EditCoordinator } from "./slots/edit-coordinator.js";
 import { SlotImageElementFactory } from "./slots/SlotImageController.js";
 import { SlotRenderer } from "./slots/SlotRenderer.js";
 
+function updateBottomPadding(
+	container: HTMLElement,
+	child: HTMLElement,
+	topOffset = 48
+): void {
+	const padding = Math.max(0, container.clientHeight - child.offsetHeight - topOffset);
+	container.style.paddingBottom = `${padding}px`;
+}
+
 export class SlotsRenderer extends OutfitPanelContext {
 
 	private readonly scrollPositions = new Map<SlotKind, number>();
@@ -15,11 +24,11 @@ export class SlotsRenderer extends OutfitPanelContext {
 	public renderSlots(
 		kind: SlotKind,
 		slots: readonly string[],
-		contentArea: HTMLDivElement
+		slotContainer: HTMLDivElement
 	): void {
 		// Always store current scroll before replacing
 		if (this.currentKind !== undefined) {
-			this.scrollPositions.set(this.currentKind, contentArea.scrollTop);
+			this.scrollPositions.set(this.currentKind, slotContainer.scrollTop);
 		}
 
 		this.currentKind = kind;
@@ -28,7 +37,7 @@ export class SlotsRenderer extends OutfitPanelContext {
 
 		const imageFactory = new SlotImageElementFactory(
 			this.panel,
-			contentArea.getBoundingClientRect().width
+			slotContainer.getBoundingClientRect().width
 		);
 
 		const overflowMenuFactory = new OverflowMenuFactory();
@@ -45,17 +54,27 @@ export class SlotsRenderer extends OutfitPanelContext {
 
 		const fragment = document.createDocumentFragment();
 
-		for (const display of displaySlots) {
-			const el = slotFactory.createSlotElement(contentArea, display);
-			fragment.append(el);
+		let lastSlotEl: HTMLElement | null = null;
+		for (let i = 0; i < displaySlots.length; i++) {
+			const display = displaySlots[i];
+			const slotEl = slotFactory.createSlotElement(slotContainer, display);
+
+			if (i === displaySlots.length - 1) {
+				lastSlotEl = slotEl;
+			}
+
+			fragment.append(slotEl);
 		}
 
 		const addSlotBtn = this.createAddSlotButton(kind);
 		fragment.append(addSlotBtn);
 
-		contentArea.replaceChildren(fragment);
+		slotContainer.replaceChildren(fragment);
+		if (lastSlotEl) {
+			this.observeLastSlot(slotContainer, lastSlotEl);
+		}
 
-		setScroll(contentArea, this.scrollPositions.get(kind));
+		setScroll(slotContainer, this.scrollPositions.get(kind) ?? 0);
 	}
 
 	private buildDisplaySlots(slots: readonly string[]): DisplaySlot[] {
@@ -78,6 +97,10 @@ export class SlotsRenderer extends OutfitPanelContext {
 		}
 
 		return displaySlots;
+	}
+
+	private observeLastSlot(slotContainer: HTMLElement, slotEl: HTMLElement): void {
+		updateBottomPadding(slotContainer, slotEl);
 	}
 
 	private createAddSlotButton(kind: SlotKind): HTMLButtonElement {

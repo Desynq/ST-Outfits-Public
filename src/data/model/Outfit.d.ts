@@ -15,6 +15,18 @@ export interface OutfitImage {
 	hidden: boolean;
 }
 
+export interface SlotCondition {
+	type: 'active';
+	id: string;
+}
+
+export type SlotConditionMapMode = 'none' | 'and_all';
+
+export interface SlotConditionMap {
+	mode: SlotConditionMapMode;
+	items: SlotCondition[];
+}
+
 export interface OutfitSlot {
 	id: string;
 	value: string;
@@ -24,6 +36,7 @@ export interface OutfitSlot {
 	activeImageTag: string | null;
 
 	equipped: boolean;
+	conditions: SlotConditionMap;
 }
 
 export interface Outfit {

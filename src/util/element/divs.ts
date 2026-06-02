@@ -1,4 +1,4 @@
-import { createElement } from "../ElementHelper.js";
+import { createElement, el } from "../ElementHelper.js";
 
 
 
@@ -13,4 +13,10 @@ export function createOverlayElement(
 		overlay.addEventListener('click', (e) => onClick(overlay, e));
 	}
 	return overlay;
+}
+
+export function div(className: string, parent?: HTMLElement): HTMLDivElement {
+	return parent === undefined
+		? el('div', { className })
+		: el('div', { className, parent });
 }

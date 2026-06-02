@@ -6,27 +6,18 @@ import { MutableOutfitView } from "../../data/view/MutableOutfitView.js";
 import { SlotPresetRegistry } from "../../data/view/SlotPresetsView.js";
 import { OutfitManager } from "../../manager/OutfitManager.js";
 import { assertNever } from "../../shared.js";
+import { div } from "../../util/element/divs.js";
 import { createDiv, createElement, el } from "../../util/ElementHelper.js";
 import { resolveKebabCase } from "../../util/StringHelper.js";
+import { SlotModal } from "./Modal.js";
 
 
 
 
 
-export class SlotPresetsModal {
+export class SlotPresetsModal extends SlotModal {
 
-	private root: HTMLDivElement;
-
-	private constructor(
-		private readonly slot: OutfitSlotState,
-		private readonly manager: OutfitManager,
-		private readonly saveAndRender: () => void,
-		private readonly close: () => void
-	) {
-		this.root = createElement('div', 'slot-presets-modal');
-		const div = (className: string, parent: HTMLElement): HTMLDivElement => el('div', { className, parent });
-
-
+	protected override construct(): void {
 		const presets = this.registry.getAllSorted();
 
 		const content = div('slot-presets-content', this.root);
@@ -79,31 +70,6 @@ export class SlotPresetsModal {
 			},
 			parent: footerLeft
 		});
-	}
-
-	public static show(
-		slot: OutfitSlotState,
-		manager: OutfitManager,
-		saveAndRender: () => void
-	): void {
-		const overlay = createElement('div', 'slot-presets-overlay');
-		const modal = new SlotPresetsModal(slot, manager, saveAndRender, () => {
-			overlay.remove();
-		});
-
-		overlay.append(modal.root);
-		document.body.append(overlay);
-
-		overlay.addEventListener('click', (e) => {
-			if (e.target === overlay) {
-				overlay.remove();
-			}
-		});
-	}
-
-	public reshow(): void {
-		this.close();
-		SlotPresetsModal.show(this.slot, this.manager, this.saveAndRender);
 	}
 
 

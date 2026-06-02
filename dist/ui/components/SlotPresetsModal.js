@@ -1,15 +1,11 @@
 import { OutfitTracker } from "../../data/tracker.js";
 import { assertNever } from "../../shared.js";
+import { div } from "../../util/element/divs.js";
 import { createElement, el } from "../../util/ElementHelper.js";
 import { resolveKebabCase } from "../../util/StringHelper.js";
-export class SlotPresetsModal {
-    constructor(slot, manager, saveAndRender, close) {
-        this.slot = slot;
-        this.manager = manager;
-        this.saveAndRender = saveAndRender;
-        this.close = close;
-        this.root = createElement('div', 'slot-presets-modal');
-        const div = (className, parent) => el('div', { className, parent });
+import { SlotModal } from "./Modal.js";
+export class SlotPresetsModal extends SlotModal {
+    construct() {
         const presets = this.registry.getAllSorted();
         const content = div('slot-presets-content', this.root);
         const slotSection = div('slot-presets-slot-section', content);
@@ -54,23 +50,6 @@ export class SlotPresetsModal {
             },
             parent: footerLeft
         });
-    }
-    static show(slot, manager, saveAndRender) {
-        const overlay = createElement('div', 'slot-presets-overlay');
-        const modal = new SlotPresetsModal(slot, manager, saveAndRender, () => {
-            overlay.remove();
-        });
-        overlay.append(modal.root);
-        document.body.append(overlay);
-        overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) {
-                overlay.remove();
-            }
-        });
-    }
-    reshow() {
-        this.close();
-        SlotPresetsModal.show(this.slot, this.manager, this.saveAndRender);
     }
     get registry() {
         return OutfitTracker.slotPresets();

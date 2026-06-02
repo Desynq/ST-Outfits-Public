@@ -5,6 +5,7 @@ import { MutableOutfitView } from "../data/view/MutableOutfitView.js";
 import { IOutfitCollectionView } from "../data/view/OutfitCollectionView.js";
 import { OutfitSnapshotsView } from "../data/view/OutfitSnapshotsView.js";
 import { formatAccessorySlotName, toSlotName } from "../shared.js";
+import { isSlotBlocked } from "../util/slot.js";
 import { indentString, toKebabCase } from "../util/StringHelper.js";
 import { toSummaryKey } from "../util/SummaryHelper.js";
 import { deleteGlobalVariable, getGlobalVariable, setGlobalVariable } from "./GlobalVarManager.js";
@@ -71,7 +72,7 @@ export abstract class OutfitManager {
 	public buildSlotSummariesFromKind(kind: string): Record<string, string> {
 		return this.outfit.mapSlots(
 			s => this.formatSlotSummary(s),
-			s => s.kind === kind && s.enabled
+			(s, arr) => s.kind === kind && s.enabled && !isSlotBlocked(s, arr)
 		);
 	}
 
@@ -85,7 +86,7 @@ export abstract class OutfitManager {
 
 
 	public getVisibleSlotMap(): Record<string, string> {
-		return this.getOutfitView().getSlotValueMap(s => s.enabled);
+		return this.getOutfitView().getSlotValueMap((s, arr) => s.enabled && !isSlotBlocked(s, arr));
 	}
 
 	public abstract getVarName(namespace: string): string;

@@ -6,6 +6,8 @@ declare global {
 
 
 	export type Disposer = () => void;
+
+	export type Constructor<T> = new () => T;
 }
 
 export { };

@@ -44,7 +44,7 @@ export class SlotActionsMenuElement {
         return this;
     }
     buildMenuChildren() {
-        return conditionalList(this.createDeleteBtn(), this.createShiftBtn(), this.createMoveBtn(), this.createPresetsBtn(), [this.deps.canAddNote(), () => this.createAddNoteBtn()]);
+        return conditionalList(this.createDeleteBtn(), this.createShiftBtn(), this.createMoveBtn(), this.createPresetsBtn(), this.createConditionsBtn(), [this.deps.canAddNote(), () => this.createAddNoteBtn()]);
     }
     createBtn(options) {
         const { events, ...rest } = options;
@@ -93,6 +93,15 @@ export class SlotActionsMenuElement {
             text: 'Presets',
             events: {
                 click: () => this.deps.showPresets()
+            }
+        });
+    }
+    createConditionsBtn() {
+        return this.createBtn({
+            className: 'slot-button slot-conditions-button',
+            text: 'Conditions',
+            events: {
+                click: () => this.deps.showConditions()
             }
         });
     }

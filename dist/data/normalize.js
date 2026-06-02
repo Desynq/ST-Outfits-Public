@@ -1,4 +1,7 @@
+import { toSlot } from "../Constants.js";
 import { asBoolean, asObject, resolvePositiveNumber, resolveString, asStringRecord, ensureObject, notObject, resolveTimestamp } from "../ObjectHelper.js";
+import { isRecord } from "../util/narrowing.js";
+import { toSlotId } from "../util/normalize/slot.js";
 import { normalizeOutfitSnapshots } from "./mappings/OutfitCache.js";
 export function validatePresets(holder) {
     if (!holder || typeof holder !== 'object')
@@ -61,15 +64,14 @@ function inferKindFromId(id) {
 }
 function normalizeLegacyOutfit(value) {
     const values = asStringRecord()(value);
-    const slots = Object.entries(values).map(([id, v]) => ({
-        id,
-        kind: inferKindFromId(id),
-        enabled: true,
-        value: v,
-        images: {},
-        activeImageTag: null,
-        equipped: true
-    }));
+    const slots = Object.entries(values).map(([rawId, v]) => {
+        const id = toSlotId(rawId);
+        return toSlot({
+            id,
+            kind: inferKindFromId(id),
+            value: v
+        });
+    });
     return { slots };
 }
 function normalizeKind(kind) {
@@ -87,35 +89,38 @@ export function normalizeOutfit(value) {
     });
     const slots = [];
     const seen = new Set();
-    for (const s of raw.slots) {
-        if (!s || typeof s !== 'object' || typeof s.id !== 'string') {
+    for (const slot of raw.slots) {
+        if (!slot || typeof slot !== 'object' || typeof slot.id !== 'string') {
             continue;
         }
-        if (seen.has(s.id))
+        const id = toSlotId(slot.id);
+        if (!id) {
             continue;
-        seen.add(s.id);
-        slots.push({
-            id: s.id,
-            kind: normalizeKind(s.kind),
-            enabled: typeof s.enabled === 'boolean' ? s.enabled : true,
-            value: typeof s.value === 'string' ? s.value : raw.values[s.id] ?? 'None',
-            images: normalizeImages(s.images),
-            activeImageTag: typeof s.activeImageTag === 'string' ? s.activeImageTag : null,
-            equipped: typeof s.equipped === 'boolean' ? s.equipped : true
-        });
-    }
-    for (const [id, v] of Object.entries(raw.values)) {
+        }
         if (seen.has(id))
             continue;
+        seen.add(id);
         slots.push({
             id,
-            kind: inferKindFromId(id),
-            enabled: true,
-            value: v,
-            images: {},
-            activeImageTag: null,
-            equipped: true
+            kind: normalizeKind(slot.kind),
+            enabled: typeof slot.enabled === 'boolean' ? slot.enabled : true,
+            value: typeof slot.value === 'string' ? slot.value : raw.values[id] ?? 'None',
+            images: normalizeImages(slot.images),
+            activeImageTag: typeof slot.activeImageTag === 'string' ? slot.activeImageTag : null,
+            equipped: typeof slot.equipped === 'boolean' ? slot.equipped : true,
+            conditions: normalizeConditionMap(slot)
         });
+    }
+    // legacy
+    for (const [rawId, v] of Object.entries(raw.values)) {
+        const id = toSlotId(rawId);
+        if (seen.has(id))
+            continue;
+        slots.push(toSlot({
+            id,
+            kind: inferKindFromId(id),
+            value: v
+        }));
     }
     return { slots };
 }
@@ -202,6 +207,38 @@ function normalizeRawSlotPreset(value, images) {
         createdAt,
         lastUsedAt
     };
+}
+export function normalizeConditionMap(slot) {
+    if (!isRecord(slot)) {
+        return {
+            mode: 'none',
+            items: []
+        };
+    }
+    const rawConditions = slot.conditions;
+    if (!rawConditions || typeof rawConditions !== 'object') {
+        return {
+            mode: 'none',
+            items: []
+        };
+    }
+    const map = rawConditions;
+    const conditions = Array.isArray(map.items)
+        ? map.items
+            .filter((condition) => {
+            return !!condition
+                && typeof condition === 'object'
+                && condition.type === 'active'
+                && typeof condition.id === 'string';
+        })
+            .map(condition => ({
+            type: 'active',
+            id: condition.id
+        }))
+        : [];
+    return map.mode === 'and_all'
+        ? { mode: map.mode, items: conditions }
+        : { mode: 'none', items: [] };
 }
 export function normalizeRecord(input, normalizeValue) {
     const out = {};

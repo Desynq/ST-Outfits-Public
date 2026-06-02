@@ -1,4 +1,5 @@
-import { OutfitSlot, SlotKind } from "../model/Outfit.js";
+import { toSlot } from "../../Constants.js";
+import { OutfitSlot, SlotCondition, SlotConditionMapMode, SlotKind } from "../model/Outfit.js";
 import { OutfitTracker } from "../tracker.js";
 
 
@@ -55,7 +56,11 @@ export type ResizeImageResult =
 	| 'noop'
 	| 'resized';
 
-export class MutableSlotView {
+export interface ISlotManipulator {
+	setConditions(id: string, type: SlotConditionMapMode, conditions: SlotCondition[]): boolean;
+}
+
+export class MutableSlotView implements ISlotManipulator {
 
 	private readonly _slots: OutfitSlot[];
 	private indexById: Record<string, number> = {};
@@ -146,6 +151,15 @@ export class MutableSlotView {
 		if (slot === undefined) return false;
 
 		slot.equipped = equipped;
+		return true;
+	}
+
+	public setConditions(id: string, type: SlotConditionMapMode, conditions: SlotCondition[]): boolean {
+		const slot = this.getMutableSlotById(id);
+		if (slot === undefined) return false;
+
+		slot.conditions.mode = type;
+		slot.conditions.items = conditions;
 		return true;
 	}
 
@@ -240,15 +254,10 @@ export class MutableSlotView {
 		const i = this.indexById[id];
 		if (i !== undefined) return 'slot-already-exists';
 
-		this._slots.push({
+		this._slots.push(toSlot({
 			id,
-			kind,
-			value: 'None',
-			enabled: true,
-			images: {},
-			activeImageTag: null,
-			equipped: true
-		});
+			kind
+		}));
 
 		this.indexById[id] = this._slots.length - 1; // append to index
 		return 'added';

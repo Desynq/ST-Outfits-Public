@@ -22,7 +22,7 @@ export class OutfitPanel {
         this.dropBus = new EventBus();
         this.focusBus = new EventBus();
         // Event registration
-        this.onDispose = (disposer) => this.disposer.add(disposer);
+        this.onRenderDispose = (disposer) => this.disposer.add(disposer);
     }
     onHide(listener) {
         this.hideBus.add(listener);

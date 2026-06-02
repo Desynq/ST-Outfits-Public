@@ -1,6 +1,7 @@
 import { ChatOutfitStorage } from "../api/chat-metadata.js";
 import { OutfitTracker } from "../data/tracker.js";
 import { formatAccessorySlotName, toSlotName } from "../shared.js";
+import { isSlotBlocked } from "../util/slot.js";
 import { indentString, toKebabCase } from "../util/StringHelper.js";
 import { toSummaryKey } from "../util/SummaryHelper.js";
 import { deleteGlobalVariable, getGlobalVariable, setGlobalVariable } from "./GlobalVarManager.js";
@@ -29,7 +30,7 @@ export class OutfitManager {
         return this.getOutfitView().values[slotId];
     }
     buildSlotSummariesFromKind(kind) {
-        return this.outfit.mapSlots(s => this.formatSlotSummary(s), s => s.kind === kind && s.enabled);
+        return this.outfit.mapSlots(s => this.formatSlotSummary(s), (s, arr) => s.kind === kind && s.enabled && !isSlotBlocked(s, arr));
     }
     formatSlotSummary(s) {
         const note = ChatOutfitStorage.getAddendum(this.getName(), s.id);
@@ -38,7 +39,7 @@ export class OutfitManager {
             + (note ? `\n\nNote:\n${note}` : '');
     }
     getVisibleSlotMap() {
-        return this.getOutfitView().getSlotValueMap(s => s.enabled);
+        return this.getOutfitView().getSlotValueMap((s, arr) => s.enabled && !isSlotBlocked(s, arr));
     }
     clearSummaries() {
         this.summaryMacros.clear();

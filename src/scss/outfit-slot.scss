@@ -21,6 +21,11 @@
 		border-color: rgba(100, 100, 100, 0.8);
 		box-shadow: 0 0 0 2px rgba(100, 100, 100, 0.4);
 	}
+
+	&.--blocked {
+		border-color: rgba(255, 100, 100, 0.9);
+		box-shadow: 0 0 0 2px rgba(255, 100, 100, 0.25);
+	}
 }
 
 .outfit-slot > * {
@@ -133,6 +138,12 @@
 
 	.outfit-slot.--disabled & {
 		color: rgba(255, 255, 255, 0.5);
+	}
+
+	.outfit-slot.--blocked & {
+		color: rgb(255, 180, 180);
+		text-shadow:
+			0 0 4px rgba(255, 80, 80, 0.25);
 	}
 }
 

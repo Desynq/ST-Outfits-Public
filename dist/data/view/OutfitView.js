@@ -30,19 +30,19 @@ export class OutfitView {
     }
     mapSlots(map, filter) {
         const out = {};
-        for (const s of this.slots) {
-            if (filter && !filter(s))
+        for (const slot of this.slots) {
+            if (filter && !filter(slot, this.slots))
                 continue;
-            out[s.id] = map(s);
+            out[slot.id] = map(slot);
         }
         return out;
     }
     getSlotValueMap(filter) {
         const out = {};
-        for (const s of this.slots) {
-            if (filter && !filter(s))
+        for (const slot of this.slots) {
+            if (filter && !filter(slot, this.slots))
                 continue;
-            out[s.id] = s.value;
+            out[slot.id] = slot.value;
         }
         return out;
     }

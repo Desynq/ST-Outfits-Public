@@ -1,4 +1,4 @@
-import { OutfitSlot, SlotKind } from "./Outfit.js";
+import { OutfitSlot, SlotConditionMap, SlotKind } from "./Outfit.js";
 import { ImageRegistry } from "./OutfitGallery.js";
 import { OutfitImageState } from "./OutfitImageState.js";
 import { KeyedSlotPreset } from "./SlotPreset.js";
@@ -22,6 +22,7 @@ export class OutfitSlotState extends OutfitSlotBase {
 	public readonly images: Readonly<Record<string, OutfitImageState>>;
 	public readonly activeImageTag: string | null;
 	public readonly equipped: boolean;
+	public readonly conditions: SlotConditionMap;
 
 	public constructor(
 		public readonly raw: Readonly<OutfitSlot>,
@@ -45,6 +46,7 @@ export class OutfitSlotState extends OutfitSlotBase {
 		this.images = images;
 		this.activeImageTag = raw.activeImageTag;
 		this.equipped = raw.equipped;
+		this.conditions = raw.conditions;
 	}
 
 	public isEnabled(): boolean {

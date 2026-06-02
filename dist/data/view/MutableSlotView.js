@@ -1,3 +1,4 @@
+import { toSlot } from "../../Constants.js";
 import { OutfitTracker } from "../tracker.js";
 export class MutableSlotView {
     constructor(slots) {
@@ -72,6 +73,14 @@ export class MutableSlotView {
         if (slot === undefined)
             return false;
         slot.equipped = equipped;
+        return true;
+    }
+    setConditions(id, type, conditions) {
+        const slot = this.getMutableSlotById(id);
+        if (slot === undefined)
+            return false;
+        slot.conditions.mode = type;
+        slot.conditions.items = conditions;
         return true;
     }
     attachImage(id, tag, refKey) {
@@ -151,15 +160,10 @@ export class MutableSlotView {
         const i = this.indexById[id];
         if (i !== undefined)
             return 'slot-already-exists';
-        this._slots.push({
+        this._slots.push(toSlot({
             id,
-            kind,
-            value: 'None',
-            enabled: true,
-            images: {},
-            activeImageTag: null,
-            equipped: true
-        });
+            kind
+        }));
         this.indexById[id] = this._slots.length - 1; // append to index
         return 'added';
     }

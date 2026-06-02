@@ -1,5 +1,8 @@
 import { OutfitView } from "./OutfitView.js";
 export class MutableOutfitView extends OutfitView {
+    manipulate() {
+        return this.slotView;
+    }
     setValue(slotId, value) {
         return this.slotView.setValue(slotId, value);
     }

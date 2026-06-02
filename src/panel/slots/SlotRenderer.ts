@@ -2,9 +2,12 @@ import { OutfitSlotState } from "../../data/model/OutfitSnapshots.js";
 import { assertNever, toSlotName } from "../../shared.js";
 import { PanelType } from "../../types/maps.js";
 import { OverflowMenu, OverflowMenuFactory } from "../../ui/components/OverflowMenu.js";
+import { SlotConditionsModal } from "../../ui/components/SlotConditionsModal.js";
 import { SlotPresetsModal } from "../../ui/components/SlotPresetsModal.js";
 import { addDoubleTapListener } from "../../util/element/click-actions.js";
 import { appendElement, createDiv, createElement, el } from "../../util/ElementHelper.js";
+import { toSlotId } from "../../util/normalize/slot.js";
+import { isSlotBlocked } from "../../util/slot.js";
 import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
 import { OutfitPanel } from "../OutfitPanel.js";
 import { OutfitSlotsHost } from "../OutfitSlotsHost.js";
@@ -86,6 +89,7 @@ export class SlotRenderer extends OutfitPanelContext {
 			classes: [
 				slot.enabled && !slot.equipped && '--unequipped',
 				!slot.enabled && '--disabled',
+				isSlotBlocked(slot.raw, this.outfitView.slots) && '--blocked'
 			]
 		});
 
@@ -207,7 +211,7 @@ export class SlotRenderer extends OutfitPanelContext {
 		imageElement.onDoubleTap(() => menu.toggleMenu());
 
 		const observer = imageElement.trackResizeChanges(ctx.contentEl);
-		this.panel.onDispose(observer.disconnect);
+		this.panel.onRenderDispose(observer.disconnect);
 
 		let noteEl: HTMLElement | null = null;
 		let valueEl: HTMLElement | null = null;
@@ -245,7 +249,7 @@ export class SlotRenderer extends OutfitPanelContext {
 	private createImageMenu(ctx: SlotContext, imageElement: SlotImageElement, opener: HTMLElement): OverflowMenu {
 		return this.deps.overflowMenuFactory.create({
 			openerEl: opener,
-			onDispose: this.panel.onDispose,
+			onDispose: this.panel.onRenderDispose,
 			align: 'left',
 			options: {
 				parent: ctx.slotElement,
@@ -337,7 +341,7 @@ export class SlotRenderer extends OutfitPanelContext {
 			{
 				mountEl: ctx.slotElement,
 				getViewBoundary: () => ctx.scroller.getBoundingClientRect(),
-				onDispose: this.panel.onDispose,
+				onDispose: this.panel.onRenderDispose,
 				deleteSlot: () => this.askDeleteSlot(ctx.slotElement, ctx.slot),
 				shiftSlot: () => this.beginSlotShift(ctx),
 				moveSlot: () => this.moveSlot(ctx.slot),
@@ -348,7 +352,12 @@ export class SlotRenderer extends OutfitPanelContext {
 				),
 
 				canAddNote: () => this.getSlotRenderMode(ctx.slot, this.panel) === 'normal' && this.noteElement.isEmpty(ctx.slot),
-				addNote: () => this.noteElement.beginInlineEdit(ctx, addendumEl)
+				addNote: () => this.noteElement.beginInlineEdit(ctx, addendumEl),
+				showConditions: () => SlotConditionsModal.show(
+					ctx.slot,
+					this.outfitManager,
+					() => this.panel.saveAndRender()
+				)
 			},
 			this.deps.overflowMenuFactory
 		)
@@ -406,15 +415,6 @@ export class SlotRenderer extends OutfitPanelContext {
 		}
 
 		ctx.imageActionsEl.replaceChildren();
-	}
-
-	private toSlotId(slotName: string): string {
-		return slotName
-			.trim()
-			.toLowerCase()
-			.replace(/[^a-z0-9\s-]/g, '') // drop punctation/symbols
-			.replace(/\s+/g, '-') // space → hyphens
-			.replace(/-+/g, '-'); // collapse repeat hyphens
 	}
 
 	/* ------------------------------- Slot Moving ------------------------------ */
@@ -590,7 +590,7 @@ export class SlotRenderer extends OutfitPanelContext {
 
 	private commitRename(slot: OutfitSlotState, textarea: HTMLTextAreaElement): void {
 		const rawName = textarea.value;
-		const newSlotId = this.toSlotId(rawName);
+		const newSlotId = toSlotId(rawName);
 
 		const slotAlreadyExists = this.outfitView.hasSlotId(newSlotId);
 		const hadToFormat = rawName !== newSlotId;

@@ -1,6 +1,7 @@
 // @ts-ignore
 import { extension_settings } from "../../../../../extensions.js";
 import { saveSettings } from "../api/settings.js";
+import { isObject, notObject } from "../ObjectHelper.js";
 import { normalizeCharPanels, normalizePanelSettings } from "./mappings/PanelSettings.js";
 import { CharactersOutfitMap, ExtensionSettingsAugment, ImageBlob, ImageCacheEntry, ImageRef, OutfitTrackerModel } from "./model/Outfit.js";
 import { normalizeImageBlobs, normalizeSlotPresets, validatePresets } from "./normalize.js";
@@ -131,6 +132,8 @@ const settings = extension_settings as typeof extension_settings & ExtensionSett
 function loadTracker(): Tracker {
 	const raw: Partial<OutfitTrackerModel> = settings.outfit_tracker ??= {};
 
+	migrateTracker(raw);
+
 	raw.enableSysMessages ??= false;
 	raw.autoOpenUser ??= false;
 	raw.autoOpenBot ??= false;
@@ -143,7 +146,86 @@ function loadTracker(): Tracker {
 	normalizePanelSettings(raw, 'userPanel', defaultUserPanelSettings);
 	normalizePanelSettings(raw, 'botPanel', defaultBotPanelSettings);
 
+	raw.version = 1;
 	return new Tracker(raw as OutfitTrackerModel);
+}
+
+function migrateTracker(raw: Partial<OutfitTrackerModel>): void {
+	const version = typeof raw.version === 'number' ? raw.version : 0;
+
+	if (version < 1) {
+		migrateOutfitNamingV1(raw.presets);
+		raw.version = 1;
+	}
+
+	if (version < 2) {
+		migratePanelSettingsV2(raw);
+		raw.version = 2;
+	}
+}
+
+function migrateOutfitNamingV1(presets: unknown): void {
+	if (notObject(presets)) return;
+
+	for (const collection of getPresetCollections(presets as Record<string, unknown>)) {
+		if (notObject(collection)) continue;
+
+		const raw = collection as Record<string, unknown>;
+
+		if (!('current_outfit' in raw) && 'autoOutfit' in raw) {
+			raw.current_outfit = raw.autoOutfit;
+		}
+
+		if (!('saved_outfits' in raw) && 'outfits' in raw) {
+			raw.saved_outfits = raw.outfits;
+		}
+
+		delete raw.autoOutfit;
+		delete raw.outfits;
+	}
+}
+
+function migratePanelSettingsV2(raw: Partial<OutfitTrackerModel>): void {
+	migrateSinglePanelSettingsV2(raw.userPanel);
+	migrateSinglePanelSettingsV2(raw.botPanel);
+
+	const charPanels = raw.charPanels;
+	if (notObject(charPanels)) return;
+
+	const panels = charPanels.panels;
+	if (notObject(panels)) return;
+
+	for (const panel of Object.values(panels)) {
+		migrateSinglePanelSettingsV2(panel);
+	}
+}
+
+function migrateSinglePanelSettingsV2(settings: unknown): void {
+	if (notObject(settings)) return;
+
+	const raw = settings as Record<string, unknown>;
+
+	if (!('load_state' in raw)) {
+		raw.load_state = raw.canLoadFromChat === false
+			? 'global'
+			: 'chat';
+	}
+
+	delete raw.canLoadFromChat;
+}
+
+function getPresetCollections(
+	presets: Record<string, unknown>
+): unknown[] {
+	const collections: unknown[] = [];
+
+	collections.push(presets.user);
+
+	if (presets.bot && typeof presets.bot === 'object') {
+		collections.push(...Object.values(presets.bot));
+	}
+
+	return collections;
 }
 
 export const OutfitTracker = loadTracker();

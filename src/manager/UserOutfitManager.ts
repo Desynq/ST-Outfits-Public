@@ -1,7 +1,7 @@
 import { areOutfitSnapshotsEqual } from "../data/model/OutfitSnapshots.js";
 import { OutfitTracker } from "../data/tracker.js";
 import { IOutfitCollectionView } from "../data/view/OutfitCollectionView.js";
-import { OutfitManager } from "./OutfitManager.js";
+import { LoadPresetResult, OutfitManager } from "./OutfitManager.js";
 
 export class UserOutfitManager extends OutfitManager {
     public constructor(
@@ -42,7 +42,7 @@ export class UserOutfitManager extends OutfitManager {
         }
     }
 
-    public async savePreset(outfitName: string): Promise<string> {
+    public savePreset(outfitName: string): string {
         const outfit = this.getOutfitView().snapshot();
 
         OutfitTracker.userOutfits().saveOutfit(outfitName, outfit);
@@ -53,16 +53,16 @@ export class UserOutfitManager extends OutfitManager {
         return '';
     }
 
-    public async loadPreset(outfitName: string): Promise<string> {
+    public loadPreset(outfitName: string): LoadPresetResult {
         const newOutfit = OutfitTracker.userOutfits().getSavedOutfit(outfitName)?.snapshot();
         if (newOutfit === undefined) {
-            return `[Outfit System] Preset "${outfitName}" not found.`;
+            return 'not-found';
         }
 
         const oldOutfit = this.getOutfitView().snapshot();
 
         if (areOutfitSnapshotsEqual(oldOutfit, newOutfit)) {
-            return `You are already wearing the "${outfitName}" outfit.`;
+            return 'already-wearing';
         }
 
         OutfitTracker.userOutfits().setAutosavedOutfit(newOutfit);
@@ -71,7 +71,7 @@ export class UserOutfitManager extends OutfitManager {
             void this.setSlotValue(slotId, value);
         }
 
-        return `You changed into the "${outfitName}" outfit.`;
+        return 'success';
     }
 
     public deletePreset(outfitName: string): string {

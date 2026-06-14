@@ -31,7 +31,7 @@ export class UserOutfitManager extends OutfitManager {
             return `You changed from ${previousValue} to ${value}.`;
         }
     }
-    async savePreset(outfitName) {
+    savePreset(outfitName) {
         const outfit = this.getOutfitView().snapshot();
         OutfitTracker.userOutfits().saveOutfit(outfitName, outfit);
         if (OutfitTracker.areSystemMessagesEnabled()) {
@@ -39,20 +39,20 @@ export class UserOutfitManager extends OutfitManager {
         }
         return '';
     }
-    async loadPreset(outfitName) {
+    loadPreset(outfitName) {
         const newOutfit = OutfitTracker.userOutfits().getSavedOutfit(outfitName)?.snapshot();
         if (newOutfit === undefined) {
-            return `[Outfit System] Preset "${outfitName}" not found.`;
+            return 'not-found';
         }
         const oldOutfit = this.getOutfitView().snapshot();
         if (areOutfitSnapshotsEqual(oldOutfit, newOutfit)) {
-            return `You are already wearing the "${outfitName}" outfit.`;
+            return 'already-wearing';
         }
         OutfitTracker.userOutfits().setAutosavedOutfit(newOutfit);
         for (const [slotId, value] of Object.entries(this.getOutfitView().values)) {
             void this.setSlotValue(slotId, value);
         }
-        return `You changed into the "${outfitName}" outfit.`;
+        return 'success';
     }
     deletePreset(outfitName) {
         const outfit = OutfitTracker.userOutfits().getSavedOutfit(outfitName);

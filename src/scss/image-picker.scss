@@ -116,6 +116,10 @@
 	display: none;
 }
 
+.outfit-slot.--unequipped .slot-image {
+	filter: grayscale(25%) opacity(0.75);
+}
+
 .slot-content:has(.slot-value.disabled) .slot-image {
 	filter: grayscale(100%) opacity(0.6);
 }

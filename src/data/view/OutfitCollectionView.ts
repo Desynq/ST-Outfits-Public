@@ -10,6 +10,7 @@ import { OutfitView } from "./OutfitView.js";
 
 export interface IOutfitCollectionView {
 	getOrCreateAutosaved(): MutableOutfitView;
+	clearCurrentOutfit(): void;
 
 	areDisabledSlotsHidden(): boolean;
 	hideDisabledSlots(hide: boolean): void;
@@ -21,8 +22,8 @@ export interface IOutfitCollectionView {
 }
 
 export interface ICharacterOutfitCollectionView extends IOutfitCollectionView {
-	commitAutosave(): void;
-	loadFromChat(): void;
+	saveCurrentOutfitToChat(): void;
+	loadCurrentOutfitFromChat(): void;
 }
 
 export abstract class OutfitCollectionView implements IOutfitCollectionView {
@@ -39,8 +40,13 @@ export abstract class OutfitCollectionView implements IOutfitCollectionView {
 	public getOrCreateAutosaved(): MutableOutfitView {
 		const c = this.getOrCreateCollection();
 
-		c.autoOutfit ??= this.createDefaultOutfit();
-		return new MutableOutfitView('auto', c.autoOutfit);
+		c.current_outfit ??= this.createDefaultOutfit();
+		return new MutableOutfitView('auto', c.current_outfit);
+	}
+
+	public clearCurrentOutfit(): void {
+		const c = this.getOrCreateCollection();
+		c.current_outfit = { slots: [] };
 	}
 
 	protected createDefaultOutfit(): Outfit {
@@ -85,11 +91,11 @@ export class UserOutfitCollectionView extends OutfitCollectionView {
 	}
 
 	public getOutfitNames(): string[] {
-		return Object.keys(this.collection.outfits);
+		return Object.keys(this.collection.saved_outfits);
 	}
 
 	public getSavedOutfit(outfitName: string): OutfitView | undefined {
-		const outfit = this.collection.outfits[outfitName];
+		const outfit = this.collection.saved_outfits[outfitName];
 		if (outfit === undefined) return undefined;
 
 
@@ -97,15 +103,15 @@ export class UserOutfitCollectionView extends OutfitCollectionView {
 	}
 
 	public saveOutfit(outfitName: string, outfit: OutfitSnapshot): void {
-		this.collection.outfits[outfitName] = outfit;
+		this.collection.saved_outfits[outfitName] = outfit;
 	}
 
 	public setAutosavedOutfit(outfit: OutfitSnapshot): void {
-		this.collection.autoOutfit = outfit;
+		this.collection.current_outfit = outfit;
 	}
 
 	public deleteSavedOutfit(outfitName: string): void {
-		delete this.collection.outfits[outfitName];
+		delete this.collection.saved_outfits[outfitName];
 	}
 }
 export class CharacterOutfitCollectionView extends OutfitCollectionView implements ICharacterOutfitCollectionView {
@@ -136,32 +142,32 @@ export class CharacterOutfitCollectionView extends OutfitCollectionView implemen
 	public getSavedOutfitNames(): string[] {
 		const collection = this.getOutfitCollection();
 		if (collection === undefined) return [];
-		return Object.keys(collection.outfits);
+		return Object.keys(collection.saved_outfits);
 	}
 
 	public getSavedOutfit(outfitName: string): OutfitView | undefined {
 		if (this.hasCollection()) return undefined;
 
 		const collection = this.getOrCreateCollection();
-		const outfit = collection.outfits[outfitName];
+		const outfit = collection.saved_outfits[outfitName];
 		if (outfit === undefined) return undefined;
 
 		return new OutfitView(outfitName, outfit);
 	}
 
 	public saveOutfit(outfitName: string, outfit: OutfitSnapshot): void {
-		this.getOrCreateCollection().outfits[outfitName] = outfit;
+		this.getOrCreateCollection().saved_outfits[outfitName] = outfit;
 	}
 
 	public deleteSavedOutfit(outfitName: string): void {
 		const outfits = this.getOutfitCollection();
 		if (outfits === undefined) return;
 
-		delete outfits.outfits[outfitName];
+		delete outfits.saved_outfits[outfitName];
 	}
 
 	public loadOutfit(outfit: OutfitSnapshot): void {
-		this.getOrCreateCollection().autoOutfit = outfit;
+		this.getOrCreateCollection().current_outfit = outfit;
 	}
 
 	public clear(): void {
@@ -170,16 +176,16 @@ export class CharacterOutfitCollectionView extends OutfitCollectionView implemen
 
 
 
-	public loadFromChat(): void {
+	public loadCurrentOutfitFromChat(): void {
 		const c = this.getOrCreateCollection();
 
-		c.autoOutfit ??= this.createDefaultOutfit();
-		ChatOutfitStorage.loadOutfitInto(c.autoOutfit, this.character);
+		c.current_outfit ??= this.createDefaultOutfit();
+		ChatOutfitStorage.loadOutfitInto(c.current_outfit, this.character);
 	}
 
-	public commitAutosave(): void {
+	public saveCurrentOutfitToChat(): void {
 		const c = this.getOrCreateCollection();
-		ChatOutfitStorage.saveOutfit(c.autoOutfit, this.character);
+		ChatOutfitStorage.saveOutfitToChat(c.current_outfit, this.character);
 	}
 }
 

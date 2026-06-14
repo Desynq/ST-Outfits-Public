@@ -3,7 +3,7 @@ export const defaultUserPanelSettings = {
     desktopXY: [20, 50],
     mobileXY: [20, 50],
     saveXY: false,
-    canLoadFromChat: true
+    load_state: 'global'
 };
 export const defaultBotPanelSettings = {
     ...defaultUserPanelSettings,
@@ -66,10 +66,13 @@ export class PanelSettingsView {
         this.settings.saveXY = enabled;
     }
     canLoadFromChat() {
-        return this.settings.canLoadFromChat;
+        return this.getLoadState() === 'chat';
     }
-    setCanLoadFromChat(canLoad) {
-        this.settings.canLoadFromChat = canLoad;
+    getLoadState() {
+        return this.settings.load_state;
+    }
+    setLoadState(state) {
+        this.settings.load_state = state;
     }
 }
 export class UserPanelSettingsView extends PanelSettingsView {
@@ -148,7 +151,7 @@ export class CharPanelSettingsView extends PanelSettingsView {
             saveXY: false,
             desktopXY: [20, 170],
             mobileXY: [20, 170],
-            canLoadFromChat: true
+            load_state: 'global'
         };
     }
     getDefaultTheme() {

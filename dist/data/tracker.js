@@ -1,6 +1,7 @@
 // @ts-ignore
 import { extension_settings } from "../../../../../extensions.js";
 import { saveSettings } from "../api/settings.js";
+import { notObject } from "../ObjectHelper.js";
 import { normalizeCharPanels, normalizePanelSettings } from "./mappings/PanelSettings.js";
 import { normalizeImageBlobs, normalizeSlotPresets, validatePresets } from "./normalize.js";
 import { CharPanelsView } from "./view/CharPanelsView.js";
@@ -88,6 +89,7 @@ class CharacterOutfitMapView {
 const settings = extension_settings;
 function loadTracker() {
     const raw = settings.outfit_tracker ?? (settings.outfit_tracker = {});
+    migrateTracker(raw);
     raw.enableSysMessages ?? (raw.enableSysMessages = false);
     raw.autoOpenUser ?? (raw.autoOpenUser = false);
     raw.autoOpenBot ?? (raw.autoOpenBot = false);
@@ -97,7 +99,68 @@ function loadTracker() {
     validatePresets(raw);
     normalizePanelSettings(raw, 'userPanel', defaultUserPanelSettings);
     normalizePanelSettings(raw, 'botPanel', defaultBotPanelSettings);
+    raw.version = 1;
     return new Tracker(raw);
+}
+function migrateTracker(raw) {
+    const version = typeof raw.version === 'number' ? raw.version : 0;
+    if (version < 1) {
+        migrateOutfitNamingV1(raw.presets);
+        raw.version = 1;
+    }
+    if (version < 2) {
+        migratePanelSettingsV2(raw);
+        raw.version = 2;
+    }
+}
+function migrateOutfitNamingV1(presets) {
+    if (notObject(presets))
+        return;
+    for (const collection of getPresetCollections(presets)) {
+        if (notObject(collection))
+            continue;
+        const raw = collection;
+        if (!('current_outfit' in raw) && 'autoOutfit' in raw) {
+            raw.current_outfit = raw.autoOutfit;
+        }
+        if (!('saved_outfits' in raw) && 'outfits' in raw) {
+            raw.saved_outfits = raw.outfits;
+        }
+        delete raw.autoOutfit;
+        delete raw.outfits;
+    }
+}
+function migratePanelSettingsV2(raw) {
+    migrateSinglePanelSettingsV2(raw.userPanel);
+    migrateSinglePanelSettingsV2(raw.botPanel);
+    const charPanels = raw.charPanels;
+    if (notObject(charPanels))
+        return;
+    const panels = charPanels.panels;
+    if (notObject(panels))
+        return;
+    for (const panel of Object.values(panels)) {
+        migrateSinglePanelSettingsV2(panel);
+    }
+}
+function migrateSinglePanelSettingsV2(settings) {
+    if (notObject(settings))
+        return;
+    const raw = settings;
+    if (!('load_state' in raw)) {
+        raw.load_state = raw.canLoadFromChat === false
+            ? 'global'
+            : 'chat';
+    }
+    delete raw.canLoadFromChat;
+}
+function getPresetCollections(presets) {
+    const collections = [];
+    collections.push(presets.user);
+    if (presets.bot && typeof presets.bot === 'object') {
+        collections.push(...Object.values(presets.bot));
+    }
+    return collections;
 }
 export const OutfitTracker = loadTracker();
 await OutfitTracker.migrate();

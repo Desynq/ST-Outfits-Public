@@ -261,25 +261,48 @@ export class VisibilityTab extends PanelTab {
 	private renderLoadSettings(contentArea: HTMLDivElement): void {
 		const panelSettings = this.panel.getPanelSettings();
 
-		const toggleLoadFromChat = createDerivedToggleButton(
-			'visibility-tab-button toggle-load-from-chat',
-			() => panelSettings.canLoadFromChat(),
-			(canLoad) => canLoad
-				? 'Disable Loading From Chat'
-				: 'Enable Loading From Chat',
-			(canLoad) => {
-				const next = !canLoad;
-				panelSettings.setCanLoadFromChat(next);
+		const wrapper = document.createElement('label');
+		wrapper.className = 'visibility-load-state-row';
 
-				if (next && this.panel instanceof CharOutfitPanel) {
-					this.panel.saveToChat();
-				}
+		const label = document.createElement('span');
+		label.textContent = 'Load outfit from';
 
-				this.outfitManager.saveSettings();
-			}
-		);
+		const select = document.createElement('select');
+		select.className = 'visibility-load-state-select';
 
-		contentArea.append(toggleLoadFromChat);
+		const options: { value: 'chat' | 'global' | 'character'; label: string; }[] = [
+			{ value: 'chat', label: 'Chat' },
+			{ value: 'global', label: 'Global' }
+		];
+
+		if (this.panel instanceof CharOutfitPanel) {
+			options.push({ value: 'character', label: 'Character' });
+		}
+
+		for (const option of options) {
+			el('option', {
+				value: option.value,
+				text: option.label,
+				parent: select
+			});
+		}
+
+		const current = panelSettings.getLoadState();
+
+		select.value = options.some(option => option.value === current)
+			? current
+			: 'chat';
+
+		select.addEventListener('change', async () => {
+			const next = select.value as 'chat' | 'global' | 'character';
+
+			panelSettings.setLoadState(next);
+
+			this.outfitManager.saveSettings();
+		});
+
+		wrapper.append(label, select);
+		contentArea.append(wrapper);
 	}
 
 

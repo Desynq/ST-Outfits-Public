@@ -2,10 +2,11 @@ import { OutfitTracker } from "../data/tracker.js";
 import { MappedEventBus } from "../util/EventBus.js";
 import { CharOutfitPanel } from "./CharOutfitPanel.js";
 export class OutfitPanelRegistry {
-    constructor(saveSettings, userPanel, botPanel) {
+    constructor(saveSettings, userPanel, botPanel, getCurrentCharacterKey) {
         this.saveSettings = saveSettings;
         this.userPanel = userPanel;
         this.botPanel = botPanel;
+        this.getCurrentCharacterKey = getCurrentCharacterKey;
         this.panels = new Set();
         this.charPanels = new Map();
         this.groupAppendBus = new MappedEventBus();
@@ -83,10 +84,15 @@ export class OutfitPanelRegistry {
         if (panel) {
             return { panel, created: false };
         }
-        panel = CharOutfitPanel.from(character, this.saveSettings, this);
+        panel = CharOutfitPanel.from({
+            characterKey: character,
+            saveSettings: this.saveSettings,
+            grouper: this,
+            getCurrentCharacterKey: this.getCurrentCharacterKey
+        });
         // char panels can be created mid-chat
         if (panel.getPanelSettings().canLoadFromChat()) {
-            panel.outfitManager.getOutfitCollection().loadFromChat();
+            panel.outfitManager.getOutfitCollection().loadCurrentOutfitFromChat();
         }
         panel.onDestroy(() => this.unregister(character));
         panel.onDrop((packet) => this.handleCharPanelDrop(panel, packet));
@@ -96,7 +102,7 @@ export class OutfitPanelRegistry {
     }
     handleCharPanelDrop(panel, packet) {
         const { mode, cursor } = packet;
-        const name = panel.character;
+        const name = panel.characterKey;
         const groups = this.viewGroups();
         groups.moveGroup(name, mode, cursor.x, cursor.y);
         let droppedOn = null;
@@ -139,7 +145,7 @@ export class OutfitPanelRegistry {
     }
     append(parent, child) {
         const groups = this.viewGroups();
-        groups.append(child.character, parent.character);
+        groups.append(child.characterKey, parent.characterKey);
         child.close({ destroy: false });
         const parentMode = parent.getLayoutMode();
         const parentXY = parent.getPanelSettings().getXY(parentMode);
@@ -148,13 +154,13 @@ export class OutfitPanelRegistry {
         this.groupAppendBus.emit(parent, child);
     }
     ungroup(panel) {
-        const name = panel.character;
+        const name = panel.characterKey;
         const groups = this.viewGroups();
         const group = groups.getGroup(name);
         if (!group)
             return;
         const leader = this.getOrCreate(group[0]).panel;
-        groups.remove(panel.character);
+        groups.remove(panel.characterKey);
         const mode = leader.getLayoutMode();
         const [x, y] = this.computeUngroupPosition(panel, leader, group, mode);
         panel.getPanelSettings().setXY(mode, x, y);
@@ -174,7 +180,7 @@ export class OutfitPanelRegistry {
         const rect = leader.getBoundingClientRect();
         const viewportMid = window.innerHeight / 2;
         const offset = rect.height + 8;
-        const index = group.indexOf(panel.character);
+        const index = group.indexOf(panel.characterKey);
         const direction = rect.top < viewportMid ? 1 : -1;
         return [leaderX, leaderY + offset * index * direction];
     }
@@ -182,7 +188,7 @@ export class OutfitPanelRegistry {
         if (!panel.canShow())
             return false;
         const groups = this.viewGroups();
-        const group = groups.getGroup(panel.character);
+        const group = groups.getGroup(panel.characterKey);
         if (!group)
             return false;
         const prevLeader = this.getOrCreate(group[0]).panel;
@@ -190,7 +196,7 @@ export class OutfitPanelRegistry {
         const prevXY = prevLeader.getPanelSettings().getXY(mode);
         panel.getPanelSettings().setXY(mode, ...prevXY);
         prevLeader.close({ destroy: false });
-        groups.focus(panel.character);
+        groups.focus(panel.characterKey);
         panel.show({
             forcePos: true
         });
@@ -201,7 +207,7 @@ export class OutfitPanelRegistry {
     }
     getGroup(panel) {
         const groups = this.viewGroups();
-        const group = groups.getGroup(panel.character);
+        const group = groups.getGroup(panel.characterKey);
         if (!group) {
             return [];
         }

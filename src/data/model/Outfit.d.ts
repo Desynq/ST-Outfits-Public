@@ -44,8 +44,8 @@ export interface Outfit {
 }
 
 export interface OutfitCollection {
-	outfits: Record<string, Outfit | undefined>;
-	autoOutfit: Outfit;
+	saved_outfits: Record<string, Outfit | undefined>;
+	current_outfit: Outfit;
 	hideDisabled: boolean;
 	hideEmpty: boolean;
 	snapshots: Record<string, OutfitCachedSnapshot>;
@@ -97,6 +97,7 @@ export interface ImageCacheEntry {
 
 
 export interface OutfitTrackerModel {
+	version: number;
 	enableSysMessages: boolean;
 	autoOpenBot: boolean;
 	autoOpenUser: boolean;

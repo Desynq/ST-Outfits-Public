@@ -1,3 +1,4 @@
+import { CurrentCharacterProvider } from "../api/character-provider.js";
 import { OutfitTracker } from "../data/tracker.js";
 import { CharPanelsView } from "../data/view/CharPanelsView.js";
 import { CharPanelSettingsView } from "../data/view/PanelViews.js";
@@ -15,18 +16,27 @@ export class CharOutfitPanel extends OutfitPanel<'char'> {
 
 	private constructor(
 		outfitManager: CharOutfitManager,
-		private readonly grouper: ICharPanelGrouper
+		private readonly grouper: ICharPanelGrouper,
+		private readonly getCurrentCharacterKey: CurrentCharacterProvider
 	) {
 		super(outfitManager);
 	}
 
-	public static from(
-		character: string,
-		saveSettings: () => void,
-		grouper: ICharPanelGrouper
-	): CharOutfitPanel {
-		const manager = new CharOutfitManager(saveSettings, character);
-		const panel = new CharOutfitPanel(manager, grouper);
+	public static from({
+		characterKey,
+		saveSettings,
+		grouper,
+		displayName = characterKey,
+		getCurrentCharacterKey
+	}: {
+		characterKey: string;
+		saveSettings: () => void;
+		grouper: ICharPanelGrouper;
+		displayName?: string;
+		getCurrentCharacterKey: CurrentCharacterProvider;
+	}): CharOutfitPanel {
+		const manager = new CharOutfitManager(saveSettings, characterKey, displayName);
+		const panel = new CharOutfitPanel(manager, grouper, getCurrentCharacterKey);
 
 		manager.setFullSummaryTagResolver(() => panel.getPanelSettings().getFullSummaryTag());
 
@@ -39,8 +49,12 @@ export class CharOutfitPanel extends OutfitPanel<'char'> {
 	}
 
 
-	public get character(): string {
-		return this.outfitManager.character;
+	public get characterKey(): string {
+		return this.outfitManager.characterKey;
+	}
+
+	public get displayName(): string {
+		return this.outfitManager.displayName;
 	}
 
 	private get panelsView(): CharPanelsView {
@@ -89,7 +103,7 @@ export class CharOutfitPanel extends OutfitPanel<'char'> {
 	}
 
 	public override getPanelSettings(): CharPanelSettingsView {
-		return this.panelsView.getOrCreate(this.character);
+		return this.panelsView.getOrCreate(this.characterKey);
 	}
 
 	public override async exportButtonClickListener(): Promise<void> {
@@ -125,14 +139,14 @@ export class CharOutfitPanel extends OutfitPanel<'char'> {
 	public override getHeaderTitle(): string {
 		const tag = this.getPanelSettings().getFullSummaryTag()?.tag;
 		if (tag === undefined) {
-			return `${this.character}'s Outfit`;
+			return `${this.characterKey}'s Outfit`;
 		}
 
-		if (this.character.toLowerCase().endsWith(tag)) {
-			return `${this.character}`;
+		if (this.characterKey.toLowerCase().endsWith(tag)) {
+			return `${this.characterKey}`;
 		}
 
-		return `${this.character}'s ${fromKebabCase(tag)}`;
+		return `${this.characterKey}'s ${fromKebabCase(tag)}`;
 	}
 
 	public override getPanelType(): 'char' {
@@ -142,7 +156,7 @@ export class CharOutfitPanel extends OutfitPanel<'char'> {
 	public override show(options: ShowOptions = {}): boolean {
 		if (!super.show(options)) return false;
 
-		this.panelsView.setActive(this.character);
+		this.panelsView.setActive(this.characterKey);
 		this.outfitManager.saveSettings();
 
 		return true;
@@ -160,7 +174,7 @@ export class CharOutfitPanel extends OutfitPanel<'char'> {
 
 		this.outfitManager.clearSummaries();
 
-		this.panelsView.removeActive(this.character);
+		this.panelsView.removeActive(this.characterKey);
 		this.outfitManager.saveSettings();
 
 		this.destroyBus.emit();
@@ -199,11 +213,15 @@ export class CharOutfitPanel extends OutfitPanel<'char'> {
 					}
 				});
 
-				const canLoad = panel.getPanelSettings().canLoadFromChat();
+				const loadState = panel.getPanelSettings().getLoadState();
 
 				const lock = el('span', {
 					className: `panel-switch-lock`,
-					text: canLoad ? '📖' : '🌐'
+					text: {
+						'chat': '📖',
+						'global': '🌐',
+						'character': '👤'
+					}[loadState]
 				});
 				// lock.classList.toggle('is-hidden', canLoad);
 
@@ -292,9 +310,9 @@ export class CharOutfitPanel extends OutfitPanel<'char'> {
 			dropdown.hidden = true;
 		};
 
-		this.grouper.onGroupAppend(this.character, groupAppend);
-		this.grouper.onGroupRemove(this.character, groupRemove);
-		this.grouper.onGroupFocus(this.character, groupFocus);
+		this.grouper.onGroupAppend(this.characterKey, groupAppend);
+		this.grouper.onGroupRemove(this.characterKey, groupRemove);
+		this.grouper.onGroupFocus(this.characterKey, groupFocus);
 
 		if (this.grouper.getGroup(this).length === 0) {
 			dropdown.hidden = true;
@@ -312,14 +330,41 @@ export class CharOutfitPanel extends OutfitPanel<'char'> {
 	public saveToChat(): boolean {
 		if (!this.getPanelSettings().canLoadFromChat()) return false;
 
-		OutfitTracker.characterOutfits(this.character).commitAutosave();
+		OutfitTracker.characterOutfits(this.characterKey).saveCurrentOutfitToChat();
 		return true;
 	}
 
 	public loadFromChat(): boolean {
 		if (!this.getPanelSettings().canLoadFromChat()) return false;
 
-		this.outfitManager.getOutfitCollection().loadFromChat();
+		this.outfitManager.getOutfitCollection().loadCurrentOutfitFromChat();
+		this.renderTabsAndActiveContent();
+		return true;
+	}
+
+
+
+	public saveToCharacter(): boolean {
+		if (this.getPanelSettings().getLoadState() !== 'character') return false;
+		const ck = this.getCurrentCharacterKey();
+		if (ck === null) return false;
+
+		const name = `@character:${ck}`;
+		this.outfitManager.savePreset(name);
+		return true;
+	}
+
+	public loadFromCharacter(): boolean {
+		if (this.getPanelSettings().getLoadState() !== 'character') return false;
+		const ck = this.getCurrentCharacterKey();
+		if (ck === null) return false;
+
+		const name = `@character:${ck}`;
+		const result = this.outfitManager.loadPreset(name);
+		if (result === 'not-found') {
+			this.outfitManager.getOutfitCollection().clearCurrentOutfit();
+		}
+
 		this.renderTabsAndActiveContent();
 		return true;
 	}

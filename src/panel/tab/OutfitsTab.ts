@@ -1,5 +1,5 @@
 import { createButton } from "../../util/element/ButtonHelper.js";
-import { createElement } from "../../util/ElementHelper.js";
+import { createElement, el } from "../../util/ElementHelper.js";
 import { PanelTab } from "./PanelTab.js";
 
 
@@ -21,6 +21,9 @@ export class OutfitsTab extends PanelTab {
 
 		this.renderSaveButton(contentArea);
 		this.renderExportButton(contentArea);
+		if (this.outfitManager.getOutfitView().slots.length > 0) {
+			this.renderClearButton(contentArea);
+		}
 	}
 
 	private renderPreset(contentArea: HTMLDivElement, preset: string): void {
@@ -83,5 +86,19 @@ export class OutfitsTab extends PanelTab {
 		);
 
 		contentArea.appendChild(exportButton);
+	}
+
+	private renderClearButton(contentArea: HTMLDivElement): void {
+		el('button', {
+			className: 'system-tab-button clear-outfit-btn',
+			text: 'Clear Current Outfit',
+			events: {
+				click: () => {
+					this.outfitManager.getOutfitCollection().clearCurrentOutfit();
+					this.panel.saveAndRender();
+				}
+			},
+			parent: contentArea
+		});
 	}
 }

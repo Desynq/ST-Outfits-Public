@@ -1,10 +1,13 @@
 
 
 
-export function notObject(value: unknown): boolean {
+export function notObject(value: unknown): value is null | undefined | string | number | boolean | symbol | bigint {
 	return !value || typeof value !== 'object';
 }
 
+export function isObject(value: unknown): value is Record<string, unknown> {
+	return !!value && typeof value === 'object';
+}
 
 
 

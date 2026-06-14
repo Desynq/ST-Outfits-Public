@@ -11,7 +11,7 @@ export class CharPanelsView {
         var _a;
         return new CharPanelSettingsView(name, (_a = this.tree.panels)[name] ?? (_a[name] = {
             saveXY: false,
-            canLoadFromChat: true
+            load_state: 'global'
         }));
     }
     isActive(name) {

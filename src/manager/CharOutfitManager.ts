@@ -3,24 +3,32 @@ import { FullSummaryTag } from "../data/model/Panels.js";
 import { OutfitTracker } from "../data/tracker.js";
 import { ICharacterOutfitCollectionView, IOutfitCollectionView } from "../data/view/OutfitCollectionView.js";
 import { toPascalCase } from "../util/StringHelper.js";
-import { OutfitManager } from "./OutfitManager.js";
+import { LoadPresetResult, OutfitManager } from "./OutfitManager.js";
 
 
 
 export class CharOutfitManager extends OutfitManager {
 
+	public readonly characterKey: string;
+	public readonly displayName: string;
+
 	private resolveFullSummaryTag?: () => FullSummaryTag | undefined;
 
 	public constructor(
 		saveSettings: () => void,
-		public readonly character: string,
+		characterKey: string,
+		displayName: string = characterKey
 	) {
-		super(saveSettings, toPascalCase(character));
+		super(saveSettings, toPascalCase(displayName));
+
+		this.characterKey = characterKey;
+		this.displayName = displayName;
+
 		this.onActiveOutfitChanged();
 	}
 
 	public override getName(): string {
-		return this.character;
+		return this.characterKey;
 	}
 
 	public override isUser(): boolean {
@@ -28,11 +36,11 @@ export class CharOutfitManager extends OutfitManager {
 	}
 
 	public override getNameMacro(): string {
-		return this.character;
+		return this.characterKey;
 	}
 
 	public override getVarName(namespace: string): string {
-		return `${this.character.replace(/\s+/g, ' ')}_${namespace}`;
+		return `${this.characterKey.replace(/\s+/g, ' ')}_${namespace}`;
 	}
 
 	public override async updateSlotValue(slotId: string, value: string): Promise<string> {
@@ -40,23 +48,23 @@ export class CharOutfitManager extends OutfitManager {
 		void this.setSlotValue(slotId, value);
 
 		if (previousValue === 'None' && value !== 'None') {
-			return `${this.character} put on ${value}.`;
+			return `${this.characterKey} put on ${value}.`;
 		}
 		else if (value === 'None') {
-			return `${this.character} removed ${previousValue}.`;
+			return `${this.characterKey} removed ${previousValue}.`;
 		}
 		else {
-			return `${this.character} changed from ${previousValue} to ${value}.`;
+			return `${this.characterKey} changed from ${previousValue} to ${value}.`;
 		}
 	}
 
 
-	public override async savePreset(outfitName: string): Promise<string> {
+	public override savePreset(outfitName: string): string {
 		const outfit = this.getOutfitView().snapshot();
 
-		OutfitTracker.characterOutfits(this.character).saveOutfit(outfitName, outfit);
+		OutfitTracker.characterOutfits(this.characterKey).saveOutfit(outfitName, outfit);
 
-		return `Saved "${outfitName}" outfit for ${this.character}.`;
+		return `Saved "${outfitName}" outfit for ${this.displayName}.`;
 	}
 
 	public exportPresetToUser(outfitName: string): string {
@@ -67,16 +75,16 @@ export class CharOutfitManager extends OutfitManager {
 		return `Exported "${outfitName}" outfit to user.`;
 	}
 
-	public override async loadPreset(outfitName: string): Promise<string> {
-		const collectionView = OutfitTracker.characterOutfits(this.character);
+	public override loadPreset(outfitName: string): LoadPresetResult {
+		const collectionView = OutfitTracker.characterOutfits(this.characterKey);
 		const newOutfit = collectionView.getSavedOutfit(outfitName)?.snapshot();
 		if (newOutfit === undefined) {
-			return `[Outfit System] Preset "${outfitName}" not found.`;
+			return 'not-found';
 		}
 
 		const oldOutfit = this.getOutfitView().snapshot();
 		if (areOutfitSnapshotsEqual(oldOutfit, newOutfit)) {
-			return `${this.character} was already wearing the "${outfitName}" outfit.`;
+			return 'already-wearing';
 		}
 
 		collectionView.loadOutfit(newOutfit);
@@ -85,28 +93,28 @@ export class CharOutfitManager extends OutfitManager {
 			void this.setSlotValue(slot, value);
 		}
 
-		return `${this.character} changed into the "${outfitName}" outfit.`;
+		return 'success';
 	}
 
 	public override deletePreset(outfitName: string): string {
-		const outfit = OutfitTracker.characterOutfits(this.character).getSavedOutfit(outfitName);
+		const outfit = OutfitTracker.characterOutfits(this.characterKey).getSavedOutfit(outfitName);
 		if (outfit === undefined) {
 			return `[Outfit System] Preset "${outfitName}" not found.`;
 		}
 
-		OutfitTracker.characterOutfits(this.character).deleteSavedOutfit(outfitName);
+		OutfitTracker.characterOutfits(this.characterKey).deleteSavedOutfit(outfitName);
 
 		return `Deleted "${outfitName}" outfit.`;
 	}
 
 	public override getPresets(): string[] {
-		const outfits = OutfitTracker.characterOutfits(this.character).getSavedOutfitNames();
+		const outfits = OutfitTracker.characterOutfits(this.characterKey).getSavedOutfitNames();
 
 		return outfits;
 	}
 
 	public override getOutfitCollection(): ICharacterOutfitCollectionView {
-		return OutfitTracker.characterOutfits(this.character);
+		return OutfitTracker.characterOutfits(this.characterKey);
 	}
 
 

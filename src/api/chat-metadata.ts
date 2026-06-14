@@ -71,7 +71,7 @@ class _ChatOutfitStorage {
 		settingsOutfit.slots = structuredClone(stored.slots);
 	}
 
-	public saveOutfit(settingsOutfit: Outfit, character: string): void {
+	public saveOutfitToChat(settingsOutfit: Outfit, character: string): void {
 		const data = this.getChatData();
 
 		data.outfits[character] = structuredClone(settingsOutfit);

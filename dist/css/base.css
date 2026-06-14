@@ -97,8 +97,7 @@
   z-index: 10;
 }
 .outfit-slot.--unequipped {
-  border-color: rgba(100, 100, 100, 0.8);
-  box-shadow: 0 0 0 2px rgba(100, 100, 100, 0.4);
+  border-style: dashed;
 }
 .outfit-slot.--blocked {
   border-color: rgba(255, 100, 100, 0.9);
@@ -1282,6 +1281,10 @@
 
 .slot-image.--error {
   display: none;
+}
+
+.outfit-slot.--unequipped .slot-image {
+  filter: grayscale(25%) opacity(0.75);
 }
 
 .slot-content:has(.slot-value.disabled) .slot-image {

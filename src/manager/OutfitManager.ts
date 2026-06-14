@@ -16,6 +16,11 @@ type RenameSlotResult =
 	| 'slot-already-exists'
 	| 'slot-renamed';
 
+export type LoadPresetResult =
+	| 'not-found'
+	| 'already-wearing'
+	| 'success';
+
 export abstract class OutfitManager {
 
 	protected readonly summaryMacros: OutfitMacroManager;
@@ -63,9 +68,9 @@ export abstract class OutfitManager {
 
 	public abstract deletePreset(outfitName: string): string;
 
-	public abstract loadPreset(outfitName: string): Promise<string>;
+	public abstract loadPreset(outfitName: string): LoadPresetResult;
 
-	public abstract savePreset(outfitName: string): Promise<string>;
+	public abstract savePreset(outfitName: string): string;
 
 
 

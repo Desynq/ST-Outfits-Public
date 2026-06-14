@@ -171,17 +171,37 @@ export class VisibilityTab extends PanelTab {
     }
     renderLoadSettings(contentArea) {
         const panelSettings = this.panel.getPanelSettings();
-        const toggleLoadFromChat = createDerivedToggleButton('visibility-tab-button toggle-load-from-chat', () => panelSettings.canLoadFromChat(), (canLoad) => canLoad
-            ? 'Disable Loading From Chat'
-            : 'Enable Loading From Chat', (canLoad) => {
-            const next = !canLoad;
-            panelSettings.setCanLoadFromChat(next);
-            if (next && this.panel instanceof CharOutfitPanel) {
-                this.panel.saveToChat();
-            }
+        const wrapper = document.createElement('label');
+        wrapper.className = 'visibility-load-state-row';
+        const label = document.createElement('span');
+        label.textContent = 'Load outfit from';
+        const select = document.createElement('select');
+        select.className = 'visibility-load-state-select';
+        const options = [
+            { value: 'chat', label: 'Chat' },
+            { value: 'global', label: 'Global' }
+        ];
+        if (this.panel instanceof CharOutfitPanel) {
+            options.push({ value: 'character', label: 'Character' });
+        }
+        for (const option of options) {
+            el('option', {
+                value: option.value,
+                text: option.label,
+                parent: select
+            });
+        }
+        const current = panelSettings.getLoadState();
+        select.value = options.some(option => option.value === current)
+            ? current
+            : 'chat';
+        select.addEventListener('change', async () => {
+            const next = select.value;
+            panelSettings.setLoadState(next);
             this.outfitManager.saveSettings();
         });
-        contentArea.append(toggleLoadFromChat);
+        wrapper.append(label, select);
+        contentArea.append(wrapper);
     }
     renderThemeInputs(contentArea) {
         const panelSettings = this.panel.getPanelSettings();

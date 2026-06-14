@@ -1,6 +1,7 @@
 const getContext = SillyTavern.getContext;
 // @ts-ignore
 import { extension_settings } from '../../../../extensions.js';
+import { getCurrentCharacterKey } from './api/character-provider.js';
 import { saveSettings as saveSettingsBase } from './api/settings.js';
 import { registerPanelCommands } from './command/panel-commands.js';
 import { OutfitPanelRegistry } from './panel/PanelRegistry.js';
@@ -39,11 +40,13 @@ async function initializeExtension() {
         if (panelRegistryHook) {
             for (const charPanel of panelRegistryHook.getCharPanels()) {
                 // avoid saving twice
-                if (charPanel.character === botPanel.character)
+                if (charPanel.characterKey === botPanel.character)
                     continue;
                 charPanel.saveToChat();
+                charPanel.saveToCharacter();
             }
             botPanel.saveToChat();
+            botPanel.saveToCharacter();
         }
         saveSettingsBase();
     };
@@ -51,7 +54,7 @@ async function initializeExtension() {
     const userManager = new UserOutfitManager(saveSettings);
     const botPanel = new BotOutfitPanel(botManager);
     const userPanel = new UserOutfitPanel(userManager);
-    const panelRegistry = new OutfitPanelRegistry(saveSettings, userPanel, botPanel);
+    const panelRegistry = new OutfitPanelRegistry(saveSettings, userPanel, botPanel, getCurrentCharacterKey);
     panelRegistryHook = panelRegistry;
     const autoOutfitSystem = new AutoOutfitSystem(botManager);
     // Store panels globally for access in other functions
@@ -148,6 +151,9 @@ async function initializeExtension() {
         const context = getContext();
         const charName = context.characters[context.characterId]?.name || 'Unknown';
         botPanel.updateCharacter(charName);
+        for (const charPanel of panelRegistry.getCharPanels()) {
+            charPanel.loadFromCharacter();
+        }
     }
     function setupEventListeners() {
         const context = getContext();

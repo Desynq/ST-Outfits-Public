@@ -43,7 +43,7 @@ class _ChatOutfitStorage {
             return;
         settingsOutfit.slots = structuredClone(stored.slots);
     }
-    saveOutfit(settingsOutfit, character) {
+    saveOutfitToChat(settingsOutfit, character) {
         const data = this.getChatData();
         data.outfits[character] = structuredClone(settingsOutfit);
         this.saveChatData(data);

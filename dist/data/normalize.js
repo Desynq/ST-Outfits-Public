@@ -1,5 +1,5 @@
 import { toSlot } from "../Constants.js";
-import { asBoolean, asObject, resolvePositiveNumber, resolveString, asStringRecord, ensureObject, notObject, resolveTimestamp } from "../ObjectHelper.js";
+import { asBoolean, asObject, asStringRecord, ensureObject, notObject, resolvePositiveNumber, resolveString, resolveTimestamp } from "../ObjectHelper.js";
 import { isRecord } from "../util/narrowing.js";
 import { toSlotId } from "../util/normalize/slot.js";
 import { normalizeOutfitSnapshots } from "./mappings/OutfitCache.js";
@@ -19,23 +19,23 @@ export function validatePresets(holder) {
 }
 export function normalizeOutfitCollection(value) {
     const raw = ensureObject(value, {
-        outfits: asObject({}),
-        autoOutfit: normalizeOutfit,
+        saved_outfits: asObject({}),
+        current_outfit: normalizeOutfit,
         hideDisabled: asBoolean(false),
         hideEmpty: asBoolean(false),
         snapshots: asObject({}),
         diffs: asObject({})
     });
-    const outfits = {};
-    for (const [name, v] of Object.entries(raw.outfits)) {
-        outfits[name] = isLegacyOutfit(v)
+    const savedOutfits = {};
+    for (const [name, v] of Object.entries(raw.saved_outfits)) {
+        savedOutfits[name] = isLegacyOutfit(v)
             ? normalizeLegacyOutfit(v)
             : normalizeOutfit(v);
     }
     normalizeOutfitSnapshots(raw.snapshots);
     return {
-        outfits,
-        autoOutfit: raw.autoOutfit,
+        saved_outfits: savedOutfits,
+        current_outfit: raw.current_outfit,
         hideDisabled: raw.hideDisabled,
         hideEmpty: raw.hideEmpty,
         snapshots: raw.snapshots,
@@ -43,10 +43,10 @@ export function normalizeOutfitCollection(value) {
     };
 }
 function normalizePresetCollection(value) {
-    if (value && typeof value === 'object' && !('outfits' in value)) {
+    if (value && typeof value === 'object' && !('saved_outfits' in value)) {
         return normalizeOutfitCollection({
-            outfits: value,
-            autoOutfit: {}
+            saved_outfits: value,
+            current_outfit: {}
         });
     }
     return normalizeOutfitCollection(value);

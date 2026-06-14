@@ -27,10 +27,14 @@ export interface PanelGroup {
 
 
 
+export type PanelLoadState =
+	| 'global'
+	| 'chat'
+	| 'character';
 
 export interface PanelSettingsBase {
 	saveXY: boolean;
-	canLoadFromChat: boolean;
+	load_state: PanelLoadState;
 
 	bgColor1?: string;
 	bgColor2?: string;
@@ -42,7 +46,7 @@ export interface PanelSettings {
 	desktopXY: XY;
 	mobileXY: XY;
 	saveXY: boolean;
-	canLoadFromChat: boolean;
+	load_state: PanelLoadState;
 }
 
 

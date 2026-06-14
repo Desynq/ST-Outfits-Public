@@ -1,7 +1,7 @@
 import { areOutfitSnapshotsEqual } from "../data/model/OutfitSnapshots.js";
 import { OutfitTracker } from "../data/tracker.js";
 import { ICharacterOutfitCollectionView, IOutfitCollectionView } from "../data/view/OutfitCollectionView.js";
-import { OutfitManager } from "./OutfitManager.js";
+import { LoadPresetResult, OutfitManager } from "./OutfitManager.js";
 
 export class BotOutfitManager extends OutfitManager {
     public character!: string;
@@ -51,7 +51,7 @@ export class BotOutfitManager extends OutfitManager {
         }
     }
 
-    public override async savePreset(outfitName: string): Promise<string> {
+    public override savePreset(outfitName: string): string {
         const outfit = this.getOutfitView().snapshot();
 
         OutfitTracker.characterOutfits(this.character).saveOutfit(outfitName, outfit);
@@ -73,16 +73,16 @@ export class BotOutfitManager extends OutfitManager {
         return "";
     }
 
-    public override async loadPreset(outfitName: string): Promise<string> {
+    public override loadPreset(outfitName: string): LoadPresetResult {
         const collectionView = OutfitTracker.characterOutfits(this.character);
         const newOutfit = collectionView.getSavedOutfit(outfitName)?.snapshot();
         if (newOutfit === undefined) {
-            return `[Outfit System] Preset "${outfitName}" not found.`;
+            return 'not-found';
         }
 
         const oldOutfit = this.getOutfitView().snapshot();
         if (areOutfitSnapshotsEqual(oldOutfit, newOutfit)) {
-            return `${this.character} was already wearing the "${outfitName}" outfit.`;
+            return 'already-wearing';
         }
 
         collectionView.loadOutfit(newOutfit);
@@ -91,7 +91,7 @@ export class BotOutfitManager extends OutfitManager {
             void this.setSlotValue(slot, value);
         }
 
-        return `${this.character} changed into the "${outfitName}" outfit.`;
+        return 'success';
     }
 
     public override deletePreset(outfitName: string): string {

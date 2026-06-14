@@ -12,8 +12,12 @@ export class OutfitCollectionView {
     }
     getOrCreateAutosaved() {
         const c = this.getOrCreateCollection();
-        c.autoOutfit ?? (c.autoOutfit = this.createDefaultOutfit());
-        return new MutableOutfitView('auto', c.autoOutfit);
+        c.current_outfit ?? (c.current_outfit = this.createDefaultOutfit());
+        return new MutableOutfitView('auto', c.current_outfit);
+    }
+    clearCurrentOutfit() {
+        const c = this.getOrCreateCollection();
+        c.current_outfit = { slots: [] };
     }
     createDefaultOutfit() {
         return {
@@ -46,22 +50,22 @@ export class UserOutfitCollectionView extends OutfitCollectionView {
         return this.collection;
     }
     getOutfitNames() {
-        return Object.keys(this.collection.outfits);
+        return Object.keys(this.collection.saved_outfits);
     }
     getSavedOutfit(outfitName) {
-        const outfit = this.collection.outfits[outfitName];
+        const outfit = this.collection.saved_outfits[outfitName];
         if (outfit === undefined)
             return undefined;
         return new OutfitView(outfitName, outfit);
     }
     saveOutfit(outfitName, outfit) {
-        this.collection.outfits[outfitName] = outfit;
+        this.collection.saved_outfits[outfitName] = outfit;
     }
     setAutosavedOutfit(outfit) {
-        this.collection.autoOutfit = outfit;
+        this.collection.current_outfit = outfit;
     }
     deleteSavedOutfit(outfitName) {
-        delete this.collection.outfits[outfitName];
+        delete this.collection.saved_outfits[outfitName];
     }
 }
 export class CharacterOutfitCollectionView extends OutfitCollectionView {
@@ -88,39 +92,39 @@ export class CharacterOutfitCollectionView extends OutfitCollectionView {
         const collection = this.getOutfitCollection();
         if (collection === undefined)
             return [];
-        return Object.keys(collection.outfits);
+        return Object.keys(collection.saved_outfits);
     }
     getSavedOutfit(outfitName) {
         if (this.hasCollection())
             return undefined;
         const collection = this.getOrCreateCollection();
-        const outfit = collection.outfits[outfitName];
+        const outfit = collection.saved_outfits[outfitName];
         if (outfit === undefined)
             return undefined;
         return new OutfitView(outfitName, outfit);
     }
     saveOutfit(outfitName, outfit) {
-        this.getOrCreateCollection().outfits[outfitName] = outfit;
+        this.getOrCreateCollection().saved_outfits[outfitName] = outfit;
     }
     deleteSavedOutfit(outfitName) {
         const outfits = this.getOutfitCollection();
         if (outfits === undefined)
             return;
-        delete outfits.outfits[outfitName];
+        delete outfits.saved_outfits[outfitName];
     }
     loadOutfit(outfit) {
-        this.getOrCreateCollection().autoOutfit = outfit;
+        this.getOrCreateCollection().current_outfit = outfit;
     }
     clear() {
         delete this.map[this.character];
     }
-    loadFromChat() {
+    loadCurrentOutfitFromChat() {
         const c = this.getOrCreateCollection();
-        c.autoOutfit ?? (c.autoOutfit = this.createDefaultOutfit());
-        ChatOutfitStorage.loadOutfitInto(c.autoOutfit, this.character);
+        c.current_outfit ?? (c.current_outfit = this.createDefaultOutfit());
+        ChatOutfitStorage.loadOutfitInto(c.current_outfit, this.character);
     }
-    commitAutosave() {
+    saveCurrentOutfitToChat() {
         const c = this.getOrCreateCollection();
-        ChatOutfitStorage.saveOutfit(c.autoOutfit, this.character);
+        ChatOutfitStorage.saveOutfitToChat(c.current_outfit, this.character);
     }
 }

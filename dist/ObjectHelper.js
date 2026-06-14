@@ -1,6 +1,9 @@
 export function notObject(value) {
     return !value || typeof value !== 'object';
 }
+export function isObject(value) {
+    return !!value && typeof value === 'object';
+}
 export function ensureObject(target, shape) {
     if (!target || typeof target !== 'object') {
         target = {};

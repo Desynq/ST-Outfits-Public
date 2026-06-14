@@ -5,14 +5,15 @@ import { EventBus } from "../util/EventBus.js";
 import { fromKebabCase } from "../util/StringHelper.js";
 import { OutfitPanel } from "./OutfitPanel.js";
 export class CharOutfitPanel extends OutfitPanel {
-    constructor(outfitManager, grouper) {
+    constructor(outfitManager, grouper, getCurrentCharacterKey) {
         super(outfitManager);
         this.grouper = grouper;
+        this.getCurrentCharacterKey = getCurrentCharacterKey;
         this.destroyBus = new EventBus();
     }
-    static from(character, saveSettings, grouper) {
-        const manager = new CharOutfitManager(saveSettings, character);
-        const panel = new CharOutfitPanel(manager, grouper);
+    static from({ characterKey, saveSettings, grouper, displayName = characterKey, getCurrentCharacterKey }) {
+        const manager = new CharOutfitManager(saveSettings, characterKey, displayName);
+        const panel = new CharOutfitPanel(manager, grouper, getCurrentCharacterKey);
         manager.setFullSummaryTagResolver(() => panel.getPanelSettings().getFullSummaryTag());
         return panel;
     }
@@ -20,8 +21,11 @@ export class CharOutfitPanel extends OutfitPanel {
         this.destroyBus.add(listener);
         return this;
     }
-    get character() {
-        return this.outfitManager.character;
+    get characterKey() {
+        return this.outfitManager.characterKey;
+    }
+    get displayName() {
+        return this.outfitManager.displayName;
     }
     get panelsView() {
         return OutfitTracker.viewCharPanels();
@@ -60,7 +64,7 @@ export class CharOutfitPanel extends OutfitPanel {
         return true;
     }
     getPanelSettings() {
-        return this.panelsView.getOrCreate(this.character);
+        return this.panelsView.getOrCreate(this.characterKey);
     }
     async exportButtonClickListener() {
         const presetName = prompt('Name this export:');
@@ -88,12 +92,12 @@ export class CharOutfitPanel extends OutfitPanel {
     getHeaderTitle() {
         const tag = this.getPanelSettings().getFullSummaryTag()?.tag;
         if (tag === undefined) {
-            return `${this.character}'s Outfit`;
+            return `${this.characterKey}'s Outfit`;
         }
-        if (this.character.toLowerCase().endsWith(tag)) {
-            return `${this.character}`;
+        if (this.characterKey.toLowerCase().endsWith(tag)) {
+            return `${this.characterKey}`;
         }
-        return `${this.character}'s ${fromKebabCase(tag)}`;
+        return `${this.characterKey}'s ${fromKebabCase(tag)}`;
     }
     getPanelType() {
         return 'char';
@@ -101,7 +105,7 @@ export class CharOutfitPanel extends OutfitPanel {
     show(options = {}) {
         if (!super.show(options))
             return false;
-        this.panelsView.setActive(this.character);
+        this.panelsView.setActive(this.characterKey);
         this.outfitManager.saveSettings();
         return true;
     }
@@ -115,7 +119,7 @@ export class CharOutfitPanel extends OutfitPanel {
         this.panelEl = null;
         this.disposer.dispose();
         this.outfitManager.clearSummaries();
-        this.panelsView.removeActive(this.character);
+        this.panelsView.removeActive(this.characterKey);
         this.outfitManager.saveSettings();
         this.destroyBus.emit();
     }
@@ -147,10 +151,14 @@ export class CharOutfitPanel extends OutfitPanel {
                         }
                     }
                 });
-                const canLoad = panel.getPanelSettings().canLoadFromChat();
+                const loadState = panel.getPanelSettings().getLoadState();
                 const lock = el('span', {
                     className: `panel-switch-lock`,
-                    text: canLoad ? '📖' : '🌐'
+                    text: {
+                        'chat': '📖',
+                        'global': '🌐',
+                        'character': '👤'
+                    }[loadState]
                 });
                 // lock.classList.toggle('is-hidden', canLoad);
                 const label = el('span', {
@@ -222,9 +230,9 @@ export class CharOutfitPanel extends OutfitPanel {
                 return;
             dropdown.hidden = true;
         };
-        this.grouper.onGroupAppend(this.character, groupAppend);
-        this.grouper.onGroupRemove(this.character, groupRemove);
-        this.grouper.onGroupFocus(this.character, groupFocus);
+        this.grouper.onGroupAppend(this.characterKey, groupAppend);
+        this.grouper.onGroupRemove(this.characterKey, groupRemove);
+        this.grouper.onGroupFocus(this.characterKey, groupFocus);
         if (this.grouper.getGroup(this).length === 0) {
             dropdown.hidden = true;
         }
@@ -238,13 +246,37 @@ export class CharOutfitPanel extends OutfitPanel {
     saveToChat() {
         if (!this.getPanelSettings().canLoadFromChat())
             return false;
-        OutfitTracker.characterOutfits(this.character).commitAutosave();
+        OutfitTracker.characterOutfits(this.characterKey).saveCurrentOutfitToChat();
         return true;
     }
     loadFromChat() {
         if (!this.getPanelSettings().canLoadFromChat())
             return false;
-        this.outfitManager.getOutfitCollection().loadFromChat();
+        this.outfitManager.getOutfitCollection().loadCurrentOutfitFromChat();
+        this.renderTabsAndActiveContent();
+        return true;
+    }
+    saveToCharacter() {
+        if (this.getPanelSettings().getLoadState() !== 'character')
+            return false;
+        const ck = this.getCurrentCharacterKey();
+        if (ck === null)
+            return false;
+        const name = `@character:${ck}`;
+        this.outfitManager.savePreset(name);
+        return true;
+    }
+    loadFromCharacter() {
+        if (this.getPanelSettings().getLoadState() !== 'character')
+            return false;
+        const ck = this.getCurrentCharacterKey();
+        if (ck === null)
+            return false;
+        const name = `@character:${ck}`;
+        const result = this.outfitManager.loadPreset(name);
+        if (result === 'not-found') {
+            this.outfitManager.getOutfitCollection().clearCurrentOutfit();
+        }
         this.renderTabsAndActiveContent();
         return true;
     }

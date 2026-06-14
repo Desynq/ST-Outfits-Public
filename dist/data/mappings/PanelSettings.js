@@ -22,9 +22,9 @@ export function normalizePanelSettings(holder, key, fallback) {
     target.saveXY = typeof target.saveXY === 'boolean'
         ? target.saveXY
         : fallback.saveXY;
-    target.canLoadFromChat = typeof target.canLoadFromChat === 'boolean'
-        ? target.canLoadFromChat
-        : fallback.canLoadFromChat;
+    target.load_state = typeof target.load_state === 'string' && ['global', 'chat', 'character'].includes(target.load_state)
+        ? target.load_state
+        : fallback.load_state;
 }
 export function normalizeCharPanels(obj) {
     const raw = ensureObject(obj, {
@@ -37,8 +37,12 @@ export function normalizeCharPanels(obj) {
         if (!v || typeof v !== 'object')
             continue;
         const panel = {
-            saveXY: typeof v.saveXY === 'boolean' ? v.saveXY : false,
-            canLoadFromChat: typeof v.canLoadFromChat === 'boolean' ? v.canLoadFromChat : true
+            saveXY: typeof v.saveXY === 'boolean'
+                ? v.saveXY
+                : false,
+            load_state: typeof v.load_state === 'string' && ['global', 'chat', 'character'].includes(v.load_state)
+                ? v.load_state
+                : 'global'
         };
         if (isXY(v.desktopXY))
             panel.desktopXY = v.desktopXY;

@@ -111,15 +111,21 @@ export class BotOutfitPanel extends OutfitPanel<'bot'> {
 	public saveToChat(): boolean {
 		if (!this.getPanelSettings().canLoadFromChat()) return false;
 
-		OutfitTracker.characterOutfits(this.character).commitAutosave();
+		OutfitTracker.characterOutfits(this.character).saveCurrentOutfitToChat();
 		return true;
 	}
 
 	public loadFromChat(): boolean {
 		if (!this.getPanelSettings().canLoadFromChat()) return false;
 
-		this.outfitManager.getOutfitCollection().loadFromChat();
+		this.outfitManager.getOutfitCollection().loadCurrentOutfitFromChat();
 		this.renderTabsAndActiveContent();
 		return true;
+	}
+
+
+	public saveToCharacter(): void {
+		const name = `@character:${this.character}`;
+		this.outfitManager.savePreset(name);
 	}
 }

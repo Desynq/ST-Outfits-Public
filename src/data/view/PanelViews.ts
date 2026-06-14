@@ -1,6 +1,6 @@
 import { assertNever } from "../../shared.js";
 import { XY } from "../model/Outfit.js";
-import { CharPanelSettings, FullPanelSettings, FullSummaryTag, PanelSettings, PanelSettingsBase, PartialPanelSettings } from "../model/Panels.js";
+import { CharPanelSettings, FullPanelSettings, FullSummaryTag, PanelLoadState, PanelSettings, PanelSettingsBase, PartialPanelSettings } from "../model/Panels.js";
 
 export type LayoutMode = 'desktop' | 'mobile';
 
@@ -14,7 +14,7 @@ export const defaultUserPanelSettings: PanelSettings = {
 	desktopXY: [20, 50],
 	mobileXY: [20, 50],
 	saveXY: false,
-	canLoadFromChat: true
+	load_state: 'global'
 };
 
 export const defaultBotPanelSettings: PanelSettings = {
@@ -107,11 +107,15 @@ export abstract class PanelSettingsView<TSettings extends PartialPanelSettings> 
 	}
 
 	public canLoadFromChat(): boolean {
-		return this.settings.canLoadFromChat;
+		return this.getLoadState() === 'chat';
 	}
 
-	public setCanLoadFromChat(canLoad: boolean): void {
-		this.settings.canLoadFromChat = canLoad;
+	public getLoadState(): PanelLoadState {
+		return this.settings.load_state;
+	}
+
+	public setLoadState(state: PanelLoadState): void {
+		this.settings.load_state = state;
 	}
 }
 
@@ -224,7 +228,7 @@ export class CharPanelSettingsView extends PanelSettingsView<CharPanelSettings> 
 			saveXY: false,
 			desktopXY: [20, 170],
 			mobileXY: [20, 170],
-			canLoadFromChat: true
+			load_state: 'global'
 		};
 	}
 

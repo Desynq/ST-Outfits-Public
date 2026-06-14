@@ -36,7 +36,8 @@ export class OutfitPanelRegistry implements ICharPanelGrouper {
 	public constructor(
 		private readonly saveSettings: () => void,
 		private readonly userPanel: UserOutfitPanel,
-		private readonly botPanel: BotOutfitPanel
+		private readonly botPanel: BotOutfitPanel,
+		private readonly getCurrentCharacterKey: () => string | null
 	) {
 		this.panels
 			.add(userPanel)
@@ -128,15 +129,16 @@ export class OutfitPanelRegistry implements ICharPanelGrouper {
 			return { panel, created: false };
 		}
 
-		panel = CharOutfitPanel.from(
-			character,
-			this.saveSettings,
-			this
-		);
+		panel = CharOutfitPanel.from({
+			characterKey: character,
+			saveSettings: this.saveSettings,
+			grouper: this,
+			getCurrentCharacterKey: this.getCurrentCharacterKey
+		});
 
 		// char panels can be created mid-chat
 		if (panel.getPanelSettings().canLoadFromChat()) {
-			panel.outfitManager.getOutfitCollection().loadFromChat();
+			panel.outfitManager.getOutfitCollection().loadCurrentOutfitFromChat();
 		}
 
 		panel.onDestroy(() => this.unregister(character));
@@ -150,7 +152,7 @@ export class OutfitPanelRegistry implements ICharPanelGrouper {
 
 	private handleCharPanelDrop(panel: CharOutfitPanel, packet: DropPacket): void {
 		const { mode, cursor } = packet;
-		const name = panel.character;
+		const name = panel.characterKey;
 		const groups = this.viewGroups();
 
 		groups.moveGroup(name, mode, cursor.x, cursor.y);
@@ -207,7 +209,7 @@ export class OutfitPanelRegistry implements ICharPanelGrouper {
 
 	public append(parent: CharOutfitPanel, child: CharOutfitPanel): void {
 		const groups = this.viewGroups();
-		groups.append(child.character, parent.character);
+		groups.append(child.characterKey, parent.characterKey);
 
 		child.close({ destroy: false });
 
@@ -220,7 +222,7 @@ export class OutfitPanelRegistry implements ICharPanelGrouper {
 	}
 
 	public ungroup(panel: CharOutfitPanel): void {
-		const name = panel.character;
+		const name = panel.characterKey;
 		const groups = this.viewGroups();
 
 		const group = groups.getGroup(name);
@@ -228,7 +230,7 @@ export class OutfitPanelRegistry implements ICharPanelGrouper {
 
 		const leader = this.getOrCreate(group[0]).panel;
 
-		groups.remove(panel.character);
+		groups.remove(panel.characterKey);
 
 		const mode = leader.getLayoutMode();
 		const [x, y] = this.computeUngroupPosition(panel, leader, group, mode);
@@ -262,7 +264,7 @@ export class OutfitPanelRegistry implements ICharPanelGrouper {
 		const rect = leader.getBoundingClientRect();
 		const viewportMid = window.innerHeight / 2;
 		const offset = rect.height + 8;
-		const index = group.indexOf(panel.character);
+		const index = group.indexOf(panel.characterKey);
 
 		const direction = rect.top < viewportMid ? 1 : -1;
 
@@ -273,7 +275,7 @@ export class OutfitPanelRegistry implements ICharPanelGrouper {
 		if (!panel.canShow()) return false;
 
 		const groups = this.viewGroups();
-		const group = groups.getGroup(panel.character);
+		const group = groups.getGroup(panel.characterKey);
 		if (!group) return false;
 
 		const prevLeader = this.getOrCreate(group[0]).panel;
@@ -284,7 +286,7 @@ export class OutfitPanelRegistry implements ICharPanelGrouper {
 
 		prevLeader.close({ destroy: false });
 
-		groups.focus(panel.character);
+		groups.focus(panel.characterKey);
 		panel.show({
 			forcePos: true
 		});
@@ -298,7 +300,7 @@ export class OutfitPanelRegistry implements ICharPanelGrouper {
 	public getGroup(panel: CharOutfitPanel): CharOutfitPanel[] {
 		const groups = this.viewGroups();
 
-		const group = groups.getGroup(panel.character);
+		const group = groups.getGroup(panel.characterKey);
 		if (!group) {
 			return [];
 		}

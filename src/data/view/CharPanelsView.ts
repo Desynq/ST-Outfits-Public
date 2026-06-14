@@ -20,7 +20,7 @@ export class CharPanelsView {
 	public getOrCreate(name: string): CharPanelSettingsView {
 		return new CharPanelSettingsView(name, this.tree.panels[name] ??= {
 			saveXY: false,
-			canLoadFromChat: true
+			load_state: 'global'
 		});
 	}
 

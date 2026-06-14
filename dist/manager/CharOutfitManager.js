@@ -87,6 +87,6 @@ export class CharOutfitManager extends OutfitManager {
     }
     setFullSummaryTagResolver(fn) {
         this.resolveFullSummaryTag = fn;
-        this.updateSummaries();
+        this.updateContext();
     }
 }

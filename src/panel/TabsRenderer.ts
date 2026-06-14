@@ -273,7 +273,7 @@ export class OutfitTabsRenderer {
 				kind: result.newName
 			};
 
-			this.outfitManager.updateSummaries();
+			this.outfitManager.updateContext();
 			this.panel.saveAndRender();
 		}
 	}

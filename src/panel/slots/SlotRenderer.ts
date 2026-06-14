@@ -348,6 +348,7 @@ export class SlotRenderer extends OutfitPanelContext {
 				showPresets: () => SlotPresetsModal.show(
 					ctx.slot,
 					this.outfitManager,
+					() => this.outfitManager.updateContext(),
 					() => this.panel.saveAndRender()
 				),
 
@@ -356,6 +357,7 @@ export class SlotRenderer extends OutfitPanelContext {
 				showConditions: () => SlotConditionsModal.show(
 					ctx.slot,
 					this.outfitManager,
+					() => this.outfitManager.updateContext(),
 					() => this.panel.saveAndRender()
 				)
 			},

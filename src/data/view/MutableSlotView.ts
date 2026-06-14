@@ -163,6 +163,16 @@ export class MutableSlotView implements ISlotManipulator {
 		return true;
 	}
 
+	private renameCondition(oldId: string, newId: string): void {
+		for (const slot of this._slots) {
+			for (const condition of slot.conditions.items) {
+				if (condition.id === oldId) {
+					condition.id = newId;
+				}
+			}
+		}
+	}
+
 
 
 	public attachImage(id: string, tag: string, refKey: string): AttachImageResult {
@@ -311,6 +321,8 @@ export class MutableSlotView implements ISlotManipulator {
 
 		delete this.indexById[oldId];
 		this.indexById[newId] = i;
+
+		this.renameCondition(oldId, newId);
 
 		return 'renamed';
 	}

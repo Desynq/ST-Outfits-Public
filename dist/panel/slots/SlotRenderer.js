@@ -221,10 +221,10 @@ export class SlotRenderer extends OutfitPanelContext {
             deleteSlot: () => this.askDeleteSlot(ctx.slotElement, ctx.slot),
             shiftSlot: () => this.beginSlotShift(ctx),
             moveSlot: () => this.moveSlot(ctx.slot),
-            showPresets: () => SlotPresetsModal.show(ctx.slot, this.outfitManager, () => this.panel.saveAndRender()),
+            showPresets: () => SlotPresetsModal.show(ctx.slot, this.outfitManager, () => this.outfitManager.updateContext(), () => this.panel.saveAndRender()),
             canAddNote: () => this.getSlotRenderMode(ctx.slot, this.panel) === 'normal' && this.noteElement.isEmpty(ctx.slot),
             addNote: () => this.noteElement.beginInlineEdit(ctx, addendumEl),
-            showConditions: () => SlotConditionsModal.show(ctx.slot, this.outfitManager, () => this.panel.saveAndRender())
+            showConditions: () => SlotConditionsModal.show(ctx.slot, this.outfitManager, () => this.outfitManager.updateContext(), () => this.panel.saveAndRender())
         }, this.deps.overflowMenuFactory)
             .onClopen(open => ctx.slotElement.classList.toggle('--menu-open', open));
     }

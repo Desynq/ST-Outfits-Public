@@ -101,7 +101,7 @@ export abstract class OutfitManager {
 		this.summaryMacros.clear();
 	}
 
-	public updateSummaries(): void {
+	public updateContext(): void {
 		const domain = this.getFullSummaryTag().domain;
 		const domainChanged = this.summaryMacros.setDomain(domain);
 
@@ -225,7 +225,7 @@ export abstract class OutfitManager {
 	}
 
 	protected onActiveOutfitChanged(): void {
-		this.updateSummaries();
+		this.updateContext();
 	}
 
 	public deleteOutfitSlot(slotId: string): boolean {
@@ -235,7 +235,7 @@ export abstract class OutfitManager {
 		deleteGlobalVariable(this.getVarName(slotId));
 		view.deleteSlot(slotId);
 
-		this.updateSummaries();
+		this.updateContext();
 		return true;
 	}
 
@@ -260,7 +260,7 @@ export abstract class OutfitManager {
 		const prompt = this.formatSlotSummary(slot.raw);
 
 		setGlobalVariable(varName, prompt);
-		this.updateSummaries();
+		this.updateContext();
 	}
 
 	public getSlots(): readonly string[] {

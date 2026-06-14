@@ -146,6 +146,7 @@ export class SlotConditionsModal extends SlotModal {
 		}
 
 		this.close();
+		this.updateContext();
 		this.saveAndRender();
 	}
 }

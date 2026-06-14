@@ -112,6 +112,7 @@ export class SlotConditionsModal extends SlotModal {
             mutator.setConditions(this.slot.id, 'and_all', conditions);
         }
         this.close();
+        this.updateContext();
         this.saveAndRender();
     }
 }

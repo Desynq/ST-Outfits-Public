@@ -83,6 +83,15 @@ export class MutableSlotView {
         slot.conditions.items = conditions;
         return true;
     }
+    renameCondition(oldId, newId) {
+        for (const slot of this._slots) {
+            for (const condition of slot.conditions.items) {
+                if (condition.id === oldId) {
+                    condition.id = newId;
+                }
+            }
+        }
+    }
     attachImage(id, tag, refKey) {
         const i = this.indexById[id];
         if (i === undefined)
@@ -207,6 +216,7 @@ export class MutableSlotView {
         this._slots[i].id = newId;
         delete this.indexById[oldId];
         this.indexById[newId] = i;
+        this.renameCondition(oldId, newId);
         return 'renamed';
     }
     sortByKind(kindOrder) {

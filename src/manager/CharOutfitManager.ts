@@ -126,6 +126,6 @@ export class CharOutfitManager extends OutfitManager {
 
 	public setFullSummaryTagResolver(fn: () => FullSummaryTag | undefined): void {
 		this.resolveFullSummaryTag = fn;
-		this.updateSummaries();
+		this.updateContext();
 	}
 }

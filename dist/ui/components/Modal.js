@@ -1,10 +1,11 @@
 import { div } from "../../util/element/divs.js";
 export class SlotModal {
-    constructor(slot, manager, saveAndRender, close) {
-        this.slot = slot;
-        this.manager = manager;
-        this.saveAndRender = saveAndRender;
-        this.close = close;
+    constructor(context) {
+        this.slot = context.slot;
+        this.manager = context.manager;
+        this.updateContext = context.updateContext;
+        this.saveAndRender = context.saveAndRender;
+        this.close = context.close;
         this.root = this.createRoot();
         this.construct();
     }
@@ -14,11 +15,14 @@ export class SlotModal {
     isCloseOnBlur() {
         return true;
     }
-    static show(slot, manager, saveAndRender) {
+    static show(slot, manager, updateContext, saveAndRender) {
         const overlay = div('slot-presets-overlay');
-        const ModalClass = this;
-        const modal = new ModalClass(slot, manager, saveAndRender, () => {
-            overlay.remove();
+        const modal = new this({
+            slot,
+            manager,
+            updateContext,
+            saveAndRender,
+            close: () => overlay.remove()
         });
         overlay.append(modal.root);
         document.body.append(overlay);
@@ -33,6 +37,6 @@ export class SlotModal {
     reshow() {
         this.close();
         const ModalClass = this.constructor;
-        ModalClass.show(this.slot, this.manager, this.saveAndRender);
+        ModalClass.show(this.slot, this.manager, this.updateContext, this.saveAndRender);
     }
 }

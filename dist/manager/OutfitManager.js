@@ -44,7 +44,7 @@ export class OutfitManager {
     clearSummaries() {
         this.summaryMacros.clear();
     }
-    updateSummaries() {
+    updateContext() {
         const domain = this.getFullSummaryTag().domain;
         const domainChanged = this.summaryMacros.setDomain(domain);
         const kindSummaries = new Map();
@@ -136,7 +136,7 @@ export class OutfitManager {
         }
     }
     onActiveOutfitChanged() {
-        this.updateSummaries();
+        this.updateContext();
     }
     deleteOutfitSlot(slotId) {
         const view = this.getOutfitView();
@@ -144,7 +144,7 @@ export class OutfitManager {
             return false;
         deleteGlobalVariable(this.getVarName(slotId));
         view.deleteSlot(slotId);
-        this.updateSummaries();
+        this.updateContext();
         return true;
     }
     async setSlotValue(slotId, value) {
@@ -166,7 +166,7 @@ export class OutfitManager {
         const varName = this.getVarName(slot.id);
         const prompt = this.formatSlotSummary(slot.raw);
         setGlobalVariable(varName, prompt);
-        this.updateSummaries();
+        this.updateContext();
     }
     getSlots() {
         return this.getOutfitView().getSlotIds();

@@ -2,7 +2,7 @@ import { el } from "../../util/ElementHelper.js";
 export function promptOptions(message, options, label = String) {
     return new Promise(resolve => {
         const overlay = el('div', {
-            className: 'outfit-option-overlay'
+            className: 'sto-overlay show'
         });
         const modal = el('div', {
             className: 'outfit-option-modal'

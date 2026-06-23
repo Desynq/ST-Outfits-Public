@@ -1,20 +1,12 @@
-.outfit-option-overlay {
-	position: fixed;
-	inset: 0;
-	z-index: 999999;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	background: rgb(0 0 0 / 50%);
-}
-
 .outfit-option-modal {
 	display: flex;
 	flex-direction: column;
 	gap: 0.75rem;
+
 	min-width: 20rem;
 	max-width: 90dvw;
 	max-height: 80dvh;
+
 	padding: 1rem;
 	border-radius: 0.75rem;
 	background: var(--SmartThemeBlurTintColor);
@@ -27,7 +19,6 @@
 	flex-direction: column;
 	gap: 0.5rem;
 
-	max-height: 50dvh;
 	overflow-y: auto;
 }
 

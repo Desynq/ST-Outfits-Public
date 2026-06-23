@@ -9,7 +9,7 @@ export function promptOptions<const T>(
 ): Promise<T | null> {
 	return new Promise(resolve => {
 		const overlay = el('div', {
-			className: 'outfit-option-overlay'
+			className: 'sto-overlay show'
 		});
 
 		const modal = el('div', {

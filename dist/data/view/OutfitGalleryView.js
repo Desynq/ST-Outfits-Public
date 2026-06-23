@@ -68,7 +68,7 @@ export class OutfitGalleryView {
         };
         const uocv = OutfitTracker.userOutfits();
         const userOutfits = uocv.getOutfitNames().map(name => uocv.getSavedOutfit(name));
-        userOutfits.push(uocv.getOrCreateAutosaved());
+        userOutfits.push(uocv.getOrCreateCurrentOutfit());
         for (const outfit of userOutfits) {
             if (hasImageRef(outfit))
                 return true;
@@ -77,7 +77,7 @@ export class OutfitGalleryView {
         const cocs = comv.characters().map(character => comv.outfits(character));
         for (const cocv of cocs) {
             const charOutfits = cocv.getSavedOutfitNames().map(name => cocv.getSavedOutfit(name));
-            charOutfits.push(cocv.getOrCreateAutosaved());
+            charOutfits.push(cocv.getOrCreateCurrentOutfit());
             for (const outfit of charOutfits) {
                 if (hasImageRef(outfit))
                     return true;

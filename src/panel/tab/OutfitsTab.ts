@@ -20,6 +20,7 @@ export class OutfitsTab extends PanelTab {
 		}
 
 		this.renderSaveButton(contentArea);
+		this.renderImportButton(contentArea);
 		this.renderExportButton(contentArea);
 		if (this.outfitManager.getOutfitView().slots.length > 0) {
 			this.renderClearButton(contentArea);
@@ -76,6 +77,17 @@ export class OutfitsTab extends PanelTab {
 		);
 
 		contentArea.appendChild(saveButton);
+	}
+
+	private renderImportButton(contentArea: HTMLDivElement): void {
+		el('button', {
+			className: 'system-tab-button import-outfit-btn',
+			text: 'Import Outfit',
+			events: {
+				click: async () => await this.panel.importButtonClickListener()
+			},
+			parent: contentArea
+		});
 	}
 
 	private renderExportButton(contentArea: HTMLDivElement): void {

@@ -16,6 +16,7 @@ export interface OutfitTabsHost<T extends PanelType> {
 	sendSystemMessage(message: string): void;
 
 	exportButtonClickListener(): Promise<void>;
+	importButtonClickListener(): Promise<void>;
 
 
 

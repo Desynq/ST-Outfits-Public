@@ -5,10 +5,13 @@ import { LayoutMode, PanelSettingsViewMap } from "../data/view/PanelViews.js";
 import { isWideScreen } from "../shared.js";
 import type { OutfitManagerMap, PanelType } from "../types/maps.js";
 import { ShowOptions } from "../types/OutfitPanel.js";
+import { promptOptions } from "../ui/prompt/prompt-options.js";
 import { mergeClassNames } from "../util/element/css.js";
 import { clampPosition, enforceViewportBounds } from "../util/element/position.js";
 import { createConfiguredElements, el, ElementOptions, toggleClasses } from "../util/ElementHelper.js";
+import { invariant } from "../util/error.js";
 import { EventBus, Listener } from "../util/EventBus.js";
+import { assertString } from "../util/narrowing.js";
 import { ResourceCleaner } from "./Disposer.js";
 import { OutfitSlotsHost } from "./OutfitSlotsHost.js";
 import { OutfitTabsHost } from "./OutfitTabsHost.js";
@@ -525,6 +528,62 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 
 
 	public abstract exportButtonClickListener(): Promise<void>;
+
+	public async importButtonClickListener(): Promise<void> {
+		const inputName = await promptOptions(
+			'Import from which character?',
+			OutfitTracker.characters().characters()
+		);
+
+		if (!inputName) {
+			this.sendSystemMessage('Cancelled.');
+			return;
+		}
+
+		const character = inputName;
+
+		const collection = OutfitTracker.characterOutfits(character);
+		if (!collection.hasCollection()) {
+			this.sendSystemMessage(`Character ${character} has no outfit collection.`);
+			return;
+		}
+
+		const current = Symbol('current_outfit');
+		const outfits = [
+			...collection.getSavedOutfitNames(),
+			current
+		] as const;
+
+		const inputOutfit = await promptOptions(
+			'Import which outfit?',
+			outfits,
+			option => typeof option === 'symbol' ? 'Current Outfit' : option
+		);
+
+		if (inputOutfit === null) {
+			this.sendSystemMessage(`Cancelled.`);
+			return;
+		}
+
+		if (inputOutfit === current) {
+			const currentOutfit = collection.getCurrentOutfit();
+			invariant(currentOutfit, 'Outfit collections should always have an existing current outfit');
+			this.outfitManager.getOutfitCollection().loadOutfit(currentOutfit.snapshot());
+
+			this.sendSystemMessage(`Successfully loaded current outfit from ${character}`);
+			this.saveAndRender();
+			return;
+		}
+
+		const savedOutfit = collection.getSavedOutfit(inputOutfit);
+		invariant(savedOutfit, 'Saved outfit name does not exist in collection despite being queried from collection earlier');
+
+		this.outfitManager.getOutfitCollection().loadOutfit(savedOutfit.snapshot());
+
+		this.sendSystemMessage(`Successfully loaded saved outfit ${inputOutfit} from ${character}`);
+		this.saveAndRender();
+		return;
+	}
 
 
 

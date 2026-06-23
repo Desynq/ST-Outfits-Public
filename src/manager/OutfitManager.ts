@@ -279,7 +279,7 @@ export abstract class OutfitManager {
 	public abstract getOutfitCollection(): IOutfitCollectionView;
 
 	public getOutfitView(): MutableOutfitView {
-		return this.getOutfitCollection().getOrCreateAutosaved();
+		return this.getOutfitCollection().getOrCreateCurrentOutfit();
 	}
 
 	public renameSlot(slotId: string, newId: string): RenameSlotResult {

@@ -175,7 +175,7 @@ export class OutfitManager {
         return this.getOutfitView().values;
     }
     getOutfitView() {
-        return this.getOutfitCollection().getOrCreateAutosaved();
+        return this.getOutfitCollection().getOrCreateCurrentOutfit();
     }
     renameSlot(slotId, newId) {
         const view = this.getOutfitView();

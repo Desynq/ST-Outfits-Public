@@ -10,9 +10,15 @@ export class OutfitCollectionView {
         const collection = this.getOrCreateCollection();
         return fn(collection);
     }
-    getOrCreateAutosaved() {
+    getOrCreateCurrentOutfit() {
+        const c = this.getOrCreateCollection(); // instantiate current outfit
+        c.current_outfit ?? (c.current_outfit = this.createDefaultOutfit()); // add default slots
+        return new MutableOutfitView('auto', c.current_outfit);
+    }
+    getCurrentOutfit() {
+        if (!this.hasCollection())
+            return null;
         const c = this.getOrCreateCollection();
-        c.current_outfit ?? (c.current_outfit = this.createDefaultOutfit());
         return new MutableOutfitView('auto', c.current_outfit);
     }
     clearCurrentOutfit() {
@@ -49,6 +55,9 @@ export class UserOutfitCollectionView extends OutfitCollectionView {
     getOrCreateCollection() {
         return this.collection;
     }
+    hasCollection() {
+        return true;
+    }
     getOutfitNames() {
         return Object.keys(this.collection.saved_outfits);
     }
@@ -61,7 +70,7 @@ export class UserOutfitCollectionView extends OutfitCollectionView {
     saveOutfit(outfitName, outfit) {
         this.collection.saved_outfits[outfitName] = outfit;
     }
-    setAutosavedOutfit(outfit) {
+    loadOutfit(outfit) {
         this.collection.current_outfit = outfit;
     }
     deleteSavedOutfit(outfitName) {
@@ -83,7 +92,7 @@ export class CharacterOutfitCollectionView extends OutfitCollectionView {
         return created;
     }
     hasCollection() {
-        return this.map[this.character] === undefined;
+        return this.map[this.character] !== undefined;
     }
     getOutfitCollection() {
         return this.map[this.character];
@@ -95,7 +104,7 @@ export class CharacterOutfitCollectionView extends OutfitCollectionView {
         return Object.keys(collection.saved_outfits);
     }
     getSavedOutfit(outfitName) {
-        if (this.hasCollection())
+        if (!this.hasCollection())
             return undefined;
         const collection = this.getOrCreateCollection();
         const outfit = collection.saved_outfits[outfitName];

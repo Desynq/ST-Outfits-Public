@@ -9,8 +9,9 @@ import { OutfitView } from "./OutfitView.js";
 
 
 export interface IOutfitCollectionView {
-	getOrCreateAutosaved(): MutableOutfitView;
+	getOrCreateCurrentOutfit(): MutableOutfitView;
 	clearCurrentOutfit(): void;
+	loadOutfit(outfit: OutfitSnapshot): void;
 
 	areDisabledSlotsHidden(): boolean;
 	hideDisabledSlots(hide: boolean): void;
@@ -31,16 +32,27 @@ export abstract class OutfitCollectionView implements IOutfitCollectionView {
 	public constructor() { }
 
 	protected abstract getOrCreateCollection(): OutfitCollection;
+	public abstract hasCollection(): boolean;
+
+	public abstract loadOutfit(outfit: OutfitSnapshot): void;
 
 	protected withCollection<T>(fn: (c: OutfitCollection) => T): T {
 		const collection = this.getOrCreateCollection();
 		return fn(collection);
 	}
 
-	public getOrCreateAutosaved(): MutableOutfitView {
+	public getOrCreateCurrentOutfit(): MutableOutfitView {
+		const c = this.getOrCreateCollection(); // instantiate current outfit
+
+		c.current_outfit ??= this.createDefaultOutfit(); // add default slots
+		return new MutableOutfitView('auto', c.current_outfit);
+	}
+
+	public getCurrentOutfit(): MutableOutfitView | null {
+		if (!this.hasCollection()) return null;
+
 		const c = this.getOrCreateCollection();
 
-		c.current_outfit ??= this.createDefaultOutfit();
 		return new MutableOutfitView('auto', c.current_outfit);
 	}
 
@@ -90,6 +102,10 @@ export class UserOutfitCollectionView extends OutfitCollectionView {
 		return this.collection;
 	}
 
+	public override hasCollection(): boolean {
+		return true;
+	}
+
 	public getOutfitNames(): string[] {
 		return Object.keys(this.collection.saved_outfits);
 	}
@@ -106,7 +122,7 @@ export class UserOutfitCollectionView extends OutfitCollectionView {
 		this.collection.saved_outfits[outfitName] = outfit;
 	}
 
-	public setAutosavedOutfit(outfit: OutfitSnapshot): void {
+	public override loadOutfit(outfit: OutfitSnapshot): void {
 		this.collection.current_outfit = outfit;
 	}
 
@@ -131,8 +147,8 @@ export class CharacterOutfitCollectionView extends OutfitCollectionView implemen
 		return created;
 	}
 
-	public hasCollection(): boolean {
-		return this.map[this.character] === undefined;
+	public override hasCollection(): boolean {
+		return this.map[this.character] !== undefined;
 	}
 
 	private getOutfitCollection(): OutfitCollection | undefined {
@@ -146,7 +162,7 @@ export class CharacterOutfitCollectionView extends OutfitCollectionView implemen
 	}
 
 	public getSavedOutfit(outfitName: string): OutfitView | undefined {
-		if (this.hasCollection()) return undefined;
+		if (!this.hasCollection()) return undefined;
 
 		const collection = this.getOrCreateCollection();
 		const outfit = collection.saved_outfits[outfitName];
@@ -166,7 +182,7 @@ export class CharacterOutfitCollectionView extends OutfitCollectionView implemen
 		delete outfits.saved_outfits[outfitName];
 	}
 
-	public loadOutfit(outfit: OutfitSnapshot): void {
+	public override loadOutfit(outfit: OutfitSnapshot): void {
 		this.getOrCreateCollection().current_outfit = outfit;
 	}
 

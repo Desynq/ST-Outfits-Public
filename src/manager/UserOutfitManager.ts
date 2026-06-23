@@ -65,7 +65,7 @@ export class UserOutfitManager extends OutfitManager {
             return 'already-wearing';
         }
 
-        OutfitTracker.userOutfits().setAutosavedOutfit(newOutfit);
+        OutfitTracker.userOutfits().loadOutfit(newOutfit);
 
         for (const [slotId, value] of Object.entries(this.getOutfitView().values)) {
             void this.setSlotValue(slotId, value);

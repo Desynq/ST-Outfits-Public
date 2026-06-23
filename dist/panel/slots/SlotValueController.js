@@ -8,6 +8,7 @@ import { triggerAfterLayout, triggerAfterTransition } from "../../util/element/c
 import { addLongPressAction, createElement, el } from "../../util/ElementHelper.js";
 import { EventBus } from "../../util/EventBus.js";
 import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
+import * as SlotPresetsApi from "../../api/internal/slot-preset.js";
 export class SlotValueController extends OutfitPanelContext {
     constructor(deps) {
         super(deps.panel);
@@ -217,7 +218,22 @@ export class SlotValueController extends OutfitPanelContext {
         return this.getSlotText(slot) === this.getEmptyText();
     }
     async updateSlotText(slot, text) {
+        this.syncPresetFromEditedValue(slot, text);
         await this.outfitManager.updateSlotValue(slot.id, text);
+    }
+    syncPresetFromEditedValue(slot, text) {
+        if (!SlotPresetsApi.canSync(slot))
+            return;
+        const step = SlotPresetsApi.beginSaveSlotAsPresetFromImageTag({
+            slot: {
+                value: text,
+                getActiveImageState: () => slot.getActiveImageState(),
+                hasPreset: (preset) => slot.hasPreset(preset)
+            }
+        });
+        if (step.type !== 'ready')
+            return;
+        step.save();
     }
     getEmptyText() {
         return 'None';

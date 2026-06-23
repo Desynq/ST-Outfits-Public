@@ -58,6 +58,7 @@ export type ResizeImageResult =
 
 export interface ISlotManipulator {
 	setConditions(id: string, type: SlotConditionMapMode, conditions: SlotCondition[]): boolean;
+	setSync(id: string, sync: boolean): boolean;
 }
 
 export class MutableSlotView implements ISlotManipulator {
@@ -256,6 +257,16 @@ export class MutableSlotView implements ISlotManipulator {
 		image.width = width;
 		image.height = height;
 		return 'resized';
+	}
+
+
+
+	public setSync(id: string, sync: boolean): boolean {
+		const slot = this.getMutableSlotById(id);
+		if (slot === undefined) return false;
+
+		slot.synced = sync;
+		return true;
 	}
 
 

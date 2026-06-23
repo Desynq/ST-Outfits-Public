@@ -37,6 +37,7 @@ export interface OutfitSlot {
 
 	equipped: boolean;
 	conditions: SlotConditionMap;
+	synced: boolean;
 }
 
 export interface Outfit {

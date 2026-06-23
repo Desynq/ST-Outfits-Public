@@ -12,6 +12,7 @@ export interface IOutfitCollectionView {
 	getOrCreateCurrentOutfit(): MutableOutfitView;
 	clearCurrentOutfit(): void;
 	loadOutfit(outfit: OutfitSnapshot): void;
+	getSavedOutfit(outfitName: string): OutfitView | undefined;
 
 	areDisabledSlotsHidden(): boolean;
 	hideDisabledSlots(hide: boolean): void;
@@ -35,6 +36,8 @@ export abstract class OutfitCollectionView implements IOutfitCollectionView {
 	public abstract hasCollection(): boolean;
 
 	public abstract loadOutfit(outfit: OutfitSnapshot): void;
+
+	public abstract getSavedOutfit(outfitName: string): OutfitView | undefined;
 
 	protected withCollection<T>(fn: (c: OutfitCollection) => T): T {
 		const collection = this.getOrCreateCollection();

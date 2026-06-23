@@ -4,7 +4,7 @@
 	gap: 0.75rem;
 
 	min-width: 20rem;
-	max-width: 90dvw;
+	max-width: 50dvw;
 	max-height: 80dvh;
 
 	padding: 1rem;
@@ -12,6 +12,11 @@
 	background: var(--SmartThemeBlurTintColor);
 	color: var(--SmartThemeBodyColor);
 	border: 1px solid var(--SmartThemeBorderColor);
+
+	// mobile
+	@media (max-width: 720px) {
+		max-width: 90dvw;
+	}
 }
 
 .outfit-option-buttons {

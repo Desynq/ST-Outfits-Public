@@ -73,27 +73,6 @@ export class BotOutfitManager extends OutfitManager {
         return "";
     }
 
-    public override loadPreset(outfitName: string): LoadPresetResult {
-        const collectionView = OutfitTracker.characterOutfits(this.character);
-        const newOutfit = collectionView.getSavedOutfit(outfitName)?.snapshot();
-        if (newOutfit === undefined) {
-            return 'not-found';
-        }
-
-        const oldOutfit = this.getOutfitView().snapshot();
-        if (areOutfitSnapshotsEqual(oldOutfit, newOutfit)) {
-            return 'already-wearing';
-        }
-
-        collectionView.loadOutfit(newOutfit);
-
-        for (const [slot, value] of Object.entries(this.getOutfitView().values)) {
-            void this.setSlotValue(slot, value);
-        }
-
-        return 'success';
-    }
-
     public override deletePreset(outfitName: string): string {
         const outfit = OutfitTracker.characterOutfits(this.character).getSavedOutfit(outfitName);
         if (outfit === undefined) {

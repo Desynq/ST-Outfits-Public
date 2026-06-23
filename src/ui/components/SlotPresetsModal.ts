@@ -1,14 +1,12 @@
-import { ImageBlob, ImageRef, OutfitImage } from "../../data/model/Outfit.js";
-import { OutfitSlotState } from "../../data/model/OutfitSnapshots.js";
+import * as SlotPresetApi from "../../api/internal/slot-preset.js";
+import { ImageRef, OutfitImage } from "../../data/model/Outfit.js";
 import { KeyedSlotPreset } from "../../data/model/SlotPreset.js";
 import { OutfitTracker } from "../../data/tracker.js";
 import { MutableOutfitView } from "../../data/view/MutableOutfitView.js";
 import { SlotPresetRegistry } from "../../data/view/SlotPresetsView.js";
-import { OutfitManager } from "../../manager/OutfitManager.js";
 import { assertNever } from "../../shared.js";
 import { div } from "../../util/element/divs.js";
-import { createDiv, createElement, el } from "../../util/ElementHelper.js";
-import { resolveKebabCase } from "../../util/StringHelper.js";
+import { createElement, el } from "../../util/ElementHelper.js";
 import { SlotModal } from "./Modal.js";
 
 
@@ -74,7 +72,7 @@ export class SlotPresetsModal extends SlotModal {
 
 
 	private get registry(): SlotPresetRegistry {
-		return OutfitTracker.slotPresets();
+		return SlotPresetApi.getSlotPresetRegistry();
 	}
 
 	private getRef(blobKey: string): ImageRef | undefined {
@@ -164,74 +162,54 @@ export class SlotPresetsModal extends SlotModal {
 	}
 
 	private autoSavePreset(): void {
-		const imageState = this.slot.getActiveImageState();
+		const step = SlotPresetApi.beginSaveSlotAsPresetFromImageTag({ slot: this.slot, registry: this.registry });
 
-		if (!imageState) {
-			toastr.error('Slot must have an image in order to be saved as a preset.');
-			return;
+		switch (step.type) {
+			case 'no-image':
+				toastr.error('Slot must have an image in order to be saved as a preset.');
+				return;
+			case 'ready':
+				if (step.oldPreset) {
+					const ok = confirm(`Overwrite ${step.oldPreset.key}?`);
+					if (!ok) {
+						return;
+					}
+				}
+
+				step.save();
+				this.manager.saveSettings();
+				this.reshow();
+				return;
+			default: assertNever(step);
 		}
-
-		const old = this.registry.get(imageState.tag);
-
-		const preset = this.buildPresetFromImage(imageState.tag, imageState.image);
-
-		if (old) {
-			const ok = confirm(`Overwrite ${imageState.tag}?`);
-			if (!ok) return;
-		}
-
-		this.registry.set(preset);
-		this.manager.saveSettings();
-		this.reshow();
 	}
 
 	private savePreset(): void {
-		const imageState = this.slot.getActiveImageState();
-
-		if (!imageState) {
+		if (!SlotPresetApi.canHavePreset(this.slot)) {
 			// No image, no preset
 			toastr.error('Slot must have an image in order to be saved as a preset.');
 			return;
 		}
 
-		const raw = prompt('Enter image tag (kebab-case only):');
-		if (!raw) {
-			return;
-		}
-
-		const key = resolveKebabCase(raw);
+		const key = SlotPresetApi.promptPresetKey();
 		if (!key) {
 			return;
 		}
 
-		const old = this.registry.get(key);
-		const preset = this.buildPresetFromImage(key, imageState.image);
 
-		if (old || this.slot.hasPreset(preset)) {
-			const ok = confirm(`Preset "${key}" exists. Overwrite?`);
-			if (!ok) {
-				return;
-			}
+		const step = SlotPresetApi.beginSaveSlotAsPreset({ slot: this.slot, registry: this.registry, key });
+
+		if (step.type === 'no-image') {
+			throw new Error();
 		}
-		this.registry.set(preset);
 
-		// no need to re-render
+		if (!SlotPresetApi.confirmPresetOverwrite(step, key)) {
+			return;
+		}
+
+		step.save();
 		this.manager.saveSettings();
 		this.reshow();
-	}
-
-	private buildPresetFromImage(key: string, image: OutfitImage): KeyedSlotPreset {
-		const { key: imageKey, width: imageWidth, height: imageHeight } = image;
-
-		return {
-			key,
-			value: this.slot.value,
-			imageKey,
-			imageWidth,
-			imageHeight,
-			createdAt: Date.now(),
-			lastUsedAt: Date.now()
-		};
 	}
 
 	private deletePreset(preset: KeyedSlotPreset): void {

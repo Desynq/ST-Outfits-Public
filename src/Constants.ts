@@ -43,7 +43,8 @@ export function toSlot(from: {
 		conditions: {
 			mode: 'none',
 			items: []
-		}
+		},
+		synced: false
 	};
 }
 

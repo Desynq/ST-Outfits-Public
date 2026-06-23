@@ -5,6 +5,7 @@ import { OverflowMenu, OverflowMenuFactory } from "../../ui/components/OverflowM
 import { SlotConditionsModal } from "../../ui/components/SlotConditionsModal.js";
 import { SlotPresetsModal } from "../../ui/components/SlotPresetsModal.js";
 import { addDoubleTapListener } from "../../util/element/click-actions.js";
+import { mergeClassNames } from "../../util/element/css.js";
 import { appendElement, createDiv, createElement, el } from "../../util/ElementHelper.js";
 import { toSlotId } from "../../util/normalize/slot.js";
 import { isSlotBlocked } from "../../util/slot.js";
@@ -151,7 +152,7 @@ export class SlotRenderer extends OutfitPanelContext {
 			armTap
 		);
 
-		this.renderImageElement(ctx);
+		const imageElement = this.renderImageElement(ctx);
 		contentEl.append(contentTextEl);
 
 		const { valueEl } = this.valueElement.render(contentTextEl, ctx);
@@ -171,7 +172,7 @@ export class SlotRenderer extends OutfitPanelContext {
 				this.decorateMinimal(ctx, valueEl, addendumEl);
 				break;
 			case 'normal':
-				this.decorate(ctx, valueEl, addendumEl);
+				this.decorate(ctx, valueEl, addendumEl, imageElement);
 				break;
 			default: assertNever(mode);
 		}
@@ -315,7 +316,8 @@ export class SlotRenderer extends OutfitPanelContext {
 	private decorate(
 		ctx: SlotContext,
 		valueEl: HTMLDivElement,
-		addendumEl: HTMLDivElement
+		addendumEl: HTMLDivElement,
+		imageElement: SlotImageElement
 	): void {
 		const actionsElement = new SlotActionsElement(this.panel);
 
@@ -334,6 +336,11 @@ export class SlotRenderer extends OutfitPanelContext {
 		this.appendEditBtn(ctx.actionsRightEl, ctx, valueEl);
 
 		this.createMenuBtn(ctx, addendumEl).appendTo(ctx.actionsRightEl);
+
+		if (imageElement.state === 'shown') {
+			const syncBtn = this.createSyncButton(ctx);
+			ctx.labelRightDiv.append(syncBtn);
+		}
 	}
 
 	private createMenuBtn(ctx: SlotContext, addendumEl: HTMLDivElement): SlotActionsMenuElement {
@@ -398,6 +405,19 @@ export class SlotRenderer extends OutfitPanelContext {
 			() => this.valueElement.beginInlineEdit(ctx, valueEl)
 		);
 		return editBtn;
+	}
+
+	private createSyncButton(ctx: SlotContext): HTMLButtonElement {
+		return el('button', {
+			className: mergeClassNames('sync-slot-button', ctx.slot.synced ? 'active' : 'inactive'),
+			text: '⇆',
+			events: {
+				click: async () => {
+					await this.outfitManager.setSlotSync(ctx.slot.id, !ctx.slot.synced);
+					this.panel.saveAndRender();
+				}
+			}
+		});
 	}
 
 	private removeActionButtons(ctx: SlotContext): void {

@@ -53,27 +53,6 @@ export class UserOutfitManager extends OutfitManager {
         return '';
     }
 
-    public loadPreset(outfitName: string): LoadPresetResult {
-        const newOutfit = OutfitTracker.userOutfits().getSavedOutfit(outfitName)?.snapshot();
-        if (newOutfit === undefined) {
-            return 'not-found';
-        }
-
-        const oldOutfit = this.getOutfitView().snapshot();
-
-        if (areOutfitSnapshotsEqual(oldOutfit, newOutfit)) {
-            return 'already-wearing';
-        }
-
-        OutfitTracker.userOutfits().loadOutfit(newOutfit);
-
-        for (const [slotId, value] of Object.entries(this.getOutfitView().values)) {
-            void this.setSlotValue(slotId, value);
-        }
-
-        return 'success';
-    }
-
     public deletePreset(outfitName: string): string {
         const outfit = OutfitTracker.userOutfits().getSavedOutfit(outfitName);
         if (outfit === undefined) {

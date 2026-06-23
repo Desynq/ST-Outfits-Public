@@ -24,6 +24,7 @@ export class OutfitSlotState extends OutfitSlotBase {
         this.activeImageTag = raw.activeImageTag;
         this.equipped = raw.equipped;
         this.conditions = raw.conditions;
+        this.synced = raw.synced;
     }
     isEnabled() {
         return this.enabled;

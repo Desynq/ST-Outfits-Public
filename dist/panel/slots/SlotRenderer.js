@@ -2,6 +2,7 @@ import { assertNever, toSlotName } from "../../shared.js";
 import { SlotConditionsModal } from "../../ui/components/SlotConditionsModal.js";
 import { SlotPresetsModal } from "../../ui/components/SlotPresetsModal.js";
 import { addDoubleTapListener } from "../../util/element/click-actions.js";
+import { mergeClassNames } from "../../util/element/css.js";
 import { appendElement, createDiv, createElement, el } from "../../util/ElementHelper.js";
 import { toSlotId } from "../../util/normalize/slot.js";
 import { isSlotBlocked } from "../../util/slot.js";
@@ -77,7 +78,7 @@ export class SlotRenderer extends OutfitPanelContext {
         };
         const disarmTap = () => slotNameEl.classList.remove('tap-armed');
         addDoubleTapListener(slotNameEl, () => { disarmTap(); this.beginRename(slotNameEl, ctx); }, 300, () => { disarmTap(); this.toggle(ctx.slot); }, armTap);
-        this.renderImageElement(ctx);
+        const imageElement = this.renderImageElement(ctx);
         contentEl.append(contentTextEl);
         const { valueEl } = this.valueElement.render(contentTextEl, ctx);
         if (mode !== 'normal' && this.valueElement.isEmpty(slot)) {
@@ -94,7 +95,7 @@ export class SlotRenderer extends OutfitPanelContext {
                 this.decorateMinimal(ctx, valueEl, addendumEl);
                 break;
             case 'normal':
-                this.decorate(ctx, valueEl, addendumEl);
+                this.decorate(ctx, valueEl, addendumEl, imageElement);
                 break;
             default: assertNever(mode);
         }
@@ -199,7 +200,7 @@ export class SlotRenderer extends OutfitPanelContext {
         }
         this.createMenuBtn(ctx, addendumEl).appendTo(ctx.labelRightDiv);
     }
-    decorate(ctx, valueEl, addendumEl) {
+    decorate(ctx, valueEl, addendumEl, imageElement) {
         const actionsElement = new SlotActionsElement(this.panel);
         const toggleBtn = this.createToggleBtn(ctx.slot);
         ctx.actionsLeftEl.append(toggleBtn);
@@ -212,6 +213,10 @@ export class SlotRenderer extends OutfitPanelContext {
         }
         this.appendEditBtn(ctx.actionsRightEl, ctx, valueEl);
         this.createMenuBtn(ctx, addendumEl).appendTo(ctx.actionsRightEl);
+        if (imageElement.state === 'shown') {
+            const syncBtn = this.createSyncButton(ctx);
+            ctx.labelRightDiv.append(syncBtn);
+        }
     }
     createMenuBtn(ctx, addendumEl) {
         return new SlotActionsMenuElement({
@@ -246,6 +251,18 @@ export class SlotRenderer extends OutfitPanelContext {
         const editBtn = appendElement(container, 'button', 'slot-button edit-slot', '✏️');
         editBtn.addEventListener('click', () => this.valueElement.beginInlineEdit(ctx, valueEl));
         return editBtn;
+    }
+    createSyncButton(ctx) {
+        return el('button', {
+            className: mergeClassNames('sync-slot-button', ctx.slot.synced ? 'active' : 'inactive'),
+            text: '⇆',
+            events: {
+                click: async () => {
+                    await this.outfitManager.setSlotSync(ctx.slot.id, !ctx.slot.synced);
+                    this.panel.saveAndRender();
+                }
+            }
+        });
     }
     removeActionButtons(ctx) {
         const selectors = [

@@ -355,3 +355,50 @@
 	user-select: none;
 	white-space: pre-wrap;
 }
+
+
+
+.sync-slot-button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	width: 2rem;
+	height: 2rem;
+
+	padding: 0;
+	border-radius: 0.5rem;
+
+	border: 1px solid var(--SmartThemeBorderColor);
+	background: var(--SmartThemeQuoteColor);
+	color: var(--SmartThemeBodyColor);
+
+	cursor: pointer;
+	transition:
+		background-color 0.15s ease,
+		border-color 0.15s ease,
+		transform 0.1s ease,
+		opacity 0.15s ease;
+
+	&:hover {
+		transform: scale(1.05);
+	}
+
+	&:active {
+		transform: scale(0.95);
+	}
+
+	&.active {
+		background: rgb(80 180 120 / 20%);
+		border-color: rgb(80 180 120 / 60%);
+		color: rgb(120 220 150);
+	}
+
+	&.inactive {
+		opacity: 0.55;
+
+		&:hover {
+			opacity: 0.8;
+		}
+	}
+}

@@ -1,3 +1,4 @@
+import { getSlotPresetRegistry } from "../../api/internal/slot-preset.js";
 import { UnresolvedOutfitSlot, OutfitSlotState } from "../model/OutfitSnapshots.js";
 import { OutfitTracker } from "../tracker.js";
 import { MutableSlotView } from "./MutableSlotView.js";
@@ -66,9 +67,24 @@ export class OutfitView {
     }
     resolveSlot(slotId) {
         const slot = this.getSlotById(slotId);
-        return !slot
-            ? new UnresolvedOutfitSlot(slotId)
-            : new OutfitSlotState(slot, OutfitTracker.viewGallery());
+        if (!slot)
+            return new UnresolvedOutfitSlot(slotId);
+        return new OutfitSlotState(this.resolveSyncedSlot(slot), OutfitTracker.viewGallery());
+    }
+    resolveSyncedSlot(slot) {
+        if (!slot.synced)
+            return slot;
+        if (slot.activeImageTag === null)
+            return slot;
+        const preset = getSlotPresetRegistry().get(slot.activeImageTag);
+        if (!preset)
+            return slot;
+        if (slot.value === preset.value)
+            return slot; // already synced
+        return {
+            ...slot,
+            value: preset.value
+        };
     }
     getValue(slot) {
         const realSlot = this.slotView.getSlotById(slot.id);

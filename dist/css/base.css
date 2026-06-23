@@ -84,13 +84,18 @@
   flex-direction: column;
   gap: 0.75rem;
   min-width: 20rem;
-  max-width: 90dvw;
+  max-width: 50dvw;
   max-height: 80dvh;
   padding: 1rem;
   border-radius: 0.75rem;
   background: var(--SmartThemeBlurTintColor);
   color: var(--SmartThemeBodyColor);
   border: 1px solid var(--SmartThemeBorderColor);
+}
+@media (max-width: 720px) {
+  .outfit-option-modal {
+    max-width: 90dvw;
+  }
 }
 
 .outfit-option-buttons {
@@ -404,6 +409,38 @@
   align-self: center;
   user-select: none;
   white-space: pre-wrap;
+}
+
+.sync-slot-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border-radius: 0.5rem;
+  border: 1px solid var(--SmartThemeBorderColor);
+  background: var(--SmartThemeQuoteColor);
+  color: var(--SmartThemeBodyColor);
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.1s ease, opacity 0.15s ease;
+}
+.sync-slot-button:hover {
+  transform: scale(1.05);
+}
+.sync-slot-button:active {
+  transform: scale(0.95);
+}
+.sync-slot-button.active {
+  background: rgba(80, 180, 120, 0.2);
+  border-color: rgba(80, 180, 120, 0.6);
+  color: rgb(120, 220, 150);
+}
+.sync-slot-button.inactive {
+  opacity: 0.55;
+}
+.sync-slot-button.inactive:hover {
+  opacity: 0.8;
 }
 
 .slot-overflow-menu {

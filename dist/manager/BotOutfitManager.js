@@ -1,4 +1,3 @@
-import { areOutfitSnapshotsEqual } from "../data/model/OutfitSnapshots.js";
 import { OutfitTracker } from "../data/tracker.js";
 import { OutfitManager } from "./OutfitManager.js";
 export class BotOutfitManager extends OutfitManager {
@@ -52,22 +51,6 @@ export class BotOutfitManager extends OutfitManager {
             return `Exported "${outfitName}" outfit to user.`;
         }
         return "";
-    }
-    loadPreset(outfitName) {
-        const collectionView = OutfitTracker.characterOutfits(this.character);
-        const newOutfit = collectionView.getSavedOutfit(outfitName)?.snapshot();
-        if (newOutfit === undefined) {
-            return 'not-found';
-        }
-        const oldOutfit = this.getOutfitView().snapshot();
-        if (areOutfitSnapshotsEqual(oldOutfit, newOutfit)) {
-            return 'already-wearing';
-        }
-        collectionView.loadOutfit(newOutfit);
-        for (const [slot, value] of Object.entries(this.getOutfitView().values)) {
-            void this.setSlotValue(slot, value);
-        }
-        return 'success';
     }
     deletePreset(outfitName) {
         const outfit = OutfitTracker.characterOutfits(this.character).getSavedOutfit(outfitName);

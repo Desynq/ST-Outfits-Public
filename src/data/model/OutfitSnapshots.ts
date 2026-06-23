@@ -23,6 +23,7 @@ export class OutfitSlotState extends OutfitSlotBase {
 	public readonly activeImageTag: string | null;
 	public readonly equipped: boolean;
 	public readonly conditions: SlotConditionMap;
+	public readonly synced: boolean;
 
 	public constructor(
 		public readonly raw: Readonly<OutfitSlot>,
@@ -47,6 +48,7 @@ export class OutfitSlotState extends OutfitSlotBase {
 		this.activeImageTag = raw.activeImageTag;
 		this.equipped = raw.equipped;
 		this.conditions = raw.conditions;
+		this.synced = raw.synced;
 	}
 
 	public isEnabled(): boolean {

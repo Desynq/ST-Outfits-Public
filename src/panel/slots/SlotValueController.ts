@@ -1,18 +1,19 @@
 import { ChatOutfitStorage } from "../../api/chat-metadata.js";
 import { OutfitSlotState } from "../../data/model/OutfitSnapshots.js";
-import { assertNever, isWideScreen, scrollIntoViewAboveKeyboard } from "../../shared.js";
+import { isWideScreen, scrollIntoViewAboveKeyboard } from "../../shared.js";
 import { PanelType } from "../../types/maps.js";
 import { SlotValueText } from "../../ui/components/SlotValueText.js";
 import { popupConfirm } from "../../util/adapter/popup-adapter.js";
 import { substituteParams } from "../../util/adapter/script-adapter.js";
 import { addDoubleTapListener } from "../../util/element/click-actions.js";
-import { hasTransitionFor, triggerAfterLayout, triggerAfterTransition } from "../../util/element/css.js";
+import { triggerAfterLayout, triggerAfterTransition } from "../../util/element/css.js";
 import { addLongPressAction, createElement, el } from "../../util/ElementHelper.js";
 import { EventBus, Listener } from "../../util/EventBus.js";
 import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
 import { OutfitPanel } from "../OutfitPanel.js";
 import { EditCoordinator } from "./edit-coordinator.js";
 import { SlotContext } from "./SlotRenderer.js";
+import * as SlotPresetsApi from "../../api/internal/slot-preset.js";
 
 export interface SlotValueDeps {
 	panel: OutfitPanel<PanelType>;
@@ -325,7 +326,24 @@ export class SlotValueController extends OutfitPanelContext {
 	}
 
 	protected async updateSlotText(slot: OutfitSlotState, text: string): Promise<void> {
+		this.syncPresetFromEditedValue(slot, text);
 		await this.outfitManager.updateSlotValue(slot.id, text);
+	}
+
+	private syncPresetFromEditedValue(slot: OutfitSlotState, text: string): void {
+		if (!SlotPresetsApi.canSync(slot)) return;
+
+		const step = SlotPresetsApi.beginSaveSlotAsPresetFromImageTag({
+			slot: {
+				value: text,
+				getActiveImageState: () => slot.getActiveImageState(),
+				hasPreset: (preset) => slot.hasPreset(preset)
+			}
+		});
+
+		if (step.type !== 'ready') return;
+
+		step.save();
 	}
 
 	protected getEmptyText(): string {

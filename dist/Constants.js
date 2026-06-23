@@ -35,7 +35,8 @@ export function toSlot(from) {
         conditions: {
             mode: 'none',
             items: []
-        }
+        },
+        synced: false
     };
 }
 export const DEFAULT_SLOTS = [

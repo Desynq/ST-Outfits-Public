@@ -1,6 +1,9 @@
 import { ChatOutfitStorage } from "../api/chat-metadata.js";
+import * as SlotPresetsApi from "../api/internal/slot-preset.js";
+import { areOutfitSnapshotsEqual } from "../data/model/OutfitSnapshots.js";
 import { OutfitTracker } from "../data/tracker.js";
-import { formatAccessorySlotName, toSlotName } from "../shared.js";
+import { assertNever, formatAccessorySlotName, toSlotName } from "../shared.js";
+import { promptOptions } from "../ui/prompt/prompt-options.js";
 import { isSlotBlocked } from "../util/slot.js";
 import { indentString, toKebabCase } from "../util/StringHelper.js";
 import { toSummaryKey } from "../util/SummaryHelper.js";
@@ -28,6 +31,21 @@ export class OutfitManager {
     }
     getValue(slotId) {
         return this.getOutfitView().values[slotId];
+    }
+    loadPreset(outfitName) {
+        const collection = this.getOutfitCollection();
+        const newOutfit = collection.getSavedOutfit(outfitName)?.snapshot();
+        if (newOutfit === undefined) {
+            return 'not-found';
+        }
+        const view = this.getOutfitView();
+        const oldOutfit = view.snapshot();
+        if (areOutfitSnapshotsEqual(oldOutfit, newOutfit)) {
+            return 'already-wearing';
+        }
+        collection.loadOutfit(newOutfit);
+        this.onActiveOutfitChanged();
+        return 'success';
     }
     buildSlotSummariesFromKind(kind) {
         return this.outfit.mapSlots(s => this.formatSlotSummary(s), (s, arr) => s.kind === kind && s.enabled && !isSlotBlocked(s, arr));
@@ -136,7 +154,26 @@ export class OutfitManager {
         }
     }
     onActiveOutfitChanged() {
+        this.reconcileSyncedSlots();
         this.updateContext();
+    }
+    reconcileSyncedSlots() {
+        const view = this.getOutfitView();
+        let changed = false;
+        for (const slot of view.slots) {
+            if (!slot.synced)
+                continue;
+            const resolved = view.resolveSlot(slot.id);
+            if (!resolved.resolved)
+                continue;
+            if (resolved.value === slot.value)
+                continue;
+            view.setValue(slot.id, resolved.value);
+            changed = true;
+        }
+        if (changed) {
+            this.saveSettings();
+        }
     }
     deleteOutfitSlot(slotId) {
         const view = this.getOutfitView();
@@ -155,12 +192,55 @@ export class OutfitManager {
         view.setValue(slot.id, value);
         await this.updateSlotContext(slotId);
     }
+    async setSlotSync(slotId, synced) {
+        const view = this.getOutfitView();
+        const slot = view.getSlotById(slotId);
+        if (!slot)
+            return;
+        if (!synced) {
+            view.manipulate().setSync(slotId, false);
+            return;
+        }
+        const before = view.resolveSlot(slotId);
+        if (!before.resolved)
+            return;
+        const step = SlotPresetsApi.beginSaveSlotAsPresetFromImageTag({
+            slot: before
+        });
+        if (step.type === 'no-image')
+            return; // cannot save as preset, therefore don't allow syncing
+        if (!step.oldPreset) {
+            step.save();
+        }
+        else if (step.oldPreset.value !== before.value) {
+            const choice = await promptOptions('This image already has a different synced preset. What should happen?', ['load-preset', 'use-current'], option => ({
+                'load-preset': `Load preset: ${step.oldPreset.value}`,
+                'use-current': `Replace preset with:\n${before.value}`
+            }[option]));
+            switch (choice) {
+                case null:
+                    return;
+                case 'load-preset':
+                    break;
+                case 'use-current':
+                    step.save();
+                    break;
+                default: assertNever(choice);
+            }
+        }
+        view.manipulate().setSync(slotId, true);
+        const after = view.resolveSlot(slotId);
+        if (after.resolved && before.value !== after.value) {
+            view.setValue(slotId, after.value);
+            await this.updateSlotContext(slotId);
+        }
+    }
     /**
      * Updates summaries and global variables tied to slot id
      */
     async updateSlotContext(slotId) {
         const view = this.getOutfitView();
-        const slot = await view.resolveSlot(slotId);
+        const slot = view.resolveSlot(slotId);
         if (!slot.resolved)
             return;
         const varName = this.getVarName(slot.id);

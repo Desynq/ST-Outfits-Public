@@ -165,6 +165,13 @@ export class MutableSlotView {
         image.height = height;
         return 'resized';
     }
+    setSync(id, sync) {
+        const slot = this.getMutableSlotById(id);
+        if (slot === undefined)
+            return false;
+        slot.synced = sync;
+        return true;
+    }
     addSlot(id, kind) {
         const i = this.indexById[id];
         if (i !== undefined)

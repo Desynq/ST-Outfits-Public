@@ -100,6 +100,9 @@ export function normalizeOutfit(value) {
         if (seen.has(id))
             continue;
         seen.add(id);
+        const activeImageTag = typeof slot.activeImageTag === 'string'
+            ? slot.activeImageTag
+            : null;
         slots.push({
             id,
             kind: normalizeKind(slot.kind),
@@ -108,7 +111,8 @@ export function normalizeOutfit(value) {
             images: normalizeImages(slot.images),
             activeImageTag: typeof slot.activeImageTag === 'string' ? slot.activeImageTag : null,
             equipped: typeof slot.equipped === 'boolean' ? slot.equipped : true,
-            conditions: normalizeConditionMap(slot)
+            conditions: normalizeConditionMap(slot),
+            synced: typeof slot.synced === 'boolean' ? slot.synced : false
         });
     }
     // legacy

@@ -3,6 +3,9 @@ import { resolveKebabCase } from "../../util/StringHelper.js";
 export function getSlotPresetRegistry() {
     return OutfitTracker.slotPresets();
 }
+export function hasImage(preset) {
+    return preset.image !== undefined;
+}
 export function canHavePreset(slot) {
     return slot.getActiveImageState() !== null;
 }
@@ -25,15 +28,7 @@ export function confirmPresetOverwrite(step, key) {
     return true;
 }
 export function beginSaveSlotAsPreset({ slot, registry = getSlotPresetRegistry(), key }) {
-    const imageState = slot.getActiveImageState();
-    if (!imageState) {
-        return { type: 'no-image' };
-    }
-    const preset = buildPresetFromImage({
-        slot,
-        key,
-        image: imageState.image
-    });
+    const preset = buildPresetFromSlot(slot);
     return {
         type: 'ready',
         oldPreset: registry.get(key),
@@ -44,19 +39,15 @@ export function beginSaveSlotAsPreset({ slot, registry = getSlotPresetRegistry()
         }
     };
 }
-export function beginSaveSlotAsPresetFromImageTag({ slot, registry = getSlotPresetRegistry() }) {
+/**
+ * Saves the slot as a preset using the active image's tag if present or the slot's id for the slot preset key
+ */
+export function beginSaveSlotAsPresetAuto({ slot, registry = getSlotPresetRegistry() }) {
     const imageState = slot.getActiveImageState();
-    if (!imageState) {
-        return { type: 'no-image' };
-    }
-    const preset = buildPresetFromImage({
-        slot,
-        key: imageState.tag,
-        image: imageState.image
-    });
+    const preset = buildPresetFromSlot(slot);
     return {
         type: 'ready',
-        oldPreset: registry.get(imageState.tag),
+        oldPreset: registry.get(imageState ? imageState.tag : slot.id),
         alreadyOnSlot: slot.hasPreset(preset),
         save: () => {
             registry.set(preset);
@@ -64,15 +55,37 @@ export function beginSaveSlotAsPresetFromImageTag({ slot, registry = getSlotPres
         }
     };
 }
-function buildPresetFromImage({ slot, key, image }) {
-    const { key: imageKey, width: imageWidth, height: imageHeight } = image;
-    return {
-        key,
+function buildPresetFromSlot(slot) {
+    const imageState = slot.getActiveImageState();
+    const preset = {
+        key: imageState ? imageState.tag : slot.id,
         value: slot.value,
-        imageKey,
-        imageWidth,
-        imageHeight,
         createdAt: Date.now(),
         lastUsedAt: Date.now()
     };
+    if (imageState) {
+        const image = imageState.image;
+        preset.image = {
+            key: image.key,
+            width: image.width,
+            height: image.height
+        };
+    }
+    return preset;
+}
+function buildPresetFromImage({ slot, key, image }) {
+    const preset = {
+        key,
+        value: slot.value,
+        createdAt: Date.now(),
+        lastUsedAt: Date.now()
+    };
+    if (image) {
+        preset.image = {
+            key: image.key,
+            width: image.width,
+            height: image.height
+        };
+    }
+    return preset;
 }

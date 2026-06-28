@@ -337,10 +337,8 @@ export class SlotRenderer extends OutfitPanelContext {
 
 		this.createMenuBtn(ctx, addendumEl).appendTo(ctx.actionsRightEl);
 
-		if (imageElement.state === 'shown') {
-			const syncBtn = this.createSyncButton(ctx);
-			ctx.labelRightDiv.append(syncBtn);
-		}
+		const syncBtn = this.createSyncButton(ctx);
+		ctx.labelRightDiv.append(syncBtn);
 	}
 
 	private createMenuBtn(ctx: SlotContext, addendumEl: HTMLDivElement): SlotActionsMenuElement {

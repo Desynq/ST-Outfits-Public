@@ -1427,7 +1427,7 @@
   background: rgba(30, 30, 30, 0.95);
   border-radius: 12px;
   padding: 16px;
-  max-width: 40dvw;
+  max-width: 70dvw;
   max-height: 80dvh;
   display: flex;
   flex-direction: column;
@@ -1462,10 +1462,20 @@
 
 .slot-presets-slot-section,
 .slot-presets-other-section {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr;
   gap: 8px;
+}
+.slot-presets-slot-section > h3, .slot-presets-slot-section > .section-title,
+.slot-presets-other-section > h3,
+.slot-presets-other-section > .section-title {
+  grid-column: 1/-1;
+}
+@media (min-width: 720px) {
+  .slot-presets-slot-section,
+  .slot-presets-other-section {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 .slot-presets-save-btn {
@@ -1503,9 +1513,30 @@
 .slot-preset-thumb {
   width: 48px;
   height: 48px;
-  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  background: var(--SmartThemeQuoteColor);
+  overflow: hidden;
+}
+.slot-preset-thumb > img {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  border-radius: 8px;
+}
+.slot-preset-thumb.placeholder {
+  opacity: 0.5;
+  font-size: 1.75rem;
+}
+.slot-preset-thumb.missing {
+  color: var(--SmartThemeErrorColor);
+}
+@media (min-width: 720px) {
+  .slot-preset-thumb {
+    width: 72px;
+    height: 72px;
+  }
 }
 
 .slot-preset-text {

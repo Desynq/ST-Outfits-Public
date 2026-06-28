@@ -213,10 +213,8 @@ export class SlotRenderer extends OutfitPanelContext {
         }
         this.appendEditBtn(ctx.actionsRightEl, ctx, valueEl);
         this.createMenuBtn(ctx, addendumEl).appendTo(ctx.actionsRightEl);
-        if (imageElement.state === 'shown') {
-            const syncBtn = this.createSyncButton(ctx);
-            ctx.labelRightDiv.append(syncBtn);
-        }
+        const syncBtn = this.createSyncButton(ctx);
+        ctx.labelRightDiv.append(syncBtn);
     }
     createMenuBtn(ctx, addendumEl) {
         return new SlotActionsMenuElement({

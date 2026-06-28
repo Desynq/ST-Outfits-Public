@@ -1,4 +1,4 @@
-import { KeyedSlotPreset, SlotPreset } from "../model/SlotPreset.js";
+import { KeyedSlotPreset, SlotPreset, SlotPresetV1 } from "../model/SlotPreset.js";
 
 export class SlotPresetRegistry {
 

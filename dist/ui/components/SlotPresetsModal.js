@@ -2,7 +2,7 @@ import * as SlotPresetApi from "../../api/internal/slot-preset.js";
 import { OutfitTracker } from "../../data/tracker.js";
 import { assertNever } from "../../shared.js";
 import { div } from "../../util/element/divs.js";
-import { createElement, el } from "../../util/ElementHelper.js";
+import { createDiv, createElement, el } from "../../util/ElementHelper.js";
 import { SlotModal } from "./Modal.js";
 export class SlotPresetsModal extends SlotModal {
     construct() {
@@ -61,13 +61,26 @@ export class SlotPresetsModal extends SlotModal {
         return this.manager.getOutfitView();
     }
     createPresetElement(preset) {
-        const imageBlob = this.getRef(preset.imageKey);
-        if (!imageBlob)
-            return null;
         const el = createElement('div', 'slot-preset-item');
-        const img = createElement('img', 'slot-preset-thumb');
-        img.src = imageBlob.url;
-        img.alt = preset.value;
+        const thumb = createDiv('slot-preset-thumb');
+        if (preset.image) {
+            const imageBlob = this.getRef(preset.image.key);
+            if (imageBlob) {
+                const img = createElement('img');
+                img.src = imageBlob.url;
+                img.alt = preset.value;
+                thumb.append(img);
+            }
+            else {
+                thumb.textContent = '🖼️';
+                thumb.classList.add('missing');
+            }
+        }
+        else {
+            thumb.textContent = '📄';
+            thumb.classList.add('placeholder');
+        }
+        el.append(thumb);
         const label = createElement('div', 'slot-preset-label', preset.key);
         const value = createElement('div', 'slot-preset-value', preset.value);
         value.tabIndex = 0;
@@ -83,80 +96,70 @@ export class SlotPresetsModal extends SlotModal {
         const deleteBtn = createBtn('delete-btn', 'Delete', () => this.deletePreset(preset));
         const actionsEl = createElement('div', 'slot-preset-actions');
         actionsEl.append(useBtn, deleteBtn);
-        el.append(img, textWrap, actionsEl);
+        el.append(textWrap, actionsEl);
         if (this.slot.hasPreset(preset)) {
             el.classList.add('attached');
         }
         return el;
     }
     async usePreset(preset) {
-        const imageAttachOutcome = this.outfit.attachImage(this.slot.id, preset.key, preset.imageKey);
-        switch (imageAttachOutcome) {
+        if (SlotPresetApi.hasImage(preset)) {
+            this.setSlotImageFromSlotPreset(preset);
+        }
+        await this.manager.updateSlotValue(this.slot.id, preset.value);
+        this.close();
+        this.saveAndRender();
+    }
+    setSlotImageFromSlotPreset(preset) {
+        const attachImageResult = this.outfit.attachImage(this.slot.id, preset.key, preset.image.key);
+        switch (attachImageResult) {
             case 'slot-not-found':
             case 'blob-does-not-exist':
                 throw new Error();
             case 'attached-image':
                 break;
-            default: assertNever(imageAttachOutcome);
+            default: assertNever(attachImageResult);
         }
-        const imageResizeOutcome = this.outfit.resizeImage(this.slot.id, preset.key, preset.imageWidth, preset.imageHeight);
-        switch (imageResizeOutcome) {
+        const resizeImageResult = this.outfit.resizeImage(this.slot.id, preset.key, preset.image.width, preset.image.height);
+        switch (resizeImageResult) {
             case 'slot-not-found':
             case 'tag-does-not-exist':
                 throw new Error();
             case 'noop':
             case 'resized':
                 break;
-            default: assertNever(imageResizeOutcome);
+            default: assertNever(resizeImageResult);
         }
-        const imageActivateOutcome = this.outfit.setActiveImage(this.slot.id, preset.key);
-        switch (imageActivateOutcome) {
+        const setActiveImageResult = this.outfit.setActiveImage(this.slot.id, preset.key);
+        switch (setActiveImageResult) {
             case 'slot-not-found':
             case 'image-does-not-exist':
                 throw new Error();
             case 'image-already-active':
             case 'set-active-image':
                 break;
-            default: assertNever(imageActivateOutcome);
+            default: assertNever(setActiveImageResult);
         }
-        await this.manager.updateSlotValue(this.slot.id, preset.value);
-        this.close();
-        this.saveAndRender();
+        return true;
     }
     autoSavePreset() {
-        const step = SlotPresetApi.beginSaveSlotAsPresetFromImageTag({ slot: this.slot, registry: this.registry });
-        switch (step.type) {
-            case 'no-image':
-                toastr.error('Slot must have an image in order to be saved as a preset.');
+        const step = SlotPresetApi.beginSaveSlotAsPresetAuto({ slot: this.slot, registry: this.registry });
+        if (step.oldPreset) {
+            const ok = confirm(`Overwrite ${step.oldPreset.key}?`);
+            if (!ok) {
                 return;
-            case 'ready':
-                if (step.oldPreset) {
-                    const ok = confirm(`Overwrite ${step.oldPreset.key}?`);
-                    if (!ok) {
-                        return;
-                    }
-                }
-                step.save();
-                this.manager.saveSettings();
-                this.reshow();
-                return;
-            default: assertNever(step);
+            }
         }
+        step.save();
+        this.manager.saveSettings();
+        this.reshow();
     }
     savePreset() {
-        if (!SlotPresetApi.canHavePreset(this.slot)) {
-            // No image, no preset
-            toastr.error('Slot must have an image in order to be saved as a preset.');
-            return;
-        }
         const key = SlotPresetApi.promptPresetKey();
         if (!key) {
             return;
         }
         const step = SlotPresetApi.beginSaveSlotAsPreset({ slot: this.slot, registry: this.registry, key });
-        if (step.type === 'no-image') {
-            throw new Error();
-        }
         if (!SlotPresetApi.confirmPresetOverwrite(step, key)) {
             return;
         }

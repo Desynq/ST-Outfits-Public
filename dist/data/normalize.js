@@ -189,28 +189,35 @@ export function normalizeSlotPresets(holder) {
     holder.slotPresets = normalizeRecord(holder.slotPresets, v => normalizeRawSlotPreset(v, holder.images));
 }
 function normalizeRawSlotPreset(value, images) {
-    if (notObject(value))
+    if (!isRecord(value))
         return undefined;
     const presetValue = resolveString(value.value);
-    const imageKey = resolveString(value.imageKey);
-    if (!presetValue || !imageKey)
+    if (!presetValue)
         return undefined;
-    if (!images[imageKey])
-        return undefined;
-    const imageWidth = resolvePositiveNumber(value.imageWidth);
-    const imageHeight = resolvePositiveNumber(value.imageHeight);
-    if (imageWidth === undefined || imageHeight === undefined)
-        return undefined;
-    const createdAt = resolveTimestamp(value.timestamp, Date.now());
-    const lastUsedAt = resolveTimestamp(value.timestamp, Date.now());
-    return {
+    const createdAt = resolveTimestamp(value.createdAt, Date.now());
+    const lastUsedAt = resolveTimestamp(value.lastUsedAt, Date.now());
+    const preset = {
         value: presetValue,
-        imageKey,
-        imageWidth,
-        imageHeight,
         createdAt,
         lastUsedAt
     };
+    if (isRecord(value.image)) {
+        const key = resolveString(value.image.key);
+        if (!key)
+            return undefined;
+        if (!images[key])
+            return undefined;
+        const width = resolvePositiveNumber(value.image.width);
+        const height = resolvePositiveNumber(value.image.height);
+        if (width === undefined || height === undefined)
+            return undefined;
+        preset.image = {
+            key,
+            width,
+            height
+        };
+    }
+    return preset;
 }
 export function normalizeConditionMap(slot) {
     if (!isRecord(slot)) {

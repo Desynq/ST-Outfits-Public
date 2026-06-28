@@ -224,8 +224,9 @@ export class SlotValueController extends OutfitPanelContext {
     syncPresetFromEditedValue(slot, text) {
         if (!SlotPresetsApi.canSync(slot))
             return;
-        const step = SlotPresetsApi.beginSaveSlotAsPresetFromImageTag({
+        const step = SlotPresetsApi.beginSaveSlotAsPresetAuto({
             slot: {
+                id: slot.id,
                 value: text,
                 getActiveImageState: () => slot.getActiveImageState(),
                 hasPreset: (preset) => slot.hasPreset(preset)

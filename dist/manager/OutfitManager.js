@@ -204,11 +204,9 @@ export class OutfitManager {
         const before = view.resolveSlot(slotId);
         if (!before.resolved)
             return;
-        const step = SlotPresetsApi.beginSaveSlotAsPresetFromImageTag({
+        const step = SlotPresetsApi.beginSaveSlotAsPresetAuto({
             slot: before
         });
-        if (step.type === 'no-image')
-            return; // cannot save as preset, therefore don't allow syncing
         if (!step.oldPreset) {
             step.save();
         }

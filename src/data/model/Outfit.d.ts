@@ -1,6 +1,6 @@
 import { PartialPanelSettings } from "../view/PartialPanelSettings";
 import { CharPanelsTree, PanelSettings } from "./Panels";
-import { SlotPreset } from "./SlotPreset";
+import { SlotPresetV1 } from "./SlotPreset";
 
 export type KnownSlotKind =
 	| 'clothing'
@@ -112,7 +112,7 @@ export interface OutfitTrackerModel {
 	// key: base64
 	images: Record<string, ImageRef>;
 
-	slotPresets: Record<string, SlotPreset>;
+	slotPresets: Record<string, SlotPresetV1>;
 }
 
 export interface ExtensionSettingsAugment {

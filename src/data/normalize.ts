@@ -1,10 +1,10 @@
 import { toSlot } from "../Constants.js";
-import { asBoolean, asObject, asStringRecord, ensureObject, notObject, resolvePositiveNumber, resolveString, resolveTimestamp } from "../ObjectHelper.js";
+import { asBoolean, asObject, asStringRecord, ensureObject, isObject, notObject, resolvePositiveNumber, resolveString, resolveTimestamp } from "../ObjectHelper.js";
 import { isRecord } from "../util/narrowing.js";
 import { toSlotId } from "../util/normalize/slot.js";
 import { normalizeOutfitSnapshots } from "./mappings/OutfitCache.js";
 import { ImageBlob, ImageRef, Outfit, OutfitCollection, OutfitImage, OutfitSlot, OutfitTrackerModel, SlotCondition, SlotConditionMap, SlotKind } from "./model/Outfit.js";
-import { SlotPreset } from "./model/SlotPreset.js";
+import { SlotPreset, SlotPresetV1 } from "./model/SlotPreset.js";
 
 
 export function validatePresets(holder: any): void {
@@ -261,29 +261,37 @@ function normalizeRawSlotPreset(
 	value: any,
 	images: Record<string, ImageBlob>
 ): SlotPreset | undefined {
-	if (notObject(value)) return undefined;
+	if (!isRecord(value)) return undefined;
 
 	const presetValue = resolveString(value.value);
-	const imageKey = resolveString(value.imageKey);
+	if (!presetValue) return undefined;
 
-	if (!presetValue || !imageKey) return undefined;
-	if (!images[imageKey]) return undefined;
+	const createdAt = resolveTimestamp(value.createdAt, Date.now());
+	const lastUsedAt = resolveTimestamp(value.lastUsedAt, Date.now());
 
-	const imageWidth = resolvePositiveNumber(value.imageWidth);
-	const imageHeight = resolvePositiveNumber(value.imageHeight);
-	if (imageWidth === undefined || imageHeight === undefined) return undefined;
-
-	const createdAt = resolveTimestamp(value.timestamp, Date.now());
-	const lastUsedAt = resolveTimestamp(value.timestamp, Date.now());
-
-	return {
+	const preset: SlotPreset = {
 		value: presetValue,
-		imageKey,
-		imageWidth,
-		imageHeight,
 		createdAt,
 		lastUsedAt
 	};
+
+	if (isRecord(value.image)) {
+		const key = resolveString(value.image.key);
+		if (!key) return undefined;
+		if (!images[key]) return undefined;
+
+		const width = resolvePositiveNumber(value.image.width);
+		const height = resolvePositiveNumber(value.image.height);
+		if (width === undefined || height === undefined) return undefined;
+
+		preset.image = {
+			key,
+			width,
+			height
+		};
+	}
+
+	return preset;
 }
 
 

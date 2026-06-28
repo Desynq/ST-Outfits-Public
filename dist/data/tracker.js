@@ -2,6 +2,7 @@
 import { extension_settings } from "../../../../../extensions.js";
 import { saveSettings } from "../api/settings.js";
 import { notObject } from "../ObjectHelper.js";
+import { isRecord } from "../util/narrowing.js";
 import { normalizeCharPanels, normalizePanelSettings } from "./mappings/PanelSettings.js";
 import { normalizeImageBlobs, normalizeSlotPresets, validatePresets } from "./normalize.js";
 import { CharPanelsView } from "./view/CharPanelsView.js";
@@ -102,6 +103,9 @@ function loadTracker() {
     raw.version = 1;
     return new Tracker(raw);
 }
+/**
+ * Will always migrate through all the versions when loading mod for the first time
+ */
 function migrateTracker(raw) {
     const version = typeof raw.version === 'number' ? raw.version : 0;
     if (version < 1) {
@@ -111,6 +115,10 @@ function migrateTracker(raw) {
     if (version < 2) {
         migratePanelSettingsV2(raw);
         raw.version = 2;
+    }
+    if (version < 3) {
+        migrateSlotPresets(raw.slotPresets);
+        raw.version = 3;
     }
 }
 function migrateOutfitNamingV1(presets) {
@@ -144,15 +152,40 @@ function migratePanelSettingsV2(raw) {
     }
 }
 function migrateSinglePanelSettingsV2(settings) {
-    if (notObject(settings))
+    if (!isRecord(settings))
         return;
-    const raw = settings;
-    if (!('load_state' in raw)) {
-        raw.load_state = raw.canLoadFromChat === false
+    if (!('load_state' in settings)) {
+        settings.load_state = settings.canLoadFromChat === false
             ? 'global'
             : 'chat';
     }
-    delete raw.canLoadFromChat;
+    delete settings.canLoadFromChat;
+}
+function migrateSlotPresets(presets) {
+    if (!isRecord(presets))
+        return;
+    for (const p of Object.values(presets)) {
+        if (!isRecord(p)) {
+            continue;
+        }
+        // already migrated
+        if ("image" in p) {
+            continue;
+        }
+        if (typeof p.imageKey !== 'string' ||
+            typeof p.imageWidth !== 'number' ||
+            typeof p.imageHeight !== 'number') {
+            continue;
+        }
+        p.image = {
+            key: p.imageKey,
+            width: p.imageWidth,
+            height: p.imageHeight
+        };
+        delete p.imageKey;
+        delete p.imageWidth;
+        delete p.imageHeight;
+    }
 }
 function getPresetCollections(presets) {
     const collections = [];

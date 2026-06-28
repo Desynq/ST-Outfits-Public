@@ -55,18 +55,6 @@ export class OutfitSlotState extends OutfitSlotBase {
     hasPreset(preset) {
         return preset.key in this.images;
     }
-    isPreset(preset) {
-        const image = this.images[preset.key];
-        if (!image)
-            return false;
-        if (image.image.width !== preset.imageWidth)
-            return false;
-        if (image.image.height !== preset.imageHeight)
-            return false;
-        if (this.value !== preset.value)
-            return false;
-        return true;
-    }
 }
 export class UnresolvedOutfitSlot extends OutfitSlotBase {
     constructor(id) {

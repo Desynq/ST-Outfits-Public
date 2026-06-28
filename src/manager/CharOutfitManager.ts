@@ -43,7 +43,7 @@ export class CharOutfitManager extends OutfitManager {
 		return `${this.characterKey.replace(/\s+/g, ' ')}_${namespace}`;
 	}
 
-	public override async updateSlotValue(slotId: string, value: string): Promise<string> {
+	public override updateSlotValue(slotId: string, value: string): string {
 		const previousValue = this.getValue(slotId);
 		void this.setSlotValue(slotId, value);
 
@@ -59,7 +59,7 @@ export class CharOutfitManager extends OutfitManager {
 	}
 
 
-	public override savePreset(outfitName: string): string {
+	public override saveOutfitAs(outfitName: string): string {
 		const outfit = this.getOutfitView().snapshot();
 
 		OutfitTracker.characterOutfits(this.characterKey).saveOutfit(outfitName, outfit);
@@ -75,7 +75,7 @@ export class CharOutfitManager extends OutfitManager {
 		return `Exported "${outfitName}" outfit to user.`;
 	}
 
-	public override deletePreset(outfitName: string): string {
+	public override deleteSavedOutfit(outfitName: string): string {
 		const outfit = OutfitTracker.characterOutfits(this.characterKey).getSavedOutfit(outfitName);
 		if (outfit === undefined) {
 			return `[Outfit System] Preset "${outfitName}" not found.`;
@@ -86,7 +86,7 @@ export class CharOutfitManager extends OutfitManager {
 		return `Deleted "${outfitName}" outfit.`;
 	}
 
-	public override getPresets(): string[] {
+	public override getSavedOutfits(): string[] {
 		const outfits = OutfitTracker.characterOutfits(this.characterKey).getSavedOutfitNames();
 
 		return outfits;

@@ -20,7 +20,7 @@ export class CharOutfitManager extends OutfitManager {
     getVarName(namespace) {
         return `${this.characterKey.replace(/\s+/g, ' ')}_${namespace}`;
     }
-    async updateSlotValue(slotId, value) {
+    updateSlotValue(slotId, value) {
         const previousValue = this.getValue(slotId);
         void this.setSlotValue(slotId, value);
         if (previousValue === 'None' && value !== 'None') {
@@ -33,7 +33,7 @@ export class CharOutfitManager extends OutfitManager {
             return `${this.characterKey} changed from ${previousValue} to ${value}.`;
         }
     }
-    savePreset(outfitName) {
+    saveOutfitAs(outfitName) {
         const outfit = this.getOutfitView().snapshot();
         OutfitTracker.characterOutfits(this.characterKey).saveOutfit(outfitName, outfit);
         return `Saved "${outfitName}" outfit for ${this.displayName}.`;
@@ -43,7 +43,7 @@ export class CharOutfitManager extends OutfitManager {
         OutfitTracker.userOutfits().saveOutfit(outfitName, outfit);
         return `Exported "${outfitName}" outfit to user.`;
     }
-    deletePreset(outfitName) {
+    deleteSavedOutfit(outfitName) {
         const outfit = OutfitTracker.characterOutfits(this.characterKey).getSavedOutfit(outfitName);
         if (outfit === undefined) {
             return `[Outfit System] Preset "${outfitName}" not found.`;
@@ -51,7 +51,7 @@ export class CharOutfitManager extends OutfitManager {
         OutfitTracker.characterOutfits(this.characterKey).deleteSavedOutfit(outfitName);
         return `Deleted "${outfitName}" outfit.`;
     }
-    getPresets() {
+    getSavedOutfits() {
         const outfits = OutfitTracker.characterOutfits(this.characterKey).getSavedOutfitNames();
         return outfits;
     }

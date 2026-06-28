@@ -350,7 +350,7 @@ export class CharOutfitPanel extends OutfitPanel<'char'> {
 		if (ck === null) return false;
 
 		const name = `@character:${ck}`;
-		this.outfitManager.savePreset(name);
+		this.outfitManager.saveOutfitAs(name);
 		return true;
 	}
 
@@ -360,7 +360,7 @@ export class CharOutfitPanel extends OutfitPanel<'char'> {
 		if (ck === null) return false;
 
 		const name = `@character:${ck}`;
-		const result = this.outfitManager.loadPreset(name);
+		const result = this.outfitManager.loadSavedOutfit(name);
 		if (result === 'not-found') {
 			this.outfitManager.getOutfitCollection().clearCurrentOutfit();
 		}

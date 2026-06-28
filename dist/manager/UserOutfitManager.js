@@ -17,7 +17,7 @@ export class UserOutfitManager extends OutfitManager {
     getVarName(namespace) {
         return `User_${namespace}`;
     }
-    async updateSlotValue(slotId, value) {
+    updateSlotValue(slotId, value) {
         const previousValue = this.getValue(slotId);
         void this.setSlotValue(slotId, value);
         if (previousValue === 'None' && value !== 'None') {
@@ -30,7 +30,7 @@ export class UserOutfitManager extends OutfitManager {
             return `You changed from ${previousValue} to ${value}.`;
         }
     }
-    savePreset(outfitName) {
+    saveOutfitAs(outfitName) {
         const outfit = this.getOutfitView().snapshot();
         OutfitTracker.userOutfits().saveOutfit(outfitName, outfit);
         if (OutfitTracker.areSystemMessagesEnabled()) {
@@ -38,7 +38,7 @@ export class UserOutfitManager extends OutfitManager {
         }
         return '';
     }
-    deletePreset(outfitName) {
+    deleteSavedOutfit(outfitName) {
         const outfit = OutfitTracker.userOutfits().getSavedOutfit(outfitName);
         if (outfit === undefined) {
             return `[Outfit System] Preset "${outfitName}" not found.`;
@@ -49,7 +49,7 @@ export class UserOutfitManager extends OutfitManager {
         }
         return '';
     }
-    getPresets() {
+    getSavedOutfits() {
         return OutfitTracker.userOutfits().getOutfitNames();
     }
     getOutfitCollection() {

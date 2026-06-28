@@ -1,4 +1,4 @@
-import * as SlotPresetApi from "../../api/internal/slot-preset.js";
+import * as SlotPresetsApi from "../../api/internal/slot-preset.js";
 import { ImageRef, OutfitImage } from "../../data/model/Outfit.js";
 import { KeyedSlotPreset, KeyedSlotPresetWithImage } from "../../data/model/SlotPreset.js";
 import { OutfitTracker } from "../../data/tracker.js";
@@ -72,7 +72,7 @@ export class SlotPresetsModal extends SlotModal {
 
 
 	private get registry(): SlotPresetRegistry {
-		return SlotPresetApi.getSlotPresetRegistry();
+		return SlotPresetsApi.getSlotPresetRegistry();
 	}
 
 	private getRef(blobKey: string): ImageRef | undefined {
@@ -140,12 +140,8 @@ export class SlotPresetsModal extends SlotModal {
 		return el;
 	}
 
-	private async usePreset(preset: KeyedSlotPreset): Promise<void> {
-		if (SlotPresetApi.hasImage(preset)) {
-			this.setSlotImageFromSlotPreset(preset);
-		}
-
-		await this.manager.updateSlotValue(this.slot.id, preset.value);
+	private usePreset(preset: KeyedSlotPreset): void {
+		this.manager.loadSlotPreset(this.slot.id, preset);
 		this.close();
 		this.saveAndRender();
 	}
@@ -187,7 +183,7 @@ export class SlotPresetsModal extends SlotModal {
 	}
 
 	private autoSavePreset(): void {
-		const step = SlotPresetApi.beginSaveSlotAsPresetAuto({ slot: this.slot, registry: this.registry });
+		const step = SlotPresetsApi.beginSaveSlotAsPresetAuto({ slot: this.slot, registry: this.registry });
 
 		if (step.oldPreset) {
 			const ok = confirm(`Overwrite ${step.oldPreset.key}?`);
@@ -202,15 +198,15 @@ export class SlotPresetsModal extends SlotModal {
 	}
 
 	private savePreset(): void {
-		const key = SlotPresetApi.promptPresetKey();
+		const key = SlotPresetsApi.promptPresetKey();
 		if (!key) {
 			return;
 		}
 
 
-		const step = SlotPresetApi.beginSaveSlotAsPreset({ slot: this.slot, registry: this.registry, key });
+		const step = SlotPresetsApi.beginSaveSlotAsPreset({ slot: this.slot, registry: this.registry, key });
 
-		if (!SlotPresetApi.confirmPresetOverwrite(step, key)) {
+		if (!SlotPresetsApi.confirmPresetOverwrite(step, key)) {
 			return;
 		}
 

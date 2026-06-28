@@ -80,3 +80,20 @@ export function resolveKebabCase(input: string): string | null {
 		? cleaned
 		: null;
 }
+
+
+
+export function plural(count: number): '' | 's';
+export function plural<T extends string, V extends string>(
+	count: number,
+	singular: T,
+	plural: V
+): T | V;
+
+export function plural(
+	count: number,
+	singular = '',
+	plural = 's'
+): string {
+	return count === 1 ? singular : plural;
+}

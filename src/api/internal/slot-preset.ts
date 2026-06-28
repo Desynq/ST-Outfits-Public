@@ -1,10 +1,9 @@
 import { OutfitImage } from "../../data/model/Outfit.js";
 import { OutfitImageState } from "../../data/model/OutfitImageState.js";
 import { OutfitSlotState } from "../../data/model/OutfitSnapshots.js";
-import { KeyedSlotPreset, KeyedSlotPresetWithImage, SlotPreset } from "../../data/model/SlotPreset.js";
+import { KeyedSlotPreset, KeyedSlotPresetWithImage } from "../../data/model/SlotPreset.js";
 import { OutfitTracker } from "../../data/tracker.js";
 import { SlotPresetRegistry } from "../../data/view/SlotPresetsView.js";
-import { deleteUndefined } from "../../util/object-helper.js";
 import { resolveKebabCase } from "../../util/StringHelper.js";
 
 
@@ -39,6 +38,9 @@ export function canSync(slot: OutfitSlotState): boolean {
 }
 
 
+
+
+
 export function promptPresetKey(): string | null {
 	const raw = prompt('Enter image tag (kebab-case only)');
 	if (!raw) return null;
@@ -66,6 +68,10 @@ export function confirmPresetOverwrite(step: Extract<SaveSlotStep, { type: 'read
 
 	return true;
 }
+
+
+
+
 
 export function beginSaveSlotAsPreset({ slot, registry = getSlotPresetRegistry(), key }: {
 	slot: SlotPresetSource;

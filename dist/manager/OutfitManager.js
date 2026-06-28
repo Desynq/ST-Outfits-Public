@@ -5,7 +5,7 @@ import { OutfitTracker } from "../data/tracker.js";
 import { assertNever, formatAccessorySlotName, toSlotName } from "../shared.js";
 import { promptOptions } from "../ui/prompt/prompt-options.js";
 import { isSlotBlocked } from "../util/slot.js";
-import { indentString, toKebabCase } from "../util/StringHelper.js";
+import { indentString, plural, toKebabCase } from "../util/StringHelper.js";
 import { toSummaryKey } from "../util/SummaryHelper.js";
 import { deleteGlobalVariable, getGlobalVariable, setGlobalVariable } from "./GlobalVarManager.js";
 import { OutfitMacroManager } from "./MacroManager.js";
@@ -32,7 +32,7 @@ export class OutfitManager {
     getValue(slotId) {
         return this.getOutfitView().values[slotId];
     }
-    loadPreset(outfitName) {
+    loadSavedOutfit(outfitName) {
         const collection = this.getOutfitCollection();
         const newOutfit = collection.getSavedOutfit(outfitName)?.snapshot();
         if (newOutfit === undefined) {
@@ -159,7 +159,7 @@ export class OutfitManager {
     }
     reconcileSyncedSlots() {
         const view = this.getOutfitView();
-        let changed = false;
+        let changed = 0;
         for (const slot of view.slots) {
             if (!slot.synced)
                 continue;
@@ -169,9 +169,10 @@ export class OutfitManager {
             if (resolved.value === slot.value)
                 continue;
             view.setValue(slot.id, resolved.value);
-            changed = true;
+            changed++;
         }
-        if (changed) {
+        if (changed > 0) {
+            toastr.info(`Synced ${changed} outfit slot${plural(changed)}.`);
             this.saveSettings();
         }
     }
@@ -184,14 +185,17 @@ export class OutfitManager {
         this.updateContext();
         return true;
     }
-    async setSlotValue(slotId, value) {
+    setSlotValue(slotId, value) {
         const view = this.getOutfitView();
         const slot = view.getSlotById(slotId);
         if (slot === undefined)
             return;
         view.setValue(slot.id, value);
-        await this.updateSlotContext(slotId);
+        this.updateSlotContext(slotId);
     }
+    /**
+     * Should be followed with a settings save and rerender before returning control to the user
+     */
     async setSlotSync(slotId, synced) {
         const view = this.getOutfitView();
         const slot = view.getSlotById(slotId);
@@ -219,6 +223,7 @@ export class OutfitManager {
                 case null:
                     return;
                 case 'load-preset':
+                    this.loadSlotPreset(slotId, step.oldPreset);
                     break;
                 case 'use-current':
                     step.save();
@@ -230,13 +235,13 @@ export class OutfitManager {
         const after = view.resolveSlot(slotId);
         if (after.resolved && before.value !== after.value) {
             view.setValue(slotId, after.value);
-            await this.updateSlotContext(slotId);
+            this.updateSlotContext(slotId);
         }
     }
     /**
      * Updates summaries and global variables tied to slot id
      */
-    async updateSlotContext(slotId) {
+    updateSlotContext(slotId) {
         const view = this.getOutfitView();
         const slot = view.resolveSlot(slotId);
         if (!slot.resolved)
@@ -264,7 +269,45 @@ export class OutfitManager {
             return 'slot-already-exists';
         deleteGlobalVariable(this.getVarName(slotId));
         view.renameSlot(slotId, newId);
-        void this.updateSlotContext(newId).catch(console.error);
+        this.updateSlotContext(newId);
         return 'slot-renamed';
+    }
+    loadSlotPreset(slotId, preset) {
+        if (SlotPresetsApi.hasImage(preset)) {
+            this.setSlotImageFromSlotPreset(slotId, preset);
+        }
+        this.updateSlotValue(slotId, preset.value);
+    }
+    setSlotImageFromSlotPreset(slotId, preset) {
+        const attachImageResult = this.outfit.attachImage(slotId, preset.key, preset.image.key);
+        switch (attachImageResult) {
+            case 'slot-not-found':
+            case 'blob-does-not-exist':
+                throw new Error();
+            case 'attached-image':
+                break;
+            default: assertNever(attachImageResult);
+        }
+        const resizeImageResult = this.outfit.resizeImage(slotId, preset.key, preset.image.width, preset.image.height);
+        switch (resizeImageResult) {
+            case 'slot-not-found':
+            case 'tag-does-not-exist':
+                throw new Error();
+            case 'noop':
+            case 'resized':
+                break;
+            default: assertNever(resizeImageResult);
+        }
+        const setActiveImageResult = this.outfit.setActiveImage(slotId, preset.key);
+        switch (setActiveImageResult) {
+            case 'slot-not-found':
+            case 'image-does-not-exist':
+                throw new Error();
+            case 'image-already-active':
+            case 'set-active-image':
+                break;
+            default: assertNever(setActiveImageResult);
+        }
+        return true;
     }
 }

@@ -63,3 +63,6 @@ export function resolveKebabCase(input) {
         ? cleaned
         : null;
 }
+export function plural(count, singular = '', plural = 's') {
+    return count === 1 ? singular : plural;
+}

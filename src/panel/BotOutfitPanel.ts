@@ -126,6 +126,6 @@ export class BotOutfitPanel extends OutfitPanel<'bot'> {
 
 	public saveToCharacter(): void {
 		const name = `@character:${this.character}`;
-		this.outfitManager.savePreset(name);
+		this.outfitManager.saveOutfitAs(name);
 	}
 }

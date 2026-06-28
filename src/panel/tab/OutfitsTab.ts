@@ -7,7 +7,7 @@ export class OutfitsTab extends PanelTab {
 
 	public override render(contentArea: HTMLDivElement): void {
 		contentArea.innerHTML = '';
-		const presets = this.outfitManager.getPresets();
+		const presets = this.outfitManager.getSavedOutfits();
 
 		if (presets.length === 0) {
 			const div = createElement('div', '', 'No saved outfits');
@@ -39,7 +39,7 @@ export class OutfitsTab extends PanelTab {
 							`;
 
 		presetElement.querySelector('.load-preset')!.addEventListener('click', async () => {
-			const message = await this.outfitManager.loadPreset(preset);
+			const message = await this.outfitManager.loadSavedOutfit(preset);
 			if (message) {
 				this.panel.sendSystemMessage(message);
 			}
@@ -48,7 +48,7 @@ export class OutfitsTab extends PanelTab {
 
 		presetElement.querySelector('.delete-preset')!.addEventListener('click', () => {
 			if (confirm(`Delete "${preset}" outfit?`)) {
-				const message = this.outfitManager.deletePreset(preset);
+				const message = this.outfitManager.deleteSavedOutfit(preset);
 				if (message) {
 					this.panel.sendSystemMessage(message);
 				}
@@ -63,7 +63,7 @@ export class OutfitsTab extends PanelTab {
 		const saveOutfit = async (): Promise<void> => {
 			const presetName = prompt('Name this outfit:');
 			if (presetName) {
-				const message = await this.outfitManager.savePreset(presetName.trim());
+				const message = await this.outfitManager.saveOutfitAs(presetName.trim());
 				if (message) {
 					this.panel.sendSystemMessage(message);
 				}

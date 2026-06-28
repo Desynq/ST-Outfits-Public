@@ -1,4 +1,4 @@
-import * as SlotPresetApi from "../../api/internal/slot-preset.js";
+import * as SlotPresetsApi from "../../api/internal/slot-preset.js";
 import { OutfitTracker } from "../../data/tracker.js";
 import { assertNever } from "../../shared.js";
 import { div } from "../../util/element/divs.js";
@@ -52,7 +52,7 @@ export class SlotPresetsModal extends SlotModal {
         });
     }
     get registry() {
-        return SlotPresetApi.getSlotPresetRegistry();
+        return SlotPresetsApi.getSlotPresetRegistry();
     }
     getRef(blobKey) {
         return OutfitTracker.viewGallery().getImageRef(blobKey);
@@ -102,11 +102,8 @@ export class SlotPresetsModal extends SlotModal {
         }
         return el;
     }
-    async usePreset(preset) {
-        if (SlotPresetApi.hasImage(preset)) {
-            this.setSlotImageFromSlotPreset(preset);
-        }
-        await this.manager.updateSlotValue(this.slot.id, preset.value);
+    usePreset(preset) {
+        this.manager.loadSlotPreset(this.slot.id, preset);
         this.close();
         this.saveAndRender();
     }
@@ -143,7 +140,7 @@ export class SlotPresetsModal extends SlotModal {
         return true;
     }
     autoSavePreset() {
-        const step = SlotPresetApi.beginSaveSlotAsPresetAuto({ slot: this.slot, registry: this.registry });
+        const step = SlotPresetsApi.beginSaveSlotAsPresetAuto({ slot: this.slot, registry: this.registry });
         if (step.oldPreset) {
             const ok = confirm(`Overwrite ${step.oldPreset.key}?`);
             if (!ok) {
@@ -155,12 +152,12 @@ export class SlotPresetsModal extends SlotModal {
         this.reshow();
     }
     savePreset() {
-        const key = SlotPresetApi.promptPresetKey();
+        const key = SlotPresetsApi.promptPresetKey();
         if (!key) {
             return;
         }
-        const step = SlotPresetApi.beginSaveSlotAsPreset({ slot: this.slot, registry: this.registry, key });
-        if (!SlotPresetApi.confirmPresetOverwrite(step, key)) {
+        const step = SlotPresetsApi.beginSaveSlotAsPreset({ slot: this.slot, registry: this.registry, key });
+        if (!SlotPresetsApi.confirmPresetOverwrite(step, key)) {
             return;
         }
         step.save();

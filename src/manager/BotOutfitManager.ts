@@ -36,7 +36,7 @@ export class BotOutfitManager extends OutfitManager {
         this.onActiveOutfitChanged();
     }
 
-    public override async updateSlotValue(slotId: string, value: string): Promise<string> {
+    public override updateSlotValue(slotId: string, value: string): string {
         const previousValue = this.getValue(slotId);
         void this.setSlotValue(slotId, value);
 
@@ -51,7 +51,7 @@ export class BotOutfitManager extends OutfitManager {
         }
     }
 
-    public override savePreset(outfitName: string): string {
+    public override saveOutfitAs(outfitName: string): string {
         const outfit = this.getOutfitView().snapshot();
 
         OutfitTracker.characterOutfits(this.character).saveOutfit(outfitName, outfit);
@@ -73,7 +73,7 @@ export class BotOutfitManager extends OutfitManager {
         return "";
     }
 
-    public override deletePreset(outfitName: string): string {
+    public override deleteSavedOutfit(outfitName: string): string {
         const outfit = OutfitTracker.characterOutfits(this.character).getSavedOutfit(outfitName);
         if (outfit === undefined) {
             return `[Outfit System] Preset "${outfitName}" not found.`;
@@ -87,7 +87,7 @@ export class BotOutfitManager extends OutfitManager {
         return '';
     }
 
-    public override getPresets(): string[] {
+    public override getSavedOutfits(): string[] {
         const outfits = OutfitTracker.characterOutfits(this.character).getSavedOutfitNames();
 
         return outfits;

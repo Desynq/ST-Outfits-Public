@@ -23,7 +23,7 @@ export class BotOutfitManager extends OutfitManager {
         this.character = name;
         this.onActiveOutfitChanged();
     }
-    async updateSlotValue(slotId, value) {
+    updateSlotValue(slotId, value) {
         const previousValue = this.getValue(slotId);
         void this.setSlotValue(slotId, value);
         if (previousValue === 'None' && value !== 'None') {
@@ -36,7 +36,7 @@ export class BotOutfitManager extends OutfitManager {
             return `${this.character} changed from ${previousValue} to ${value}.`;
         }
     }
-    savePreset(outfitName) {
+    saveOutfitAs(outfitName) {
         const outfit = this.getOutfitView().snapshot();
         OutfitTracker.characterOutfits(this.character).saveOutfit(outfitName, outfit);
         if (OutfitTracker.areSystemMessagesEnabled()) {
@@ -52,7 +52,7 @@ export class BotOutfitManager extends OutfitManager {
         }
         return "";
     }
-    deletePreset(outfitName) {
+    deleteSavedOutfit(outfitName) {
         const outfit = OutfitTracker.characterOutfits(this.character).getSavedOutfit(outfitName);
         if (outfit === undefined) {
             return `[Outfit System] Preset "${outfitName}" not found.`;
@@ -63,7 +63,7 @@ export class BotOutfitManager extends OutfitManager {
         }
         return '';
     }
-    getPresets() {
+    getSavedOutfits() {
         const outfits = OutfitTracker.characterOutfits(this.character).getSavedOutfitNames();
         return outfits;
     }

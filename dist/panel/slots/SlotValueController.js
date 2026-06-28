@@ -187,19 +187,19 @@ export class SlotValueController extends OutfitPanelContext {
         const saveBtn = document.createElement('button');
         saveBtn.classList.add('slot-button', 'save-button');
         saveBtn.textContent = 'Save';
-        saveBtn.addEventListener('click', async () => {
+        saveBtn.addEventListener('click', () => {
             cleanup();
-            void this.commitValueEdit(textarea, ctx.slot);
+            this.commitValueEdit(textarea, ctx.slot);
         });
         preventBlur(saveBtn);
         ctx.actionsRightEl.appendChild(saveBtn);
         return true;
     }
-    async commitValueEdit(textarea, slot) {
+    commitValueEdit(textarea, slot) {
         const text = textarea.value.trim() === ''
             ? this.getEmptyText()
             : textarea.value.trim();
-        await this.updateSlotText(slot, text);
+        this.updateSlotText(slot, text);
         this.panel.saveAndRender();
     }
     cancelValueEdit() {
@@ -217,9 +217,9 @@ export class SlotValueController extends OutfitPanelContext {
     isEmpty(slot) {
         return this.getSlotText(slot) === this.getEmptyText();
     }
-    async updateSlotText(slot, text) {
+    updateSlotText(slot, text) {
         this.syncPresetFromEditedValue(slot, text);
-        await this.outfitManager.updateSlotValue(slot.id, text);
+        this.outfitManager.updateSlotValue(slot.id, text);
     }
     syncPresetFromEditedValue(slot, text) {
         if (!SlotPresetsApi.canSync(slot))
@@ -235,6 +235,7 @@ export class SlotValueController extends OutfitPanelContext {
         if (step.type !== 'ready')
             return;
         step.save();
+        toastr.info(`Synced ${slot.id} slot to preset ${step.preset.key}.`);
     }
     getEmptyText() {
         return 'None';

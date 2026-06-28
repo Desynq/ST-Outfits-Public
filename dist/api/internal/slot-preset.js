@@ -6,11 +6,8 @@ export function getSlotPresetRegistry() {
 export function hasImage(preset) {
     return preset.image !== undefined;
 }
-export function canHavePreset(slot) {
-    return slot.getActiveImageState() !== null;
-}
 export function canSync(slot) {
-    return slot.synced && canHavePreset(slot);
+    return slot.synced;
 }
 export function promptPresetKey() {
     const raw = prompt('Enter image tag (kebab-case only)');
@@ -32,6 +29,7 @@ export function beginSaveSlotAsPreset({ slot, registry = getSlotPresetRegistry()
     return {
         type: 'ready',
         oldPreset: registry.get(key),
+        preset,
         alreadyOnSlot: slot.hasPreset(preset),
         save: () => {
             registry.set(preset);
@@ -48,6 +46,7 @@ export function beginSaveSlotAsPresetAuto({ slot, registry = getSlotPresetRegist
     return {
         type: 'ready',
         oldPreset: registry.get(imageState ? imageState.tag : slot.id),
+        preset,
         alreadyOnSlot: slot.hasPreset(preset),
         save: () => {
             registry.set(preset);

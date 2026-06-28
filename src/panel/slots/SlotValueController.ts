@@ -284,9 +284,9 @@ export class SlotValueController extends OutfitPanelContext {
 		saveBtn.classList.add('slot-button', 'save-button');
 		saveBtn.textContent = 'Save';
 
-		saveBtn.addEventListener('click', async () => {
+		saveBtn.addEventListener('click', () => {
 			cleanup();
-			void this.commitValueEdit(textarea, ctx.slot);
+			this.commitValueEdit(textarea, ctx.slot);
 		});
 		preventBlur(saveBtn);
 
@@ -294,12 +294,12 @@ export class SlotValueController extends OutfitPanelContext {
 		return true;
 	}
 
-	private async commitValueEdit(textarea: HTMLTextAreaElement, slot: OutfitSlotState): Promise<void> {
+	private commitValueEdit(textarea: HTMLTextAreaElement, slot: OutfitSlotState): void {
 		const text = textarea.value.trim() === ''
 			? this.getEmptyText()
 			: textarea.value.trim();
 
-		await this.updateSlotText(slot, text);
+		this.updateSlotText(slot, text);
 		this.panel.saveAndRender();
 	}
 
@@ -325,9 +325,9 @@ export class SlotValueController extends OutfitPanelContext {
 		return this.getSlotText(slot) === this.getEmptyText();
 	}
 
-	protected async updateSlotText(slot: OutfitSlotState, text: string): Promise<void> {
+	protected updateSlotText(slot: OutfitSlotState, text: string): void {
 		this.syncPresetFromEditedValue(slot, text);
-		await this.outfitManager.updateSlotValue(slot.id, text);
+		this.outfitManager.updateSlotValue(slot.id, text);
 	}
 
 	private syncPresetFromEditedValue(slot: OutfitSlotState, text: string): void {
@@ -345,6 +345,7 @@ export class SlotValueController extends OutfitPanelContext {
 		if (step.type !== 'ready') return;
 
 		step.save();
+		toastr.info(`Synced ${slot.id} slot to preset ${step.preset.key}.`);
 	}
 
 	protected getEmptyText(): string {

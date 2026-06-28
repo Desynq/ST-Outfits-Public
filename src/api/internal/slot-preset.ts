@@ -28,13 +28,8 @@ type SlotPresetSource = {
 	hasPreset: (preset: KeyedSlotPreset) => boolean;
 };
 
-
-export function canHavePreset(slot: OutfitSlotState): boolean {
-	return slot.getActiveImageState() !== null;
-}
-
 export function canSync(slot: OutfitSlotState): boolean {
-	return slot.synced && canHavePreset(slot);
+	return slot.synced;
 }
 
 
@@ -54,6 +49,7 @@ type SaveSlotStep =
 	| {
 		type: 'ready';
 		oldPreset: KeyedSlotPreset | undefined;
+		preset: KeyedSlotPreset;
 		alreadyOnSlot: boolean;
 		save: () => KeyedSlotPreset;
 	};
@@ -83,6 +79,7 @@ export function beginSaveSlotAsPreset({ slot, registry = getSlotPresetRegistry()
 	return {
 		type: 'ready',
 		oldPreset: registry.get(key),
+		preset,
 		alreadyOnSlot: slot.hasPreset(preset),
 		save: () => {
 			registry.set(preset);
@@ -106,6 +103,7 @@ export function beginSaveSlotAsPresetAuto({ slot, registry = getSlotPresetRegist
 	return {
 		type: 'ready',
 		oldPreset: registry.get(imageState ? imageState.tag : slot.id),
+		preset,
 		alreadyOnSlot: slot.hasPreset(preset),
 		save: () => {
 			registry.set(preset);

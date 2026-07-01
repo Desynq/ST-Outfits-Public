@@ -17,6 +17,7 @@ import * as SlotPresetsApi from "../../api/internal/slot-preset.js";
 import { conditionalList } from "../../util/list-utils.js";
 import { stringIf } from "../../util/StringHelper.js";
 import { SlotTextbox } from "../../ui/components/slot/slot-textbox.js";
+import { getCurrentCharacterName } from "../../api/character.js";
 
 export interface SlotValueDeps {
 	panel: OutfitPanel<PanelType>;
@@ -36,7 +37,7 @@ export type RenderEvent = {
 	isFor: (otherCtx: SlotContext) => boolean;
 };
 
-export class SlotValueController extends OutfitPanelContext {
+export class SlotTextboxFactory extends OutfitPanelContext {
 
 	private readonly renderBus = new EventBus<(event: RenderEvent) => void>();
 
@@ -240,7 +241,7 @@ export class SlotValueController extends OutfitPanelContext {
 	}
 }
 
-export class SlotChatAddendumController extends SlotValueController {
+export class SlotChatNoteFactory extends SlotTextboxFactory {
 
 	protected override getEditBoxClassName(): string {
 		return 'slot-editbox';
@@ -254,7 +255,7 @@ export class SlotChatAddendumController extends SlotValueController {
 			className: 'slot-chat-note-container',
 		});
 
-		const thumbnailEl = el('div', {
+		const thumbEl = el('div', {
 			className: 'slot-textbox-thumb fa-solid fa-comments',
 			parent: rootEl
 		});
@@ -278,13 +279,15 @@ export class SlotChatAddendumController extends SlotValueController {
 		return ChatOutfitStorage.getAddendum(this.getCharacter(), slot.id) ?? this.getEmptyText();
 	}
 
-	protected override async updateSlotText(slot: OutfitSlotState, text: string): Promise<void> {
+	protected override updateSlotText(slot: OutfitSlotState, text: string): void {
 		if (!text || text === this.getEmptyText()) {
 			ChatOutfitStorage.removeAddendum(this.getCharacter(), slot.id);
 			return;
 		}
 
 		ChatOutfitStorage.saveAddendum(this.getCharacter(), slot.id, text);
+
+		this.outfitManager.updateSlotContext(slot.id);
 	}
 
 	protected override getEmptyText(): string {
@@ -293,5 +296,72 @@ export class SlotChatAddendumController extends SlotValueController {
 
 	private getCharacter(): string {
 		return this.panel.outfitManager.getName();
+	}
+}
+
+export class SlotCharacterNoteFactory extends SlotTextboxFactory {
+
+	protected override getEditBoxClassName(): string {
+		return 'slot-editbox';
+	}
+
+	protected override createValueElements(ctx: SlotContext): {
+		rootEl: HTMLDivElement;
+		valueEl: HTMLDivElement;
+	} {
+		const rootEl = el('div', {
+			className: 'slot-character-note-container',
+		});
+
+		const thumbEl = el('div', {
+			className: 'slot-textbox-thumb fa-solid fa-address-book',
+			parent: rootEl
+		});
+
+		const valueEl = el('div', {
+			className: 'slot-character-note-textbox slot-textbox',
+			classes: [
+				stringIf(ctx.slot.isDisabled(), 'disabled'),
+				stringIf(this.isEmpty(ctx.slot), 'none')
+			],
+			parent: rootEl
+		});
+
+		return {
+			rootEl,
+			valueEl
+		};
+	}
+
+	protected override getSlotText(slot: OutfitSlotState): string {
+		let note: string | undefined;
+
+		const character = getCurrentCharacterName();
+		if (character) {
+			note = this.outfitManager.getOutfitCollection().getCharacterNote(character, slot.id);
+		}
+
+		return note ?? this.getEmptyText();
+	}
+
+	protected override updateSlotText(slot: OutfitSlotState, text: string): void {
+		const collection = this.outfitManager.getOutfitCollection();
+		const character = getCurrentCharacterName();
+		if (!character) {
+			throw new Error('User managed to edit character note with no loaded character.');
+		}
+
+		if (!text || text === this.getEmptyText()) {
+			collection.deleteCharacterNote(character, slot.id);
+			return;
+		}
+
+		collection.setCharacterNote(character, slot.id, text);
+
+		this.outfitManager.updateSlotContext(slot.id);
+	}
+
+	protected override getEmptyText(): string {
+		return '';
 	}
 }

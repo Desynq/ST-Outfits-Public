@@ -42,6 +42,33 @@ export class OutfitCollectionView {
     hideEmptySlots(hide) {
         this.withCollection(c => c.hideEmpty = hide);
     }
+    getCharacterNote(character, slotId) {
+        if (character === undefined)
+            return undefined;
+        return this.withCollection(c => c.character_notes[character]?.[slotId]);
+    }
+    setCharacterNote(character, slotId, value) {
+        this.withCollection(c => {
+            var _a;
+            if (value === '') {
+                this.deleteCharacterNote(character, slotId);
+            }
+            else {
+                ((_a = c.character_notes)[character] ?? (_a[character] = {}))[slotId] = value;
+            }
+        });
+    }
+    deleteCharacterNote(character, slotId) {
+        this.withCollection(c => {
+            const notes = c.character_notes[character];
+            if (!notes)
+                return;
+            delete notes[slotId];
+            if (Object.keys(notes).length === 0) {
+                delete c.character_notes[character];
+            }
+        });
+    }
     getSnapshotView() {
         const c = this.getOrCreateCollection();
         return new OutfitSnapshotsView(c.snapshots);

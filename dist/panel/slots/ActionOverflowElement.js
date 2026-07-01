@@ -44,7 +44,12 @@ export class SlotActionsMenuElement {
         return this;
     }
     buildMenuChildren() {
-        return conditionalList(this.createDeleteBtn(), this.createShiftBtn(), this.createMoveBtn(), this.createPresetsBtn(), this.createConditionsBtn(), [this.deps.canAddNote(), () => this.createAddNoteBtn()]);
+        return conditionalList(this.createDeleteBtn(), this.createShiftBtn(), this.createMoveBtn(), this.createPresetsBtn(), this.createConditionsBtn(), [this.deps.canAddChatNote(), () => this.createAddChatNoteBtn()], this.conditionBtn({
+            condition: this.deps.canAddCharacterNote(),
+            className: 'slot-button slot-add-character-note-button',
+            text: 'Add 👤 Note',
+            onClick: () => this.deps.addCharacterNote()
+        }));
     }
     createBtn(options) {
         const { events, ...rest } = options;
@@ -59,6 +64,15 @@ export class SlotActionsMenuElement {
                 }
             }
         });
+    }
+    conditionBtn(options) {
+        return [options.condition, () => this.createBtn({
+                className: options.className,
+                text: options.text,
+                events: {
+                    click: options.onClick
+                }
+            })];
     }
     createDeleteBtn() {
         return this.createBtn({
@@ -105,12 +119,12 @@ export class SlotActionsMenuElement {
             }
         });
     }
-    createAddNoteBtn() {
+    createAddChatNoteBtn() {
         return this.createBtn({
-            className: 'slot-button slot-add-addendum-button',
-            text: 'Add Note',
+            className: 'slot-button slot-add-chat-note-button',
+            text: 'Add 💬 Note',
             events: {
-                click: () => this.deps.addNote()
+                click: () => this.deps.addChatNote()
             }
         });
     }

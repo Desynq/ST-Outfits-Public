@@ -15,8 +15,10 @@ export interface SlotActionMenuDeps {
 	shiftSlot(): void;
 	moveSlot(): void;
 	showPresets(): void;
-	canAddNote(): boolean;
-	addNote(): void;
+	canAddChatNote(): boolean;
+	addChatNote(): void;
+	canAddCharacterNote(): boolean;
+	addCharacterNote(): void;
 	showConditions(): void;
 }
 
@@ -83,7 +85,13 @@ export class SlotActionsMenuElement {
 			this.createMoveBtn(),
 			this.createPresetsBtn(),
 			this.createConditionsBtn(),
-			[this.deps.canAddNote(), () => this.createAddNoteBtn()]
+			[this.deps.canAddChatNote(), () => this.createAddChatNoteBtn()],
+			this.conditionBtn({
+				condition: this.deps.canAddCharacterNote(),
+				className: 'slot-button slot-add-character-note-button',
+				text: 'Add 👤 Note',
+				onClick: () => this.deps.addCharacterNote()
+			})
 		);
 	}
 
@@ -102,6 +110,21 @@ export class SlotActionsMenuElement {
 				}
 			}
 		});
+	}
+
+	private conditionBtn(options: {
+		condition: boolean,
+		className: string,
+		text: string,
+		onClick: () => void;
+	}): [condition: boolean, button: () => HTMLButtonElement] {
+		return [options.condition, () => this.createBtn({
+			className: options.className,
+			text: options.text,
+			events: {
+				click: options.onClick
+			}
+		})];
 	}
 
 	private createDeleteBtn(): HTMLButtonElement {
@@ -154,12 +177,12 @@ export class SlotActionsMenuElement {
 		});
 	}
 
-	private createAddNoteBtn(): HTMLButtonElement {
+	private createAddChatNoteBtn(): HTMLButtonElement {
 		return this.createBtn({
-			className: 'slot-button slot-add-addendum-button',
-			text: 'Add Note',
+			className: 'slot-button slot-add-chat-note-button',
+			text: 'Add 💬 Note',
 			events: {
-				click: () => this.deps.addNote()
+				click: () => this.deps.addChatNote()
 			}
 		});
 	}

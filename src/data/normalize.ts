@@ -3,7 +3,7 @@ import { asBoolean, asObject, asStringRecord, ensureObject, isObject, notObject,
 import { isRecord } from "../util/narrowing.js";
 import { toSlotId } from "../util/normalize/slot.js";
 import { normalizeOutfitSnapshots } from "./mappings/OutfitCache.js";
-import { ImageBlob, ImageRef, Outfit, OutfitCollection, OutfitImage, OutfitSlot, OutfitTrackerModel, SlotCondition, SlotConditionMap, SlotKind } from "./model/Outfit.js";
+import { CharacterNotes, ImageBlob, ImageRef, Outfit, OutfitCollection, OutfitImage, OutfitSlot, OutfitTrackerModel, SlotCondition, SlotConditionMap, SlotKind } from "./model/Outfit.js";
 import { SlotPreset, SlotPresetV1 } from "./model/SlotPreset.js";
 
 
@@ -33,7 +33,8 @@ export function normalizeOutfitCollection(value: any): OutfitCollection {
 		hideDisabled: asBoolean(false),
 		hideEmpty: asBoolean(false),
 		snapshots: asObject<Record<string, any>>({}),
-		diffs: asObject<Record<string, any>>({})
+		diffs: asObject<Record<string, any>>({}),
+		character_notes: normalizeCharacterNotes
 	});
 
 	const savedOutfits: Record<string, Outfit> = {};
@@ -52,7 +53,8 @@ export function normalizeOutfitCollection(value: any): OutfitCollection {
 		hideDisabled: raw.hideDisabled,
 		hideEmpty: raw.hideEmpty,
 		snapshots: raw.snapshots,
-		diffs: raw.diffs
+		diffs: raw.diffs,
+		character_notes: raw.character_notes
 	};
 }
 
@@ -164,6 +166,32 @@ export function normalizeOutfit(value: unknown): Outfit {
 
 	return { slots };
 }
+
+
+export function normalizeCharacterNotes(value: any): CharacterNotes {
+	const raw = asObject<Record<string, any>>({})(value);
+	const result: CharacterNotes = {};
+
+	for (const [characterKey, notesValue] of Object.entries(raw)) {
+		const rawNotes = asObject<Record<string, any>>({})(notesValue);
+		const notes: Record<string, string> = {};
+
+		for (const [slotId, noteValue] of Object.entries(rawNotes)) {
+			if (typeof noteValue !== 'string') continue;
+			if (noteValue === '') continue;
+
+			notes[slotId] = noteValue;
+		}
+
+		if (Object.keys(notes).length > 0) {
+			result[characterKey] = notes;
+		}
+	}
+
+	return result;
+}
+
+
 
 function normalizeImages(
 	input: unknown

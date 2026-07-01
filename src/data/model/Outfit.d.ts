@@ -44,11 +44,16 @@ export interface Outfit {
 	slots: OutfitSlot[];
 }
 
+export type CharacterNotes = { [character: string]: { [slotId: string]: string; }; };
+
 export interface OutfitCollection {
-	saved_outfits: Record<string, Outfit | undefined>;
+	saved_outfits: { [slotId: string]: Outfit | undefined; };
 	current_outfit: Outfit;
 	hideDisabled: boolean;
 	hideEmpty: boolean;
+
+	character_notes: CharacterNotes;
+
 	snapshots: Record<string, OutfitCachedSnapshot>;
 	diffs: Record<string, OutfitCachedDiff>;
 	// TODO: move snapshots and diffs to here

@@ -602,11 +602,14 @@
   font-weight: normal;
 }
 
+.slot-character-note-container,
 .slot-chat-note-container {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
+.slot-character-note-container > .slot-character-note-textbox, .slot-character-note-container > .slot-chat-note-textbox,
+.slot-chat-note-container > .slot-character-note-textbox,
 .slot-chat-note-container > .slot-chat-note-textbox {
   min-height: calc(1lh + 12px);
 }

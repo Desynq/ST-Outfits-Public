@@ -10,7 +10,8 @@ import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
 import * as SlotPresetsApi from "../../api/internal/slot-preset.js";
 import { stringIf } from "../../util/StringHelper.js";
 import { SlotTextbox } from "../../ui/components/slot/slot-textbox.js";
-export class SlotValueController extends OutfitPanelContext {
+import { getCurrentCharacterName } from "../../api/character.js";
+export class SlotTextboxFactory extends OutfitPanelContext {
     constructor(deps) {
         super(deps.panel);
         this.deps = deps;
@@ -157,7 +158,7 @@ export class SlotValueController extends OutfitPanelContext {
         return 'None';
     }
 }
-export class SlotChatAddendumController extends SlotValueController {
+export class SlotChatNoteFactory extends SlotTextboxFactory {
     getEditBoxClassName() {
         return 'slot-editbox';
     }
@@ -165,7 +166,7 @@ export class SlotChatAddendumController extends SlotValueController {
         const rootEl = el('div', {
             className: 'slot-chat-note-container',
         });
-        const thumbnailEl = el('div', {
+        const thumbEl = el('div', {
             className: 'slot-textbox-thumb fa-solid fa-comments',
             parent: rootEl
         });
@@ -185,17 +186,68 @@ export class SlotChatAddendumController extends SlotValueController {
     getSlotText(slot) {
         return ChatOutfitStorage.getAddendum(this.getCharacter(), slot.id) ?? this.getEmptyText();
     }
-    async updateSlotText(slot, text) {
+    updateSlotText(slot, text) {
         if (!text || text === this.getEmptyText()) {
             ChatOutfitStorage.removeAddendum(this.getCharacter(), slot.id);
             return;
         }
         ChatOutfitStorage.saveAddendum(this.getCharacter(), slot.id, text);
+        this.outfitManager.updateSlotContext(slot.id);
     }
     getEmptyText() {
         return '(+)';
     }
     getCharacter() {
         return this.panel.outfitManager.getName();
+    }
+}
+export class SlotCharacterNoteFactory extends SlotTextboxFactory {
+    getEditBoxClassName() {
+        return 'slot-editbox';
+    }
+    createValueElements(ctx) {
+        const rootEl = el('div', {
+            className: 'slot-character-note-container',
+        });
+        const thumbEl = el('div', {
+            className: 'slot-textbox-thumb fa-solid fa-address-book',
+            parent: rootEl
+        });
+        const valueEl = el('div', {
+            className: 'slot-character-note-textbox slot-textbox',
+            classes: [
+                stringIf(ctx.slot.isDisabled(), 'disabled'),
+                stringIf(this.isEmpty(ctx.slot), 'none')
+            ],
+            parent: rootEl
+        });
+        return {
+            rootEl,
+            valueEl
+        };
+    }
+    getSlotText(slot) {
+        let note;
+        const character = getCurrentCharacterName();
+        if (character) {
+            note = this.outfitManager.getOutfitCollection().getCharacterNote(character, slot.id);
+        }
+        return note ?? this.getEmptyText();
+    }
+    updateSlotText(slot, text) {
+        const collection = this.outfitManager.getOutfitCollection();
+        const character = getCurrentCharacterName();
+        if (!character) {
+            throw new Error('User managed to edit character note with no loaded character.');
+        }
+        if (!text || text === this.getEmptyText()) {
+            collection.deleteCharacterNote(character, slot.id);
+            return;
+        }
+        collection.setCharacterNote(character, slot.id, text);
+        this.outfitManager.updateSlotContext(slot.id);
+    }
+    getEmptyText() {
+        return '';
     }
 }

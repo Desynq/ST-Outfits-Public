@@ -20,6 +20,15 @@ export interface IOutfitCollectionView {
 	areEmptySlotsHidden(): boolean;
 	hideEmptySlots(hide: boolean): void;
 
+	getCharacterNote(character: string | undefined, slotId: string): string | undefined;
+
+	/**
+	 * Empty value deletes the character note
+	 */
+	setCharacterNote(character: string, slotId: string, value: string): void;
+
+	deleteCharacterNote(character: string, slotId: string): void;
+
 	getSnapshotView(): OutfitSnapshotsView;
 }
 
@@ -85,6 +94,36 @@ export abstract class OutfitCollectionView implements IOutfitCollectionView {
 
 	public hideEmptySlots(hide: boolean): void {
 		this.withCollection(c => c.hideEmpty = hide);
+	}
+
+	public getCharacterNote(character: string | undefined, slotId: string): string | undefined {
+		if (character === undefined) return undefined;
+
+		return this.withCollection(c => c.character_notes[character]?.[slotId]);
+	}
+
+	public setCharacterNote(character: string, slotId: string, value: string): void {
+		this.withCollection(c => {
+			if (value === '') {
+				this.deleteCharacterNote(character, slotId);
+			}
+			else {
+				(c.character_notes[character] ??= {})[slotId] = value;
+			}
+		});
+	}
+
+	public deleteCharacterNote(character: string, slotId: string): void {
+		this.withCollection(c => {
+			const notes = c.character_notes[character];
+			if (!notes) return;
+
+			delete notes[slotId];
+
+			if (Object.keys(notes).length === 0) {
+				delete c.character_notes[character];
+			}
+		});
 	}
 
 	public getSnapshotView(): OutfitSnapshotsView {

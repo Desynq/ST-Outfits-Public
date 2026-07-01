@@ -9,21 +9,19 @@ import { isSlotBlocked } from "../../util/slot.js";
 import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
 import { SlotActionsMenuElement } from "./ActionOverflowElement.js";
 import { SlotActionsElement } from "./SlotActionsElement.js";
-import { SlotChatAddendumController, SlotValueController } from "./SlotValueController.js";
+import { SlotCharacterNoteFactory, SlotChatNoteFactory, SlotTextboxFactory } from "./SlotValueController.js";
 export class SlotRenderer extends OutfitPanelContext {
     constructor(deps) {
         super(deps.panel);
         this.deps = deps;
-        this.valueElement = new SlotValueController({
+        const textboxDeps = {
             panel: this.panel,
             removeActionButtons: (ctx) => this.removeActionButtons(ctx),
             editCoordinator: this.deps.editCoordinator
-        });
-        this.chatNoteElement = new SlotChatAddendumController({
-            panel: this.panel,
-            removeActionButtons: (ctx) => this.removeActionButtons(ctx),
-            editCoordinator: this.deps.editCoordinator
-        });
+        };
+        this.valueTextboxFactory = new SlotTextboxFactory(textboxDeps);
+        this.chatNoteFactory = new SlotChatNoteFactory(textboxDeps);
+        this.characterNoteFactory = new SlotCharacterNoteFactory(textboxDeps);
     }
     isValueHidden(mode) {
         return mode !== 'normal';
@@ -80,22 +78,26 @@ export class SlotRenderer extends OutfitPanelContext {
         addDoubleTapListener(slotNameEl, () => { disarmTap(); this.beginRename(slotNameEl, ctx); }, 300, () => { disarmTap(); this.toggle(ctx.slot); }, armTap);
         const imageElement = this.renderImageElement(ctx);
         contentEl.append(contentTextEl);
-        const { textbox: valueTextbox } = this.valueElement.render(contentTextEl, ctx);
-        if (mode !== 'normal' && valueTextbox.isEmpty()) {
-            valueTextbox.hide();
-        }
-        const { textbox: chatNoteTextbox } = this.chatNoteElement.render(contentTextEl, ctx);
-        if (mode !== 'normal' && chatNoteTextbox.isEmpty()) {
-            chatNoteTextbox.hide();
-        }
+        const createTextbox = (factory) => {
+            const { textbox } = factory.render(contentTextEl, ctx);
+            if (mode !== 'normal' && textbox.isEmpty()) {
+                textbox.hide();
+            }
+            return textbox;
+        };
+        const textboxes = {
+            value: createTextbox(this.valueTextboxFactory),
+            characterNote: createTextbox(this.characterNoteFactory),
+            chatNote: createTextbox(this.chatNoteFactory),
+        };
         switch (mode) {
             case 'hidden-empty':
             case 'hidden-disabled':
             case 'disabled-empty':
-                this.decorateMinimal(ctx, valueTextbox, chatNoteTextbox);
+                this.decorateMinimal(ctx, textboxes);
                 break;
             case 'normal':
-                this.decorate(ctx, valueTextbox, chatNoteTextbox, imageElement);
+                this.decorate(ctx, textboxes, imageElement);
                 break;
             default: assertNever(mode);
         }
@@ -129,12 +131,12 @@ export class SlotRenderer extends OutfitPanelContext {
             if (!valueEl)
                 return;
             if (event.imageWide) {
-                this.valueElement.setCollapsedMaxHeight(valueEl, null);
+                this.valueTextboxFactory.setCollapsedMaxHeight(valueEl, null);
                 return;
             }
             const noteHeight = noteEl?.getBoundingClientRect().height ?? 0;
             const height = Math.max(0, event.imageRect.height - noteHeight);
-            this.valueElement.setCollapsedMaxHeight(valueEl, height);
+            this.valueTextboxFactory.setCollapsedMaxHeight(valueEl, height);
         });
         const updateOnRender = (controller, set) => {
             controller.onRender(event => {
@@ -144,8 +146,8 @@ export class SlotRenderer extends OutfitPanelContext {
                 observer.update();
             });
         };
-        updateOnRender(this.chatNoteElement, el => noteEl = el);
-        updateOnRender(this.valueElement, el => valueEl = el);
+        updateOnRender(this.chatNoteFactory, el => noteEl = el);
+        updateOnRender(this.valueTextboxFactory, el => valueEl = el);
     }
     createImageMenu(ctx, imageElement, opener) {
         return this.deps.overflowMenuFactory.create({
@@ -190,17 +192,18 @@ export class SlotRenderer extends OutfitPanelContext {
         }
         return 'normal';
     }
-    decorateMinimal(ctx, valueTextbox, chatNoteTextbox) {
+    decorateMinimal(ctx, textboxes) {
         const toggleBtn = this.createToggleBtn(ctx.slot);
         ctx.labelRightDiv.append(toggleBtn);
-        this.appendEditBtn(ctx.labelRightDiv, ctx, valueTextbox);
-        if (valueTextbox.isHidden()) {
+        this.appendEditBtn(ctx.labelRightDiv, ctx, textboxes.value);
+        if (textboxes.value.isHidden()) {
             ctx.labelDiv.classList.add('minimized');
-            chatNoteTextbox.hide();
+            textboxes.chatNote.hide();
+            textboxes.characterNote.hide();
         }
-        this.createMenuBtn(ctx, chatNoteTextbox).appendTo(ctx.labelRightDiv);
+        this.createMenuBtn(ctx, textboxes).appendTo(ctx.labelRightDiv);
     }
-    decorate(ctx, valueTextbox, chatNoteTextbox, imageElement) {
+    decorate(ctx, textboxes, imageElement) {
         const actionsElement = new SlotActionsElement(this.panel);
         const toggleBtn = this.createToggleBtn(ctx.slot);
         ctx.actionsLeftEl.append(toggleBtn);
@@ -208,15 +211,19 @@ export class SlotRenderer extends OutfitPanelContext {
             const unequipBtn = actionsElement.createUnequipButton(ctx.slot);
             ctx.actionsLeftEl.append(unequipBtn);
         }
-        if (chatNoteTextbox.isEmpty()) {
-            chatNoteTextbox.hide();
+        const { value, ...notes } = textboxes;
+        void notes;
+        for (const note of Object.values(notes)) {
+            if (note.isEmpty()) {
+                note.hide();
+            }
         }
-        this.appendEditBtn(ctx.actionsRightEl, ctx, valueTextbox);
-        this.createMenuBtn(ctx, chatNoteTextbox).appendTo(ctx.actionsRightEl);
+        this.appendEditBtn(ctx.actionsRightEl, ctx, textboxes.value);
+        this.createMenuBtn(ctx, textboxes).appendTo(ctx.actionsRightEl);
         const syncBtn = this.createSyncButton(ctx);
         ctx.labelRightDiv.append(syncBtn);
     }
-    createMenuBtn(ctx, chatNoteTextbox) {
+    createMenuBtn(ctx, textboxes) {
         return new SlotActionsMenuElement({
             mountEl: ctx.slotElement,
             getViewBoundary: () => ctx.scroller.getBoundingClientRect(),
@@ -225,9 +232,11 @@ export class SlotRenderer extends OutfitPanelContext {
             shiftSlot: () => this.beginSlotShift(ctx),
             moveSlot: () => this.moveSlot(ctx.slot),
             showPresets: () => SlotPresetsModal.show(ctx.slot, this.outfitManager, () => this.outfitManager.updateContext(), () => this.panel.saveAndRender()),
-            canAddNote: () => this.getSlotRenderMode(ctx.slot, this.panel) === 'normal' && chatNoteTextbox.isEmpty(),
-            addNote: () => chatNoteTextbox.beginInlineEdit(),
-            showConditions: () => SlotConditionsModal.show(ctx.slot, this.outfitManager, () => this.outfitManager.updateContext(), () => this.panel.saveAndRender())
+            canAddChatNote: () => this.getSlotRenderMode(ctx.slot, this.panel) === 'normal' && textboxes.chatNote.isEmpty(),
+            addChatNote: () => textboxes.chatNote.beginInlineEdit(),
+            canAddCharacterNote: () => this.getSlotRenderMode(ctx.slot, this.panel) === 'normal' && textboxes.characterNote.isEmpty(),
+            addCharacterNote: () => textboxes.characterNote.beginInlineEdit(),
+            showConditions: () => SlotConditionsModal.show(ctx.slot, this.outfitManager, () => this.outfitManager.updateContext(), () => this.panel.saveAndRender()),
         }, this.deps.overflowMenuFactory)
             .onClopen(open => ctx.slotElement.classList.toggle('--menu-open', open));
     }

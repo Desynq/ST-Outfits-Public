@@ -24,7 +24,8 @@ export function normalizeOutfitCollection(value) {
         hideDisabled: asBoolean(false),
         hideEmpty: asBoolean(false),
         snapshots: asObject({}),
-        diffs: asObject({})
+        diffs: asObject({}),
+        character_notes: normalizeCharacterNotes
     });
     const savedOutfits = {};
     for (const [name, v] of Object.entries(raw.saved_outfits)) {
@@ -39,7 +40,8 @@ export function normalizeOutfitCollection(value) {
         hideDisabled: raw.hideDisabled,
         hideEmpty: raw.hideEmpty,
         snapshots: raw.snapshots,
-        diffs: raw.diffs
+        diffs: raw.diffs,
+        character_notes: raw.character_notes
     };
 }
 function normalizePresetCollection(value) {
@@ -127,6 +129,25 @@ export function normalizeOutfit(value) {
         }));
     }
     return { slots };
+}
+export function normalizeCharacterNotes(value) {
+    const raw = asObject({})(value);
+    const result = {};
+    for (const [characterKey, notesValue] of Object.entries(raw)) {
+        const rawNotes = asObject({})(notesValue);
+        const notes = {};
+        for (const [slotId, noteValue] of Object.entries(rawNotes)) {
+            if (typeof noteValue !== 'string')
+                continue;
+            if (noteValue === '')
+                continue;
+            notes[slotId] = noteValue;
+        }
+        if (Object.keys(notes).length > 0) {
+            result[characterKey] = notes;
+        }
+    }
+    return result;
 }
 function normalizeImages(input) {
     if (!input || typeof input !== 'object') {

@@ -1,3 +1,4 @@
+import { getCurrentCharacterName } from "../api/character.js";
 import { ChatOutfitStorage } from "../api/chat-metadata.js";
 import * as SlotPresetsApi from "../api/internal/slot-preset.js";
 import { OutfitSlot } from "../data/model/Outfit.js";
@@ -104,10 +105,26 @@ export abstract class OutfitManager {
 	}
 
 	private formatSlotSummary(s: OutfitSlot): string {
-		const note = ChatOutfitStorage.getAddendum(this.getName(), s.id);
-		return (!s.equipped ? '((REMOVED))\n' : '')
-			+ s.value
-			+ (note ? `\n\nNote:\n${note}` : '');
+		const chatNote = ChatOutfitStorage.getAddendum(this.getName(), s.id);
+		const charNote = this.getOutfitCollection().getCharacterNote(getCurrentCharacterName(), s.id);
+
+		const parts: string[] = [];
+
+		if (!s.equipped) {
+			parts.push('Status: REMOVED');
+		}
+
+		parts.push(s.value);
+
+		if (charNote) {
+			parts.push(`Character context: ${charNote}`);
+		}
+
+		if (chatNote) {
+			parts.push(`Chat context:\n${chatNote}`);
+		}
+
+		return parts.join(`\n\n`);
 	}
 
 
@@ -200,7 +217,7 @@ export abstract class OutfitManager {
 				const s = this.outfit.getSlotById(k);
 				if (s === undefined) throw new Error();
 				const state = s.equipped ? 'present' : 'absent';
-				return `<${tag} type="${toType(k)}" state="${state}">`;
+				return `<${tag} name="${toType(k)}" state="${state}">`;
 			};
 
 			const kindSummary = this.buildSlotKindSummary(

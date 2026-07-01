@@ -18,7 +18,7 @@ import { DisplaySlot } from "./DisplaySlot.js";
 import { EditCoordinator } from "./edit-coordinator.js";
 import { SlotActionsElement } from "./SlotActionsElement.js";
 import { ImageState, SlotImageElement, SlotImageElementFactory } from "./SlotImageController.js";
-import { RenderEvent, SlotChatAddendumController, SlotValueController } from "./SlotValueController.js";
+import { RenderEvent, SlotCharacterNoteFactory, SlotChatNoteFactory, SlotTextboxFactory } from "./SlotValueController.js";
 
 export interface SlotContext {
 	slot: OutfitSlotState;
@@ -53,26 +53,36 @@ export interface SlotRendererDeps {
 	editCoordinator: EditCoordinator;
 }
 
+interface SlotTextboxes extends SlotNotes {
+	value: SlotTextbox;
+}
+
+interface SlotNotes {
+	chatNote: SlotTextbox,
+	characterNote: SlotTextbox;
+}
+
 export class SlotRenderer extends OutfitPanelContext {
-	private readonly valueElement: SlotValueController;
-	private readonly chatNoteElement: SlotChatAddendumController;
+	private readonly valueTextboxFactory: SlotTextboxFactory;
+	private readonly chatNoteFactory: SlotChatNoteFactory;
+	private readonly characterNoteFactory: SlotCharacterNoteFactory;
 
 	public constructor(
 		private readonly deps: SlotRendererDeps
 	) {
 		super(deps.panel);
 
-		this.valueElement = new SlotValueController({
+		const textboxDeps = {
 			panel: this.panel,
-			removeActionButtons: (ctx: SlotContext) => this.removeActionButtons(ctx),
+			removeActionButtons: (ctx: SlotContext): void => this.removeActionButtons(ctx),
 			editCoordinator: this.deps.editCoordinator
-		});
+		};
 
-		this.chatNoteElement = new SlotChatAddendumController({
-			panel: this.panel,
-			removeActionButtons: (ctx: SlotContext) => this.removeActionButtons(ctx),
-			editCoordinator: this.deps.editCoordinator
-		});
+		this.valueTextboxFactory = new SlotTextboxFactory(textboxDeps);
+
+		this.chatNoteFactory = new SlotChatNoteFactory(textboxDeps);
+
+		this.characterNoteFactory = new SlotCharacterNoteFactory(textboxDeps);
 	}
 
 	private isValueHidden(mode: SlotRenderMode): boolean {
@@ -156,24 +166,28 @@ export class SlotRenderer extends OutfitPanelContext {
 		const imageElement = this.renderImageElement(ctx);
 		contentEl.append(contentTextEl);
 
-		const { textbox: valueTextbox } = this.valueElement.render(contentTextEl, ctx);
-		if (mode !== 'normal' && valueTextbox.isEmpty()) {
-			valueTextbox.hide();
-		}
+		const createTextbox = <T extends SlotTextboxFactory>(factory: T): SlotTextbox => {
+			const { textbox } = factory.render(contentTextEl, ctx);
+			if (mode !== 'normal' && textbox.isEmpty()) {
+				textbox.hide();
+			}
+			return textbox;
+		};
 
-		const { textbox: chatNoteTextbox } = this.chatNoteElement.render(contentTextEl, ctx);
-		if (mode !== 'normal' && chatNoteTextbox.isEmpty()) {
-			chatNoteTextbox.hide();
-		}
+		const textboxes: SlotTextboxes = {
+			value: createTextbox(this.valueTextboxFactory),
+			characterNote: createTextbox(this.characterNoteFactory),
+			chatNote: createTextbox(this.chatNoteFactory),
+		};
 
 		switch (mode) {
 			case 'hidden-empty':
 			case 'hidden-disabled':
 			case 'disabled-empty':
-				this.decorateMinimal(ctx, valueTextbox, chatNoteTextbox);
+				this.decorateMinimal(ctx, textboxes);
 				break;
 			case 'normal':
-				this.decorate(ctx, valueTextbox, chatNoteTextbox, imageElement);
+				this.decorate(ctx, textboxes, imageElement);
 				break;
 			default: assertNever(mode);
 		}
@@ -222,18 +236,18 @@ export class SlotRenderer extends OutfitPanelContext {
 			if (!valueEl) return;
 
 			if (event.imageWide) {
-				this.valueElement.setCollapsedMaxHeight(valueEl, null);
+				this.valueTextboxFactory.setCollapsedMaxHeight(valueEl, null);
 				return;
 			}
 
 			const noteHeight = noteEl?.getBoundingClientRect().height ?? 0;
 			const height = Math.max(0, event.imageRect.height - noteHeight);
 
-			this.valueElement.setCollapsedMaxHeight(valueEl, height);
+			this.valueTextboxFactory.setCollapsedMaxHeight(valueEl, height);
 		});
 
 		const updateOnRender = (
-			controller: SlotValueController,
+			controller: SlotTextboxFactory,
 			set: (el: HTMLElement) => void,
 		): void => {
 			controller.onRender(event => {
@@ -244,8 +258,8 @@ export class SlotRenderer extends OutfitPanelContext {
 			});
 		};
 
-		updateOnRender(this.chatNoteElement, el => noteEl = el);
-		updateOnRender(this.valueElement, el => valueEl = el);
+		updateOnRender(this.chatNoteFactory, el => noteEl = el);
+		updateOnRender(this.valueTextboxFactory, el => valueEl = el);
 	}
 
 	private createImageMenu(ctx: SlotContext, imageElement: SlotImageElement, opener: HTMLElement): OverflowMenu {
@@ -300,24 +314,24 @@ export class SlotRenderer extends OutfitPanelContext {
 		return 'normal';
 	}
 
-	private decorateMinimal(ctx: SlotContext, valueTextbox: SlotTextbox, chatNoteTextbox: SlotTextbox): void {
+	private decorateMinimal(ctx: SlotContext, textboxes: SlotTextboxes): void {
 		const toggleBtn = this.createToggleBtn(ctx.slot);
 		ctx.labelRightDiv.append(toggleBtn);
 
-		this.appendEditBtn(ctx.labelRightDiv, ctx, valueTextbox);
+		this.appendEditBtn(ctx.labelRightDiv, ctx, textboxes.value);
 
-		if (valueTextbox.isHidden()) {
+		if (textboxes.value.isHidden()) {
 			ctx.labelDiv.classList.add('minimized');
-			chatNoteTextbox.hide();
+			textboxes.chatNote.hide();
+			textboxes.characterNote.hide();
 		}
 
-		this.createMenuBtn(ctx, chatNoteTextbox).appendTo(ctx.labelRightDiv);
+		this.createMenuBtn(ctx, textboxes).appendTo(ctx.labelRightDiv);
 	}
 
 	private decorate(
 		ctx: SlotContext,
-		valueTextbox: SlotTextbox,
-		chatNoteTextbox: SlotTextbox,
+		textboxes: SlotTextboxes,
 		imageElement: SlotImageElement
 	): void {
 		const actionsElement = new SlotActionsElement(this.panel);
@@ -330,19 +344,24 @@ export class SlotRenderer extends OutfitPanelContext {
 			ctx.actionsLeftEl.append(unequipBtn);
 		}
 
-		if (chatNoteTextbox.isEmpty()) {
-			chatNoteTextbox.hide();
+		const { value, ...notes } = textboxes;
+		void (notes satisfies SlotNotes);
+
+		for (const note of Object.values(notes)) {
+			if (note.isEmpty()) {
+				note.hide();
+			}
 		}
 
-		this.appendEditBtn(ctx.actionsRightEl, ctx, valueTextbox);
+		this.appendEditBtn(ctx.actionsRightEl, ctx, textboxes.value);
 
-		this.createMenuBtn(ctx, chatNoteTextbox).appendTo(ctx.actionsRightEl);
+		this.createMenuBtn(ctx, textboxes).appendTo(ctx.actionsRightEl);
 
 		const syncBtn = this.createSyncButton(ctx);
 		ctx.labelRightDiv.append(syncBtn);
 	}
 
-	private createMenuBtn(ctx: SlotContext, chatNoteTextbox: SlotTextbox): SlotActionsMenuElement {
+	private createMenuBtn(ctx: SlotContext, textboxes: SlotTextboxes): SlotActionsMenuElement {
 		return new SlotActionsMenuElement(
 			{
 				mountEl: ctx.slotElement,
@@ -358,14 +377,16 @@ export class SlotRenderer extends OutfitPanelContext {
 					() => this.panel.saveAndRender()
 				),
 
-				canAddNote: () => this.getSlotRenderMode(ctx.slot, this.panel) === 'normal' && chatNoteTextbox.isEmpty(),
-				addNote: () => chatNoteTextbox.beginInlineEdit(),
+				canAddChatNote: () => this.getSlotRenderMode(ctx.slot, this.panel) === 'normal' && textboxes.chatNote.isEmpty(),
+				addChatNote: () => textboxes.chatNote.beginInlineEdit(),
+				canAddCharacterNote: () => this.getSlotRenderMode(ctx.slot, this.panel) === 'normal' && textboxes.characterNote.isEmpty(),
+				addCharacterNote: () => textboxes.characterNote.beginInlineEdit(),
 				showConditions: () => SlotConditionsModal.show(
 					ctx.slot,
 					this.outfitManager,
 					() => this.outfitManager.updateContext(),
 					() => this.panel.saveAndRender()
-				)
+				),
 			},
 			this.deps.overflowMenuFactory
 		)

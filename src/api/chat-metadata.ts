@@ -79,13 +79,14 @@ class _ChatOutfitStorage {
 		this.saveChatData(data);
 	}
 
-	public getAddendum(character: string, slot: string): string | null {
+	public getNote(character: string | null, slot: string): string | null {
+		if (!character) return null;
 		const data = this.getChatData();
 
 		return data.addendums[character]?.[slot] ?? null;
 	}
 
-	public saveAddendum(character: string, slot: string, value: string): void {
+	public setNote(character: string, slot: string, value: string): void {
 		const data = this.getChatData();
 
 		const outfit = data.addendums[character] ??= {};
@@ -94,7 +95,7 @@ class _ChatOutfitStorage {
 		this.saveChatData(data);
 	}
 
-	public removeAddendum(character: string, slot: string): void {
+	public deleteNote(character: string, slot: string): void {
 		const data = this.getChatData();
 
 		const outfit = data.addendums[character] ??= {};

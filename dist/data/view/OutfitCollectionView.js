@@ -43,7 +43,7 @@ export class OutfitCollectionView {
         this.withCollection(c => c.hideEmpty = hide);
     }
     getCharacterNote(character, slotId) {
-        if (character === undefined)
+        if (!character)
             return undefined;
         return this.withCollection(c => c.character_notes[character]?.[slotId]);
     }

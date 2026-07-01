@@ -48,18 +48,20 @@ class _ChatOutfitStorage {
         data.outfits[character] = structuredClone(settingsOutfit);
         this.saveChatData(data);
     }
-    getAddendum(character, slot) {
+    getNote(character, slot) {
+        if (!character)
+            return null;
         const data = this.getChatData();
         return data.addendums[character]?.[slot] ?? null;
     }
-    saveAddendum(character, slot, value) {
+    setNote(character, slot, value) {
         var _a;
         const data = this.getChatData();
         const outfit = (_a = data.addendums)[character] ?? (_a[character] = {});
         outfit[slot] = value;
         this.saveChatData(data);
     }
-    removeAddendum(character, slot) {
+    deleteNote(character, slot) {
         var _a;
         const data = this.getChatData();
         const outfit = (_a = data.addendums)[character] ?? (_a[character] = {});

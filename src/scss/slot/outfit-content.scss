@@ -168,7 +168,12 @@
 	line-height: 1;
 
 	.outfit-slot.--disabled & {
-		color: rgba(255, 255, 255, 0.75);
+		color: rgba(255, 255, 255, 0.5); // faded white
+		font-weight: normal;
+	}
+
+	.outfit-slot.--unequipped & {
+		color: rgba(120, 120, 120, 0.6); // gray
 		font-weight: normal;
 	}
 }

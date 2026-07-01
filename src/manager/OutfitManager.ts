@@ -1,4 +1,4 @@
-import { getCurrentCharacterName } from "../api/character.js";
+import { getCurrentCharacterKey } from "../api/character-provider.js";
 import { ChatOutfitStorage } from "../api/chat-metadata.js";
 import * as SlotPresetsApi from "../api/internal/slot-preset.js";
 import { OutfitSlot } from "../data/model/Outfit.js";
@@ -105,8 +105,8 @@ export abstract class OutfitManager {
 	}
 
 	private formatSlotSummary(s: OutfitSlot): string {
-		const chatNote = ChatOutfitStorage.getAddendum(this.getName(), s.id);
-		const charNote = this.getOutfitCollection().getCharacterNote(getCurrentCharacterName(), s.id);
+		const chatNote = ChatOutfitStorage.getNote(this.getName(), s.id);
+		const charNote = this.getOutfitCollection().getCharacterNote(getCurrentCharacterKey(), s.id);
 
 		const parts: string[] = [];
 
@@ -114,7 +114,7 @@ export abstract class OutfitManager {
 			parts.push('Status: REMOVED');
 		}
 
-		parts.push(s.value);
+		parts.push(`${s.value}`);
 
 		if (charNote) {
 			parts.push(`Character context: ${charNote}`);
@@ -399,21 +399,46 @@ export abstract class OutfitManager {
 		return this.getOutfitCollection().getOrCreateCurrentOutfit();
 	}
 
-	public renameSlot(slotId: string, newId: string): RenameSlotResult {
+	public renameSlot(oldSlotId: string, newSlotId: string): RenameSlotResult {
 		const view = this.getOutfitView();
 
-		const oldSlot = view.getSlotById(slotId);
+		const oldSlot = view.getSlotById(oldSlotId);
 		if (!oldSlot) return 'slot-not-found';
 
-		if (view.getSlotById(newId)) return 'slot-already-exists';
+		if (view.getSlotById(newSlotId)) return 'slot-already-exists';
 
-		deleteGlobalVariable(this.getVarName(slotId));
+		deleteGlobalVariable(this.getVarName(oldSlotId));
 
-		view.renameSlot(slotId, newId);
+		view.renameSlot(oldSlotId, newSlotId);
+		this.passCharacterNote(oldSlotId, newSlotId);
+		this.passChatNote(oldSlotId, newSlotId);
 
-		this.updateSlotContext(newId);
+		this.updateSlotContext(newSlotId);
 
 		return 'slot-renamed';
+	}
+
+	private passCharacterNote(oldSlotId: string, newSlotId: string): void {
+		const collection = this.getOutfitCollection();
+		const character = getCurrentCharacterKey();
+		if (!character) return;
+
+		const note = collection.getCharacterNote(character, oldSlotId);
+		if (!note) return;
+
+		collection.deleteCharacterNote(character, oldSlotId);
+		collection.setCharacterNote(character, newSlotId, note);
+	}
+
+	private passChatNote(oldSlotId: string, newSlotId: string): void {
+		const character = getCurrentCharacterKey();
+		if (!character) return;
+
+		const note = ChatOutfitStorage.getNote(character, oldSlotId);
+		if (note === null) return;
+
+		ChatOutfitStorage.deleteNote(character, oldSlotId);
+		ChatOutfitStorage.setNote(character, newSlotId, note);
 	}
 
 

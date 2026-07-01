@@ -17,7 +17,7 @@ import * as SlotPresetsApi from "../../api/internal/slot-preset.js";
 import { conditionalList } from "../../util/list-utils.js";
 import { stringIf } from "../../util/StringHelper.js";
 import { SlotTextbox } from "../../ui/components/slot/slot-textbox.js";
-import { getCurrentCharacterName } from "../../api/character.js";
+import { getCurrentCharacterKey } from "../../api/character-provider.js";
 
 export interface SlotValueDeps {
 	panel: OutfitPanel<PanelType>;
@@ -276,16 +276,16 @@ export class SlotChatNoteFactory extends SlotTextboxFactory {
 	}
 
 	protected override getSlotText(slot: OutfitSlotState): string {
-		return ChatOutfitStorage.getAddendum(this.getCharacter(), slot.id) ?? this.getEmptyText();
+		return ChatOutfitStorage.getNote(this.getCharacter(), slot.id) ?? this.getEmptyText();
 	}
 
 	protected override updateSlotText(slot: OutfitSlotState, text: string): void {
 		if (!text || text === this.getEmptyText()) {
-			ChatOutfitStorage.removeAddendum(this.getCharacter(), slot.id);
+			ChatOutfitStorage.deleteNote(this.getCharacter(), slot.id);
 			return;
 		}
 
-		ChatOutfitStorage.saveAddendum(this.getCharacter(), slot.id, text);
+		ChatOutfitStorage.setNote(this.getCharacter(), slot.id, text);
 
 		this.outfitManager.updateSlotContext(slot.id);
 	}
@@ -336,7 +336,7 @@ export class SlotCharacterNoteFactory extends SlotTextboxFactory {
 	protected override getSlotText(slot: OutfitSlotState): string {
 		let note: string | undefined;
 
-		const character = getCurrentCharacterName();
+		const character = getCurrentCharacterKey();
 		if (character) {
 			note = this.outfitManager.getOutfitCollection().getCharacterNote(character, slot.id);
 		}
@@ -346,7 +346,7 @@ export class SlotCharacterNoteFactory extends SlotTextboxFactory {
 
 	protected override updateSlotText(slot: OutfitSlotState, text: string): void {
 		const collection = this.outfitManager.getOutfitCollection();
-		const character = getCurrentCharacterName();
+		const character = getCurrentCharacterKey();
 		if (!character) {
 			throw new Error('User managed to edit character note with no loaded character.');
 		}

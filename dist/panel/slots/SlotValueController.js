@@ -10,7 +10,7 @@ import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
 import * as SlotPresetsApi from "../../api/internal/slot-preset.js";
 import { stringIf } from "../../util/StringHelper.js";
 import { SlotTextbox } from "../../ui/components/slot/slot-textbox.js";
-import { getCurrentCharacterName } from "../../api/character.js";
+import { getCurrentCharacterKey } from "../../api/character-provider.js";
 export class SlotTextboxFactory extends OutfitPanelContext {
     constructor(deps) {
         super(deps.panel);
@@ -184,14 +184,14 @@ export class SlotChatNoteFactory extends SlotTextboxFactory {
         };
     }
     getSlotText(slot) {
-        return ChatOutfitStorage.getAddendum(this.getCharacter(), slot.id) ?? this.getEmptyText();
+        return ChatOutfitStorage.getNote(this.getCharacter(), slot.id) ?? this.getEmptyText();
     }
     updateSlotText(slot, text) {
         if (!text || text === this.getEmptyText()) {
-            ChatOutfitStorage.removeAddendum(this.getCharacter(), slot.id);
+            ChatOutfitStorage.deleteNote(this.getCharacter(), slot.id);
             return;
         }
-        ChatOutfitStorage.saveAddendum(this.getCharacter(), slot.id, text);
+        ChatOutfitStorage.setNote(this.getCharacter(), slot.id, text);
         this.outfitManager.updateSlotContext(slot.id);
     }
     getEmptyText() {
@@ -228,7 +228,7 @@ export class SlotCharacterNoteFactory extends SlotTextboxFactory {
     }
     getSlotText(slot) {
         let note;
-        const character = getCurrentCharacterName();
+        const character = getCurrentCharacterKey();
         if (character) {
             note = this.outfitManager.getOutfitCollection().getCharacterNote(character, slot.id);
         }
@@ -236,7 +236,7 @@ export class SlotCharacterNoteFactory extends SlotTextboxFactory {
     }
     updateSlotText(slot, text) {
         const collection = this.outfitManager.getOutfitCollection();
-        const character = getCurrentCharacterName();
+        const character = getCurrentCharacterKey();
         if (!character) {
             throw new Error('User managed to edit character note with no loaded character.');
         }

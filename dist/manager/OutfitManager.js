@@ -1,4 +1,4 @@
-import { getCurrentCharacterName } from "../api/character.js";
+import { getCurrentCharacterKey } from "../api/character-provider.js";
 import { ChatOutfitStorage } from "../api/chat-metadata.js";
 import * as SlotPresetsApi from "../api/internal/slot-preset.js";
 import { areOutfitSnapshotsEqual } from "../data/model/OutfitSnapshots.js";
@@ -52,13 +52,13 @@ export class OutfitManager {
         return this.outfit.mapSlots(s => this.formatSlotSummary(s), (s, arr) => s.kind === kind && s.enabled && !isSlotBlocked(s, arr));
     }
     formatSlotSummary(s) {
-        const chatNote = ChatOutfitStorage.getAddendum(this.getName(), s.id);
-        const charNote = this.getOutfitCollection().getCharacterNote(getCurrentCharacterName(), s.id);
+        const chatNote = ChatOutfitStorage.getNote(this.getName(), s.id);
+        const charNote = this.getOutfitCollection().getCharacterNote(getCurrentCharacterKey(), s.id);
         const parts = [];
         if (!s.equipped) {
             parts.push('Status: REMOVED');
         }
-        parts.push(s.value);
+        parts.push(`${s.value}`);
         if (charNote) {
             parts.push(`Character context: ${charNote}`);
         }
@@ -271,17 +271,40 @@ export class OutfitManager {
     getOutfitView() {
         return this.getOutfitCollection().getOrCreateCurrentOutfit();
     }
-    renameSlot(slotId, newId) {
+    renameSlot(oldSlotId, newSlotId) {
         const view = this.getOutfitView();
-        const oldSlot = view.getSlotById(slotId);
+        const oldSlot = view.getSlotById(oldSlotId);
         if (!oldSlot)
             return 'slot-not-found';
-        if (view.getSlotById(newId))
+        if (view.getSlotById(newSlotId))
             return 'slot-already-exists';
-        deleteGlobalVariable(this.getVarName(slotId));
-        view.renameSlot(slotId, newId);
-        this.updateSlotContext(newId);
+        deleteGlobalVariable(this.getVarName(oldSlotId));
+        view.renameSlot(oldSlotId, newSlotId);
+        this.passCharacterNote(oldSlotId, newSlotId);
+        this.passChatNote(oldSlotId, newSlotId);
+        this.updateSlotContext(newSlotId);
         return 'slot-renamed';
+    }
+    passCharacterNote(oldSlotId, newSlotId) {
+        const collection = this.getOutfitCollection();
+        const character = getCurrentCharacterKey();
+        if (!character)
+            return;
+        const note = collection.getCharacterNote(character, oldSlotId);
+        if (!note)
+            return;
+        collection.deleteCharacterNote(character, oldSlotId);
+        collection.setCharacterNote(character, newSlotId, note);
+    }
+    passChatNote(oldSlotId, newSlotId) {
+        const character = getCurrentCharacterKey();
+        if (!character)
+            return;
+        const note = ChatOutfitStorage.getNote(character, oldSlotId);
+        if (note === null)
+            return;
+        ChatOutfitStorage.deleteNote(character, oldSlotId);
+        ChatOutfitStorage.setNote(character, newSlotId, note);
     }
     loadSlotPreset(slotId, preset) {
         if (SlotPresetsApi.hasImage(preset)) {

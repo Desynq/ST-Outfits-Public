@@ -598,7 +598,11 @@
   line-height: 1;
 }
 .outfit-slot.--disabled .slot-textbox-thumb {
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: normal;
+}
+.outfit-slot.--unequipped .slot-textbox-thumb {
+  color: rgba(120, 120, 120, 0.6);
   font-weight: normal;
 }
 

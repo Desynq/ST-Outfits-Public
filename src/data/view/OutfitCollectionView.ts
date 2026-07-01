@@ -20,7 +20,7 @@ export interface IOutfitCollectionView {
 	areEmptySlotsHidden(): boolean;
 	hideEmptySlots(hide: boolean): void;
 
-	getCharacterNote(character: string | undefined, slotId: string): string | undefined;
+	getCharacterNote(character: string | undefined | null, slotId: string): string | undefined;
 
 	/**
 	 * Empty value deletes the character note
@@ -96,8 +96,8 @@ export abstract class OutfitCollectionView implements IOutfitCollectionView {
 		this.withCollection(c => c.hideEmpty = hide);
 	}
 
-	public getCharacterNote(character: string | undefined, slotId: string): string | undefined {
-		if (character === undefined) return undefined;
+	public getCharacterNote(character: string | undefined | null, slotId: string): string | undefined {
+		if (!character) return undefined;
 
 		return this.withCollection(c => c.character_notes[character]?.[slotId]);
 	}

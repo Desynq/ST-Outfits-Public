@@ -282,6 +282,7 @@ export class SlotChatNoteFactory extends SlotTextboxFactory {
 	protected override updateSlotText(slot: OutfitSlotState, text: string): void {
 		if (!text || text === this.getEmptyText()) {
 			ChatOutfitStorage.deleteNote(this.getCharacter(), slot.id);
+			this.outfitManager.updateSlotContext(slot.id);
 			return;
 		}
 
@@ -353,6 +354,7 @@ export class SlotCharacterNoteFactory extends SlotTextboxFactory {
 
 		if (!text || text === this.getEmptyText()) {
 			collection.deleteCharacterNote(character, slot.id);
+			this.outfitManager.updateSlotContext(slot.id);
 			return;
 		}
 

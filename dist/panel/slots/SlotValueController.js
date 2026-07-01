@@ -189,6 +189,7 @@ export class SlotChatNoteFactory extends SlotTextboxFactory {
     updateSlotText(slot, text) {
         if (!text || text === this.getEmptyText()) {
             ChatOutfitStorage.deleteNote(this.getCharacter(), slot.id);
+            this.outfitManager.updateSlotContext(slot.id);
             return;
         }
         ChatOutfitStorage.setNote(this.getCharacter(), slot.id, text);
@@ -242,6 +243,7 @@ export class SlotCharacterNoteFactory extends SlotTextboxFactory {
         }
         if (!text || text === this.getEmptyText()) {
             collection.deleteCharacterNote(character, slot.id);
+            this.outfitManager.updateSlotContext(slot.id);
             return;
         }
         collection.setCharacterNote(character, slot.id, text);

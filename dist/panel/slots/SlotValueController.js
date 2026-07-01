@@ -1,5 +1,4 @@
 import { ChatOutfitStorage } from "../../api/chat-metadata.js";
-import { isWideScreen, scrollIntoViewAboveKeyboard } from "../../shared.js";
 import { SlotValueText } from "../../ui/components/SlotValueText.js";
 import { popupConfirm } from "../../util/adapter/popup-adapter.js";
 import { substituteParams } from "../../util/adapter/script-adapter.js";
@@ -9,6 +8,8 @@ import { addLongPressAction, createElement, el } from "../../util/ElementHelper.
 import { EventBus } from "../../util/EventBus.js";
 import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
 import * as SlotPresetsApi from "../../api/internal/slot-preset.js";
+import { stringIf } from "../../util/StringHelper.js";
+import { SlotTextbox } from "../../ui/components/slot/slot-textbox.js";
 export class SlotValueController extends OutfitPanelContext {
     constructor(deps) {
         super(deps.panel);
@@ -20,39 +21,65 @@ export class SlotValueController extends OutfitPanelContext {
         return this;
     }
     render(container, ctx) {
-        const disabledClass = ctx.slot.isDisabled() ? 'disabled' : '';
-        const noneClass = this.isEmpty(ctx.slot) ? 'none' : '';
-        const valueEl = el('div', {
-            className: this.getValueElClassName(),
-            classes: [disabledClass, noneClass].filter(Boolean)
+        const { rootEl, valueEl: textboxEl } = this.createValueElements(ctx);
+        const textbox = new SlotTextbox(rootEl, textboxEl, {
+            ctx,
+            editCoordinator: this.deps.editCoordinator,
+            removeActionButtons: this.deps.removeActionButtons,
+            getOriginalText: () => this.getSlotText(ctx.slot),
+            getEmptyText: () => this.getEmptyText(),
+            isEmpty: () => this.isEmpty(ctx.slot),
+            getEditBoxClassName: () => this.getEditBoxClassName(),
+            onCommit: (text) => {
+                this.updateSlotText(ctx.slot, text);
+                this.panel.saveAndRender();
+            },
+            onCancel: () => {
+                this.panel.renderTabsAndActiveContent();
+            }
         });
         const valueRenderer = new SlotValueText({
             showPromptModal: this.showPromptModal.bind(this),
             expandValue: () => {
-                valueEl.classList.add('--reveal');
-                this.updateOverflowState(valueEl);
+                textboxEl.classList.add('--reveal');
+                this.updateOverflowState(textboxEl);
             }
         });
         // set text
-        valueEl.replaceChildren(valueRenderer.createFrag(this.getSlotText(ctx.slot)));
-        addDoubleTapListener(valueEl, () => this.beginInlineEdit(ctx, valueEl));
-        addLongPressAction(valueEl, 300, () => {
-            const text = valueEl.textContent;
+        textboxEl.replaceChildren(valueRenderer.createFrag(this.getSlotText(ctx.slot)));
+        addDoubleTapListener(textboxEl, () => textbox.beginInlineEdit());
+        addLongPressAction(textboxEl, 300, () => {
+            const text = textboxEl.textContent;
             const prompt = substituteParams(text);
             void this.showPromptModal(prompt);
         }, { stopImmediatePropagation: true });
-        valueEl.addEventListener('click', () => {
-            valueEl.classList.toggle('--reveal');
-            this.updateOverflowState(valueEl);
+        textboxEl.addEventListener('click', () => {
+            textboxEl.classList.toggle('--reveal');
+            this.updateOverflowState(textboxEl);
         });
-        container.appendChild(valueEl);
-        triggerAfterLayout(valueEl, () => this.updateOverflowState(valueEl));
+        container.appendChild(rootEl);
+        triggerAfterLayout(textboxEl, () => this.updateOverflowState(textboxEl));
         this.renderBus.emit({
             ctx,
-            valueEl,
+            valueEl: textboxEl,
             isFor: (otherCtx) => otherCtx.slot.id === ctx.slot.id
         });
         return {
+            rootEl,
+            textboxEl,
+            textbox
+        };
+    }
+    createValueElements(ctx) {
+        const valueEl = el('div', {
+            className: 'slot-value slot-textbox',
+            classes: [
+                stringIf(ctx.slot.isDisabled(), 'disabled'),
+                stringIf(this.isEmpty(ctx.slot), 'none')
+            ]
+        });
+        return {
+            rootEl: valueEl,
             valueEl
         };
     }
@@ -97,117 +124,6 @@ export class SlotValueController extends OutfitPanelContext {
             large: true
         });
     }
-    beginInlineEdit(ctx, valueEl) {
-        if (!this.deps.editCoordinator.canEdit(valueEl))
-            return false;
-        this.deps.editCoordinator.beginEdit(valueEl);
-        valueEl.hidden = false;
-        const scrollTop = ctx.scroller.scrollTop;
-        const rect = valueEl.getBoundingClientRect();
-        const originalValue = this.getSlotText(ctx.slot);
-        const empty = this.isEmpty(ctx.slot);
-        // Create editable textarea
-        const textarea = el('textarea', {
-            className: this.getEditBoxClassName(),
-            rows: 1,
-            value: empty ? '' : originalValue,
-        });
-        textarea.style.height = `${rect.height}px`;
-        // Swap value box with editor
-        valueEl.replaceWith(textarea);
-        ctx.scroller.scrollTop = scrollTop;
-        const autoResize = () => {
-            const prevScroll = ctx.scroller.scrollTop;
-            textarea.style.height = 'auto';
-            textarea.style.height = `${textarea.scrollHeight}px`;
-            // Restore scroll to prevent browser compensation
-            ctx.scroller.scrollTop = prevScroll;
-        };
-        autoResize();
-        textarea.focus({ preventScroll: true });
-        textarea.setSelectionRange(textarea.value.length, textarea.value.length);
-        requestAnimationFrame(() => {
-            scrollIntoViewAboveKeyboard(ctx.scroller, textarea);
-        });
-        const vv = window.visualViewport;
-        const onVvChange = () => scrollIntoViewAboveKeyboard(ctx.scroller, textarea);
-        vv?.addEventListener('resize', onVvChange);
-        vv?.addEventListener('scroll', onVvChange);
-        const cleanup = () => {
-            vv?.removeEventListener('resize', onVvChange);
-            vv?.removeEventListener('scroll', onVvChange);
-        };
-        this.deps.removeActionButtons(ctx);
-        textarea.addEventListener('keydown', (e) => {
-            if (e.isComposing)
-                return;
-            if (isWideScreen() && e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                void this.commitValueEdit(textarea, ctx.displaySlot.slot);
-            }
-            else if (e.key === 'Escape') {
-                e.preventDefault();
-                this.cancelValueEdit();
-            }
-        });
-        const preventBlur = (btn) => btn.addEventListener('pointerdown', e => e.preventDefault());
-        if (!empty) {
-            const clearBtn = el('button', {
-                className: 'slot-button clear-button',
-                text: 'Clear',
-                events: {
-                    click: async () => {
-                        await this.updateSlotText(ctx.slot, this.getEmptyText());
-                        cleanup();
-                        this.panel.renderTabsAndActiveContent();
-                    }
-                },
-                parent: ctx.actionsLeftEl
-            });
-        }
-        const tokenCounter = el('div', {
-            className: 'slot-token-count',
-            parent: ctx.actionsLeftEl
-        });
-        const updateTokenCount = () => tokenCounter.textContent = `Tokens:\n${Math.ceil(textarea.value.length / 4)}`;
-        updateTokenCount();
-        textarea.addEventListener('input', () => {
-            autoResize();
-            updateTokenCount();
-        });
-        const cancelBtn = document.createElement('button');
-        cancelBtn.classList.add('slot-button', 'cancel-button');
-        cancelBtn.textContent = 'Cancel';
-        cancelBtn.addEventListener('click', () => {
-            cleanup();
-            this.cancelValueEdit();
-        });
-        preventBlur(cancelBtn);
-        ctx.actionsRightEl.appendChild(cancelBtn);
-        const saveBtn = document.createElement('button');
-        saveBtn.classList.add('slot-button', 'save-button');
-        saveBtn.textContent = 'Save';
-        saveBtn.addEventListener('click', () => {
-            cleanup();
-            this.commitValueEdit(textarea, ctx.slot);
-        });
-        preventBlur(saveBtn);
-        ctx.actionsRightEl.appendChild(saveBtn);
-        return true;
-    }
-    commitValueEdit(textarea, slot) {
-        const text = textarea.value.trim() === ''
-            ? this.getEmptyText()
-            : textarea.value.trim();
-        this.updateSlotText(slot, text);
-        this.panel.saveAndRender();
-    }
-    cancelValueEdit() {
-        this.panel.renderTabsAndActiveContent();
-    }
-    getValueElClassName() {
-        return 'slot-value slot-textbox';
-    }
     getEditBoxClassName() {
         return 'slot-editbox';
     }
@@ -242,11 +158,29 @@ export class SlotValueController extends OutfitPanelContext {
     }
 }
 export class SlotChatAddendumController extends SlotValueController {
-    getValueElClassName() {
-        return 'slot-addendum slot-textbox';
-    }
     getEditBoxClassName() {
         return 'slot-editbox';
+    }
+    createValueElements(ctx) {
+        const rootEl = el('div', {
+            className: 'slot-chat-note-container',
+        });
+        const thumbnailEl = el('div', {
+            className: 'slot-textbox-thumb fa-solid fa-comments',
+            parent: rootEl
+        });
+        const valueEl = el('div', {
+            className: 'slot-chat-note-textbox slot-textbox',
+            classes: [
+                stringIf(ctx.slot.isDisabled(), 'disabled'),
+                stringIf(this.isEmpty(ctx.slot), 'none')
+            ],
+            parent: rootEl
+        });
+        return {
+            rootEl,
+            valueEl
+        };
     }
     getSlotText(slot) {
         return ChatOutfitStorage.getAddendum(this.getCharacter(), slot.id) ?? this.getEmptyText();

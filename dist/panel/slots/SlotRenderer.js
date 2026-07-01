@@ -19,7 +19,7 @@ export class SlotRenderer extends OutfitPanelContext {
             removeActionButtons: (ctx) => this.removeActionButtons(ctx),
             editCoordinator: this.deps.editCoordinator
         });
-        this.noteElement = new SlotChatAddendumController({
+        this.chatNoteElement = new SlotChatAddendumController({
             panel: this.panel,
             removeActionButtons: (ctx) => this.removeActionButtons(ctx),
             editCoordinator: this.deps.editCoordinator
@@ -80,22 +80,22 @@ export class SlotRenderer extends OutfitPanelContext {
         addDoubleTapListener(slotNameEl, () => { disarmTap(); this.beginRename(slotNameEl, ctx); }, 300, () => { disarmTap(); this.toggle(ctx.slot); }, armTap);
         const imageElement = this.renderImageElement(ctx);
         contentEl.append(contentTextEl);
-        const { valueEl } = this.valueElement.render(contentTextEl, ctx);
-        if (mode !== 'normal' && this.valueElement.isEmpty(slot)) {
-            valueEl.hidden = true;
+        const { textbox: valueTextbox } = this.valueElement.render(contentTextEl, ctx);
+        if (mode !== 'normal' && valueTextbox.isEmpty()) {
+            valueTextbox.hide();
         }
-        const { valueEl: addendumEl } = this.noteElement.render(contentTextEl, ctx);
-        if (mode !== 'normal' && this.noteElement.isEmpty(slot)) {
-            addendumEl.hidden = true;
+        const { textbox: chatNoteTextbox } = this.chatNoteElement.render(contentTextEl, ctx);
+        if (mode !== 'normal' && chatNoteTextbox.isEmpty()) {
+            chatNoteTextbox.hide();
         }
         switch (mode) {
             case 'hidden-empty':
             case 'hidden-disabled':
             case 'disabled-empty':
-                this.decorateMinimal(ctx, valueEl, addendumEl);
+                this.decorateMinimal(ctx, valueTextbox, chatNoteTextbox);
                 break;
             case 'normal':
-                this.decorate(ctx, valueEl, addendumEl, imageElement);
+                this.decorate(ctx, valueTextbox, chatNoteTextbox, imageElement);
                 break;
             default: assertNever(mode);
         }
@@ -144,7 +144,7 @@ export class SlotRenderer extends OutfitPanelContext {
                 observer.update();
             });
         };
-        updateOnRender(this.noteElement, el => noteEl = el);
+        updateOnRender(this.chatNoteElement, el => noteEl = el);
         updateOnRender(this.valueElement, el => valueEl = el);
     }
     createImageMenu(ctx, imageElement, opener) {
@@ -190,17 +190,17 @@ export class SlotRenderer extends OutfitPanelContext {
         }
         return 'normal';
     }
-    decorateMinimal(ctx, valueEl, addendumEl) {
+    decorateMinimal(ctx, valueTextbox, chatNoteTextbox) {
         const toggleBtn = this.createToggleBtn(ctx.slot);
         ctx.labelRightDiv.append(toggleBtn);
-        this.appendEditBtn(ctx.labelRightDiv, ctx, valueEl);
-        if (valueEl.hidden) {
+        this.appendEditBtn(ctx.labelRightDiv, ctx, valueTextbox);
+        if (valueTextbox.isHidden()) {
             ctx.labelDiv.classList.add('minimized');
-            addendumEl.hidden = true;
+            chatNoteTextbox.hide();
         }
-        this.createMenuBtn(ctx, addendumEl).appendTo(ctx.labelRightDiv);
+        this.createMenuBtn(ctx, chatNoteTextbox).appendTo(ctx.labelRightDiv);
     }
-    decorate(ctx, valueEl, addendumEl, imageElement) {
+    decorate(ctx, valueTextbox, chatNoteTextbox, imageElement) {
         const actionsElement = new SlotActionsElement(this.panel);
         const toggleBtn = this.createToggleBtn(ctx.slot);
         ctx.actionsLeftEl.append(toggleBtn);
@@ -208,15 +208,15 @@ export class SlotRenderer extends OutfitPanelContext {
             const unequipBtn = actionsElement.createUnequipButton(ctx.slot);
             ctx.actionsLeftEl.append(unequipBtn);
         }
-        if (this.noteElement.isEmpty(ctx.slot)) {
-            addendumEl.hidden = true;
+        if (chatNoteTextbox.isEmpty()) {
+            chatNoteTextbox.hide();
         }
-        this.appendEditBtn(ctx.actionsRightEl, ctx, valueEl);
-        this.createMenuBtn(ctx, addendumEl).appendTo(ctx.actionsRightEl);
+        this.appendEditBtn(ctx.actionsRightEl, ctx, valueTextbox);
+        this.createMenuBtn(ctx, chatNoteTextbox).appendTo(ctx.actionsRightEl);
         const syncBtn = this.createSyncButton(ctx);
         ctx.labelRightDiv.append(syncBtn);
     }
-    createMenuBtn(ctx, addendumEl) {
+    createMenuBtn(ctx, chatNoteTextbox) {
         return new SlotActionsMenuElement({
             mountEl: ctx.slotElement,
             getViewBoundary: () => ctx.scroller.getBoundingClientRect(),
@@ -225,8 +225,8 @@ export class SlotRenderer extends OutfitPanelContext {
             shiftSlot: () => this.beginSlotShift(ctx),
             moveSlot: () => this.moveSlot(ctx.slot),
             showPresets: () => SlotPresetsModal.show(ctx.slot, this.outfitManager, () => this.outfitManager.updateContext(), () => this.panel.saveAndRender()),
-            canAddNote: () => this.getSlotRenderMode(ctx.slot, this.panel) === 'normal' && this.noteElement.isEmpty(ctx.slot),
-            addNote: () => this.noteElement.beginInlineEdit(ctx, addendumEl),
+            canAddNote: () => this.getSlotRenderMode(ctx.slot, this.panel) === 'normal' && chatNoteTextbox.isEmpty(),
+            addNote: () => chatNoteTextbox.beginInlineEdit(),
             showConditions: () => SlotConditionsModal.show(ctx.slot, this.outfitManager, () => this.outfitManager.updateContext(), () => this.panel.saveAndRender())
         }, this.deps.overflowMenuFactory)
             .onClopen(open => ctx.slotElement.classList.toggle('--menu-open', open));
@@ -245,9 +245,9 @@ export class SlotRenderer extends OutfitPanelContext {
         void this.outfitManager.updateSlotContext(slot.id);
         this.panel.saveAndRender();
     }
-    appendEditBtn(container, ctx, valueEl) {
+    appendEditBtn(container, ctx, valueTextbox) {
         const editBtn = appendElement(container, 'button', 'slot-button edit-slot', '✏️');
-        editBtn.addEventListener('click', () => this.valueElement.beginInlineEdit(ctx, valueEl));
+        editBtn.addEventListener('click', () => valueTextbox.beginInlineEdit());
         return editBtn;
     }
     createSyncButton(ctx) {

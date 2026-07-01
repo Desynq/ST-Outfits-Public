@@ -1,6 +1,5 @@
 import * as SlotPresetsApi from "../../api/internal/slot-preset.js";
 import { OutfitTracker } from "../../data/tracker.js";
-import { assertNever } from "../../shared.js";
 import { div } from "../../util/element/divs.js";
 import { createDiv, createElement, el } from "../../util/ElementHelper.js";
 import { SlotModal } from "./Modal.js";
@@ -106,38 +105,6 @@ export class SlotPresetsModal extends SlotModal {
         this.manager.loadSlotPreset(this.slot.id, preset);
         this.close();
         this.saveAndRender();
-    }
-    setSlotImageFromSlotPreset(preset) {
-        const attachImageResult = this.outfit.attachImage(this.slot.id, preset.key, preset.image.key);
-        switch (attachImageResult) {
-            case 'slot-not-found':
-            case 'blob-does-not-exist':
-                throw new Error();
-            case 'attached-image':
-                break;
-            default: assertNever(attachImageResult);
-        }
-        const resizeImageResult = this.outfit.resizeImage(this.slot.id, preset.key, preset.image.width, preset.image.height);
-        switch (resizeImageResult) {
-            case 'slot-not-found':
-            case 'tag-does-not-exist':
-                throw new Error();
-            case 'noop':
-            case 'resized':
-                break;
-            default: assertNever(resizeImageResult);
-        }
-        const setActiveImageResult = this.outfit.setActiveImage(this.slot.id, preset.key);
-        switch (setActiveImageResult) {
-            case 'slot-not-found':
-            case 'image-does-not-exist':
-                throw new Error();
-            case 'image-already-active':
-            case 'set-active-image':
-                break;
-            default: assertNever(setActiveImageResult);
-        }
-        return true;
     }
     autoSavePreset() {
         const step = SlotPresetsApi.beginSaveSlotAsPresetAuto({ slot: this.slot, registry: this.registry });

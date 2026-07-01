@@ -66,3 +66,6 @@ export function resolveKebabCase(input) {
 export function plural(count, singular = '', plural = 's') {
     return count === 1 ? singular : plural;
 }
+export function stringIf(condition, value) {
+    return condition ? value : '';
+}

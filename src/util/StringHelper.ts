@@ -97,3 +97,9 @@ export function plural(
 ): string {
 	return count === 1 ? singular : plural;
 }
+
+
+
+export function stringIf<T extends string>(condition: boolean, value: T): T | '' {
+	return condition ? value : '';
+}

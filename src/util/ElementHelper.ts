@@ -270,7 +270,7 @@ export type ElementOptions<K extends keyof HTMLElementTagNameMap> =
 		events?: Partial<{
 			[E in keyof GlobalEventHandlersEventMap]: (this: HTMLElementTagNameMap[K], ev: GlobalEventHandlersEventMap[E]) => void
 		}>;
-		classes?: Array<string | false | null | undefined>;
+		classes?: readonly (string | null | undefined | false)[];
 		parent?: HTMLElement;
 	}
 	& Partial<NativeProps<K>>

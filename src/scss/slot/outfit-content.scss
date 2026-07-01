@@ -95,10 +95,6 @@
 	transition: max-height 180ms ease;
 }
 
-.slot-addendum {
-	min-height: calc(1lh + 12px);
-}
-
 .slot-editbox {
 	flex: 1 1 auto;
 
@@ -153,10 +149,38 @@
 		/* subtle focus ring */
 		box-shadow: 0 0 0 2px rgba(196, 181, 253, 0.25);
 	}
+
+	.outfit-slot.--unequipped & {
+		color: rgba(160, 160, 160, 0.9);
+	}
 }
 
-.outfit-slot.--unequipped .slot-textbox {
-	color: rgba(160, 160, 160, 0.9);
+
+.slot-textbox-thumb {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	flex: 0 0 2rem;
+	width: 2rem;
+	height: 2rem;
+	font-size: 1.6rem;
+	line-height: 1;
+
+	.outfit-slot.--disabled & {
+		color: rgba(255, 255, 255, 0.75);
+		font-weight: normal;
+	}
+}
+
+.slot-chat-note-container {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+
+	& > .slot-chat-note-textbox {
+		min-height: calc(1lh + 12px);
+	}
 }
 
 

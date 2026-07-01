@@ -146,42 +146,6 @@ export class SlotPresetsModal extends SlotModal {
 		this.saveAndRender();
 	}
 
-	private setSlotImageFromSlotPreset(preset: KeyedSlotPresetWithImage): boolean {
-		const attachImageResult = this.outfit.attachImage(this.slot.id, preset.key, preset.image.key);
-		switch (attachImageResult) {
-			case 'slot-not-found':
-			case 'blob-does-not-exist':
-				throw new Error();
-			case 'attached-image':
-				break;
-			default: assertNever(attachImageResult);
-		}
-
-		const resizeImageResult = this.outfit.resizeImage(this.slot.id, preset.key, preset.image.width, preset.image.height);
-		switch (resizeImageResult) {
-			case 'slot-not-found':
-			case 'tag-does-not-exist':
-				throw new Error();
-			case 'noop':
-			case 'resized':
-				break;
-			default: assertNever(resizeImageResult);
-		}
-
-		const setActiveImageResult = this.outfit.setActiveImage(this.slot.id, preset.key);
-		switch (setActiveImageResult) {
-			case 'slot-not-found':
-			case 'image-does-not-exist':
-				throw new Error();
-			case 'image-already-active':
-			case 'set-active-image':
-				break;
-			default: assertNever(setActiveImageResult);
-		}
-
-		return true;
-	}
-
 	private autoSavePreset(): void {
 		const step = SlotPresetsApi.beginSaveSlotAsPresetAuto({ slot: this.slot, registry: this.registry });
 

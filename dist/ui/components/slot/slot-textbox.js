@@ -53,12 +53,15 @@ export class SlotTextbox {
             vv?.removeEventListener('resize', onVvChange);
             vv?.removeEventListener('scroll', onVvChange);
         };
+        const commitText = (text) => {
+            cleanup();
+            onCommit(text);
+        };
         const commit = () => {
             const text = textarea.value.trim() === ''
                 ? getEmptyText()
                 : textarea.value.trim();
-            cleanup();
-            onCommit(text);
+            commitText(text);
         };
         const cancel = () => {
             cleanup();
@@ -86,9 +89,10 @@ export class SlotTextbox {
                 text: 'Clear',
                 events: {
                     click: () => {
-                        commit();
+                        commitText(getEmptyText());
                     }
-                }
+                },
+                parent: ctx.actionsLeftEl
             });
             preventBlur(clearBtn);
         }

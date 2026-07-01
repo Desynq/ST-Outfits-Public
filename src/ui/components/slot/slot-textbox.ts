@@ -103,13 +103,16 @@ export class SlotTextbox {
 			vv?.removeEventListener('scroll', onVvChange);
 		};
 
+		const commitText = (text: string): void => {
+			cleanup();
+			onCommit(text);
+		};
+
 		const commit = (): void => {
 			const text = textarea.value.trim() === ''
 				? getEmptyText()
 				: textarea.value.trim();
-
-			cleanup();
-			onCommit(text);
+			commitText(text);
 		};
 
 		const cancel = (): void => {
@@ -142,9 +145,10 @@ export class SlotTextbox {
 				text: 'Clear',
 				events: {
 					click: () => {
-						commit();
+						commitText(getEmptyText());
 					}
-				}
+				},
+				parent: ctx.actionsLeftEl
 			});
 
 			preventBlur(clearBtn);

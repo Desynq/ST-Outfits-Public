@@ -18,7 +18,7 @@ import { DisplaySlot } from "./DisplaySlot.js";
 import { EditCoordinator } from "./edit-coordinator.js";
 import { SlotActionsElement } from "./SlotActionsElement.js";
 import { ImageState, SlotImageElement, SlotImageElementFactory } from "./SlotImageController.js";
-import { RenderEvent, SlotCharacterNoteFactory, SlotChatNoteFactory, SlotTextboxFactory } from "./SlotValueController.js";
+import { SlotCharacterNoteFactory, SlotChatNoteFactory, SlotTextboxFactory } from "./SlotValueController.js";
 
 export interface SlotContext {
 	slot: OutfitSlotState;
@@ -373,7 +373,7 @@ export class SlotRenderer extends OutfitPanelContext {
 				showPresets: () => SlotPresetsModal.show(
 					ctx.slot,
 					this.outfitManager,
-					() => this.outfitManager.updateContext(),
+					() => this.outfitManager.updateMacros(),
 					() => this.panel.saveAndRender()
 				),
 
@@ -384,7 +384,7 @@ export class SlotRenderer extends OutfitPanelContext {
 				showConditions: () => SlotConditionsModal.show(
 					ctx.slot,
 					this.outfitManager,
-					() => this.outfitManager.updateContext(),
+					() => this.outfitManager.updateMacros(),
 					() => this.panel.saveAndRender()
 				),
 			},

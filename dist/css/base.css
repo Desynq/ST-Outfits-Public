@@ -116,6 +116,43 @@
   cursor: pointer;
 }
 
+.outfit-confirm-scroll {
+  max-height: 50dvh;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  padding: 0.75rem;
+  border: 1px solid var(--SmartThemeBorderColor);
+  border-radius: 0.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  color: var(--SmartThemeBodyColor);
+  font-family: var(--monoFontFamily, monospace);
+}
+
+.outfit-confirm-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.outfit-confirm-table th,
+.outfit-confirm-table td {
+  padding: 0.5rem;
+  border: 1px solid var(--SmartThemeBorderColor);
+  vertical-align: top;
+  text-align: left;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.outfit-confirm-table th {
+  position: sticky;
+  top: 0;
+  background: var(--SmartThemeBlurTintColor);
+  z-index: 1;
+}
+
 .outfit-slots {
   display: grid;
   grid-template-columns: 1fr;

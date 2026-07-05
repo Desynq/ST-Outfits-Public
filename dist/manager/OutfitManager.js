@@ -13,6 +13,7 @@ import { OutfitMacroManager } from "./MacroManager.js";
 export class OutfitManager {
     constructor(saveSettings, macroOwner) {
         this.saveSettings = saveSettings;
+        this.updateContextTimeout = null;
         this.summaryMacros = new OutfitMacroManager(macroOwner, 'summary', 'outfit');
     }
     get outfit() {
@@ -73,7 +74,16 @@ export class OutfitManager {
     clearSummaries() {
         this.summaryMacros.clear();
     }
-    updateContext() {
+    updateMacrosDebounced() {
+        if (this.updateContextTimeout !== null) {
+            clearTimeout(this.updateContextTimeout);
+        }
+        this.updateContextTimeout = window.setTimeout(() => {
+            this.updateContextTimeout = null;
+            this.updateMacros();
+        }, 100);
+    }
+    updateMacros() {
         const domain = this.getFullSummaryTag().domain;
         const domainChanged = this.summaryMacros.setDomain(domain);
         const kindSummaries = new Map();
@@ -166,7 +176,7 @@ export class OutfitManager {
     }
     onActiveOutfitChanged() {
         this.reconcileSyncedSlots();
-        this.updateContext();
+        this.updateMacros();
     }
     reconcileSyncedSlots() {
         const view = this.getOutfitView();
@@ -193,7 +203,7 @@ export class OutfitManager {
             return false;
         deleteGlobalVariable(this.getVarName(slotId));
         view.deleteSlot(slotId);
-        this.updateContext();
+        this.updateMacros();
         return true;
     }
     setSlotValue(slotId, value) {
@@ -252,7 +262,7 @@ export class OutfitManager {
     /**
      * Updates summaries and global variables tied to slot id
      */
-    updateSlotContext(slotId) {
+    updateSlotContext(slotId, { debounceMacros = false } = {}) {
         const view = this.getOutfitView();
         const slot = view.resolveSlot(slotId);
         if (!slot.resolved)
@@ -260,7 +270,12 @@ export class OutfitManager {
         const varName = this.getVarName(slot.id);
         const prompt = this.formatSlotSummary(slot.raw);
         setGlobalVariable(varName, prompt);
-        this.updateContext();
+        if (debounceMacros) {
+            this.updateMacrosDebounced();
+        }
+        else {
+            this.updateMacros();
+        }
     }
     getSlots() {
         return this.getOutfitView().getSlotIds();

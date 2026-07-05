@@ -28,6 +28,8 @@ export type LoadPresetResult =
 
 export abstract class OutfitManager {
 
+	private updateContextTimeout: number | null = null;
+
 	protected readonly summaryMacros: OutfitMacroManager;
 
 	public constructor(
@@ -145,7 +147,18 @@ export abstract class OutfitManager {
 		this.summaryMacros.clear();
 	}
 
-	public updateContext(): void {
+	public updateMacrosDebounced(): void {
+		if (this.updateContextTimeout !== null) {
+			clearTimeout(this.updateContextTimeout);
+		}
+
+		this.updateContextTimeout = window.setTimeout(() => {
+			this.updateContextTimeout = null;
+			this.updateMacros();
+		}, 100);
+	}
+
+	public updateMacros(): void {
 		const domain = this.getFullSummaryTag().domain;
 		const domainChanged = this.summaryMacros.setDomain(domain);
 
@@ -270,7 +283,7 @@ export abstract class OutfitManager {
 
 	protected onActiveOutfitChanged(): void {
 		this.reconcileSyncedSlots();
-		this.updateContext();
+		this.updateMacros();
 	}
 
 	private reconcileSyncedSlots(): void {
@@ -301,7 +314,7 @@ export abstract class OutfitManager {
 		deleteGlobalVariable(this.getVarName(slotId));
 		view.deleteSlot(slotId);
 
-		this.updateContext();
+		this.updateMacros();
 		return true;
 	}
 
@@ -373,7 +386,10 @@ export abstract class OutfitManager {
 	/**
 	 * Updates summaries and global variables tied to slot id
 	 */
-	public updateSlotContext(slotId: string): void {
+	public updateSlotContext(
+		slotId: string,
+		{ debounceMacros = false }: { debounceMacros?: boolean; } = {}
+	): void {
 		const view = this.getOutfitView();
 		const slot = view.resolveSlot(slotId);
 		if (!slot.resolved) return;
@@ -382,7 +398,13 @@ export abstract class OutfitManager {
 		const prompt = this.formatSlotSummary(slot.raw);
 
 		setGlobalVariable(varName, prompt);
-		this.updateContext();
+
+		if (debounceMacros) {
+			this.updateMacrosDebounced();
+		}
+		else {
+			this.updateMacros();
+		}
 	}
 
 	public getSlots(): readonly string[] {

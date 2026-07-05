@@ -3,8 +3,7 @@ import { MutableOutfitView } from "../data/view/MutableOutfitView.js";
 import { OutfitManager } from "../manager/OutfitManager.js";
 import { assertNever } from "../shared.js";
 import { PanelType } from "../types/maps.js";
-import { addDoubleTapListener } from "../util/element/click-actions.js";
-import { addContextActionListener, addHorizontalScroll, createElement, el } from "../util/ElementHelper.js";
+import { addHorizontalScroll, createElement, el } from "../util/ElementHelper.js";
 import { OutfitTabsHost } from "./OutfitTabsHost.js";
 import { CacheTab } from "./tab/CacheTab.js";
 import { OutfitsTab } from "./tab/OutfitsTab.js";
@@ -273,7 +272,7 @@ export class OutfitTabsRenderer {
 				kind: result.newName
 			};
 
-			this.outfitManager.updateContext();
+			this.outfitManager.updateMacros();
 			this.panel.saveAndRender();
 		}
 	}

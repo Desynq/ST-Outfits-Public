@@ -86,7 +86,7 @@ export class VisibilityTab extends PanelTab {
 			switch (result) {
 				case 'ok':
 					updateMsgEl('✓ Tag updated', '--ok');
-					this.outfitManager.updateContext();
+					this.outfitManager.updateMacros();
 					this.panel.saveAndRender();
 					break;
 				case 'invalid-tag-name':
@@ -111,7 +111,7 @@ export class VisibilityTab extends PanelTab {
 			updateMsgEl('Preset to default', '--ok');
 
 			settings.resetFullSummaryTag();
-			this.outfitManager.updateContext();
+			this.outfitManager.updateMacros();
 			this.panel.saveAndRender();
 		});
 

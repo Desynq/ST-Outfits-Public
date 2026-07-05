@@ -181,7 +181,7 @@ export class OutfitTabsRenderer {
                 type: 'kind',
                 kind: result.newName
             };
-            this.outfitManager.updateContext();
+            this.outfitManager.updateMacros();
             this.panel.saveAndRender();
         }
     }

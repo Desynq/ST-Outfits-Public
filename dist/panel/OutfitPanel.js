@@ -176,7 +176,6 @@ export class OutfitPanel {
         let width = 0;
         let height = 0;
         const start = (e) => {
-            var _a;
             if (!this.panelEl)
                 return;
             if (this.isFullscreen())
@@ -187,7 +186,7 @@ export class OutfitPanel {
             offsetY = e.clientY - rect.top;
             width = rect.width;
             height = rect.height;
-            (_a = this.panelEl.style).position || (_a.position = 'absolute');
+            this.panelEl.style.position ||= 'absolute';
             this.panelEl.style.right = "auto";
             this.panelEl.style.left = rect.left + "px";
             this.panelEl.style.top = rect.top + "px";

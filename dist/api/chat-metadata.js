@@ -55,16 +55,14 @@ class _ChatOutfitStorage {
         return data.addendums[character]?.[slot] ?? null;
     }
     setNote(character, slot, value) {
-        var _a;
         const data = this.getChatData();
-        const outfit = (_a = data.addendums)[character] ?? (_a[character] = {});
+        const outfit = data.addendums[character] ??= {};
         outfit[slot] = value;
         this.saveChatData(data);
     }
     deleteNote(character, slot) {
-        var _a;
         const data = this.getChatData();
-        const outfit = (_a = data.addendums)[character] ?? (_a[character] = {});
+        const outfit = data.addendums[character] ??= {};
         delete outfit[slot];
         this.saveChatData(data);
     }

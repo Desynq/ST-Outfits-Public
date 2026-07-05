@@ -8,11 +8,10 @@ export class CharPanelsView {
         return name in this.tree.panels;
     }
     getOrCreate(name) {
-        var _a;
-        return new CharPanelSettingsView(name, (_a = this.tree.panels)[name] ?? (_a[name] = {
+        return new CharPanelSettingsView(name, this.tree.panels[name] ??= {
             saveXY: false,
             load_state: 'global'
-        }));
+        });
     }
     isActive(name) {
         return this.tree.active.includes(name);

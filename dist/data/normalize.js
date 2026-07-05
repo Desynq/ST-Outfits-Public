@@ -6,7 +6,7 @@ import { normalizeOutfitSnapshots } from "./mappings/OutfitCache.js";
 export function validatePresets(holder) {
     if (!holder || typeof holder !== 'object')
         return;
-    holder.presets ?? (holder.presets = {});
+    holder.presets ??= {};
     holder.presets.user = normalizePresetCollection(holder.presets.user);
     const botOut = {};
     const botRaw = holder.presets.bot;

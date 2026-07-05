@@ -12,7 +12,7 @@ export class OutfitCollectionView {
     }
     getOrCreateCurrentOutfit() {
         const c = this.getOrCreateCollection(); // instantiate current outfit
-        c.current_outfit ?? (c.current_outfit = this.createDefaultOutfit()); // add default slots
+        c.current_outfit ??= this.createDefaultOutfit(); // add default slots
         return new MutableOutfitView('auto', c.current_outfit);
     }
     getCurrentOutfit() {
@@ -49,12 +49,11 @@ export class OutfitCollectionView {
     }
     setCharacterNote(character, slotId, value) {
         this.withCollection(c => {
-            var _a;
             if (value === '') {
                 this.deleteCharacterNote(character, slotId);
             }
             else {
-                ((_a = c.character_notes)[character] ?? (_a[character] = {}))[slotId] = value;
+                (c.character_notes[character] ??= {})[slotId] = value;
             }
         });
     }
@@ -156,7 +155,7 @@ export class CharacterOutfitCollectionView extends OutfitCollectionView {
     }
     loadCurrentOutfitFromChat() {
         const c = this.getOrCreateCollection();
-        c.current_outfit ?? (c.current_outfit = this.createDefaultOutfit());
+        c.current_outfit ??= this.createDefaultOutfit();
         ChatOutfitStorage.loadOutfitInto(c.current_outfit, this.character);
     }
     saveCurrentOutfitToChat() {

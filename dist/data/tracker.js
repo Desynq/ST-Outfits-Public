@@ -89,11 +89,11 @@ class CharacterOutfitMapView {
 }
 const settings = extension_settings;
 function loadTracker() {
-    const raw = settings.outfit_tracker ?? (settings.outfit_tracker = {});
+    const raw = settings.outfit_tracker ??= {};
     migrateTracker(raw);
-    raw.enableSysMessages ?? (raw.enableSysMessages = false);
-    raw.autoOpenUser ?? (raw.autoOpenUser = false);
-    raw.autoOpenBot ?? (raw.autoOpenBot = false);
+    raw.enableSysMessages ??= false;
+    raw.autoOpenUser ??= false;
+    raw.autoOpenBot ??= false;
     raw.charPanels = normalizeCharPanels(raw.charPanels);
     normalizeImageBlobs(raw);
     normalizeSlotPresets(raw);

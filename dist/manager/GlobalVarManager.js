@@ -1,7 +1,7 @@
 const { extensionSettings } = SillyTavern.getContext();
 function getGlobalVars() {
-    const vars = extensionSettings.variables ?? (extensionSettings.variables = { global: {} });
-    const globalVars = vars.global ?? (vars.global = {});
+    const vars = extensionSettings.variables ??= { global: {} };
+    const globalVars = vars.global ??= {};
     return globalVars;
 }
 export function getGlobalVariable(key) {

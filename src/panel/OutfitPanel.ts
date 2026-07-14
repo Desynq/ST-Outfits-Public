@@ -5,6 +5,7 @@ import { LayoutMode, PanelSettingsViewMap } from "../data/view/PanelViews.js";
 import { isWideScreen } from "../shared.js";
 import type { OutfitManagerMap, PanelType } from "../types/maps.js";
 import { ShowOptions } from "../types/OutfitPanel.js";
+import { createPanelSwitcher } from "../ui/components/button/panel-switcher.js";
 import { promptOptions } from "../ui/prompt/prompt-options.js";
 import { mergeClassNames } from "../util/element/css.js";
 import { clampPosition, enforceViewportBounds } from "../util/element/position.js";
@@ -15,6 +16,7 @@ import { assertString } from "../util/narrowing.js";
 import { ResourceCleaner } from "./Disposer.js";
 import { OutfitSlotsHost } from "./OutfitSlotsHost.js";
 import { OutfitTabsHost } from "./OutfitTabsHost.js";
+import { IPanelGrouper } from "./PanelRegistry.js";
 import { SlotsRenderer } from "./SlotsRenderer.js";
 import { OutfitTabsRenderer as TabsRenderer } from "./TabsRenderer.js";
 
@@ -44,12 +46,28 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 
 	protected readonly hideBus = new EventBus();
 	protected readonly expandedBus = new EventBus();
-	protected readonly dropBus = new EventBus<(packet: DropPacket) => void>();
 	protected readonly focusBus = new EventBus();
+
+	private grouper: IPanelGrouper | null = null;
 
 	public constructor(
 		public readonly outfitManager: OutfitManagerMap[T]
 	) { }
+
+
+	public setGrouper(grouper: IPanelGrouper): void {
+		this.grouper = grouper;
+	}
+
+	protected getGrouper(): IPanelGrouper {
+		if (!this.grouper) {
+			throw new Error('Panel grouper has not been assigned');
+		}
+
+		return this.grouper;
+	}
+
+
 
 	// Event registration
 
@@ -61,10 +79,6 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 
 	public onExpand(listener: () => void): void {
 		this.expandedBus.add(listener);
-	}
-
-	public onDrop(listener: Parameters<typeof this.dropBus.add>[0]): void {
-		this.dropBus.add(listener);
 	}
 
 	public onFocus(listener: Listener<typeof this.focusBus>): void {
@@ -173,12 +187,12 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 		this.setY(y);
 	}
 
-	public setX(x: number): void {
+	private setX(x: number): void {
 		if (!this.panelEl) return;
 		this.panelEl.style.left = `${x}px`;
 	}
 
-	public setY(y: number): void {
+	private setY(y: number): void {
 		if (!this.panelEl) return;
 		this.panelEl.style.top = `${y}px`;
 	}
@@ -234,105 +248,13 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 
 		const mode = this.getLayoutMode();
 		if (mode !== 'mobile') {
-			enforceViewportBounds(this.panelEl);
+			// enforceViewportBounds(this.panelEl);
 		}
 	}
 
 	public saveAndRender(): void {
 		this.outfitManager.saveSettings();
 		this.renderTabsAndActiveContent();
-	}
-
-	protected makePanelDraggable(): void {
-		if (!this.panelEl) return;
-
-		const handle = this.panelEl.querySelector(".outfit-header") as HTMLElement;
-		if (!handle) return;
-
-		let offsetX = 0;
-		let offsetY = 0;
-		let width = 0;
-		let height = 0;
-
-		const start = (e: PointerEvent): void => {
-			if (!this.panelEl) return;
-
-			if (this.isFullscreen()) return;
-
-			handle.setPointerCapture(e.pointerId);
-
-			const rect = this.panelEl.getBoundingClientRect();
-			offsetX = e.clientX - rect.left;
-			offsetY = e.clientY - rect.top;
-			width = rect.width;
-			height = rect.height;
-
-			this.panelEl.style.position ||= 'absolute';
-			this.panelEl.style.right = "auto";
-			this.panelEl.style.left = rect.left + "px";
-			this.panelEl.style.top = rect.top + "px";
-
-			handle.addEventListener("pointermove", move);
-			handle.addEventListener("pointerup", stop);
-			handle.addEventListener("pointercancel", stop);
-		};
-
-		const move = (e: PointerEvent): void => {
-			if (!this.panelEl) return;
-
-			if (e.pointerType === 'touch') {
-				e.preventDefault();
-			}
-
-			const x = e.clientX - offsetX;
-			const y = e.clientY - offsetY;
-
-			clampPosition({
-				element: this.panelEl,
-				x,
-				y,
-				width,
-				height
-			});
-		};
-
-		const stop = (e: PointerEvent): void => {
-			if (handle.hasPointerCapture(e.pointerId)) {
-				handle.releasePointerCapture(e.pointerId);
-			}
-			handle.removeEventListener("pointermove", move);
-			handle.removeEventListener("pointerup", stop);
-			handle.removeEventListener("pointercancel", stop);
-
-			if (!this.panelEl) return;
-
-			const left = parseFloat(this.panelEl.style.left);
-			const top = parseFloat(this.panelEl.style.top);
-			const mode = isWideScreen() ? 'desktop' : 'mobile';
-
-			const panelSettings = this.getPanelSettings();
-			if (panelSettings.isXYSaved()) {
-				panelSettings.setXY(mode, left, top);
-				this.outfitManager.saveSettings();
-			}
-
-			this.dropBus.emit({
-				mode,
-				cursor: {
-					x: e.clientX,
-					y: e.clientY
-				},
-				panel: {
-					x: left,
-					y: top
-				}
-			});
-		};
-
-		handle.addEventListener("pointerdown", (e) => {
-			if (e.target !== handle) return;
-			start(e);
-		});
 	}
 
 	protected beginDragFromEvent(e: PointerEvent): void {
@@ -349,64 +271,12 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 	protected makeHeaderMinimizable(): void {
 		if (!this.panelEl) return;
 
-		const title = this.panelEl.querySelector(".outfit-header h3") as HTMLElement;
+		const title = this.panelEl.querySelector<HTMLElement>('.outfit-header h3');
 		if (!title) return;
 
-		let startX = 0;
-		let startY = 0;
-		let pressTimer: number | null = null;
-		let dragging = false;
-
-		const DRAG_THRESHOLD = 7;      // px
-		const HOLD_THRESHOLD = 150;    // ms
-
-		title.addEventListener("pointerdown", (e) => {
-			startX = e.clientX;
-			startY = e.clientY;
-			dragging = false;
-
-			// Start timer: if held long enough, treat as drag
-			pressTimer = window.setTimeout(() => {
-				dragging = true;
-				this.beginDragFromEvent(e);  // <— you'll add this below
-			}, HOLD_THRESHOLD);
-		});
-
-		title.addEventListener("pointermove", (e) => {
-			if (!pressTimer) return;
-
-			const dx = Math.abs(e.clientX - startX);
-			const dy = Math.abs(e.clientY - startY);
-
-			// If finger moves enough → start dragging right away
-			if (dx > DRAG_THRESHOLD || dy > DRAG_THRESHOLD) {
-				dragging = true;
-				clearTimeout(pressTimer);
-				pressTimer = null;
-				this.beginDragFromEvent(e);  // <— hook into your drag logic
-			}
-		});
-
-		title.addEventListener("pointerup", (e) => {
-			if (pressTimer) {
-				clearTimeout(pressTimer);
-				pressTimer = null;
-
-				if (!dragging && e.button === 0) {
-					// Treat as tap
-					this.toggleMinimize();
-				}
-			}
-
-			dragging = false;
-		});
-
-		title.addEventListener("pointercancel", () => {
-			if (pressTimer) {
-				clearTimeout(pressTimer);
-				pressTimer = null;
-			}
-			dragging = false;
+		title.addEventListener('click', event => {
+			if (event.button !== 0) return;
+			this.toggleMinimize();
 		});
 	}
 
@@ -423,6 +293,10 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 		});
 
 		const actions = [
+			createPanelSwitcher({
+				currentPanel: this,
+				grouper: this.getGrouper()
+			}),
 			action({
 				className: 'minimize-button',
 				text: '−',
@@ -443,7 +317,7 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 				events: {
 					click: () => this.close()
 				}
-			})
+			}),
 		];
 
 		const actionsEl = el('div', {
@@ -514,15 +388,11 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 	}
 
 	public autoOpen(x?: number, y?: number): void {
-		this.show({
-			restoreX: x === undefined,
-			restoreY: x === undefined
-		});
-		this.setMinimize(true);
+		void x;
+		void y;
 
-		if (!this.panelEl) return;
-		this.panelEl.style.left = `${x}px`;
-		this.panelEl.style.top = `${y}px`;
+		this.show();
+		this.setMinimize(true);
 	}
 
 
@@ -622,25 +492,7 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 	): boolean {
 		if (!this.canShow()) return false;
 
-		const {
-			restoreX = false,
-			restoreY = false,
-			forcePos = false,
-			resetSizeAndPos = false
-		} = options;
-
 		const initialized = this.initializePanel();
-
-		if (resetSizeAndPos) {
-			this.resetSizeAndPos();
-		}
-		else if (forcePos) {
-			this.restoreSize();
-			this.forcePos();
-		}
-		else if (initialized) {
-			this.restoreSizeAndPos(restoreX, restoreY);
-		}
 
 		if (this.panelEl) {
 			this.panelEl.hidden = false;
@@ -653,8 +505,10 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 
 	/**
 	 * Hides the DOM until `show()` is called
+	 * 
+	 * destroy property does nothing unless panel is a custom panel
 	 */
-	public close(): void {
+	public close({ destroy = true }: { destroy?: boolean; } = {}): void {
 		if (this.panelEl) {
 			this.panelEl.hidden = true;
 		}

@@ -1,8 +1,8 @@
 import { OutfitTracker } from "../data/tracker.js";
 import { isWideScreen } from "../shared.js";
+import { createPanelSwitcher } from "../ui/components/button/panel-switcher.js";
 import { promptOptions } from "../ui/prompt/prompt-options.js";
 import { mergeClassNames } from "../util/element/css.js";
-import { clampPosition, enforceViewportBounds } from "../util/element/position.js";
 import { el, toggleClasses } from "../util/ElementHelper.js";
 import { invariant } from "../util/error.js";
 import { EventBus } from "../util/EventBus.js";
@@ -21,19 +21,25 @@ export class OutfitPanel {
         this.disposer = new ResourceCleaner();
         this.hideBus = new EventBus();
         this.expandedBus = new EventBus();
-        this.dropBus = new EventBus();
         this.focusBus = new EventBus();
+        this.grouper = null;
         // Event registration
         this.onRenderDispose = (disposer) => this.disposer.add(disposer);
+    }
+    setGrouper(grouper) {
+        this.grouper = grouper;
+    }
+    getGrouper() {
+        if (!this.grouper) {
+            throw new Error('Panel grouper has not been assigned');
+        }
+        return this.grouper;
     }
     onHide(listener) {
         this.hideBus.add(listener);
     }
     onExpand(listener) {
         this.expandedBus.add(listener);
-    }
-    onDrop(listener) {
-        this.dropBus.add(listener);
     }
     onFocus(listener) {
         this.focusBus.add(listener);
@@ -158,92 +164,12 @@ export class OutfitPanel {
         this.tabsRenderer.renderTabs(tabsContainer, contentArea);
         const mode = this.getLayoutMode();
         if (mode !== 'mobile') {
-            enforceViewportBounds(this.panelEl);
+            // enforceViewportBounds(this.panelEl);
         }
     }
     saveAndRender() {
         this.outfitManager.saveSettings();
         this.renderTabsAndActiveContent();
-    }
-    makePanelDraggable() {
-        if (!this.panelEl)
-            return;
-        const handle = this.panelEl.querySelector(".outfit-header");
-        if (!handle)
-            return;
-        let offsetX = 0;
-        let offsetY = 0;
-        let width = 0;
-        let height = 0;
-        const start = (e) => {
-            if (!this.panelEl)
-                return;
-            if (this.isFullscreen())
-                return;
-            handle.setPointerCapture(e.pointerId);
-            const rect = this.panelEl.getBoundingClientRect();
-            offsetX = e.clientX - rect.left;
-            offsetY = e.clientY - rect.top;
-            width = rect.width;
-            height = rect.height;
-            this.panelEl.style.position ||= 'absolute';
-            this.panelEl.style.right = "auto";
-            this.panelEl.style.left = rect.left + "px";
-            this.panelEl.style.top = rect.top + "px";
-            handle.addEventListener("pointermove", move);
-            handle.addEventListener("pointerup", stop);
-            handle.addEventListener("pointercancel", stop);
-        };
-        const move = (e) => {
-            if (!this.panelEl)
-                return;
-            if (e.pointerType === 'touch') {
-                e.preventDefault();
-            }
-            const x = e.clientX - offsetX;
-            const y = e.clientY - offsetY;
-            clampPosition({
-                element: this.panelEl,
-                x,
-                y,
-                width,
-                height
-            });
-        };
-        const stop = (e) => {
-            if (handle.hasPointerCapture(e.pointerId)) {
-                handle.releasePointerCapture(e.pointerId);
-            }
-            handle.removeEventListener("pointermove", move);
-            handle.removeEventListener("pointerup", stop);
-            handle.removeEventListener("pointercancel", stop);
-            if (!this.panelEl)
-                return;
-            const left = parseFloat(this.panelEl.style.left);
-            const top = parseFloat(this.panelEl.style.top);
-            const mode = isWideScreen() ? 'desktop' : 'mobile';
-            const panelSettings = this.getPanelSettings();
-            if (panelSettings.isXYSaved()) {
-                panelSettings.setXY(mode, left, top);
-                this.outfitManager.saveSettings();
-            }
-            this.dropBus.emit({
-                mode,
-                cursor: {
-                    x: e.clientX,
-                    y: e.clientY
-                },
-                panel: {
-                    x: left,
-                    y: top
-                }
-            });
-        };
-        handle.addEventListener("pointerdown", (e) => {
-            if (e.target !== handle)
-                return;
-            start(e);
-        });
     }
     beginDragFromEvent(e) {
         const handle = this.panelEl?.querySelector(".outfit-header");
@@ -256,55 +182,13 @@ export class OutfitPanel {
     makeHeaderMinimizable() {
         if (!this.panelEl)
             return;
-        const title = this.panelEl.querySelector(".outfit-header h3");
+        const title = this.panelEl.querySelector('.outfit-header h3');
         if (!title)
             return;
-        let startX = 0;
-        let startY = 0;
-        let pressTimer = null;
-        let dragging = false;
-        const DRAG_THRESHOLD = 7; // px
-        const HOLD_THRESHOLD = 150; // ms
-        title.addEventListener("pointerdown", (e) => {
-            startX = e.clientX;
-            startY = e.clientY;
-            dragging = false;
-            // Start timer: if held long enough, treat as drag
-            pressTimer = window.setTimeout(() => {
-                dragging = true;
-                this.beginDragFromEvent(e); // <— you'll add this below
-            }, HOLD_THRESHOLD);
-        });
-        title.addEventListener("pointermove", (e) => {
-            if (!pressTimer)
+        title.addEventListener('click', event => {
+            if (event.button !== 0)
                 return;
-            const dx = Math.abs(e.clientX - startX);
-            const dy = Math.abs(e.clientY - startY);
-            // If finger moves enough → start dragging right away
-            if (dx > DRAG_THRESHOLD || dy > DRAG_THRESHOLD) {
-                dragging = true;
-                clearTimeout(pressTimer);
-                pressTimer = null;
-                this.beginDragFromEvent(e); // <— hook into your drag logic
-            }
-        });
-        title.addEventListener("pointerup", (e) => {
-            if (pressTimer) {
-                clearTimeout(pressTimer);
-                pressTimer = null;
-                if (!dragging && e.button === 0) {
-                    // Treat as tap
-                    this.toggleMinimize();
-                }
-            }
-            dragging = false;
-        });
-        title.addEventListener("pointercancel", () => {
-            if (pressTimer) {
-                clearTimeout(pressTimer);
-                pressTimer = null;
-            }
-            dragging = false;
+            this.toggleMinimize();
         });
     }
     createOutfitActions() {
@@ -313,6 +197,10 @@ export class OutfitPanel {
             className: mergeClassNames('outfit-action', 'no-highlight', options.className)
         });
         const actions = [
+            createPanelSwitcher({
+                currentPanel: this,
+                grouper: this.getGrouper()
+            }),
             action({
                 className: 'minimize-button',
                 text: '−',
@@ -333,7 +221,7 @@ export class OutfitPanel {
                 events: {
                     click: () => this.close()
                 }
-            })
+            }),
         ];
         const actionsEl = el('div', {
             className: 'outfit-actions',
@@ -390,15 +278,10 @@ export class OutfitPanel {
         }
     }
     autoOpen(x, y) {
-        this.show({
-            restoreX: x === undefined,
-            restoreY: x === undefined
-        });
+        void x;
+        void y;
+        this.show();
         this.setMinimize(true);
-        if (!this.panelEl)
-            return;
-        this.panelEl.style.left = `${x}px`;
-        this.panelEl.style.top = `${y}px`;
     }
     async importButtonClickListener() {
         const inputName = await promptOptions('Import from which character?', OutfitTracker.characters().characters());
@@ -452,18 +335,7 @@ export class OutfitPanel {
     show(options = {}) {
         if (!this.canShow())
             return false;
-        const { restoreX = false, restoreY = false, forcePos = false, resetSizeAndPos = false } = options;
         const initialized = this.initializePanel();
-        if (resetSizeAndPos) {
-            this.resetSizeAndPos();
-        }
-        else if (forcePos) {
-            this.restoreSize();
-            this.forcePos();
-        }
-        else if (initialized) {
-            this.restoreSizeAndPos(restoreX, restoreY);
-        }
         if (this.panelEl) {
             this.panelEl.hidden = false;
         }
@@ -473,8 +345,10 @@ export class OutfitPanel {
     }
     /**
      * Hides the DOM until `show()` is called
+     *
+     * destroy property does nothing unless panel is a custom panel
      */
-    close() {
+    close({ destroy = true } = {}) {
         if (this.panelEl) {
             this.panelEl.hidden = true;
         }

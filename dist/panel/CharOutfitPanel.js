@@ -7,9 +7,9 @@ import { OutfitPanel } from "./OutfitPanel.js";
 export class CharOutfitPanel extends OutfitPanel {
     constructor(outfitManager, grouper, getCurrentCharacterKey) {
         super(outfitManager);
-        this.grouper = grouper;
         this.getCurrentCharacterKey = getCurrentCharacterKey;
         this.destroyBus = new EventBus();
+        this.setGrouper(grouper);
     }
     static from({ characterKey, saveSettings, grouper, displayName = characterKey, getCurrentCharacterKey }) {
         const manager = new CharOutfitManager(saveSettings, characterKey, displayName);
@@ -57,7 +57,7 @@ export class CharOutfitPanel extends OutfitPanel {
         });
         document.body.append(panel);
         this.panelEl = panel;
-        this.makePanelDraggable();
+        // this.makePanelDraggable();
         this.makeHeaderMinimizable();
         const outfitActions = this.createOutfitActions();
         outfitHeader.append(outfitActions);
@@ -122,122 +122,6 @@ export class CharOutfitPanel extends OutfitPanel {
         this.panelsView.removeActive(this.characterKey);
         this.outfitManager.saveSettings();
         this.destroyBus.emit();
-    }
-    createOutfitActions() {
-        const actionsEl = super.createOutfitActions();
-        const button = el('span', {
-            className: 'outfit-action switch-panel-button no-highlight',
-            text: '▼',
-            events: {
-                click: () => {
-                    openMenu();
-                }
-            }
-        });
-        const menu = el('div', {
-            className: 'panel-switch-menu'
-        });
-        const rebuildMenu = () => {
-            const panels = this.grouper.getGroup(this);
-            const optionEls = panels.map(panel => {
-                const remove = el('span', {
-                    className: 'panel-switch-remove no-highlight',
-                    text: '-',
-                    events: {
-                        click: (e) => {
-                            e.stopPropagation();
-                            this.grouper.ungroup(panel);
-                            rebuildMenu();
-                        }
-                    }
-                });
-                const loadState = panel.getPanelSettings().getLoadState();
-                const lock = el('span', {
-                    className: `panel-switch-lock`,
-                    text: {
-                        'chat': '📖',
-                        'global': '🌐',
-                        'character': '👤'
-                    }[loadState]
-                });
-                // lock.classList.toggle('is-hidden', canLoad);
-                const label = el('span', {
-                    className: 'panel-switch-label',
-                    text: panel.getHeaderTitle()
-                });
-                const option = el('div', {
-                    className: 'panel-switch-option',
-                    events: {
-                        click: () => {
-                            menu.classList.remove('--open');
-                            this.grouper.focus(panel);
-                        }
-                    },
-                    children: [lock, label, remove]
-                });
-                option.classList.toggle('is-current-panel', panel === this);
-                const s = panel.getPanelSettings();
-                option.style.setProperty('--panel-bg-1', s.bgColor1);
-                option.style.setProperty('--panel-bg-2', s.bgColor2);
-                option.style.setProperty('--panel-border', s.borderColor);
-                return option;
-            });
-            menu.replaceChildren(...optionEls);
-        };
-        button.addEventListener('click', rebuildMenu);
-        const positionMenu = () => {
-            menu.style.left = '0px';
-            menu.style.right = 'auto';
-            const menuRect = menu.getBoundingClientRect();
-            const panelRect = this.getBoundingClientRect();
-            const overflowRight = menuRect.right - panelRect.right;
-            if (overflowRight > 0) {
-                menu.style.left = `${-overflowRight - 8}px`;
-            }
-            const adjustedRect = menu.getBoundingClientRect();
-            if (adjustedRect.left < 8) {
-                menu.style.left = `${parseFloat(menu.style.left || '0') + (8 - adjustedRect.left)}px`;
-            }
-        };
-        const openMenu = () => {
-            rebuildMenu();
-            menu.classList.toggle('--open');
-            positionMenu();
-        };
-        const dropdown = el('div', {
-            className: 'panel-switch-dropdown',
-            tabIndex: 0,
-            children: [button, menu],
-            events: {
-                focusout: () => {
-                    menu.classList.remove('--open');
-                    menu.replaceChildren();
-                }
-            }
-        });
-        const groupAppend = (parent, child) => {
-            if (parent !== this)
-                return;
-            dropdown.hidden = false;
-        };
-        const groupFocus = (panel) => {
-            if (panel !== this)
-                return;
-            dropdown.hidden = false;
-        };
-        const groupRemove = (panel) => {
-            if (panel !== this)
-                return;
-            dropdown.hidden = true;
-        };
-        this.grouper.onGroupAppend(this.characterKey, groupAppend);
-        this.grouper.onGroupRemove(this.characterKey, groupRemove);
-        this.grouper.onGroupFocus(this.characterKey, groupFocus);
-        if (this.grouper.getGroup(this).length === 0) {
-            dropdown.hidden = true;
-        }
-        actionsEl.prepend(dropdown);
-        return actionsEl;
     }
     /**
      * Saves to chat only if this panel is in chat-enabled mode.

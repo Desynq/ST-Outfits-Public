@@ -47,7 +47,7 @@ export function registerPanelCommands(panelRegistry) {
                 void reloadCurrentChat();
                 return `Removed character panel for ${charName}`;
             }
-            const openResult = attempt(() => panel.autoOpen(20, 170), {
+            const openResult = attempt(() => panelRegistry.focus(panel), {
                 toastr: `Panel opened but failed for render for ${charName}`,
                 log: '[Outfits] panel.autoOpen failed:',
                 meta: () => ({ character: charName })

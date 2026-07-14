@@ -20,11 +20,8 @@
 $z-layers: (
 	panel: 100,
 	panel-minimized: 99,
-	panel-front: 101,
-
 	panel-desktop: 10000,
-	panel-desktop-minimized: 2999,
-	panel-desktop-front: 10001
+	panel-desktop-minimized: 2999
 );
 
 @function z($layer) {
@@ -38,60 +35,95 @@ $z-layers: (
 	display: flex;
 	flex-direction: column;
 
-	overflow-y: auto;
+	left: 0;
+	top: var(--topBarBlockSize, 0);
+	right: unset;
+	bottom: unset;
 
-	border-radius: 10px;
-	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+	width: calc(((100svw - var(--sheldWidth, 0px)) / 2) - 1px);
+	height: calc(100svh - var(--topBarBlockSize, 0px));
+
+	min-width: 100px;
+	min-height: 50px;
+	max-width: 90svw;
+	max-height: 95svh;
+
+	margin: 0;
 	padding: 6px;
-	/* Only one display property */
-	color: #ffffff;
-	user-select: none;
-	font-size: 0.9em;
-	/* Now we only have one display property */
 
-
-	resize: both;
 	overflow: auto;
+	resize: none;
+
+	border: 1px solid var(--panel-border, #4a3540);
+	border-radius: 10px;
 
 	background: linear-gradient(135deg,
 			var(--panel-bg-1, #2a1f26),
 			var(--panel-bg-2, #33242d));
-	border: 1px solid var(--panel-border, #4a3540);
+
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+
+	color: #ffffff;
+	font-size: 0.9em;
+	user-select: none;
 
 	&.fullscreen {
-		position: fixed;
-		inset: var(--topBarBlockSize) 0 0 0 !important;
-		width: 100vw !important;
-		height: calc(100vh - var(--topBarBlockSize)) !important;
+		inset: var(--topBarBlockSize, 0px) 0 0 0;
+
+		width: 100svw;
+		height: calc(100svh - var(--topBarBlockSize, 0px));
+
+		max-width: none;
+		max-height: none;
+
+		border-radius: 0;
 	}
 
 	&.minimized {
 		z-index: z(panel-minimized);
 
-		width: 48px !important;
-		height: 48px !important;
+		width: 48px;
+		height: 48px;
+		min-width: 48px;
+		min-height: 48px;
+		max-width: 48px;
+		max-height: 48px;
+
 		padding: 0;
-		border-radius: 12px;
+
 		justify-content: center;
 		align-items: center;
-		resize: none;
-	}
 
-	&.--front {
-		z-index: z(panel-front);
+		border-radius: 12px;
+		overflow: hidden;
 	}
 
 	@media (min-width: 720px) {
-		& {
-			z-index: z(panel-desktop);
-		}
+		z-index: z(panel-desktop);
 
 		&.minimized {
 			z-index: z(panel-desktop-minimized);
 		}
+	}
 
-		&.--front {
-			z-index: z(panel-desktop-front);
+	@media (max-width: 719px) {
+		inset: var(--topBarBlockSize, 0px) 0 0 0;
+
+		width: 100svw;
+		height: calc(100svh - var(--topBarBlockSize, 0px));
+
+		min-width: 0;
+		min-height: 0;
+		max-width: none;
+		max-height: none;
+
+		border-radius: 0;
+
+		&.minimized {
+			width: 48px;
+			height: 48px;
+			min-width: 48px;
+			min-height: 48px;
 		}
 	}
 }

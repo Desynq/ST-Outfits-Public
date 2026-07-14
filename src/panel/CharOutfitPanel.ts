@@ -8,7 +8,7 @@ import { el } from "../util/ElementHelper.js";
 import { EventBus } from "../util/EventBus.js";
 import { fromKebabCase } from "../util/StringHelper.js";
 import { OutfitPanel } from "./OutfitPanel.js";
-import { ICharPanelGrouper } from "./PanelRegistry.js";
+import { IPanelGrouper } from "./PanelRegistry.js";
 
 export class CharOutfitPanel extends OutfitPanel<'char'> {
 
@@ -16,10 +16,11 @@ export class CharOutfitPanel extends OutfitPanel<'char'> {
 
 	private constructor(
 		outfitManager: CharOutfitManager,
-		private readonly grouper: ICharPanelGrouper,
+		grouper: IPanelGrouper,
 		private readonly getCurrentCharacterKey: CurrentCharacterProvider
 	) {
 		super(outfitManager);
+		this.setGrouper(grouper);
 	}
 
 	public static from({
@@ -31,7 +32,7 @@ export class CharOutfitPanel extends OutfitPanel<'char'> {
 	}: {
 		characterKey: string;
 		saveSettings: () => void;
-		grouper: ICharPanelGrouper;
+		grouper: IPanelGrouper;
 		displayName?: string;
 		getCurrentCharacterKey: CurrentCharacterProvider;
 	}): CharOutfitPanel {
@@ -93,7 +94,7 @@ export class CharOutfitPanel extends OutfitPanel<'char'> {
 		document.body.append(panel);
 		this.panelEl = panel;
 
-		this.makePanelDraggable();
+		// this.makePanelDraggable();
 		this.makeHeaderMinimizable();
 
 		const outfitActions = this.createOutfitActions();
@@ -178,149 +179,6 @@ export class CharOutfitPanel extends OutfitPanel<'char'> {
 		this.outfitManager.saveSettings();
 
 		this.destroyBus.emit();
-	}
-
-	protected override createOutfitActions(): HTMLDivElement {
-		const actionsEl = super.createOutfitActions();
-
-		const button = el('span', {
-			className: 'outfit-action switch-panel-button no-highlight',
-			text: '▼',
-			events: {
-				click: (): void => {
-					openMenu();
-				}
-			}
-		});
-
-		const menu = el('div', {
-			className: 'panel-switch-menu'
-		});
-
-		const rebuildMenu = (): void => {
-			const panels = this.grouper.getGroup(this);
-
-			const optionEls = panels.map(panel => {
-				const remove = el('span', {
-					className: 'panel-switch-remove no-highlight',
-					text: '-',
-					events: {
-						click: (e: MouseEvent): void => {
-							e.stopPropagation();
-							this.grouper.ungroup(panel);
-							rebuildMenu();
-						}
-					}
-				});
-
-				const loadState = panel.getPanelSettings().getLoadState();
-
-				const lock = el('span', {
-					className: `panel-switch-lock`,
-					text: {
-						'chat': '📖',
-						'global': '🌐',
-						'character': '👤'
-					}[loadState]
-				});
-				// lock.classList.toggle('is-hidden', canLoad);
-
-				const label = el('span', {
-					className: 'panel-switch-label',
-					text: panel.getHeaderTitle()
-				});
-
-				const option = el('div', {
-					className: 'panel-switch-option',
-					events: {
-						click: (): void => {
-							menu.classList.remove('--open');
-							this.grouper.focus(panel);
-						}
-					},
-					children: [lock, label, remove]
-				});
-
-				option.classList.toggle('is-current-panel', panel === this);
-
-				const s = panel.getPanelSettings();
-				option.style.setProperty('--panel-bg-1', s.bgColor1);
-				option.style.setProperty('--panel-bg-2', s.bgColor2);
-				option.style.setProperty('--panel-border', s.borderColor);
-
-				return option;
-			});
-
-			menu.replaceChildren(...optionEls);
-		};
-
-		button.addEventListener('click', rebuildMenu);
-
-
-		const positionMenu = (): void => {
-			menu.style.left = '0px';
-			menu.style.right = 'auto';
-
-			const menuRect = menu.getBoundingClientRect();
-			const panelRect = this.getBoundingClientRect();
-			const overflowRight = menuRect.right - panelRect.right;
-
-			if (overflowRight > 0) {
-				menu.style.left = `${-overflowRight - 8}px`;
-			}
-
-			const adjustedRect = menu.getBoundingClientRect();
-			if (adjustedRect.left < 8) {
-				menu.style.left = `${parseFloat(menu.style.left || '0') + (8 - adjustedRect.left)}px`;
-			}
-		};
-
-		const openMenu = (): void => {
-			rebuildMenu();
-			menu.classList.toggle('--open');
-			positionMenu();
-		};
-
-
-
-		const dropdown = el('div', {
-			className: 'panel-switch-dropdown',
-			tabIndex: 0,
-			children: [button, menu],
-			events: {
-				focusout: () => {
-					menu.classList.remove('--open');
-					menu.replaceChildren();
-				}
-			}
-		});
-
-		const groupAppend = (parent: CharOutfitPanel, child: CharOutfitPanel): void => {
-			if (parent !== this) return;
-			dropdown.hidden = false;
-		};
-
-		const groupFocus = (panel: CharOutfitPanel): void => {
-			if (panel !== this) return;
-			dropdown.hidden = false;
-		};
-
-		const groupRemove = (panel: CharOutfitPanel): void => {
-			if (panel !== this) return;
-			dropdown.hidden = true;
-		};
-
-		this.grouper.onGroupAppend(this.characterKey, groupAppend);
-		this.grouper.onGroupRemove(this.characterKey, groupRemove);
-		this.grouper.onGroupFocus(this.characterKey, groupFocus);
-
-		if (this.grouper.getGroup(this).length === 0) {
-			dropdown.hidden = true;
-		}
-
-		actionsEl.prepend(dropdown);
-
-		return actionsEl;
 	}
 
 	/**

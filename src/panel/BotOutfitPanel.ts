@@ -37,7 +37,7 @@ export class BotOutfitPanel extends OutfitPanel<'bot'> {
 		document.body.appendChild(panel);
 		this.panelEl = panel;
 
-		this.makePanelDraggable();
+		// this.makePanelDraggable();
 		this.makeHeaderMinimizable();
 
 		const outfitHeaderDiv = queryOrThrow(this.panelEl, HTMLDivElement, '.outfit-header');

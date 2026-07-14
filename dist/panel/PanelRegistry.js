@@ -8,69 +8,65 @@ export class OutfitPanelRegistry {
         this.botPanel = botPanel;
         this.getCurrentCharacterKey = getCurrentCharacterKey;
         this.panels = new Set();
+        this.panelOrder = [];
         this.charPanels = new Map();
-        this.groupAppendBus = new MappedEventBus();
-        this.groupRemoveBus = new MappedEventBus();
+        this.activePanel = null;
         this.groupFocusBus = new MappedEventBus();
         this.botAutoOpenTimer = null;
-        this.panels
-            .add(userPanel)
-            .add(botPanel);
+        userPanel.setGrouper(this);
+        botPanel.setGrouper(this);
+        this.registerPanel(userPanel);
+        this.registerPanel(botPanel);
         this.openActiveCharPanels();
+        this.sortInitialOrder();
         botPanel.onUpdateCharacter(() => {
             if (this.isReserved(this.botPanel.character)) {
                 this.botPanel.disable();
                 return;
             }
-            this.enableBotPanel();
+            this.openBotPanel();
         });
         if (OutfitTracker.isAutoOpen().user) {
-            userPanel.autoOpen();
+            this.focus(userPanel);
+            userPanel.setMinimize(true);
         }
-        for (const panel of this.panels) {
-            panel.onExpand(() => this.handlePanelExpanded(panel));
-            panel.onFocus(() => {
-                for (const p of this.panels) {
-                    if (p === panel)
-                        continue;
-                    p.setFront(false);
-                }
-                panel.setFront(true);
-            });
-        }
-        // this.resolveOverlaps();
     }
-    onGroupAppend(name, listener) {
-        this.groupAppendBus.set(name, listener);
+    registerPanel(panel) {
+        if (this.panels.has(panel))
+            return;
+        this.panels.add(panel);
+        this.panelOrder.push(panel);
+        panel.onFocus(() => {
+            this.promotePanel(panel);
+            for (const other of this.panels) {
+                if (other === panel)
+                    continue;
+                other.setFront(false);
+            }
+            panel.setFront(true);
+        });
     }
-    onGroupRemove(name, listener) {
-        this.groupRemoveBus.set(name, listener);
+    promotePanel(panel) {
+        const index = this.panelOrder.indexOf(panel);
+        if (index <= 0)
+            return;
+        this.panelOrder.splice(index, 1);
+        this.panelOrder.unshift(panel);
+    }
+    sortInitialOrder() {
+        this.panelOrder.sort((a, b) => a.getHeaderTitle().localeCompare(b.getHeaderTitle(), undefined, {
+            numeric: true,
+            sensitivity: 'base'
+        }));
     }
     onGroupFocus(name, listener) {
         this.groupFocusBus.set(name, listener);
     }
-    viewGroups() {
-        return OutfitTracker.viewCharPanels().viewGroups();
-    }
     openActiveCharPanels() {
-        const groups = this.viewGroups();
-        for (const name of OutfitTracker.viewCharPanels().getActives()) {
+        const actives = OutfitTracker.viewCharPanels().getActives();
+        for (const name of actives) {
             const { panel } = this.getOrCreate(name);
-            if (groups.isFollower(name)) {
-                panel.hide();
-            }
-            else {
-                panel.autoOpen();
-            }
-        }
-    }
-    handlePanelExpanded(panel) {
-        for (const other of this.panels) {
-            if (other === panel)
-                continue;
-            if (other.isMinimized())
-                continue;
-            other.setMinimize(true);
+            panel.hide();
         }
     }
     getCharPanels() {
@@ -94,132 +90,77 @@ export class OutfitPanelRegistry {
         if (panel.getPanelSettings().canLoadFromChat()) {
             panel.outfitManager.getOutfitCollection().loadCurrentOutfitFromChat();
         }
-        panel.onDestroy(() => this.unregister(character));
-        panel.onDrop((packet) => this.handleCharPanelDrop(panel, packet));
-        this.panels.add(panel);
+        panel.onDestroy(() => this.unregisterCustomPanel(character));
+        this.registerPanel(panel);
         this.charPanels.set(character, panel);
         return { panel, created: true };
     }
-    handleCharPanelDrop(panel, packet) {
-        const { mode, cursor } = packet;
-        const name = panel.characterKey;
-        const groups = this.viewGroups();
-        groups.moveGroup(name, mode, cursor.x, cursor.y);
-        let droppedOn = null;
-        for (const [n, p] of this.charPanels) {
-            if (n === name)
-                continue;
-            if (!p.isVisible())
-                continue;
-            const rect = p.getBoundingClientRect();
-            const inside = cursor.x >= rect.left &&
-                cursor.x <= rect.right &&
-                cursor.y >= rect.top &&
-                cursor.y <= rect.bottom;
-            if (inside) {
-                droppedOn = p;
-                break;
-            }
-        }
-        if (droppedOn) {
-            this.append(droppedOn, panel);
-        }
-    }
-    unregister(character) {
+    unregisterCustomPanel(character) {
         const panel = this.charPanels.get(character);
         if (!panel) {
             return;
         }
-        this.groupAppendBus.remove(character);
-        this.groupRemoveBus.remove(character);
         this.panels.delete(panel);
         this.charPanels.delete(character);
-        this.viewGroups().remove(character);
+        this.groupFocusBus.remove(character);
+        const orderIndex = this.panelOrder.indexOf(panel);
+        if (orderIndex !== -1) {
+            this.panelOrder.splice(orderIndex, 1);
+        }
+        if (this.activePanel === panel) {
+            this.activePanel = null;
+        }
         if (this.botPanel.character === character) {
-            this.enableBotPanel();
+            const replaced = this.openBotPanel();
+            if (!replaced) {
+                this.autoFocus();
+            }
+        }
+        else {
+            this.autoFocus();
         }
         this.saveSettings();
     }
     isReserved(character) {
         return character === 'Unknown' || this.charPanels.has(character);
     }
-    append(parent, child) {
-        const groups = this.viewGroups();
-        groups.append(child.characterKey, parent.characterKey);
-        child.close({ destroy: false });
-        const parentMode = parent.getLayoutMode();
-        const parentXY = parent.getPanelSettings().getXY(parentMode);
-        child.getPanelSettings().setXY(parentMode, ...parentXY);
-        this.saveSettings();
-        this.groupAppendBus.emit(parent, child);
-    }
-    ungroup(panel) {
-        const name = panel.characterKey;
-        const groups = this.viewGroups();
-        const group = groups.getGroup(name);
-        if (!group)
-            return;
-        const leader = this.getOrCreate(group[0]).panel;
-        groups.remove(panel.characterKey);
-        const mode = leader.getLayoutMode();
-        const [x, y] = this.computeUngroupPosition(panel, leader, group, mode);
-        panel.getPanelSettings().setXY(mode, x, y);
-        panel.show({
-            forcePos: true
-        });
-        panel.setMinimize(false);
-        this.saveSettings();
-        this.groupRemoveBus.emit(panel);
-    }
-    computeUngroupPosition(panel, leader, group, mode) {
-        const [leaderX, leaderY] = leader.getSavedXY(mode);
-        if (panel === leader) {
-            return [leaderX, leaderY];
-        }
-        leader.setMinimize(true);
-        const rect = leader.getBoundingClientRect();
-        const viewportMid = window.innerHeight / 2;
-        const offset = rect.height + 8;
-        const index = group.indexOf(panel.characterKey);
-        const direction = rect.top < viewportMid ? 1 : -1;
-        return [leaderX, leaderY + offset * index * direction];
-    }
     focus(panel) {
         if (!panel.canShow())
             return false;
-        const groups = this.viewGroups();
-        const group = groups.getGroup(panel.characterKey);
-        if (!group)
+        if (!this.panels.has(panel))
             return false;
-        const prevLeader = this.getOrCreate(group[0]).panel;
-        const mode = prevLeader.getLayoutMode();
-        const prevXY = prevLeader.getPanelSettings().getXY(mode);
-        panel.getPanelSettings().setXY(mode, ...prevXY);
-        prevLeader.close({ destroy: false });
-        groups.focus(panel.characterKey);
-        panel.show({
-            forcePos: true
-        });
-        panel.setMinimize(false);
-        this.saveSettings();
+        this.promotePanel(panel);
+        if (this.activePanel === panel) {
+            return true;
+        }
+        if (this.activePanel) {
+            this.activePanel.hide();
+            this.activePanel.setFront(false);
+        }
+        this.activePanel = panel;
+        panel.show();
+        panel.setFront(true);
         this.groupFocusBus.emit(panel);
         return true;
     }
-    getGroup(panel) {
-        const groups = this.viewGroups();
-        const group = groups.getGroup(panel.characterKey);
-        if (!group) {
-            return [];
+    autoFocus() {
+        const panel = this.panelOrder.find(panel => panel.canShow());
+        if (!panel) {
+            this.activePanel = null;
+            return false;
         }
-        return group.map(name => this.getOrCreate(name).panel);
+        return this.focus(panel);
     }
-    enableBotPanel() {
+    getGroup(panel) {
+        return [...this.panelOrder];
+    }
+    openBotPanel() {
         if (this.isReserved(this.botPanel.character)) {
-            return;
+            return false;
         }
         this.botPanel.enable();
         if (!OutfitTracker.isAutoOpen().bot) {
-            return;
+            return false;
         }
         this.cancelBotAutoOpen(); // debounce
         this.botAutoOpenTimer = setTimeout(() => {
@@ -228,29 +169,15 @@ export class OutfitPanelRegistry {
                 return;
             if (this.isReserved(this.botPanel.character))
                 return;
-            this.botPanel.autoOpen();
+            this.focus(this.botPanel);
+            this.botPanel.setMinimize(true);
         }, 100);
+        return true;
     }
     cancelBotAutoOpen() {
         if (this.botAutoOpenTimer === null)
             return;
         clearTimeout(this.botAutoOpenTimer);
         this.botAutoOpenTimer = null;
-    }
-    resolveOverlaps() {
-        const Y_OFFSET = 48;
-        let prev = null;
-        for (const panel of this.panels) {
-            if (prev) {
-                const mode = panel.getLayoutMode();
-                const settings = panel.getPanelSettings();
-                const [x, y] = settings.getXY(mode);
-                const [ox, oy] = prev.getPanelSettings().getXY(mode); // mode is global
-                if (x === ox && y === oy) {
-                    prev.hide();
-                }
-            }
-            prev = panel;
-        }
     }
 }

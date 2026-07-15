@@ -18,10 +18,10 @@
 @use "sass:map";
 
 $z-layers: (
-	panel: 100,
-	panel-minimized: 99,
-	panel-desktop: 10000,
-	panel-desktop-minimized: 2999
+	panel: 28,
+	panel-minimized: 27,
+	panel-mobile: 100,
+	panel-mobile-minimized: 99,
 );
 
 @function z($layer) {
@@ -46,10 +46,11 @@ $z-layers: (
 	min-width: 100px;
 	min-height: 50px;
 	max-width: 90svw;
-	max-height: 95svh;
+	max-height: 100svh;
 
 	margin: 0;
 	padding: 6px;
+	padding-bottom: 16px;
 
 	overflow: auto;
 	resize: none;
@@ -68,10 +69,7 @@ $z-layers: (
 	user-select: none;
 
 	&.fullscreen {
-		inset: var(--topBarBlockSize, 0px) 0 0 0;
-
 		width: 100svw;
-		height: calc(100svh - var(--topBarBlockSize, 0px));
 
 		max-width: none;
 		max-height: none;
@@ -81,6 +79,9 @@ $z-layers: (
 
 	&.minimized {
 		z-index: z(panel-minimized);
+
+		left: 8px;
+		top: 8px;
 
 		width: 48px;
 		height: 48px;
@@ -98,16 +99,8 @@ $z-layers: (
 		overflow: hidden;
 	}
 
-	@media (min-width: 720px) {
-		z-index: z(panel-desktop);
-
-		&.minimized {
-			z-index: z(panel-desktop-minimized);
-		}
-	}
-
-	@media (max-width: 719px) {
-		inset: var(--topBarBlockSize, 0px) 0 0 0;
+	@media (max-width: 1000px) {
+		z-index: z(panel-mobile);
 
 		width: 100svw;
 		height: calc(100svh - var(--topBarBlockSize, 0px));
@@ -120,10 +113,7 @@ $z-layers: (
 		border-radius: 0;
 
 		&.minimized {
-			width: 48px;
-			height: 48px;
-			min-width: 48px;
-			min-height: 48px;
+			z-index: z(panel-mobile-minimized);
 		}
 	}
 }

@@ -80,6 +80,7 @@
 }
 
 .outfit-option-modal {
+  z-index: 10000;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -867,7 +868,7 @@
 
 .outfit-header {
   touch-action: none;
-  cursor: move;
+  cursor: pointer;
   padding-bottom: 8px;
   margin-bottom: 8px;
   display: flex;
@@ -1690,7 +1691,7 @@
 
 .outfit-panel {
   position: fixed;
-  z-index: 100;
+  z-index: 28;
   display: flex;
   flex-direction: column;
   left: 0;
@@ -1702,9 +1703,10 @@
   min-width: 100px;
   min-height: 50px;
   max-width: 90svw;
-  max-height: 95svh;
+  max-height: 100svh;
   margin: 0;
   padding: 6px;
+  padding-bottom: 16px;
   overflow: auto;
   resize: none;
   border: 1px solid var(--panel-border, #4a3540);
@@ -1716,15 +1718,15 @@
   user-select: none;
 }
 .outfit-panel.fullscreen {
-  inset: var(--topBarBlockSize, 0px) 0 0 0;
   width: 100svw;
-  height: calc(100svh - var(--topBarBlockSize, 0px));
   max-width: none;
   max-height: none;
   border-radius: 0;
 }
 .outfit-panel.minimized {
-  z-index: 99;
+  z-index: 27;
+  left: 8px;
+  top: 8px;
   width: 48px;
   height: 48px;
   min-width: 48px;
@@ -1737,17 +1739,9 @@
   border-radius: 12px;
   overflow: hidden;
 }
-@media (min-width: 720px) {
+@media (max-width: 1000px) {
   .outfit-panel {
-    z-index: 10000;
-  }
-  .outfit-panel.minimized {
-    z-index: 2999;
-  }
-}
-@media (max-width: 719px) {
-  .outfit-panel {
-    inset: var(--topBarBlockSize, 0px) 0 0 0;
+    z-index: 100;
     width: 100svw;
     height: calc(100svh - var(--topBarBlockSize, 0px));
     min-width: 0;
@@ -1757,10 +1751,7 @@
     border-radius: 0;
   }
   .outfit-panel.minimized {
-    width: 48px;
-    height: 48px;
-    min-width: 48px;
-    min-height: 48px;
+    z-index: 99;
   }
 }
 

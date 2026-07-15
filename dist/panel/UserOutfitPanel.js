@@ -21,7 +21,7 @@ export class UserOutfitPanel extends OutfitPanel {
         document.body.appendChild(panel);
         this.panelEl = panel;
         // this.makePanelDraggable();
-        this.makeHeaderMinimizable();
+        this.bindMinimizeEvents();
         const outfitHeaderDiv = queryOrThrow(this.panelEl, HTMLDivElement, '.outfit-header');
         const outfitActionsDiv = this.createOutfitActions();
         outfitHeaderDiv.appendChild(outfitActionsDiv);

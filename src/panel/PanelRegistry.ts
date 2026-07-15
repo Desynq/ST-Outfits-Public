@@ -10,7 +10,7 @@ import { UserOutfitPanel } from "./UserOutfitPanel.js";
 
 export interface IPanelGrouper {
 	focus(panel: OutfitPanel): boolean;
-	getGroup(panel: OutfitPanel): OutfitPanel[];
+	getGroup(): OutfitPanel[];
 
 	onGroupFocus(name: string, listener: (panel: OutfitPanel) => void): void;
 }
@@ -35,11 +35,12 @@ export class OutfitPanelRegistry implements IPanelGrouper {
 		private readonly botPanel: BotOutfitPanel,
 		private readonly getCurrentCharacterKey: () => string | null
 	) {
-		userPanel.setGrouper(this);
-		botPanel.setGrouper(this);
+		const globalPanels = [userPanel, botPanel];
 
-		this.registerPanel(userPanel);
-		this.registerPanel(botPanel);
+		for (const panel of globalPanels) {
+			panel.setGrouper(this);
+			this.registerPanel(panel);
+		}
 
 		this.openActiveCharPanels();
 		this.sortInitialOrder();
@@ -74,6 +75,10 @@ export class OutfitPanelRegistry implements IPanelGrouper {
 			}
 
 			panel.setFront(true);
+		});
+
+		panel.clickedClose.add(() => {
+			this.autoFocus();
 		});
 	}
 
@@ -185,15 +190,20 @@ export class OutfitPanelRegistry implements IPanelGrouper {
 		return character === 'Unknown' || this.charPanels.has(character);
 	}
 
+	/**
+	 * Focuses the given panel.
+	 * 
+	 * Calling this with the already focused panel has no effect
+	 */
 	public focus(panel: OutfitPanel): boolean {
 		if (!panel.canShow()) return false;
 		if (!this.panels.has(panel)) return false;
 
-		this.promotePanel(panel);
-
 		if (this.activePanel === panel) {
 			return true;
 		}
+
+		this.promotePanel(panel);
 
 		if (this.activePanel) {
 			this.activePanel.hide();
@@ -211,7 +221,7 @@ export class OutfitPanelRegistry implements IPanelGrouper {
 	}
 
 	private autoFocus(): boolean {
-		const panel = this.panelOrder.find(panel => panel.canShow());
+		const panel = this.getGroup()[0];
 
 		if (!panel) {
 			this.activePanel = null;
@@ -221,8 +231,8 @@ export class OutfitPanelRegistry implements IPanelGrouper {
 		return this.focus(panel);
 	}
 
-	public getGroup(panel: CharOutfitPanel): OutfitPanel[] {
-		return [...this.panelOrder];
+	public getGroup(): OutfitPanel[] {
+		return [...this.panelOrder].filter(panel => panel.canShow());
 	}
 
 

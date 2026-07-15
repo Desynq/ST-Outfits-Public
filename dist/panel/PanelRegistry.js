@@ -13,10 +13,11 @@ export class OutfitPanelRegistry {
         this.activePanel = null;
         this.groupFocusBus = new MappedEventBus();
         this.botAutoOpenTimer = null;
-        userPanel.setGrouper(this);
-        botPanel.setGrouper(this);
-        this.registerPanel(userPanel);
-        this.registerPanel(botPanel);
+        const globalPanels = [userPanel, botPanel];
+        for (const panel of globalPanels) {
+            panel.setGrouper(this);
+            this.registerPanel(panel);
+        }
         this.openActiveCharPanels();
         this.sortInitialOrder();
         botPanel.onUpdateCharacter(() => {
@@ -44,6 +45,9 @@ export class OutfitPanelRegistry {
                 other.setFront(false);
             }
             panel.setFront(true);
+        });
+        panel.clickedClose.add(() => {
+            this.autoFocus();
         });
     }
     promotePanel(panel) {
@@ -124,15 +128,20 @@ export class OutfitPanelRegistry {
     isReserved(character) {
         return character === 'Unknown' || this.charPanels.has(character);
     }
+    /**
+     * Focuses the given panel.
+     *
+     * Calling this with the already focused panel has no effect
+     */
     focus(panel) {
         if (!panel.canShow())
             return false;
         if (!this.panels.has(panel))
             return false;
-        this.promotePanel(panel);
         if (this.activePanel === panel) {
             return true;
         }
+        this.promotePanel(panel);
         if (this.activePanel) {
             this.activePanel.hide();
             this.activePanel.setFront(false);
@@ -144,15 +153,15 @@ export class OutfitPanelRegistry {
         return true;
     }
     autoFocus() {
-        const panel = this.panelOrder.find(panel => panel.canShow());
+        const panel = this.getGroup()[0];
         if (!panel) {
             this.activePanel = null;
             return false;
         }
         return this.focus(panel);
     }
-    getGroup(panel) {
-        return [...this.panelOrder];
+    getGroup() {
+        return [...this.panelOrder].filter(panel => panel.canShow());
     }
     openBotPanel() {
         if (this.isReserved(this.botPanel.character)) {

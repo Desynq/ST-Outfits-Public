@@ -95,7 +95,7 @@ export class CharOutfitPanel extends OutfitPanel<'char'> {
 		this.panelEl = panel;
 
 		// this.makePanelDraggable();
-		this.makeHeaderMinimizable();
+		this.bindMinimizeEvents();
 
 		const outfitActions = this.createOutfitActions();
 		outfitHeader.append(outfitActions);

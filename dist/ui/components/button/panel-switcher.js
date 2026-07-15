@@ -13,7 +13,7 @@ export function createPanelSwitcher({ currentPanel, grouper }) {
         className: 'panel-switch-menu'
     });
     const rebuildMenu = () => {
-        const panels = grouper.getGroup(currentPanel);
+        const panels = grouper.getGroup();
         const optionEls = panels.map(panel => {
             const loadState = panel.getPanelSettings().getLoadState();
             const lock = el('span', {
@@ -86,7 +86,7 @@ export function createPanelSwitcher({ currentPanel, grouper }) {
         dropdown.hidden = false;
     };
     grouper.onGroupFocus(currentPanel.outfitManager.getName(), groupFocus);
-    if (grouper.getGroup(currentPanel).length <= 1) {
+    if (grouper.getGroup().length <= 1) {
         dropdown.hidden = true;
     }
     return dropdown;

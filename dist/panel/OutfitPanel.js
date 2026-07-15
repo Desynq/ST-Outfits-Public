@@ -3,6 +3,7 @@ import { isWideScreen } from "../shared.js";
 import { createPanelSwitcher } from "../ui/components/button/panel-switcher.js";
 import { promptOptions } from "../ui/prompt/prompt-options.js";
 import { mergeClassNames } from "../util/element/css.js";
+import { isLeftClick } from "../util/element/event-helpers.js";
 import { el, toggleClasses } from "../util/ElementHelper.js";
 import { invariant } from "../util/error.js";
 import { EventBus } from "../util/EventBus.js";
@@ -22,6 +23,10 @@ export class OutfitPanel {
         this.hideBus = new EventBus();
         this.expandedBus = new EventBus();
         this.focusBus = new EventBus();
+        this.clickCloseBus = new EventBus();
+        this.clickedClose = {
+            add: (listener) => this.clickCloseBus.add(listener)
+        };
         this.grouper = null;
         // Event registration
         this.onRenderDispose = (disposer) => this.disposer.add(disposer);
@@ -179,16 +184,20 @@ export class OutfitPanel {
         // So your existing dragging logic activates correctly
         handle.dispatchEvent(new PointerEvent("pointerdown", e));
     }
-    makeHeaderMinimizable() {
+    /**
+     * Makes the header and minimized panel toggle the minimized state on left-click.
+     */
+    bindMinimizeEvents() {
         if (!this.panelEl)
             return;
-        const title = this.panelEl.querySelector('.outfit-header h3');
-        if (!title)
-            return;
-        title.addEventListener('click', event => {
-            if (event.button !== 0)
+        this.panelEl.addEventListener('click', event => {
+            if (!isLeftClick(event))
                 return;
-            this.toggleMinimize();
+            const target = event.target;
+            const clickedHeader = target.closest('.outfit-header h3') !== null;
+            if (this.isMinimized() || clickedHeader) {
+                this.toggleMinimize();
+            }
         });
     }
     createOutfitActions() {
@@ -219,7 +228,10 @@ export class OutfitPanel {
                 className: 'close-button',
                 text: '×',
                 events: {
-                    click: () => this.close()
+                    click: () => {
+                        this.close();
+                        this.clickCloseBus.emit();
+                    }
                 }
             }),
         ];

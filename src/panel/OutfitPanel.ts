@@ -8,10 +8,11 @@ import { ShowOptions } from "../types/OutfitPanel.js";
 import { createPanelSwitcher } from "../ui/components/button/panel-switcher.js";
 import { promptOptions } from "../ui/prompt/prompt-options.js";
 import { mergeClassNames } from "../util/element/css.js";
+import { isLeftClick } from "../util/element/event-helpers.js";
 import { clampPosition, enforceViewportBounds } from "../util/element/position.js";
 import { createConfiguredElements, el, ElementOptions, toggleClasses } from "../util/ElementHelper.js";
 import { invariant } from "../util/error.js";
-import { EventBus, Listener } from "../util/EventBus.js";
+import { EventBus, EventSubscriber, Listener } from "../util/EventBus.js";
 import { assertString } from "../util/narrowing.js";
 import { ResourceCleaner } from "./Disposer.js";
 import { OutfitSlotsHost } from "./OutfitSlotsHost.js";
@@ -47,6 +48,11 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 	protected readonly hideBus = new EventBus();
 	protected readonly expandedBus = new EventBus();
 	protected readonly focusBus = new EventBus();
+
+	protected readonly clickCloseBus = new EventBus();
+	public readonly clickedClose: EventSubscriber = {
+		add: (listener) => this.clickCloseBus.add(listener)
+	};
 
 	private grouper: IPanelGrouper | null = null;
 
@@ -268,15 +274,21 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 	}
 
 
-	protected makeHeaderMinimizable(): void {
+	/**
+	 * Makes the header and minimized panel toggle the minimized state on left-click.
+	 */
+	protected bindMinimizeEvents(): void {
 		if (!this.panelEl) return;
 
-		const title = this.panelEl.querySelector<HTMLElement>('.outfit-header h3');
-		if (!title) return;
+		this.panelEl.addEventListener('click', event => {
+			if (!isLeftClick(event)) return;
 
-		title.addEventListener('click', event => {
-			if (event.button !== 0) return;
-			this.toggleMinimize();
+			const target = event.target as HTMLElement;
+			const clickedHeader = target.closest('.outfit-header h3') !== null;
+
+			if (this.isMinimized() || clickedHeader) {
+				this.toggleMinimize();
+			}
 		});
 	}
 
@@ -315,7 +327,10 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 				className: 'close-button',
 				text: '×',
 				events: {
-					click: () => this.close()
+					click: () => {
+						this.close();
+						this.clickCloseBus.emit();
+					}
 				}
 			}),
 		];

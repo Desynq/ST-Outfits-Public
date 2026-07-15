@@ -29,7 +29,7 @@ export function createPanelSwitcher({
 	});
 
 	const rebuildMenu = (): void => {
-		const panels = grouper.getGroup(currentPanel);
+		const panels = grouper.getGroup();
 
 		const optionEls = panels.map(panel => {
 			const loadState = panel.getPanelSettings().getLoadState();
@@ -122,7 +122,7 @@ export function createPanelSwitcher({
 
 	grouper.onGroupFocus(currentPanel.outfitManager.getName(), groupFocus);
 
-	if (grouper.getGroup(currentPanel).length <= 1) {
+	if (grouper.getGroup().length <= 1) {
 		dropdown.hidden = true;
 	}
 

@@ -7,14 +7,23 @@ import { el } from "../../util/ElementHelper.js";
 
 
 export async function promptImageResize(
-	deps: {
+	{
+		slot,
+		imgWrapper,
+		userWidth,
+		userHeight,
+		saveImageResize,
+		completeResize
+	}: {
 		slot: OutfitSlotState;
 		imgWrapper: HTMLElement;
+		userWidth: number,
+		userHeight: number,
 		saveImageResize: (width: number, height: number) => Promise<void>;
 		completeResize: () => void;
 	}
 ): Promise<void> {
-	const image = deps.slot.getActiveImageState();
+	const image = slot.getActiveImageState();
 	if (!image) {
 		throw new Error('Attempted resizing undefined image.');
 	}
@@ -57,8 +66,8 @@ export async function promptImageResize(
 		return input;
 	};
 
-	const widthInput = renderInput('Width', deps.imgWrapper.offsetWidth);
-	const heightInput = renderInput('Height', deps.imgWrapper.offsetHeight);
+	const widthInput = renderInput('Width', userWidth);
+	const heightInput = renderInput('Height', userHeight);
 
 	const matchAspectRatio = (): void => {
 		const width = Number(widthInput.value);
@@ -72,8 +81,8 @@ export async function promptImageResize(
 
 		if (!width || !height) return;
 
-		await deps.saveImageResize(width, height);
-		deps.completeResize();
+		await saveImageResize(width, height);
+		completeResize();
 	};
 
 	const renderWidthPreset = (width: number): void => {

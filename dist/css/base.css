@@ -868,7 +868,6 @@
 
 .outfit-header {
   touch-action: none;
-  cursor: pointer;
   padding-bottom: 8px;
   margin-bottom: 8px;
   display: flex;
@@ -1368,10 +1367,12 @@
   position: relative;
   display: inline-block;
   overflow: hidden;
+  cursor: pointer;
+  width: var(--preferred-width, 96px);
   max-width: 100%;
   min-width: 96px;
   min-height: 24px;
-  flex: 0 0 auto;
+  aspect-ratio: var(--aspect-ratio, 1/1);
 }
 
 .slot-image-wrapper:not(:has(.slot-image)) {
@@ -1385,7 +1386,6 @@
   justify-content: center;
   width: 96px;
   height: 24px;
-  cursor: pointer;
   border: 1px dashed rgba(255, 255, 255, 0.25);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.04);
@@ -1410,18 +1410,22 @@
   object-fit: fill;
   display: block;
   border-radius: 5px;
+  transition: filter 300ms ease-out;
 }
-
 .slot-image.--error {
   display: none;
 }
-
 .outfit-slot.--unequipped .slot-image {
   filter: grayscale(25%) opacity(0.75);
 }
-
+.outfit-slot.--unequipped .slot-image:hover {
+  filter: none;
+}
 .slot-content:has(.slot-value.disabled) .slot-image {
   filter: grayscale(100%) opacity(0.6);
+}
+.slot-content:has(.slot-value.disabled) .slot-image:hover {
+  filter: none;
 }
 
 .outfit-slot-image-resize-handle {
@@ -1695,11 +1699,11 @@
   display: flex;
   flex-direction: column;
   left: 0;
-  top: var(--topBarBlockSize, 0);
+  top: 0;
   right: unset;
   bottom: unset;
   width: calc((100svw - var(--sheldWidth, 0px)) / 2 - 1px);
-  height: calc(100svh - var(--topBarBlockSize, 0px));
+  height: 100svh;
   min-width: 100px;
   min-height: 50px;
   max-width: 90svw;
@@ -1717,14 +1721,9 @@
   font-size: 0.9em;
   user-select: none;
 }
-.outfit-panel.fullscreen {
-  width: 100svw;
-  max-width: none;
-  max-height: none;
-  border-radius: 0;
-}
 .outfit-panel.minimized {
   z-index: 27;
+  cursor: pointer;
   left: 8px;
   top: 8px;
   width: 48px;
@@ -1742,6 +1741,7 @@
 @media (max-width: 1000px) {
   .outfit-panel {
     z-index: 100;
+    top: var(--topBarBlockSize, 0px);
     width: 100svw;
     height: calc(100svh - var(--topBarBlockSize, 0px));
     min-width: 0;
@@ -1752,7 +1752,7 @@
   }
   .outfit-panel.minimized {
     z-index: 99;
-    top: var(--topBarBlockSize, 0);
+    top: calc(var(--topBarBlockSize, 0px) + 8px);
   }
 }
 @media (max-aspect-ratio: 3/2) {

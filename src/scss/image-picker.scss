@@ -57,11 +57,15 @@
 	position: relative;
 	display: inline-block;
 	overflow: hidden;
+	cursor: pointer;
+
+	width: var(--preferred-width, 96px);
 	max-width: 100%;
+
 	min-width: 96px;
 	min-height: 24px;
 
-	flex: 0 0 auto;
+	aspect-ratio: var(--aspect-ratio, 1 / 1);
 }
 
 .slot-image-wrapper:not(:has(.slot-image)) {
@@ -76,8 +80,6 @@
 
 	width: 96px;
 	height: 24px;
-
-	cursor: pointer;
 
 	border: 1px dashed rgba(255, 255, 255, 0.25);
 	border-radius: 8px;
@@ -110,18 +112,28 @@
 	object-fit: fill;
 	display: block;
 	border-radius: 5px;
-}
 
-.slot-image.--error {
-	display: none;
-}
+	transition: filter 300ms ease-out;
 
-.outfit-slot.--unequipped .slot-image {
-	filter: grayscale(25%) opacity(0.75);
-}
+	&.--error {
+		display: none;
+	}
 
-.slot-content:has(.slot-value.disabled) .slot-image {
-	filter: grayscale(100%) opacity(0.6);
+	.outfit-slot.--unequipped & {
+		filter: grayscale(25%) opacity(0.75);
+
+		&:hover {
+			filter: none;
+		}
+	}
+
+	.slot-content:has(.slot-value.disabled) & {
+		filter: grayscale(100%) opacity(0.6);
+
+		&:hover {
+			filter: none;
+		}
+	}
 }
 
 

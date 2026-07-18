@@ -1,7 +1,7 @@
 import { popupConfirm } from "../../util/adapter/popup-adapter.js";
 import { el } from "../../util/ElementHelper.js";
-export async function promptImageResize(deps) {
-    const image = deps.slot.getActiveImageState();
+export async function promptImageResize({ slot, imgWrapper, userWidth, userHeight, saveImageResize, completeResize }) {
+    const image = slot.getActiveImageState();
     if (!image) {
         throw new Error('Attempted resizing undefined image.');
     }
@@ -35,8 +35,8 @@ export async function promptImageResize(deps) {
         });
         return input;
     };
-    const widthInput = renderInput('Width', deps.imgWrapper.offsetWidth);
-    const heightInput = renderInput('Height', deps.imgWrapper.offsetHeight);
+    const widthInput = renderInput('Width', userWidth);
+    const heightInput = renderInput('Height', userHeight);
     const matchAspectRatio = () => {
         const width = Number(widthInput.value);
         const height = Math.round(width * image.ref.height / image.ref.width);
@@ -47,8 +47,8 @@ export async function promptImageResize(deps) {
         const height = Number(heightInput.value);
         if (!width || !height)
             return;
-        await deps.saveImageResize(width, height);
-        deps.completeResize();
+        await saveImageResize(width, height);
+        completeResize();
     };
     const renderWidthPreset = (width) => {
         el('button', {

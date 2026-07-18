@@ -4,7 +4,7 @@ import { ImageLightbox } from "../../ui/components/ImageLightbox.js";
 import { promptImageResize } from "../../ui/components/ResizeImageModal.js";
 import { multiConfirm, popupConfirm } from "../../util/adapter/popup-adapter.js";
 import { addDoubleTapListener } from "../../util/element/click-actions.js";
-import { createElement, setElementSize } from "../../util/ElementHelper.js";
+import { applyImageSizing, createElement } from "../../util/ElementHelper.js";
 import { EventBus } from "../../util/EventBus.js";
 import { promptImageUpload, resizeImage } from "../../util/image-utils.js";
 import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
@@ -123,13 +123,13 @@ export class SlotImageElement extends OutfitPanelContext {
                 default: assertNever(result.reason);
             }
         }
-        const { imgEl, imgBlob, imgTag } = result.value;
+        const { imgEl, imgBlob, imgTag, imgRecord } = result.value;
         this.imgWrapper.append(imgEl);
-        const resizeHandle = this.createResizeHandle();
-        this.imgWrapper.append(resizeHandle);
+        // const resizeHandle = this.createResizeHandle(imgBlob, imgRecord);
+        // this.imgWrapper.append(resizeHandle);
         const deleteBtn = this.createDeleteBtn();
         const toggleBtn = this.createToggleBtn();
-        const resizeBtn = this.createResizeBtn();
+        const resizeBtn = this.createResizeBtn(imgRecord);
         return {
             imgEl,
             singleTap: () => ImageLightbox.show(imgBlob, imgTag),
@@ -149,12 +149,14 @@ export class SlotImageElement extends OutfitPanelContext {
         btn.addEventListener('click', () => this.deleteImage());
         return btn;
     }
-    createResizeBtn() {
+    createResizeBtn(imgRecord) {
         const btn = createElement('button', 'slot-button');
         btn.textContent = 'Resize Image';
         btn.addEventListener('click', () => promptImageResize({
             slot: this.slot,
             imgWrapper: this.imgWrapper,
+            userWidth: imgRecord.width,
+            userHeight: imgRecord.height,
             saveImageResize: (width, height) => this.saveImageResize(width, height),
             completeResize: () => this.panel.renderTabsAndActiveContent()
         }));
@@ -175,7 +177,7 @@ export class SlotImageElement extends OutfitPanelContext {
         }
         const imgEl = createElement('img', 'slot-image');
         imgEl.src = blob.url;
-        this.clampImage(image);
+        this.applyImageSizing(image, blob);
         imgEl.addEventListener('error', () => {
             this.imgWrapper.classList.add('--error');
         });
@@ -187,9 +189,8 @@ export class SlotImageElement extends OutfitPanelContext {
         };
         return { ok: true, value };
     }
-    createResizeHandle() {
+    createResizeHandle(blob, image) {
         const handle = createElement('div', 'outfit-slot-image-resize-handle');
-        // stop resizing from triggering clicks on the imgWrapper
         handle.addEventListener('click', (e) => {
             e.stopPropagation();
         });
@@ -198,17 +199,27 @@ export class SlotImageElement extends OutfitPanelContext {
             handle.setPointerCapture(e.pointerId);
             const startRect = this.imgWrapper.getBoundingClientRect();
             const startX = e.clientX;
-            const startY = e.clientY;
-            let width = startRect.width;
-            let height = startRect.height;
+            const width = startRect.width;
+            const aspectRatio = blob.width / blob.height;
+            const startRenderedWidth = startRect.width;
+            const startPreferredWidth = image.width;
+            const originalAspectRatio = blob.width / blob.height;
+            let preferredWidth = startPreferredWidth;
             const onMove = (moveEvent) => {
                 const dx = moveEvent.clientX - startX;
-                const dy = moveEvent.clientY - startY;
-                width = Math.max(24, startRect.width + dx);
-                height = Math.max(24, startRect.height + dy);
-                setElementSize(this.imgWrapper, width, height);
+                const renderedWidth = Math.max(96, startRenderedWidth + dx);
+                const resizeScale = renderedWidth / startRenderedWidth;
+                preferredWidth =
+                    startPreferredWidth * resizeScale;
+                applyImageSizing(this.imgWrapper, {
+                    originalWidth: blob.width,
+                    originalHeight: blob.height,
+                    preferredWidth,
+                    maxWidth: this.boundaryWidth
+                });
             };
             const onUp = () => {
+                const height = width / aspectRatio;
                 void this.saveImageResize(width, height);
                 handle.releasePointerCapture(e.pointerId);
                 window.removeEventListener('pointermove', onMove);
@@ -219,12 +230,13 @@ export class SlotImageElement extends OutfitPanelContext {
         });
         return handle;
     }
-    clampImage(image) {
-        const maxWidth = this.boundaryWidth / 2;
-        const scale = Math.min(maxWidth / image.width, 1);
-        const newWidth = image.width * scale;
-        const newHeight = image.height * scale;
-        setElementSize(this.imgWrapper, newWidth, newHeight);
+    applyImageSizing(image, blob) {
+        applyImageSizing(this.imgWrapper, {
+            originalWidth: blob.width,
+            originalHeight: blob.height,
+            preferredWidth: image.width,
+            maxWidth: this.boundaryWidth
+        });
     }
     // add a new image or change to a pre-existing image
     // image tag must be kebab-case with no special characters

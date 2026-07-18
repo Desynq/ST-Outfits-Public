@@ -18,6 +18,7 @@ import { conditionalList } from "../../util/list-utils.js";
 import { stringIf } from "../../util/StringHelper.js";
 import { SlotTextbox } from "../../ui/components/slot/slot-textbox.js";
 import { getCurrentCharacterKey } from "../../api/character-provider.js";
+import { clamp } from "../../util/math.js";
 
 export interface SlotValueDeps {
 	panel: OutfitPanel<PanelType>;

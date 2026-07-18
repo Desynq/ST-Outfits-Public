@@ -36,12 +36,12 @@ $z-layers: (
 	flex-direction: column;
 
 	left: 0;
-	top: var(--topBarBlockSize, 0);
+	top: 0;
 	right: unset;
 	bottom: unset;
 
 	width: calc(((100svw - var(--sheldWidth, 0px)) / 2) - 1px);
-	height: calc(100svh - var(--topBarBlockSize, 0px));
+	height: 100svh;
 
 	min-width: 100px;
 	min-height: 50px;
@@ -68,17 +68,9 @@ $z-layers: (
 	font-size: 0.9em;
 	user-select: none;
 
-	&.fullscreen {
-		width: 100svw;
-
-		max-width: none;
-		max-height: none;
-
-		border-radius: 0;
-	}
-
 	&.minimized {
 		z-index: z(panel-minimized);
+		cursor: pointer;
 
 		left: 8px;
 		top: 8px;
@@ -102,6 +94,8 @@ $z-layers: (
 	@media (max-width: 1000px) {
 		z-index: z(panel-mobile);
 
+		top: var(--topBarBlockSize, 0px);
+
 		width: 100svw;
 		height: calc(100svh - var(--topBarBlockSize, 0px));
 
@@ -114,7 +108,7 @@ $z-layers: (
 
 		&.minimized {
 			z-index: z(panel-mobile-minimized);
-			top: var(--topBarBlockSize, 0);
+			top: calc(var(--topBarBlockSize, 0px) + 8px);
 		}
 	}
 

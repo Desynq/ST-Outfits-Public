@@ -320,3 +320,22 @@ export function setElementSize(element, width, height) {
         element.style[dimension] = `${value}px`;
     }
 }
+export function setElementAspectRatio(element, width, height) {
+    if (width <= 0 || height <= 0) {
+        throw new RangeError('Aspect ratio dimensions must be positive');
+    }
+    element.style.setProperty('--element-aspect-ratio', `${width} / ${height}`);
+}
+const USER_WIDTH_REFERENCE = 384;
+export function applyImageSizing(element, { originalWidth, originalHeight, preferredWidth, maxWidth }) {
+    if (originalWidth <= 0 ||
+        originalHeight <= 0 ||
+        preferredWidth <= 0 ||
+        maxWidth <= 0) {
+        throw new RangeError('Image dimensions must be positive');
+    }
+    const widthRatio = Math.min(preferredWidth / USER_WIDTH_REFERENCE, 1);
+    const renderedWidth = maxWidth * widthRatio;
+    element.style.setProperty('--aspect-ratio', `${originalWidth} / ${originalHeight}`);
+    element.style.setProperty('--preferred-width', `${renderedWidth}px`);
+}

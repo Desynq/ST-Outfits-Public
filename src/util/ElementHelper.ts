@@ -489,3 +489,60 @@ export function setElementSize(
 		element.style[dimension] = `${value}px`;
 	}
 }
+
+export function setElementAspectRatio(
+	element: HTMLElement,
+	width: number,
+	height: number
+): void {
+	if (width <= 0 || height <= 0) {
+		throw new RangeError('Aspect ratio dimensions must be positive');
+	}
+
+	element.style.setProperty('--element-aspect-ratio', `${width} / ${height}`);
+}
+
+
+
+
+export interface ImageSizingOptions {
+	originalWidth: number;
+	originalHeight: number;
+	preferredWidth: number;
+	maxWidth: number;
+}
+
+const USER_WIDTH_REFERENCE = 384;
+
+export function applyImageSizing(
+	element: HTMLElement,
+	{
+		originalWidth,
+		originalHeight,
+		preferredWidth,
+		maxWidth
+	}: ImageSizingOptions
+): void {
+	if (
+		originalWidth <= 0 ||
+		originalHeight <= 0 ||
+		preferredWidth <= 0 ||
+		maxWidth <= 0
+	) {
+		throw new RangeError('Image dimensions must be positive');
+	}
+
+	const widthRatio = Math.min(preferredWidth / USER_WIDTH_REFERENCE, 1);
+
+	const renderedWidth = maxWidth * widthRatio;
+
+	element.style.setProperty(
+		'--aspect-ratio',
+		`${originalWidth} / ${originalHeight}`
+	);
+
+	element.style.setProperty(
+		'--preferred-width',
+		`${renderedWidth}px`
+	);
+}

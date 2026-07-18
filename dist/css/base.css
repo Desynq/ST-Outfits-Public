@@ -1706,7 +1706,7 @@
   max-height: 100svh;
   margin: 0;
   padding: 6px;
-  padding-bottom: 16px;
+  padding-bottom: 24px;
   overflow: auto;
   resize: none;
   border: 1px solid var(--panel-border, #4a3540);
@@ -1752,6 +1752,12 @@
   }
   .outfit-panel.minimized {
     z-index: 99;
+    top: var(--topBarBlockSize, 0);
+  }
+}
+@media (max-aspect-ratio: 3/2) {
+  .outfit-panel {
+    padding-bottom: 6px;
   }
 }
 

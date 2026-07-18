@@ -50,7 +50,7 @@ $z-layers: (
 
 	margin: 0;
 	padding: 6px;
-	padding-bottom: 16px;
+	padding-bottom: 24px;
 
 	overflow: auto;
 	resize: none;
@@ -114,7 +114,12 @@ $z-layers: (
 
 		&.minimized {
 			z-index: z(panel-mobile-minimized);
+			top: var(--topBarBlockSize, 0);
 		}
+	}
+
+	@media (max-aspect-ratio: 3/2) {
+		padding-bottom: 6px;
 	}
 }
 

@@ -334,8 +334,10 @@ export function applyImageSizing(element, { originalWidth, originalHeight, prefe
         maxWidth <= 0) {
         throw new RangeError('Image dimensions must be positive');
     }
-    const widthRatio = Math.min(preferredWidth / USER_WIDTH_REFERENCE, 1);
-    const renderedWidth = maxWidth * widthRatio;
+    const scale = Math.min(preferredWidth / USER_WIDTH_REFERENCE, 1);
     element.style.setProperty('--aspect-ratio', `${originalWidth} / ${originalHeight}`);
-    element.style.setProperty('--preferred-width', `${renderedWidth}px`);
+    element.style.setProperty('--image-scale', String(scale));
+    return {
+        scale: String(scale)
+    };
 }

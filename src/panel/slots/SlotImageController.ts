@@ -74,7 +74,8 @@ export type ImageState = 'shown' | 'hidden' | 'empty' | 'error';
 export class SlotImageElement extends OutfitPanelContext {
 
 	public readonly imgWrapper: HTMLDivElement;
-	private _state: ImageState;
+	private readonly imageContext: OutfitImageState | null;
+	private readonly _state: ImageState;
 
 	private readonly doubleTapBus = new EventBus<() => void>();
 
@@ -93,9 +94,9 @@ export class SlotImageElement extends OutfitPanelContext {
 	) {
 		super(panel);
 		this.imgWrapper = createElement('div', 'slot-image-wrapper');
-		const imageState = this.slot.getActiveImageState();
+		this.imageContext = this.slot.getActiveImageState();
 
-		const { singleTap, appendControls, state } = this.renderImageContent(imageState);
+		const { singleTap, appendControls, state } = this.renderImageContent(this.imageContext);
 		this._state = state;
 
 		if (singleTap) {
@@ -108,6 +109,12 @@ export class SlotImageElement extends OutfitPanelContext {
 
 	public appendTo(parent: HTMLElement): this {
 		parent.append(this.imgWrapper);
+
+		// give parent context on image scaling when appending
+		if (this.imageContext) {
+			const { scale } = this.applyImageSizing(this.imageContext.image, this.imageContext.ref);
+			parent.style.setProperty('--image-scale', scale);
+		}
 		return this;
 	}
 
@@ -409,8 +416,8 @@ export class SlotImageElement extends OutfitPanelContext {
 		return handle;
 	}
 
-	private applyImageSizing(image: OutfitImage, blob: ImageRef): void {
-		applyImageSizing(this.imgWrapper, {
+	private applyImageSizing(image: OutfitImage, blob: ImageRef): { scale: string; } {
+		return applyImageSizing(this.imgWrapper, {
 			originalWidth: blob.width,
 			originalHeight: blob.height,
 			preferredWidth: image.width,

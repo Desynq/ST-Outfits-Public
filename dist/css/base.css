@@ -512,30 +512,30 @@
 .slot-content {
   position: relative;
   display: grid;
-  grid-template-columns: auto 1fr;
-  grid-template-rows: auto auto;
-  /* 2 rows */
-  grid-template-areas: "image value" "image value";
-  gap: 6px;
-  margin-bottom: 8px;
   align-items: flex-start;
+  margin-bottom: 8px;
+  gap: 0px;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "value";
 }
-
-.slot-content.--value-taller {
-  grid-template-areas: "image value" "image value";
+.slot-content:has(.slot-image-wrapper) {
+  gap: 6px;
+  grid-template-columns: clamp(min(96px, 100% - 6px), (100% - 6px) * var(--image-scale, 0.125), 100% - 6px) minmax(0, 1fr);
+  grid-template-areas: "image value";
 }
-
 .slot-content.--image-wider {
-  grid-template-columns: auto 1fr;
-  grid-template-rows: auto auto;
-  grid-template-areas: "image image" "value value";
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "image" "value";
 }
-
-.slot-image-wrapper {
+.slot-content.--image-wider > .slot-image-wrapper {
+  width: calc(100% * var(--image-scale, 1));
+}
+.slot-content > .slot-image-wrapper {
   grid-area: image;
+  width: 100%;
+  min-width: 0;
 }
-
-.slot-content-text {
+.slot-content > .slot-content-text {
   grid-area: value;
 }
 
@@ -1349,6 +1349,7 @@
 .resize-prompt-content .actions-row {
   display: flex;
   flex-direction: row;
+  flex-wrap: wrap;
   gap: 8px;
 }
 .resize-prompt-content input[type=number] {
@@ -1368,9 +1369,6 @@
   display: inline-block;
   overflow: hidden;
   cursor: pointer;
-  width: var(--preferred-width, 96px);
-  max-width: 100%;
-  min-width: 96px;
   min-height: 24px;
   aspect-ratio: var(--aspect-ratio, 1/1);
 }

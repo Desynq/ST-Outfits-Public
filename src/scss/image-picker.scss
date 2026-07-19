@@ -28,6 +28,7 @@
 	.actions-row {
 		display: flex;
 		flex-direction: row;
+		flex-wrap: wrap;
 		gap: 8px;
 	}
 
@@ -59,10 +60,6 @@
 	overflow: hidden;
 	cursor: pointer;
 
-	width: var(--preferred-width, 96px);
-	max-width: 100%;
-
-	min-width: 96px;
 	min-height: 24px;
 
 	aspect-ratio: var(--aspect-ratio, 1 / 1);

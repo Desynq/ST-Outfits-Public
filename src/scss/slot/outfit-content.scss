@@ -2,41 +2,47 @@
 	position: relative;
 
 	display: grid;
-	grid-template-columns: auto 1fr;
-	grid-template-rows: auto auto;
-	/* 2 rows */
-	grid-template-areas:
-		'image value'
-		'image value';
 
-	gap: 6px;
-	margin-bottom: 8px;
 	align-items: flex-start;
+	margin-bottom: 8px;
+
+
+	gap: 0px;
+	grid-template-columns: minmax(0, 1fr);
+	grid-template-areas: 'value';
+
+	&:has(.slot-image-wrapper) {
+		gap: 6px;
+		grid-template-columns:
+			clamp(min(96px, calc(100% - 6px)),
+				calc((100% - 6px) * var(--image-scale, 0.125)),
+				calc(100% - 6px)) minmax(0, 1fr);
+		grid-template-areas: 'image value';
+	}
+
+	&.--image-wider {
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-areas:
+			'image'
+			'value';
+
+		& > .slot-image-wrapper {
+			width: calc(100% * var(--image-scale, 1));
+		}
+	}
+
+	& > .slot-image-wrapper {
+		grid-area: image;
+		width: 100%;
+		min-width: 0;
+	}
+
+	& > .slot-content-text {
+		grid-area: value;
+	}
 }
 
-.slot-content.--value-taller {
-	grid-template-areas:
-		'image value'
-		'image value';
-}
 
-.slot-content.--image-wider {
-	grid-template-columns: auto 1fr;
-	grid-template-rows: auto auto;
-	grid-template-areas:
-		'image image'
-		'value value';
-}
-
-
-
-.slot-image-wrapper {
-	grid-area: image;
-}
-
-.slot-content-text {
-	grid-area: value;
-}
 
 .image-menu-button {
 	grid-area: btn;

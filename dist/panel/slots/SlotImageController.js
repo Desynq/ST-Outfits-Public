@@ -26,8 +26,8 @@ export class SlotImageElement extends OutfitPanelContext {
         this.slot = slot;
         this.doubleTapBus = new EventBus();
         this.imgWrapper = createElement('div', 'slot-image-wrapper');
-        const imageState = this.slot.getActiveImageState();
-        const { singleTap, appendControls, state } = this.renderImageContent(imageState);
+        this.imageContext = this.slot.getActiveImageState();
+        const { singleTap, appendControls, state } = this.renderImageContent(this.imageContext);
         this._state = state;
         if (singleTap) {
             this.imgWrapper.addEventListener('click', singleTap);
@@ -37,6 +37,11 @@ export class SlotImageElement extends OutfitPanelContext {
     }
     appendTo(parent) {
         parent.append(this.imgWrapper);
+        // give parent context on image scaling when appending
+        if (this.imageContext) {
+            const { scale } = this.applyImageSizing(this.imageContext.image, this.imageContext.ref);
+            parent.style.setProperty('--image-scale', scale);
+        }
         return this;
     }
     onDoubleTap(listener) {
@@ -231,7 +236,7 @@ export class SlotImageElement extends OutfitPanelContext {
         return handle;
     }
     applyImageSizing(image, blob) {
-        applyImageSizing(this.imgWrapper, {
+        return applyImageSizing(this.imgWrapper, {
             originalWidth: blob.width,
             originalHeight: blob.height,
             preferredWidth: image.width,

@@ -2,6 +2,7 @@ import { Popup } from "../../../../../../popup.js";
 import { OutfitSlotState } from "../../data/model/OutfitSnapshots.js";
 import { popupConfirm } from "../../util/adapter/popup-adapter.js";
 import { el } from "../../util/ElementHelper.js";
+import { fraction } from "../../util/math.js";
 
 
 
@@ -85,10 +86,12 @@ export async function promptImageResize(
 		completeResize();
 	};
 
-	const renderWidthPreset = (width: number): void => {
+	const renderWidthPreset = (frac: string): void => {
+		const maxWidth = 384;
+		const width = maxWidth * fraction(frac);
 		el('button', {
 			className: 'menu_button',
-			text: `${width}px`,
+			text: ` ${frac} `,
 			events: {
 				click: async () => {
 					widthInput.value = width.toString();
@@ -111,11 +114,18 @@ export async function promptImageResize(
 		parent: actionsRow
 	});
 
-	renderWidthPreset(48);
-	renderWidthPreset(96);
-	renderWidthPreset(128);
-	renderWidthPreset(196);
-	renderWidthPreset(256);
+	for (const preset of [
+		'1/8',
+		'1/4',
+		'1/3',
+		'1/2',
+		'2/3',
+		'3/4',
+		'7/8',
+		'1/1',
+	]) {
+		renderWidthPreset(preset);
+	}
 
 	let popupRef: Popup;
 

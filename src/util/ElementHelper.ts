@@ -522,7 +522,7 @@ export function applyImageSizing(
 		preferredWidth,
 		maxWidth
 	}: ImageSizingOptions
-): void {
+): { scale: string; } {
 	if (
 		originalWidth <= 0 ||
 		originalHeight <= 0 ||
@@ -532,9 +532,10 @@ export function applyImageSizing(
 		throw new RangeError('Image dimensions must be positive');
 	}
 
-	const widthRatio = Math.min(preferredWidth / USER_WIDTH_REFERENCE, 1);
-
-	const renderedWidth = maxWidth * widthRatio;
+	const scale = Math.min(
+		preferredWidth / USER_WIDTH_REFERENCE,
+		1
+	);
 
 	element.style.setProperty(
 		'--aspect-ratio',
@@ -542,7 +543,11 @@ export function applyImageSizing(
 	);
 
 	element.style.setProperty(
-		'--preferred-width',
-		`${renderedWidth}px`
+		'--image-scale',
+		String(scale)
 	);
+
+	return {
+		scale: String(scale)
+	};
 }

@@ -25,9 +25,9 @@ interface ImageContext {
 };
 
 type CreateImageFailReason =
-	| 'active-image-tag-not-stored'
+	| 'no-image-state'
 	| 'image-hidden'
-	| 'image-blob-does-not-exist';
+	| 'image-missing-blob';
 
 type CreateImageResult =
 	| {
@@ -111,7 +111,7 @@ export class SlotImageElement extends OutfitPanelContext {
 		parent.append(this.imgWrapper);
 
 		// give parent context on image scaling when appending
-		if (this.imageContext) {
+		if (this.imageContext !== null) {
 			const { scale } = this.applyImageSizing(this.imageContext.image, this.imageContext.ref);
 			parent.style.setProperty('--image-scale', scale);
 		}
@@ -199,28 +199,28 @@ export class SlotImageElement extends OutfitPanelContext {
 	}
 
 	private renderImageContent(imageState: OutfitImageState | null): RenderImageBundle {
-		if (!imageState) {
-			this.imgWrapper.classList.add('--empty');
-			this.imgWrapper.textContent = 'Add Image';
-			return {
-				imgEl: null,
-				noDoubleTap: true,
-				singleTap: () => this.changeImage(),
-				state: 'empty'
-			};
-		}
-
 		const result = this.createImage(imageState);
 		if (!result.ok) {
 			switch (result.reason) {
-				case 'active-image-tag-not-stored':
-				case 'image-blob-does-not-exist':
-					this.imgWrapper.classList.add('--error');
-					this.imgWrapper.textContent = 'Error';
+				case 'no-image-state':
+					this.imgWrapper.classList.add('--empty');
+					this.imgWrapper.textContent = 'Add Image';
 					return {
 						imgEl: null,
+						noDoubleTap: true,
+						singleTap: () => this.changeImage(),
+						state: 'empty'
+					};
+
+				case 'image-missing-blob':
+					this.imgWrapper.classList.add('--error');
+					this.imgWrapper.textContent = 'Image Lost';
+					return {
+						imgEl: null,
+						singleTap: () => this.changeImage(),
 						state: 'error'
 					};
+
 				case 'image-hidden':
 					this.imgWrapper.classList.add('--hidden');
 					this.imgWrapper.textContent = 'Show Image';
@@ -229,6 +229,7 @@ export class SlotImageElement extends OutfitPanelContext {
 						singleTap: () => this.toggleImage(),
 						state: 'hidden'
 					};
+
 				default: assertNever(result.reason);
 			}
 		}
@@ -294,7 +295,15 @@ export class SlotImageElement extends OutfitPanelContext {
 		this.outfitManager.saveSettings();
 	}
 
-	private createImage(imageState: OutfitImageState): CreateImageResult {
+	private createImage(imageState: OutfitImageState | null): CreateImageResult {
+		if (this.slot.isActiveImageBlobMissing()) {
+			return { ok: false, reason: 'image-missing-blob' };
+		}
+
+		if (imageState === null) {
+			return { ok: false, reason: 'no-image-state' };
+		}
+
 		const { tag, image, ref: blob } = imageState;
 		if (image.hidden) {
 			this.imgWrapper.classList.add('--hidden');
@@ -513,7 +522,7 @@ export class SlotImageElement extends OutfitPanelContext {
 
 	private toggleImage(): void {
 		const imageState = this.slot.getActiveImageState();
-		if (!imageState) return;
+		if (imageState === null) return;
 
 		this.outfitView.toggleImage(this.slot.id, imageState.tag, !imageState.image.hidden);
 

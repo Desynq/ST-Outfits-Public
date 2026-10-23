@@ -1,8 +1,8 @@
+import { MissingBlobError } from "../../util/error.js";
 import { OutfitSlot, SlotConditionMap, SlotKind } from "./Outfit.js";
 import { ImageRegistry } from "./OutfitGallery.js";
 import { OutfitImageState } from "./OutfitImageState.js";
 import { KeyedSlotPreset } from "./SlotPreset.js";
-
 
 abstract class OutfitSlotBase {
 	public constructor(
@@ -19,7 +19,7 @@ export class OutfitSlotState extends OutfitSlotBase {
 	public readonly kind: SlotKind;
 	public readonly value: string;
 	public readonly enabled: boolean;
-	public readonly images: Readonly<Record<string, OutfitImageState>>;
+	public readonly images: Readonly<Record<string, OutfitImageState | null>>;
 	public readonly activeImageTag: string | null;
 	public readonly equipped: boolean;
 	public readonly conditions: SlotConditionMap;
@@ -31,11 +31,13 @@ export class OutfitSlotState extends OutfitSlotBase {
 	) {
 		super(raw.id);
 
-		const images: Record<string, OutfitImageState> = {};
+		const images: Record<string, OutfitImageState | null> = {};
 		for (const [tag, image] of Object.entries(raw.images)) {
 			const ref = imageRegistry.getImageRef(image.key);
 			if (!ref) {
-				throw new Error(`Missing blob for image key ${image.key}`);
+				console.error(`Missing blob for image key ${image.key}`);
+				images[tag] = null;
+				continue;
 			}
 
 			images[tag] = new OutfitImageState(tag, image, ref);
@@ -67,10 +69,16 @@ export class OutfitSlotState extends OutfitSlotBase {
 
 	public getActiveImageState(): OutfitImageState | null {
 		if (this.activeImageTag === null) return null;
-		return this.images[this.activeImageTag];
+		return this.images[this.activeImageTag] ?? null;
 	}
 
-	public getImageState(tag: string): OutfitImageState | undefined {
+	public isActiveImageBlobMissing(): boolean {
+		if (this.activeImageTag === null) return false;
+		const image = this.images[this.activeImageTag];
+		return image === null;
+	}
+
+	public getImageState(tag: string): OutfitImageState | null | undefined {
 		return this.images[tag];
 	}
 
@@ -79,7 +87,7 @@ export class OutfitSlotState extends OutfitSlotBase {
 	}
 
 	public getImageStates(): OutfitImageState[] {
-		return Object.values(this.images);
+		return Object.values(this.images).filter(img => img !== null);
 	}
 
 	/**

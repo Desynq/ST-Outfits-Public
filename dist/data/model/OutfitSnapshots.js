@@ -13,7 +13,9 @@ export class OutfitSlotState extends OutfitSlotBase {
         for (const [tag, image] of Object.entries(raw.images)) {
             const ref = imageRegistry.getImageRef(image.key);
             if (!ref) {
-                throw new Error(`Missing blob for image key ${image.key}`);
+                console.error(`Missing blob for image key ${image.key}`);
+                images[tag] = null;
+                continue;
             }
             images[tag] = new OutfitImageState(tag, image, ref);
         }
@@ -38,7 +40,13 @@ export class OutfitSlotState extends OutfitSlotBase {
     getActiveImageState() {
         if (this.activeImageTag === null)
             return null;
-        return this.images[this.activeImageTag];
+        return this.images[this.activeImageTag] ?? null;
+    }
+    isActiveImageBlobMissing() {
+        if (this.activeImageTag === null)
+            return false;
+        const image = this.images[this.activeImageTag];
+        return image === null;
     }
     getImageState(tag) {
         return this.images[tag];
@@ -47,7 +55,7 @@ export class OutfitSlotState extends OutfitSlotBase {
         return tag in this.images;
     }
     getImageStates() {
-        return Object.values(this.images);
+        return Object.values(this.images).filter(img => img !== null);
     }
     /**
      * @returns Whether the slot has an OutfitImage record keyed by the SlotPreset

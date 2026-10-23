@@ -5,6 +5,7 @@ import { areOutfitSnapshotsEqual } from "../data/model/OutfitSnapshots.js";
 import { OutfitTracker } from "../data/tracker.js";
 import { assertNever, formatAccessorySlotName, toSlotName } from "../shared.js";
 import { promptOptions } from "../ui/prompt/prompt-options.js";
+import { ifPresent } from "../util/logic.js";
 import { isSlotBlocked } from "../util/slot.js";
 import { indentString, plural, toKebabCase } from "../util/StringHelper.js";
 import { toSummaryKey } from "../util/SummaryHelper.js";
@@ -54,15 +55,18 @@ export class OutfitManager {
     }
     formatSlotSummary(s) {
         const chatNote = ChatOutfitStorage.getNote(this.getName(), s.id);
-        const charNote = this.getOutfitCollection().getCharacterNote(getCurrentCharacterKey(), s.id);
+        const charNotes = this.getOutfitCollection().getSlotCharacterNotes(getCurrentCharacterKey(), s.id);
         const parts = [];
         if (!s.equipped) {
             parts.push('Status: REMOVED');
         }
         parts.push(`${s.value}`);
-        if (charNote) {
-            parts.push(`Character context: ${charNote}`);
-        }
+        ifPresent(charNotes?.character?.text, text => {
+            parts.push(`Character context:\n${text}`);
+        });
+        ifPresent(charNotes?.nsfw?.text, text => {
+            parts.push(`NSFW context:\n${text}`);
+        });
         if (chatNote) {
             parts.push(`Chat context:\n${chatNote}`);
         }
@@ -301,15 +305,10 @@ export class OutfitManager {
         return 'slot-renamed';
     }
     passCharacterNote(oldSlotId, newSlotId) {
-        const collection = this.getOutfitCollection();
         const character = getCurrentCharacterKey();
         if (!character)
             return;
-        const note = collection.getCharacterNote(character, oldSlotId);
-        if (!note)
-            return;
-        collection.deleteCharacterNote(character, oldSlotId);
-        collection.setCharacterNote(character, newSlotId, note);
+        this.getOutfitCollection().moveSlotCharacterNotes(character, oldSlotId, newSlotId);
     }
     passChatNote(oldSlotId, newSlotId) {
         const character = getCurrentCharacterKey();

@@ -1,9 +1,10 @@
 import { toSlot } from "../Constants.js";
 import { asBoolean, asObject, asStringRecord, ensureObject, isObject, notObject, resolvePositiveNumber, resolveString, resolveTimestamp } from "../ObjectHelper.js";
-import { isRecord } from "../util/narrowing.js";
+import { isNonEmptyString, isRecord } from "../util/narrowing.js";
 import { toSlotId } from "../util/normalize/slot.js";
+import { pruneProperty } from "../util/object-helper.js";
 import { normalizeOutfitSnapshots } from "./mappings/OutfitCache.js";
-import { CharacterNotes, ImageBlob, ImageRef, Outfit, OutfitCollection, OutfitImage, OutfitSlot, OutfitTrackerModel, SlotCondition, SlotConditionMap, SlotKind } from "./model/Outfit.js";
+import { CharacterNote, CharacterNotes, CharacterNoteType, ImageBlob, ImageRef, Outfit, OutfitCollection, OutfitImage, OutfitSlot, OutfitTrackerModel, SlotCharacterNotes, SlotCondition, SlotConditionMap, SlotKind } from "./model/Outfit.js";
 import { SlotPreset, SlotPresetV1 } from "./model/SlotPreset.js";
 
 
@@ -174,13 +175,39 @@ export function normalizeCharacterNotes(value: any): CharacterNotes {
 
 	for (const [characterKey, notesValue] of Object.entries(raw)) {
 		const rawNotes = asObject<Record<string, any>>({})(notesValue);
-		const notes: Record<string, string> = {};
+		const notes: CharacterNotes[string] = {};
 
 		for (const [slotId, noteValue] of Object.entries(rawNotes)) {
-			if (typeof noteValue !== 'string') continue;
-			if (noteValue === '') continue;
+			// Legacy format: string
+			if (typeof noteValue === 'string') {
+				if (noteValue === '') continue;
 
-			notes[slotId] = noteValue;
+				notes[slotId] = {
+					character: { text: noteValue }
+				};
+				continue;
+			}
+
+			// New format: object keyed by note type
+			if (!isRecord(noteValue)) {
+				continue;
+			}
+
+			const normalized: SlotCharacterNotes = {};
+
+			for (const type of ['character', 'nsfw'] as const) {
+				const note = noteValue[type];
+
+				if (!isRecord(note) || !isNonEmptyString(note.text)) {
+					continue;
+				}
+
+				normalized[type] = { text: note.text };
+			}
+
+			if (Object.keys(normalized).length > 0) {
+				notes[slotId] = normalized;
+			}
 		}
 
 		if (Object.keys(notes).length > 0) {

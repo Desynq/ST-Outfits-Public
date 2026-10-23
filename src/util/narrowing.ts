@@ -31,6 +31,14 @@ export function isArrayOf<T>(inputValue: unknown, fn: (x: unknown) => x is T): i
 }
 
 
+
+export function isNonEmptyString(x: unknown): x is string {
+	return typeof x === 'string' && x !== '';
+}
+
+
+
+
 export function assertArray(x: unknown): asserts x is unknown[] {
 	if (!Array.isArray(x)) {
 		throw new Error(`Expected array, got ${x}`);

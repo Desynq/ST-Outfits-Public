@@ -76,3 +76,15 @@ export function branch<K extends string>(expression: LazyValue<K>) {
 
 	return api;
 }
+
+
+
+export function ifPresent<T>(
+	value: T | null | undefined,
+	fn: (value: NonNullable<T>) => void
+): boolean {
+	if (value == null) return false;
+
+	fn(value as NonNullable<T>);
+	return true;
+}

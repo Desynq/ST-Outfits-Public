@@ -6,6 +6,12 @@ import { ResourceCleaner } from "../Disposer.js";
 
 
 
+export interface SlotNoteAction {
+	className: string;
+	text: string;
+	canAdd(): boolean;
+	add(): void;
+}
 
 export interface SlotActionMenuDeps {
 	mountEl: HTMLElement;
@@ -15,10 +21,12 @@ export interface SlotActionMenuDeps {
 	shiftSlot(): void;
 	moveSlot(): void;
 	showPresets(): void;
+
 	canAddChatNote(): boolean;
 	addChatNote(): void;
-	canAddCharacterNote(): boolean;
-	addCharacterNote(): void;
+
+	characterNoteActions: SlotNoteAction[];
+
 	showConditions(): void;
 }
 
@@ -86,12 +94,15 @@ export class SlotActionsMenuElement {
 			this.createPresetsBtn(),
 			this.createConditionsBtn(),
 			[this.deps.canAddChatNote(), () => this.createAddChatNoteBtn()],
-			this.conditionBtn({
-				condition: this.deps.canAddCharacterNote(),
-				className: 'slot-button slot-add-character-note-button',
-				text: 'Add 👤 Note',
-				onClick: () => this.deps.addCharacterNote()
-			})
+
+			...this.deps.characterNoteActions.map(action =>
+				this.conditionBtn({
+					condition: action.canAdd(),
+					className: action.className,
+					text: action.text,
+					onClick: action.add
+				})
+			)
 		);
 	}
 

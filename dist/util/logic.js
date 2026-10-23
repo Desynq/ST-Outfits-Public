@@ -46,3 +46,9 @@ export function branch(expression) {
     };
     return api;
 }
+export function ifPresent(value, fn) {
+    if (value == null)
+        return false;
+    fn(value);
+    return true;
+}

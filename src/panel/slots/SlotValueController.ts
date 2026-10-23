@@ -19,6 +19,7 @@ import { stringIf } from "../../util/StringHelper.js";
 import { SlotTextbox } from "../../ui/components/slot/slot-textbox.js";
 import { getCurrentCharacterKey } from "../../api/character-provider.js";
 import { clamp } from "../../util/math.js";
+import { CharacterNoteType } from "../../data/model/Outfit.js";
 
 export interface SlotValueDeps {
 	panel: OutfitPanel<PanelType>;
@@ -301,7 +302,30 @@ export class SlotChatNoteFactory extends SlotTextboxFactory {
 	}
 }
 
+
+export interface SlotNoteButtonOptions {
+	className: string;
+	text: string;
+}
+
 export class SlotCharacterNoteFactory extends SlotTextboxFactory {
+
+	public getAddButtonOptions(): SlotNoteButtonOptions {
+		return {
+			className: 'slot-button slot-add-character-note-button',
+			text: 'Add 👤 Note'
+		};
+	}
+
+	protected getNoteType(): CharacterNoteType {
+		return 'character';
+	}
+
+	protected getThumbFA(): string {
+		return "fa-solid fa-address-book";
+	}
+
+
 
 	protected override getEditBoxClassName(): string {
 		return 'slot-editbox';
@@ -316,7 +340,7 @@ export class SlotCharacterNoteFactory extends SlotTextboxFactory {
 		});
 
 		const thumbEl = el('div', {
-			className: 'slot-textbox-thumb fa-solid fa-address-book',
+			className: mergeClassNames('slot-textbox-thumb', this.getThumbFA()),
 			parent: rootEl
 		});
 
@@ -340,31 +364,53 @@ export class SlotCharacterNoteFactory extends SlotTextboxFactory {
 
 		const character = getCurrentCharacterKey();
 		if (character) {
-			note = this.outfitManager.getOutfitCollection().getCharacterNote(character, slot.id);
+			note = this.outfitManager
+				.getOutfitCollection()
+				.getCharacterNoteText(character, slot.id, this.getNoteType());
 		}
 
 		return note ?? this.getEmptyText();
 	}
 
 	protected override updateSlotText(slot: OutfitSlotState, text: string): void {
+		const type = this.getNoteType();
 		const collection = this.outfitManager.getOutfitCollection();
 		const character = getCurrentCharacterKey();
 		if (!character) {
-			throw new Error('User managed to edit character note with no loaded character.');
+			throw new Error('Cannot edit character note without a character.');
 		}
 
 		if (!text || text === this.getEmptyText()) {
-			collection.deleteCharacterNote(character, slot.id);
+			collection.deleteCharacterNote(character, slot.id, type);
 			this.outfitManager.updateSlotContext(slot.id);
 			return;
 		}
 
-		collection.setCharacterNote(character, slot.id, text);
+		collection.setCharacterNote(character, slot.id, text, type);
 
 		this.outfitManager.updateSlotContext(slot.id);
 	}
 
 	protected override getEmptyText(): string {
 		return '';
+	}
+}
+
+
+export class SlotNSFWCharacterNoteFactory extends SlotCharacterNoteFactory {
+
+	protected override getNoteType(): CharacterNoteType {
+		return 'nsfw';
+	}
+
+	protected override getThumbFA(): string {
+		return 'fa-solid fa-fire';
+	}
+
+	public override getAddButtonOptions(): SlotNoteButtonOptions {
+		return {
+			className: 'slot-button slot-add-character-note-button',
+			text: 'Add 🔥 Note'
+		};
 	}
 }

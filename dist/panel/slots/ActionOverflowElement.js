@@ -44,12 +44,12 @@ export class SlotActionsMenuElement {
         return this;
     }
     buildMenuChildren() {
-        return conditionalList(this.createDeleteBtn(), this.createShiftBtn(), this.createMoveBtn(), this.createPresetsBtn(), this.createConditionsBtn(), [this.deps.canAddChatNote(), () => this.createAddChatNoteBtn()], this.conditionBtn({
-            condition: this.deps.canAddCharacterNote(),
-            className: 'slot-button slot-add-character-note-button',
-            text: 'Add 👤 Note',
-            onClick: () => this.deps.addCharacterNote()
-        }));
+        return conditionalList(this.createDeleteBtn(), this.createShiftBtn(), this.createMoveBtn(), this.createPresetsBtn(), this.createConditionsBtn(), [this.deps.canAddChatNote(), () => this.createAddChatNoteBtn()], ...this.deps.characterNoteActions.map(action => this.conditionBtn({
+            condition: action.canAdd(),
+            className: action.className,
+            text: action.text,
+            onClick: action.add
+        })));
     }
     createBtn(options) {
         const { events, ...rest } = options;

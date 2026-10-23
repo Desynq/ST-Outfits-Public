@@ -22,6 +22,9 @@ export function isArrayOf(inputValue, fn) {
         return true;
     return false;
 }
+export function isNonEmptyString(x) {
+    return typeof x === 'string' && x !== '';
+}
 export function assertArray(x) {
     if (!Array.isArray(x)) {
         throw new Error(`Expected array, got ${x}`);

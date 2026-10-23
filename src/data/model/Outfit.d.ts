@@ -44,7 +44,20 @@ export interface Outfit {
 	slots: OutfitSlot[];
 }
 
-export type CharacterNotes = { [character: string]: { [slotId: string]: string; }; };
+
+export type CharacterNoteType = 'character' | 'nsfw';
+
+export interface CharacterNote {
+	text: string;
+}
+
+export type SlotCharacterNotes = Partial<Record<CharacterNoteType, CharacterNote>>;
+
+export type CharacterNotes = {
+	[character: string]: {
+		[slotId: string]: SlotCharacterNotes;
+	};
+};
 
 export interface OutfitCollection {
 	saved_outfits: { [slotId: string]: Outfit | undefined; };

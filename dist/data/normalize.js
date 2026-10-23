@@ -1,6 +1,6 @@
 import { toSlot } from "../Constants.js";
 import { asBoolean, asObject, asStringRecord, ensureObject, notObject, resolvePositiveNumber, resolveString, resolveTimestamp } from "../ObjectHelper.js";
-import { isRecord } from "../util/narrowing.js";
+import { isNonEmptyString, isRecord } from "../util/narrowing.js";
 import { toSlotId } from "../util/normalize/slot.js";
 import { normalizeOutfitSnapshots } from "./mappings/OutfitCache.js";
 export function validatePresets(holder) {
@@ -137,11 +137,30 @@ export function normalizeCharacterNotes(value) {
         const rawNotes = asObject({})(notesValue);
         const notes = {};
         for (const [slotId, noteValue] of Object.entries(rawNotes)) {
-            if (typeof noteValue !== 'string')
+            // Legacy format: string
+            if (typeof noteValue === 'string') {
+                if (noteValue === '')
+                    continue;
+                notes[slotId] = {
+                    character: { text: noteValue }
+                };
                 continue;
-            if (noteValue === '')
+            }
+            // New format: object keyed by note type
+            if (!isRecord(noteValue)) {
                 continue;
-            notes[slotId] = noteValue;
+            }
+            const normalized = {};
+            for (const type of ['character', 'nsfw']) {
+                const note = noteValue[type];
+                if (!isRecord(note) || !isNonEmptyString(note.text)) {
+                    continue;
+                }
+                normalized[type] = { text: note.text };
+            }
+            if (Object.keys(normalized).length > 0) {
+                notes[slotId] = normalized;
+            }
         }
         if (Object.keys(notes).length > 0) {
             result[characterKey] = notes;

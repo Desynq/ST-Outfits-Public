@@ -1,6 +1,7 @@
 import { ChatOutfitStorage } from "../../api/chat-metadata.js";
 import { DEFAULT_SLOTS } from "../../Constants.js";
-import { OutfitCollection, Outfit, CharactersOutfitMap } from "../model/Outfit.js";
+import { pruneProperty } from "../../util/object-helper.js";
+import { OutfitCollection, Outfit, CharactersOutfitMap, CharacterNoteType, CharacterNote, SlotCharacterNotes } from "../model/Outfit.js";
 import { OutfitSnapshot } from "../model/OutfitSnapshots.js";
 import { normalizeOutfitCollection } from "../normalize.js";
 import { MutableOutfitView } from "./MutableOutfitView.js";
@@ -20,14 +21,20 @@ export interface IOutfitCollectionView {
 	areEmptySlotsHidden(): boolean;
 	hideEmptySlots(hide: boolean): void;
 
-	getCharacterNote(character: string | undefined | null, slotId: string): string | undefined;
+	getCharacterNoteText(character: string | undefined | null, slotId: string, type: CharacterNoteType): string | undefined;
+	getSlotCharacterNotes(character: string | undefined | null, slotId: string): SlotCharacterNotes | undefined;
 
 	/**
 	 * Empty value deletes the character note
 	 */
-	setCharacterNote(character: string, slotId: string, value: string): void;
+	setCharacterNote(character: string, slotId: string, value: string, type: CharacterNoteType): void;
 
-	deleteCharacterNote(character: string, slotId: string): void;
+	deleteCharacterNote(character: string, slotId: string, type: CharacterNoteType): void;
+	moveSlotCharacterNotes(
+		character: string,
+		oldSlotId: string,
+		newSlotId: string
+	): void;
 
 	getSnapshotView(): OutfitSnapshotsView;
 }
@@ -96,35 +103,86 @@ export abstract class OutfitCollectionView implements IOutfitCollectionView {
 		this.withCollection(c => c.hideEmpty = hide);
 	}
 
-	public getCharacterNote(character: string | undefined | null, slotId: string): string | undefined {
+
+
+	public getCharacterNoteText(
+		character: string | undefined | null,
+		slotId: string,
+		type: CharacterNoteType
+	): string | undefined {
 		if (!character) return undefined;
 
-		return this.withCollection(c => c.character_notes[character]?.[slotId]);
+		return this.withCollection(
+			c => c.character_notes[character]?.[slotId]?.[type]?.text
+		);
 	}
 
-	public setCharacterNote(character: string, slotId: string, value: string): void {
+	public getSlotCharacterNotes(
+		character: string | undefined | null,
+		slotId: string
+	): SlotCharacterNotes | undefined {
+		if (!character) return undefined;
+
+		return this.withCollection(
+			c => c.character_notes[character]?.[slotId]
+		);
+	}
+
+	public setCharacterNote(
+		character: string,
+		slotId: string,
+		value: string,
+		type: CharacterNoteType
+	): void {
 		this.withCollection(c => {
 			if (value === '') {
-				this.deleteCharacterNote(character, slotId);
+				this.deleteCharacterNote(character, slotId, type);
+				return;
 			}
-			else {
-				(c.character_notes[character] ??= {})[slotId] = value;
-			}
+
+			const notes = (c.character_notes[character] ??= {});
+			const slotNotes = (notes[slotId] ??= {});
+
+			slotNotes[type] = { text: value };
 		});
 	}
 
-	public deleteCharacterNote(character: string, slotId: string): void {
+	public deleteCharacterNote(
+		character: string,
+		slotId: string,
+		type: CharacterNoteType
+	): void {
 		this.withCollection(c => {
 			const notes = c.character_notes[character];
 			if (!notes) return;
 
-			delete notes[slotId];
+			const slotNotes = notes[slotId];
+			if (!slotNotes) return;
 
-			if (Object.keys(notes).length === 0) {
-				delete c.character_notes[character];
-			}
+			delete slotNotes[type];
+
+			pruneProperty(notes, slotId);
+			pruneProperty(c.character_notes, character);
 		});
 	}
+
+	public moveSlotCharacterNotes(
+		character: string,
+		oldSlotId: string,
+		newSlotId: string
+	): void {
+		if (oldSlotId === newSlotId) return;
+
+		this.withCollection(c => {
+			const notes = c.character_notes[character];
+			if (!notes?.[oldSlotId]) return;
+
+			notes[newSlotId] = notes[oldSlotId];
+			delete notes[oldSlotId];
+		});
+	}
+
+
 
 	public getSnapshotView(): OutfitSnapshotsView {
 		const c = this.getOrCreateCollection();

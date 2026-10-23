@@ -1,5 +1,6 @@
 import { ChatOutfitStorage } from "../../api/chat-metadata.js";
 import { DEFAULT_SLOTS } from "../../Constants.js";
+import { pruneProperty } from "../../util/object-helper.js";
 import { normalizeOutfitCollection } from "../normalize.js";
 import { MutableOutfitView } from "./MutableOutfitView.js";
 import { OutfitSnapshotsView } from "./OutfitSnapshotsView.js";
@@ -42,30 +43,49 @@ export class OutfitCollectionView {
     hideEmptySlots(hide) {
         this.withCollection(c => c.hideEmpty = hide);
     }
-    getCharacterNote(character, slotId) {
+    getCharacterNoteText(character, slotId, type) {
+        if (!character)
+            return undefined;
+        return this.withCollection(c => c.character_notes[character]?.[slotId]?.[type]?.text);
+    }
+    getSlotCharacterNotes(character, slotId) {
         if (!character)
             return undefined;
         return this.withCollection(c => c.character_notes[character]?.[slotId]);
     }
-    setCharacterNote(character, slotId, value) {
+    setCharacterNote(character, slotId, value, type) {
         this.withCollection(c => {
             if (value === '') {
-                this.deleteCharacterNote(character, slotId);
+                this.deleteCharacterNote(character, slotId, type);
+                return;
             }
-            else {
-                (c.character_notes[character] ??= {})[slotId] = value;
-            }
+            const notes = (c.character_notes[character] ??= {});
+            const slotNotes = (notes[slotId] ??= {});
+            slotNotes[type] = { text: value };
         });
     }
-    deleteCharacterNote(character, slotId) {
+    deleteCharacterNote(character, slotId, type) {
         this.withCollection(c => {
             const notes = c.character_notes[character];
             if (!notes)
                 return;
-            delete notes[slotId];
-            if (Object.keys(notes).length === 0) {
-                delete c.character_notes[character];
-            }
+            const slotNotes = notes[slotId];
+            if (!slotNotes)
+                return;
+            delete slotNotes[type];
+            pruneProperty(notes, slotId);
+            pruneProperty(c.character_notes, character);
+        });
+    }
+    moveSlotCharacterNotes(character, oldSlotId, newSlotId) {
+        if (oldSlotId === newSlotId)
+            return;
+        this.withCollection(c => {
+            const notes = c.character_notes[character];
+            if (!notes?.[oldSlotId])
+                return;
+            notes[newSlotId] = notes[oldSlotId];
+            delete notes[oldSlotId];
         });
     }
     getSnapshotView() {

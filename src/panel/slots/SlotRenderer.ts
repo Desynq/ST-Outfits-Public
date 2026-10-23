@@ -18,7 +18,7 @@ import { DisplaySlot } from "./DisplaySlot.js";
 import { EditCoordinator } from "./edit-coordinator.js";
 import { SlotActionsElement } from "./SlotActionsElement.js";
 import { ImageState, SlotImageElement, SlotImageElementFactory } from "./SlotImageController.js";
-import { SlotCharacterNoteFactory, SlotChatNoteFactory, SlotTextboxFactory } from "./SlotValueController.js";
+import { SlotCharacterNoteFactory, SlotChatNoteFactory, SlotNSFWCharacterNoteFactory, SlotTextboxFactory } from "./SlotValueController.js";
 
 export interface SlotContext {
 	slot: OutfitSlotState;
@@ -53,19 +53,21 @@ export interface SlotRendererDeps {
 	editCoordinator: EditCoordinator;
 }
 
-interface SlotTextboxes extends SlotNotes {
-	value: SlotTextbox;
+interface CharacterNoteTextbox {
+	factory: SlotCharacterNoteFactory;
+	textbox: SlotTextbox;
 }
 
-interface SlotNotes {
-	chatNote: SlotTextbox,
-	characterNote: SlotTextbox;
+interface SlotTextboxes {
+	value: SlotTextbox;
+	chatNote: SlotTextbox;
+	characterNotes: CharacterNoteTextbox[];
 }
 
 export class SlotRenderer extends OutfitPanelContext {
 	private readonly valueTextboxFactory: SlotTextboxFactory;
 	private readonly chatNoteFactory: SlotChatNoteFactory;
-	private readonly characterNoteFactory: SlotCharacterNoteFactory;
+	private readonly characterNoteFactories: SlotCharacterNoteFactory[];
 
 	public constructor(
 		private readonly deps: SlotRendererDeps
@@ -82,7 +84,10 @@ export class SlotRenderer extends OutfitPanelContext {
 
 		this.chatNoteFactory = new SlotChatNoteFactory(textboxDeps);
 
-		this.characterNoteFactory = new SlotCharacterNoteFactory(textboxDeps);
+		this.characterNoteFactories = [
+			new SlotCharacterNoteFactory(textboxDeps),
+			new SlotNSFWCharacterNoteFactory(textboxDeps)
+		];
 	}
 
 	private isValueHidden(mode: SlotRenderMode): boolean {
@@ -176,8 +181,12 @@ export class SlotRenderer extends OutfitPanelContext {
 
 		const textboxes: SlotTextboxes = {
 			value: createTextbox(this.valueTextboxFactory),
-			characterNote: createTextbox(this.characterNoteFactory),
 			chatNote: createTextbox(this.chatNoteFactory),
+
+			characterNotes: this.characterNoteFactories.map(factory => ({
+				factory,
+				textbox: createTextbox(factory)
+			}))
 		};
 
 		switch (mode) {
@@ -323,7 +332,10 @@ export class SlotRenderer extends OutfitPanelContext {
 		if (textboxes.value.isHidden()) {
 			ctx.labelDiv.classList.add('minimized');
 			textboxes.chatNote.hide();
-			textboxes.characterNote.hide();
+
+			for (const { textbox } of textboxes.characterNotes) {
+				textbox.hide();
+			}
 		}
 
 		this.createMenuBtn(ctx, textboxes).appendTo(ctx.labelRightDiv);
@@ -344,10 +356,12 @@ export class SlotRenderer extends OutfitPanelContext {
 			ctx.actionsLeftEl.append(unequipBtn);
 		}
 
-		const { value, ...notes } = textboxes;
-		void (notes satisfies SlotNotes);
+		const notes = [
+			textboxes.chatNote,
+			...textboxes.characterNotes.map(({ textbox }) => textbox)
+		];
 
-		for (const note of Object.values(notes)) {
+		for (const note of notes) {
 			if (note.isEmpty()) {
 				note.hide();
 			}
@@ -362,6 +376,16 @@ export class SlotRenderer extends OutfitPanelContext {
 	}
 
 	private createMenuBtn(ctx: SlotContext, textboxes: SlotTextboxes): SlotActionsMenuElement {
+		const characterNoteActions = textboxes.characterNotes.map(({ factory, textbox }) => ({
+			...factory.getAddButtonOptions(),
+
+			canAdd: () =>
+				this.getSlotRenderMode(ctx.slot, this.panel) === 'normal'
+				&& textbox.isEmpty(),
+
+			add: () => textbox.beginInlineEdit()
+		}));
+
 		return new SlotActionsMenuElement(
 			{
 				mountEl: ctx.slotElement,
@@ -379,8 +403,9 @@ export class SlotRenderer extends OutfitPanelContext {
 
 				canAddChatNote: () => this.getSlotRenderMode(ctx.slot, this.panel) === 'normal' && textboxes.chatNote.isEmpty(),
 				addChatNote: () => textboxes.chatNote.beginInlineEdit(),
-				canAddCharacterNote: () => this.getSlotRenderMode(ctx.slot, this.panel) === 'normal' && textboxes.characterNote.isEmpty(),
-				addCharacterNote: () => textboxes.characterNote.beginInlineEdit(),
+
+				characterNoteActions,
+
 				showConditions: () => SlotConditionsModal.show(
 					ctx.slot,
 					this.outfitManager,

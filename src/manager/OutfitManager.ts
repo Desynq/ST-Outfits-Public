@@ -10,6 +10,7 @@ import { IOutfitCollectionView } from "../data/view/OutfitCollectionView.js";
 import { OutfitSnapshotsView } from "../data/view/OutfitSnapshotsView.js";
 import { assertNever, formatAccessorySlotName, toSlotName } from "../shared.js";
 import { promptOptions } from "../ui/prompt/prompt-options.js";
+import { ifPresent } from "../util/logic.js";
 import { isSlotBlocked } from "../util/slot.js";
 import { indentString, plural, toKebabCase } from "../util/StringHelper.js";
 import { toSummaryKey } from "../util/SummaryHelper.js";
@@ -108,7 +109,10 @@ export abstract class OutfitManager {
 
 	private formatSlotSummary(s: OutfitSlot): string {
 		const chatNote = ChatOutfitStorage.getNote(this.getName(), s.id);
-		const charNote = this.getOutfitCollection().getCharacterNote(getCurrentCharacterKey(), s.id);
+		const charNotes = this.getOutfitCollection().getSlotCharacterNotes(
+			getCurrentCharacterKey(),
+			s.id
+		);
 
 		const parts: string[] = [];
 
@@ -118,9 +122,13 @@ export abstract class OutfitManager {
 
 		parts.push(`${s.value}`);
 
-		if (charNote) {
-			parts.push(`Character context: ${charNote}`);
-		}
+		ifPresent(charNotes?.character?.text, text => {
+			parts.push(`Character context:\n${text}`);
+		});
+
+		ifPresent(charNotes?.nsfw?.text, text => {
+			parts.push(`NSFW context:\n${text}`);
+		});
 
 		if (chatNote) {
 			parts.push(`Chat context:\n${chatNote}`);
@@ -441,15 +449,14 @@ export abstract class OutfitManager {
 	}
 
 	private passCharacterNote(oldSlotId: string, newSlotId: string): void {
-		const collection = this.getOutfitCollection();
 		const character = getCurrentCharacterKey();
 		if (!character) return;
 
-		const note = collection.getCharacterNote(character, oldSlotId);
-		if (!note) return;
-
-		collection.deleteCharacterNote(character, oldSlotId);
-		collection.setCharacterNote(character, newSlotId, note);
+		this.getOutfitCollection().moveSlotCharacterNotes(
+			character,
+			oldSlotId,
+			newSlotId
+		);
 	}
 
 	private passChatNote(oldSlotId: string, newSlotId: string): void {

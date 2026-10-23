@@ -9,7 +9,7 @@ import { isSlotBlocked } from "../../util/slot.js";
 import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
 import { SlotActionsMenuElement } from "./ActionOverflowElement.js";
 import { SlotActionsElement } from "./SlotActionsElement.js";
-import { SlotCharacterNoteFactory, SlotChatNoteFactory, SlotTextboxFactory } from "./SlotValueController.js";
+import { SlotCharacterNoteFactory, SlotChatNoteFactory, SlotNSFWCharacterNoteFactory, SlotTextboxFactory } from "./SlotValueController.js";
 export class SlotRenderer extends OutfitPanelContext {
     constructor(deps) {
         super(deps.panel);
@@ -21,7 +21,10 @@ export class SlotRenderer extends OutfitPanelContext {
         };
         this.valueTextboxFactory = new SlotTextboxFactory(textboxDeps);
         this.chatNoteFactory = new SlotChatNoteFactory(textboxDeps);
-        this.characterNoteFactory = new SlotCharacterNoteFactory(textboxDeps);
+        this.characterNoteFactories = [
+            new SlotCharacterNoteFactory(textboxDeps),
+            new SlotNSFWCharacterNoteFactory(textboxDeps)
+        ];
     }
     isValueHidden(mode) {
         return mode !== 'normal';
@@ -87,8 +90,11 @@ export class SlotRenderer extends OutfitPanelContext {
         };
         const textboxes = {
             value: createTextbox(this.valueTextboxFactory),
-            characterNote: createTextbox(this.characterNoteFactory),
             chatNote: createTextbox(this.chatNoteFactory),
+            characterNotes: this.characterNoteFactories.map(factory => ({
+                factory,
+                textbox: createTextbox(factory)
+            }))
         };
         switch (mode) {
             case 'hidden-empty':
@@ -199,7 +205,9 @@ export class SlotRenderer extends OutfitPanelContext {
         if (textboxes.value.isHidden()) {
             ctx.labelDiv.classList.add('minimized');
             textboxes.chatNote.hide();
-            textboxes.characterNote.hide();
+            for (const { textbox } of textboxes.characterNotes) {
+                textbox.hide();
+            }
         }
         this.createMenuBtn(ctx, textboxes).appendTo(ctx.labelRightDiv);
     }
@@ -211,9 +219,11 @@ export class SlotRenderer extends OutfitPanelContext {
             const unequipBtn = actionsElement.createUnequipButton(ctx.slot);
             ctx.actionsLeftEl.append(unequipBtn);
         }
-        const { value, ...notes } = textboxes;
-        void notes;
-        for (const note of Object.values(notes)) {
+        const notes = [
+            textboxes.chatNote,
+            ...textboxes.characterNotes.map(({ textbox }) => textbox)
+        ];
+        for (const note of notes) {
             if (note.isEmpty()) {
                 note.hide();
             }
@@ -224,6 +234,12 @@ export class SlotRenderer extends OutfitPanelContext {
         ctx.labelRightDiv.append(syncBtn);
     }
     createMenuBtn(ctx, textboxes) {
+        const characterNoteActions = textboxes.characterNotes.map(({ factory, textbox }) => ({
+            ...factory.getAddButtonOptions(),
+            canAdd: () => this.getSlotRenderMode(ctx.slot, this.panel) === 'normal'
+                && textbox.isEmpty(),
+            add: () => textbox.beginInlineEdit()
+        }));
         return new SlotActionsMenuElement({
             mountEl: ctx.slotElement,
             getViewBoundary: () => ctx.scroller.getBoundingClientRect(),
@@ -234,8 +250,7 @@ export class SlotRenderer extends OutfitPanelContext {
             showPresets: () => SlotPresetsModal.show(ctx.slot, this.outfitManager, () => this.outfitManager.updateMacros(), () => this.panel.saveAndRender()),
             canAddChatNote: () => this.getSlotRenderMode(ctx.slot, this.panel) === 'normal' && textboxes.chatNote.isEmpty(),
             addChatNote: () => textboxes.chatNote.beginInlineEdit(),
-            canAddCharacterNote: () => this.getSlotRenderMode(ctx.slot, this.panel) === 'normal' && textboxes.characterNote.isEmpty(),
-            addCharacterNote: () => textboxes.characterNote.beginInlineEdit(),
+            characterNoteActions,
             showConditions: () => SlotConditionsModal.show(ctx.slot, this.outfitManager, () => this.outfitManager.updateMacros(), () => this.panel.saveAndRender()),
         }, this.deps.overflowMenuFactory)
             .onClopen(open => ctx.slotElement.classList.toggle('--menu-open', open));

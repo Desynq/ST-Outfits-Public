@@ -18,7 +18,7 @@ import { DisplaySlot } from "./DisplaySlot.js";
 import { EditCoordinator } from "./edit-coordinator.js";
 import { SlotActionsElement } from "./SlotActionsElement.js";
 import { ImageState, SlotImageElement, SlotImageElementFactory } from "./SlotImageController.js";
-import { SlotCharacterNoteFactory, SlotChatNoteFactory, SlotCharacterNSFWNoteFactory, SlotTextboxFactory, SlotCharacterDialogueNoteFactory, createCharacterNoteFactories } from "./SlotValueController.js";
+import { SlotCharacterNoteFactory, SlotChatNoteFactory, SlotTextboxFactory, createCharacterNoteFactories } from "./SlotValueController.js";
 
 export interface SlotContext {
 	slot: OutfitSlotState;

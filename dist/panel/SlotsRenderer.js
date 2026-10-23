@@ -9,6 +9,11 @@ import { EditCoordinator } from "./slots/edit-coordinator.js";
 import { SlotImageElementFactory } from "./slots/SlotImageController.js";
 import { SlotRenderer } from "./slots/SlotRenderer.js";
 function updateBottomPadding(container, child, topOffset, below = []) {
+    // 16:10 and under needs bottom padding for comfortable scrolling
+    if (!window.matchMedia('(max-aspect-ratio: 1.6)').matches) {
+        container.style.paddingBottom = '';
+        return;
+    }
     const belowHeight = below.reduce((sum, element) => sum + element.offsetHeight, 0);
     const padding = Math.max(0, container.clientHeight - child.offsetHeight - belowHeight - topOffset);
     container.style.paddingBottom = `${padding}px`;

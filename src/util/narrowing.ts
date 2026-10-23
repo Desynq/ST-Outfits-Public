@@ -85,3 +85,19 @@ export function ensureArrayProperty(
 	assertArray(value);
 	return value;
 }
+
+
+
+export function exact<T>(): <U extends T>(value: U & Record<Exclude<keyof U, keyof T>, never>) => U {
+	return <U extends T>(
+		value: U & Record<Exclude<keyof U, keyof T>, never>
+	): U => value;
+}
+
+
+
+export function typedEntries<T extends object>(obj: T): { [K in keyof T]: [K, T[K]]; }[keyof T][] {
+	return Object.entries(obj) as {
+		[K in keyof T]: [K, T[K]]
+	}[keyof T][];
+}

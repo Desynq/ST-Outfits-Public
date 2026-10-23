@@ -1,8 +1,9 @@
 import { getCurrentCharacterKey } from "../api/character-provider.js";
 import { ChatOutfitStorage } from "../api/chat-metadata.js";
 import * as SlotPresetsApi from "../api/internal/slot-preset.js";
+import { CHARACTER_NOTE_OPTIONS } from "../Constants.js";
 import { OutfitSlot } from "../data/model/Outfit.js";
-import { areOutfitSnapshotsEqual, OutfitSlotState } from "../data/model/OutfitSnapshots.js";
+import { areOutfitSnapshotsEqual } from "../data/model/OutfitSnapshots.js";
 import { KeyedSlotPreset, KeyedSlotPresetWithImage } from "../data/model/SlotPreset.js";
 import { OutfitTracker } from "../data/tracker.js";
 import { MutableOutfitView } from "../data/view/MutableOutfitView.js";
@@ -11,6 +12,7 @@ import { OutfitSnapshotsView } from "../data/view/OutfitSnapshotsView.js";
 import { assertNever, formatAccessorySlotName, toSlotName } from "../shared.js";
 import { promptOptions } from "../ui/prompt/prompt-options.js";
 import { ifPresent } from "../util/logic.js";
+import { typedEntries } from "../util/narrowing.js";
 import { isSlotBlocked } from "../util/slot.js";
 import { indentString, plural, toKebabCase } from "../util/StringHelper.js";
 import { toSummaryKey } from "../util/SummaryHelper.js";
@@ -122,15 +124,9 @@ export abstract class OutfitManager {
 
 		parts.push(`${s.value}`);
 
-		const noteLabels = {
-			character: 'Character context',
-			nsfw: 'NSFW context',
-			dialogue: 'Dialogue examples',
-		} as const;
-
-		for (const [key, label] of Object.entries(noteLabels)) {
-			ifPresent(charNotes?.[key as keyof typeof noteLabels]?.text, text => {
-				parts.push(`${label}:\n${text}`);
+		for (const [key, { context_label }] of typedEntries(CHARACTER_NOTE_OPTIONS)) {
+			ifPresent(charNotes?.[key]?.text, text => {
+				parts.push(`${context_label}:\n${text}`);
 			});
 		}
 

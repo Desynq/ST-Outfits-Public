@@ -189,7 +189,7 @@ export class SlotActionsMenuElement {
 	private createAddChatNoteBtn(): HTMLButtonElement {
 		return this.createBtn({
 			className: 'slot-button slot-add-chat-note-button',
-			text: 'Add 💬 Note',
+			text: '💬   Note',
 			events: {
 				click: () => this.deps.addChatNote()
 			}

@@ -56,3 +56,9 @@ export function ensureArrayProperty(holder, key) {
     assertArray(value);
     return value;
 }
+export function exact() {
+    return (value) => value;
+}
+export function typedEntries(obj) {
+    return Object.entries(obj);
+}

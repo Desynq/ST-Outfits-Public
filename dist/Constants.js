@@ -43,8 +43,26 @@ export const DEFAULT_SLOTS = [
     ...DEFAULT_CLOTHING_SLOTS.map(id => toSlot({ id, kind: 'clothing' })),
     ...DEFAULT_ACCESSORY_SLOTS.map(id => toSlot({ id, kind: 'accessory' }))
 ];
-export const CHARACTER_NOTE_TYPES = [
-    'character',
-    'nsfw',
-    'dialogue'
-];
+export const CHARACTER_NOTE_OPTIONS = {
+    character: {
+        icon: 'fa-solid fa-address-book',
+        add_button_text: '👤   Note',
+        context_label: 'Character context'
+    },
+    clothing: {
+        icon: 'fa-regular fa-shirt',
+        add_button_text: '👤🧥 Note',
+        context_label: 'Clothing context'
+    },
+    nsfw: {
+        icon: 'fa-solid fa-fire',
+        add_button_text: '👤🔥 Note',
+        context_label: 'NSFW context'
+    },
+    dialogue: {
+        icon: 'fa-solid fa-microphone-lines',
+        add_button_text: '👤🎙️ Note',
+        context_label: 'Dialogue examples'
+    }
+};
+export const CHARACTER_NOTE_TYPES = Object.keys(CHARACTER_NOTE_OPTIONS);

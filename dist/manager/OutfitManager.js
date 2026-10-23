@@ -1,11 +1,13 @@
 import { getCurrentCharacterKey } from "../api/character-provider.js";
 import { ChatOutfitStorage } from "../api/chat-metadata.js";
 import * as SlotPresetsApi from "../api/internal/slot-preset.js";
+import { CHARACTER_NOTE_OPTIONS } from "../Constants.js";
 import { areOutfitSnapshotsEqual } from "../data/model/OutfitSnapshots.js";
 import { OutfitTracker } from "../data/tracker.js";
 import { assertNever, formatAccessorySlotName, toSlotName } from "../shared.js";
 import { promptOptions } from "../ui/prompt/prompt-options.js";
 import { ifPresent } from "../util/logic.js";
+import { typedEntries } from "../util/narrowing.js";
 import { isSlotBlocked } from "../util/slot.js";
 import { indentString, plural, toKebabCase } from "../util/StringHelper.js";
 import { toSummaryKey } from "../util/SummaryHelper.js";
@@ -61,14 +63,9 @@ export class OutfitManager {
             parts.push('Status: REMOVED');
         }
         parts.push(`${s.value}`);
-        const noteLabels = {
-            character: 'Character context',
-            nsfw: 'NSFW context',
-            dialogue: 'Dialogue examples',
-        };
-        for (const [key, label] of Object.entries(noteLabels)) {
+        for (const [key, { context_label }] of typedEntries(CHARACTER_NOTE_OPTIONS)) {
             ifPresent(charNotes?.[key]?.text, text => {
-                parts.push(`${label}:\n${text}`);
+                parts.push(`${context_label}:\n${text}`);
             });
         }
         if (chatNote) {

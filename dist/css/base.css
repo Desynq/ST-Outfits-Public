@@ -1859,7 +1859,12 @@
   overflow-y: auto;
   padding-right: 4px;
   min-height: 0;
-  max-height: 40vh;
+  max-height: 95vh;
+}
+@media (max-aspect-ratio: 1.6) {
+  .outfit-content {
+    max-height: 80vh;
+  }
 }
 
 .outfit-actions {
@@ -1915,10 +1920,6 @@
 
 .outfit-content::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.3);
-}
-
-.outfit-content {
-  max-height: 80vh;
 }
 
 .no-highlight {

@@ -1,6 +1,7 @@
 import { getCurrentCharacterKey } from "../../api/character-provider.js";
 import { ChatOutfitStorage } from "../../api/chat-metadata.js";
 import * as SlotPresetsApi from "../../api/internal/slot-preset.js";
+import { CHARACTER_NOTE_OPTIONS } from "../../Constants.js";
 import { SlotTextbox } from "../../ui/components/slot/slot-textbox.js";
 import { SlotValueText } from "../../ui/components/SlotValueText.js";
 import { popupConfirm } from "../../util/adapter/popup-adapter.js";
@@ -9,6 +10,7 @@ import { addDoubleTapListener } from "../../util/element/click-actions.js";
 import { mergeClassNames, triggerAfterLayout, triggerAfterTransition } from "../../util/element/css.js";
 import { addLongPressAction, createElement, el } from "../../util/ElementHelper.js";
 import { EventBus } from "../../util/EventBus.js";
+import { exact } from "../../util/narrowing.js";
 import { stringIf } from "../../util/StringHelper.js";
 import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
 export class SlotTextboxFactory extends OutfitPanelContext {
@@ -203,17 +205,15 @@ export class SlotChatNoteFactory extends SlotTextboxFactory {
     }
 }
 export class SlotCharacterNoteFactory extends SlotTextboxFactory {
+    constructor(deps, options) {
+        super(deps);
+        this.options = options;
+    }
     getAddButtonOptions() {
         return {
             className: 'slot-button slot-add-character-note-button',
-            text: 'Add 👤 Note'
+            text: this.options.add_button_text
         };
-    }
-    getNoteType() {
-        return 'character';
-    }
-    getThumbFA() {
-        return "fa-solid fa-address-book";
     }
     getEditBoxClassName() {
         return 'slot-editbox';
@@ -223,7 +223,7 @@ export class SlotCharacterNoteFactory extends SlotTextboxFactory {
             className: 'slot-character-note-container',
         });
         const thumbEl = el('div', {
-            className: mergeClassNames('slot-textbox-thumb', this.getThumbFA()),
+            className: mergeClassNames('slot-textbox-thumb', this.options.icon),
             parent: rootEl
         });
         const valueEl = el('div', {
@@ -245,61 +245,31 @@ export class SlotCharacterNoteFactory extends SlotTextboxFactory {
         if (character) {
             note = this.outfitManager
                 .getOutfitCollection()
-                .getCharacterNoteText(character, slot.id, this.getNoteType());
+                .getCharacterNoteText(character, slot.id, this.options.type);
         }
         return note ?? this.getEmptyText();
     }
     updateSlotText(slot, text) {
-        const type = this.getNoteType();
         const collection = this.outfitManager.getOutfitCollection();
         const character = getCurrentCharacterKey();
         if (!character) {
             throw new Error('Cannot edit character note without a character.');
         }
         if (!text || text === this.getEmptyText()) {
-            collection.deleteCharacterNote(character, slot.id, type);
+            collection.deleteCharacterNote(character, slot.id, this.options.type);
             this.outfitManager.updateSlotContext(slot.id);
             return;
         }
-        collection.setCharacterNote(character, slot.id, text, type);
+        collection.setCharacterNote(character, slot.id, text, this.options.type);
         this.outfitManager.updateSlotContext(slot.id);
     }
     getEmptyText() {
         return '';
     }
 }
-export class SlotCharacterNSFWNoteFactory extends SlotCharacterNoteFactory {
-    getNoteType() {
-        return 'nsfw';
-    }
-    getThumbFA() {
-        return 'fa-solid fa-fire';
-    }
-    getAddButtonOptions() {
-        return {
-            className: 'slot-button slot-add-character-note-button',
-            text: 'Add 🔥 Note'
-        };
-    }
-}
-export class SlotCharacterDialogueNoteFactory extends SlotCharacterNoteFactory {
-    getNoteType() {
-        return 'dialogue';
-    }
-    getThumbFA() {
-        return 'fa-solid fa-comment-dots';
-    }
-    getAddButtonOptions() {
-        return {
-            className: 'slot-button slot-add-character-note-button',
-            text: 'Add 🗣️ Note'
-        };
-    }
-}
 export function createCharacterNoteFactories(deps) {
-    return [
-        new SlotCharacterNoteFactory(deps),
-        new SlotCharacterNSFWNoteFactory(deps),
-        new SlotCharacterDialogueNoteFactory(deps)
-    ];
+    return Object.entries(CHARACTER_NOTE_OPTIONS).map(([type, { context_label, ...options }]) => new SlotCharacterNoteFactory(deps, exact()({
+        ...options,
+        type: type
+    })));
 }

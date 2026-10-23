@@ -225,7 +225,12 @@ $z-layers: (
 	overflow-y: auto;
 	padding-right: 4px;
 	min-height: 0;
-	max-height: 40vh; // limit height for scroll
+	max-height: 95vh; // limit height for scroll
+
+	// 16:10
+	@media (max-aspect-ratio: 1.6) {
+		max-height: 80vh;
+	}
 }
 
 .outfit-actions {
@@ -283,10 +288,6 @@ $z-layers: (
 
 .outfit-content::-webkit-scrollbar-thumb:hover {
 	background: rgba(255, 255, 255, 0.3);
-}
-
-.outfit-content {
-	max-height: 80vh;
 }
 
 

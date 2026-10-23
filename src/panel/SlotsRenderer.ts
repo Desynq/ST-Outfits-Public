@@ -16,6 +16,12 @@ function updateBottomPadding(
 	topOffset: number,
 	below: readonly HTMLElement[] = []
 ): void {
+	// 16:10 and under needs bottom padding for comfortable scrolling
+	if (!window.matchMedia('(max-aspect-ratio: 1.6)').matches) {
+		container.style.paddingBottom = '';
+		return;
+	}
+
 	const belowHeight = below.reduce(
 		(sum, element) => sum + element.offsetHeight,
 		0

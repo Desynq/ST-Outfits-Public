@@ -45,5 +45,6 @@ export const DEFAULT_SLOTS = [
 ];
 export const CHARACTER_NOTE_TYPES = [
     'character',
-    'nsfw'
+    'nsfw',
+    'dialogue'
 ];

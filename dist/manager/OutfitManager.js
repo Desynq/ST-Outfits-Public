@@ -61,12 +61,16 @@ export class OutfitManager {
             parts.push('Status: REMOVED');
         }
         parts.push(`${s.value}`);
-        ifPresent(charNotes?.character?.text, text => {
-            parts.push(`Character context:\n${text}`);
-        });
-        ifPresent(charNotes?.nsfw?.text, text => {
-            parts.push(`NSFW context:\n${text}`);
-        });
+        const noteLabels = {
+            character: 'Character context',
+            nsfw: 'NSFW context',
+            dialogue: 'Dialogue examples',
+        };
+        for (const [key, label] of Object.entries(noteLabels)) {
+            ifPresent(charNotes?.[key]?.text, text => {
+                parts.push(`${label}:\n${text}`);
+            });
+        }
         if (chatNote) {
             parts.push(`Chat context:\n${chatNote}`);
         }

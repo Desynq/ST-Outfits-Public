@@ -18,7 +18,7 @@ import { DisplaySlot } from "./DisplaySlot.js";
 import { EditCoordinator } from "./edit-coordinator.js";
 import { SlotActionsElement } from "./SlotActionsElement.js";
 import { ImageState, SlotImageElement, SlotImageElementFactory } from "./SlotImageController.js";
-import { SlotCharacterNoteFactory, SlotChatNoteFactory, SlotNSFWCharacterNoteFactory, SlotTextboxFactory } from "./SlotValueController.js";
+import { SlotCharacterNoteFactory, SlotChatNoteFactory, SlotCharacterNSFWNoteFactory, SlotTextboxFactory, SlotCharacterDialogueNoteFactory, createCharacterNoteFactories } from "./SlotValueController.js";
 
 export interface SlotContext {
 	slot: OutfitSlotState;
@@ -84,10 +84,7 @@ export class SlotRenderer extends OutfitPanelContext {
 
 		this.chatNoteFactory = new SlotChatNoteFactory(textboxDeps);
 
-		this.characterNoteFactories = [
-			new SlotCharacterNoteFactory(textboxDeps),
-			new SlotNSFWCharacterNoteFactory(textboxDeps)
-		];
+		this.characterNoteFactories = createCharacterNoteFactories(textboxDeps);
 	}
 
 	private isValueHidden(mode: SlotRenderMode): boolean {

@@ -9,7 +9,7 @@ import { isSlotBlocked } from "../../util/slot.js";
 import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
 import { SlotActionsMenuElement } from "./ActionOverflowElement.js";
 import { SlotActionsElement } from "./SlotActionsElement.js";
-import { SlotCharacterNoteFactory, SlotChatNoteFactory, SlotNSFWCharacterNoteFactory, SlotTextboxFactory } from "./SlotValueController.js";
+import { SlotChatNoteFactory, SlotTextboxFactory, createCharacterNoteFactories } from "./SlotValueController.js";
 export class SlotRenderer extends OutfitPanelContext {
     constructor(deps) {
         super(deps.panel);
@@ -21,10 +21,7 @@ export class SlotRenderer extends OutfitPanelContext {
         };
         this.valueTextboxFactory = new SlotTextboxFactory(textboxDeps);
         this.chatNoteFactory = new SlotChatNoteFactory(textboxDeps);
-        this.characterNoteFactories = [
-            new SlotCharacterNoteFactory(textboxDeps),
-            new SlotNSFWCharacterNoteFactory(textboxDeps)
-        ];
+        this.characterNoteFactories = createCharacterNoteFactories(textboxDeps);
     }
     isValueHidden(mode) {
         return mode !== 'normal';

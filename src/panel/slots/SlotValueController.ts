@@ -394,7 +394,7 @@ export class SlotCharacterNoteFactory extends SlotTextboxFactory {
 }
 
 
-export class SlotNSFWCharacterNoteFactory extends SlotCharacterNoteFactory {
+export class SlotCharacterNSFWNoteFactory extends SlotCharacterNoteFactory {
 
 	protected override getNoteType(): CharacterNoteType {
 		return 'nsfw';
@@ -410,4 +410,34 @@ export class SlotNSFWCharacterNoteFactory extends SlotCharacterNoteFactory {
 			text: 'Add 🔥 Note'
 		};
 	}
+}
+
+
+
+export class SlotCharacterDialogueNoteFactory extends SlotCharacterNoteFactory {
+
+	protected override getNoteType(): CharacterNoteType {
+		return 'dialogue';
+	}
+
+	protected override getThumbFA(): string {
+		return 'fa-solid fa-comment-dots';
+	}
+
+	public override getAddButtonOptions(): SlotNoteButtonOptions {
+		return {
+			className: 'slot-button slot-add-character-note-button',
+			text: 'Add 🗣️ Note'
+		};
+	}
+}
+
+
+
+export function createCharacterNoteFactories(deps: SlotValueDeps): SlotCharacterNoteFactory[] {
+	return [
+		new SlotCharacterNoteFactory(deps),
+		new SlotCharacterNSFWNoteFactory(deps),
+		new SlotCharacterDialogueNoteFactory(deps)
+	];
 }

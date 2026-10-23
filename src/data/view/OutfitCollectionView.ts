@@ -1,7 +1,7 @@
 import { ChatOutfitStorage } from "../../api/chat-metadata.js";
-import { DEFAULT_SLOTS } from "../../Constants.js";
+import { CharacterNoteType, DEFAULT_SLOTS } from "../../Constants.js";
 import { pruneProperty } from "../../util/object-helper.js";
-import { OutfitCollection, Outfit, CharactersOutfitMap, CharacterNoteType, CharacterNote, SlotCharacterNotes } from "../model/Outfit.js";
+import { CharactersOutfitMap, Outfit, OutfitCollection, SlotCharacterNotes } from "../model/Outfit.js";
 import { OutfitSnapshot } from "../model/OutfitSnapshots.js";
 import { normalizeOutfitCollection } from "../normalize.js";
 import { MutableOutfitView } from "./MutableOutfitView.js";

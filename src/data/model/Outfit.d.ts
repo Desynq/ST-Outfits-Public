@@ -1,4 +1,4 @@
-import { PartialPanelSettings } from "../view/PartialPanelSettings";
+import { CharacterNoteType } from "../../Constants";
 import { CharPanelsTree, PanelSettings } from "./Panels";
 import { SlotPresetV1 } from "./SlotPreset";
 
@@ -43,9 +43,6 @@ export interface OutfitSlot {
 export interface Outfit {
 	slots: OutfitSlot[];
 }
-
-
-export type CharacterNoteType = 'character' | 'nsfw';
 
 export interface CharacterNote {
 	text: string;

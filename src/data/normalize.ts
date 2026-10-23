@@ -1,11 +1,10 @@
-import { toSlot } from "../Constants.js";
-import { asBoolean, asObject, asStringRecord, ensureObject, isObject, notObject, resolvePositiveNumber, resolveString, resolveTimestamp } from "../ObjectHelper.js";
+import { CHARACTER_NOTE_TYPES, toSlot } from "../Constants.js";
+import { asBoolean, asObject, asStringRecord, ensureObject, notObject, resolvePositiveNumber, resolveString, resolveTimestamp } from "../ObjectHelper.js";
 import { isNonEmptyString, isRecord } from "../util/narrowing.js";
 import { toSlotId } from "../util/normalize/slot.js";
-import { pruneProperty } from "../util/object-helper.js";
 import { normalizeOutfitSnapshots } from "./mappings/OutfitCache.js";
-import { CharacterNote, CharacterNotes, CharacterNoteType, ImageBlob, ImageRef, Outfit, OutfitCollection, OutfitImage, OutfitSlot, OutfitTrackerModel, SlotCharacterNotes, SlotCondition, SlotConditionMap, SlotKind } from "./model/Outfit.js";
-import { SlotPreset, SlotPresetV1 } from "./model/SlotPreset.js";
+import { CharacterNotes, ImageBlob, ImageRef, Outfit, OutfitCollection, OutfitImage, OutfitSlot, OutfitTrackerModel, SlotCharacterNotes, SlotCondition, SlotConditionMap, SlotKind } from "./model/Outfit.js";
+import { SlotPreset } from "./model/SlotPreset.js";
 
 
 export function validatePresets(holder: any): void {
@@ -195,7 +194,7 @@ export function normalizeCharacterNotes(value: any): CharacterNotes {
 
 			const normalized: SlotCharacterNotes = {};
 
-			for (const type of ['character', 'nsfw'] as const) {
+			for (const type of CHARACTER_NOTE_TYPES) {
 				const note = noteValue[type];
 
 				if (!isRecord(note) || !isNonEmptyString(note.text)) {

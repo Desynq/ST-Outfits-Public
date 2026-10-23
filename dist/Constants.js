@@ -43,3 +43,7 @@ export const DEFAULT_SLOTS = [
     ...DEFAULT_CLOTHING_SLOTS.map(id => toSlot({ id, kind: 'clothing' })),
     ...DEFAULT_ACCESSORY_SLOTS.map(id => toSlot({ id, kind: 'accessory' }))
 ];
+export const CHARACTER_NOTE_TYPES = [
+    'character',
+    'nsfw'
+];

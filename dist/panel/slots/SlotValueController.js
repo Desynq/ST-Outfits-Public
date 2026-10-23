@@ -1,4 +1,7 @@
+import { getCurrentCharacterKey } from "../../api/character-provider.js";
 import { ChatOutfitStorage } from "../../api/chat-metadata.js";
+import * as SlotPresetsApi from "../../api/internal/slot-preset.js";
+import { SlotTextbox } from "../../ui/components/slot/slot-textbox.js";
 import { SlotValueText } from "../../ui/components/SlotValueText.js";
 import { popupConfirm } from "../../util/adapter/popup-adapter.js";
 import { substituteParams } from "../../util/adapter/script-adapter.js";
@@ -6,11 +9,8 @@ import { addDoubleTapListener } from "../../util/element/click-actions.js";
 import { mergeClassNames, triggerAfterLayout, triggerAfterTransition } from "../../util/element/css.js";
 import { addLongPressAction, createElement, el } from "../../util/ElementHelper.js";
 import { EventBus } from "../../util/EventBus.js";
-import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
-import * as SlotPresetsApi from "../../api/internal/slot-preset.js";
 import { stringIf } from "../../util/StringHelper.js";
-import { SlotTextbox } from "../../ui/components/slot/slot-textbox.js";
-import { getCurrentCharacterKey } from "../../api/character-provider.js";
+import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
 export class SlotTextboxFactory extends OutfitPanelContext {
     constructor(deps) {
         super(deps.panel);

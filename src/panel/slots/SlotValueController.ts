@@ -1,7 +1,10 @@
+import { getCurrentCharacterKey } from "../../api/character-provider.js";
 import { ChatOutfitStorage } from "../../api/chat-metadata.js";
+import * as SlotPresetsApi from "../../api/internal/slot-preset.js";
+import { CharacterNoteType } from "../../Constants.js";
 import { OutfitSlotState } from "../../data/model/OutfitSnapshots.js";
-import { isWideScreen, scrollIntoViewAboveKeyboard } from "../../shared.js";
 import { PanelType } from "../../types/maps.js";
+import { SlotTextbox } from "../../ui/components/slot/slot-textbox.js";
 import { SlotValueText } from "../../ui/components/SlotValueText.js";
 import { popupConfirm } from "../../util/adapter/popup-adapter.js";
 import { substituteParams } from "../../util/adapter/script-adapter.js";
@@ -9,17 +12,11 @@ import { addDoubleTapListener } from "../../util/element/click-actions.js";
 import { mergeClassNames, triggerAfterLayout, triggerAfterTransition } from "../../util/element/css.js";
 import { addLongPressAction, createElement, el } from "../../util/ElementHelper.js";
 import { EventBus, Listener } from "../../util/EventBus.js";
+import { stringIf } from "../../util/StringHelper.js";
 import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
 import { OutfitPanel } from "../OutfitPanel.js";
 import { EditCoordinator } from "./edit-coordinator.js";
 import { SlotContext } from "./SlotRenderer.js";
-import * as SlotPresetsApi from "../../api/internal/slot-preset.js";
-import { conditionalList } from "../../util/list-utils.js";
-import { stringIf } from "../../util/StringHelper.js";
-import { SlotTextbox } from "../../ui/components/slot/slot-textbox.js";
-import { getCurrentCharacterKey } from "../../api/character-provider.js";
-import { clamp } from "../../util/math.js";
-import { CharacterNoteType } from "../../data/model/Outfit.js";
 
 export interface SlotValueDeps {
 	panel: OutfitPanel<PanelType>;

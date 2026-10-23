@@ -1,4 +1,4 @@
-import { toSlot } from "../Constants.js";
+import { CHARACTER_NOTE_TYPES, toSlot } from "../Constants.js";
 import { asBoolean, asObject, asStringRecord, ensureObject, notObject, resolvePositiveNumber, resolveString, resolveTimestamp } from "../ObjectHelper.js";
 import { isNonEmptyString, isRecord } from "../util/narrowing.js";
 import { toSlotId } from "../util/normalize/slot.js";
@@ -151,7 +151,7 @@ export function normalizeCharacterNotes(value) {
                 continue;
             }
             const normalized = {};
-            for (const type of ['character', 'nsfw']) {
+            for (const type of CHARACTER_NOTE_TYPES) {
                 const note = noteValue[type];
                 if (!isRecord(note) || !isNonEmptyString(note.text)) {
                     continue;

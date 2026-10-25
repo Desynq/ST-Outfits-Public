@@ -1,4 +1,5 @@
 import { substituteParams } from "../../util/adapter/script-adapter.js";
+import { onSingleClick } from "../../util/element/click-actions.js";
 import { addLongPressAction, el } from "../../util/ElementHelper.js";
 import { branch } from "../../util/logic.js";
 function iterateMacros(value) {
@@ -253,7 +254,7 @@ export class SlotValueText {
             span.classList.toggle('--revealed');
             this.deps.expandValue();
         };
-        span.addEventListener('click', e => {
+        onSingleClick(span, e => {
             e.stopPropagation();
             toggleReveal();
         });

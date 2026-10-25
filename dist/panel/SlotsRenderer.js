@@ -50,14 +50,17 @@ export class SlotsRenderer extends OutfitPanelContext {
             }
             fragment.append(slotEl);
         }
-        const footerButtons = [
-            this.createAddSlotButton(kind),
-            this.createBatchReplaceButton()
-        ];
-        fragment.append(...footerButtons);
+        const footer = el('div', {
+            className: 'outfit-content-footer',
+            children: [
+                this.createAddSlotButton(kind),
+                this.createBatchReplaceButton()
+            ]
+        });
+        fragment.append(footer);
         slotContainer.replaceChildren(fragment);
         if (lastSlotEl) {
-            updateBottomPadding(slotContainer, lastSlotEl, 16, footerButtons);
+            updateBottomPadding(slotContainer, lastSlotEl, 16, [footer]);
         }
         setScroll(slotContainer, this.scrollPositions.get(kind) ?? 0);
     }

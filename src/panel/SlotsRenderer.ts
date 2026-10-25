@@ -85,11 +85,14 @@ export class SlotsRenderer extends OutfitPanelContext {
 			fragment.append(slotEl);
 		}
 
-		const footerButtons = [
-			this.createAddSlotButton(kind),
-			this.createBatchReplaceButton()
-		];
-		fragment.append(...footerButtons);
+		const footer = el('div', {
+			className: 'outfit-content-footer',
+			children: [
+				this.createAddSlotButton(kind),
+				this.createBatchReplaceButton()
+			]
+		});
+		fragment.append(footer);
 
 		slotContainer.replaceChildren(fragment);
 		if (lastSlotEl) {
@@ -97,7 +100,7 @@ export class SlotsRenderer extends OutfitPanelContext {
 				slotContainer,
 				lastSlotEl,
 				16,
-				footerButtons
+				[footer]
 			);
 		}
 

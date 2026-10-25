@@ -96,3 +96,35 @@ export function addOnPointerDownOutside(
 	document.addEventListener('pointerdown', listener, true);
 	return () => document.removeEventListener('pointerdown', listener, true);
 }
+
+
+
+
+/**
+ * Only fires when the user clicks once without highlighting text
+ */
+export function onSingleClick(
+	element: HTMLElement,
+	callback: (e: MouseEvent) => void,
+	delay = 100
+): () => void {
+	let timer: ReturnType<typeof setTimeout> | undefined;
+
+	const listener = (e: MouseEvent): void => {
+		clearTimeout(timer);
+
+		if (e.detail !== 1) return;
+
+		timer = setTimeout(() => {
+			if (window.getSelection()?.toString()) return;
+			callback(e);
+		}, delay);
+	};
+
+	element.addEventListener('click', listener);
+
+	return () => {
+		element.removeEventListener('click', listener);
+		clearTimeout(timer);
+	};
+}

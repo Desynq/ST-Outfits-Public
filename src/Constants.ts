@@ -69,7 +69,7 @@ export const CHARACTER_NOTE_OPTIONS = {
 		context_label: 'Character context'
 	},
 	clothing: {
-		icon: 'fa-regular fa-shirt',
+		icon: 'fa-solid fa-shirt',
 		add_button_text: '👤🧥 Note',
 		context_label: 'Clothing context'
 	},

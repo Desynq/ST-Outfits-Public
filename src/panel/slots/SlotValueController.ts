@@ -8,7 +8,7 @@ import { SlotTextbox } from "../../ui/components/slot/slot-textbox.js";
 import { SlotValueText } from "../../ui/components/SlotValueText.js";
 import { popupConfirm } from "../../util/adapter/popup-adapter.js";
 import { substituteParams } from "../../util/adapter/script-adapter.js";
-import { addDoubleTapListener } from "../../util/element/click-actions.js";
+import { addDoubleTapListener, onSingleClick } from "../../util/element/click-actions.js";
 import { mergeClassNames, triggerAfterLayout, triggerAfterTransition } from "../../util/element/css.js";
 import { addLongPressAction, createElement, el } from "../../util/ElementHelper.js";
 import { EventBus, Listener } from "../../util/EventBus.js";
@@ -103,7 +103,7 @@ export class SlotTextboxFactory extends OutfitPanelContext {
 			{ stopImmediatePropagation: true }
 		);
 
-		textboxEl.addEventListener('click', () => {
+		onSingleClick(textboxEl, () => {
 			textboxEl.classList.toggle('--reveal');
 			this.updateOverflowState(textboxEl);
 		});

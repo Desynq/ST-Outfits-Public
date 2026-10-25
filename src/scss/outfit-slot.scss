@@ -35,13 +35,20 @@
 
 
 
+.outfit-content-footer {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin-top: auto;
+	width: 100%;
+}
+
 .add-slot-button {
 	padding: 10px;
 	background: rgba(255, 255, 255, 0.08);
 	border-radius: 8px;
 	backdrop-filter: blur(5px);
 	border: 1px solid rgba(255, 255, 255, 0.1);
-	margin-top: auto;
 
 	width: 100%;
 	display: block;

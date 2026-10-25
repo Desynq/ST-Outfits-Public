@@ -4,6 +4,7 @@ import { OutfitManager } from "../manager/OutfitManager.js";
 import { assertNever } from "../shared.js";
 import { PanelType } from "../types/maps.js";
 import { addHorizontalScroll, createElement, el } from "../util/ElementHelper.js";
+import { toSlotId } from "../util/normalize/slot.js";
 import { OutfitTabsHost } from "./OutfitTabsHost.js";
 import { CacheTab } from "./tab/CacheTab.js";
 import { OutfitsTab } from "./tab/OutfitsTab.js";
@@ -479,8 +480,9 @@ export class OutfitTabsRenderer {
 	private onAddTabClick(): void {
 		const kind = this.promptKind();
 		if (kind === null) return; // user cancelled
+		const id = toSlotId(kind);
 
-		const result = this.outfitManager.getOutfitView().addSlot(kind, kind);
+		const result = this.outfitManager.getOutfitView().addSlot(id, kind);
 		switch (result) {
 			case 'slot-already-exists':
 				this.panel.sendSystemMessage(`Make sure no pre-existing slots are named ${kind}.`);

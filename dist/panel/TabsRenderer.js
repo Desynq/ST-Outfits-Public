@@ -1,5 +1,6 @@
 import { assertNever } from "../shared.js";
 import { addHorizontalScroll, createElement, el } from "../util/ElementHelper.js";
+import { toSlotId } from "../util/normalize/slot.js";
 import { CacheTab } from "./tab/CacheTab.js";
 import { OutfitsTab } from "./tab/OutfitsTab.js";
 import { VisibilityTab } from "./tab/VisibilityTab.js";
@@ -361,7 +362,8 @@ export class OutfitTabsRenderer {
         const kind = this.promptKind();
         if (kind === null)
             return; // user cancelled
-        const result = this.outfitManager.getOutfitView().addSlot(kind, kind);
+        const id = toSlotId(kind);
+        const result = this.outfitManager.getOutfitView().addSlot(id, kind);
         switch (result) {
             case 'slot-already-exists':
                 this.panel.sendSystemMessage(`Make sure no pre-existing slots are named ${kind}.`);

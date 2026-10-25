@@ -3,6 +3,7 @@ import { OverflowMenuFactory } from "../ui/components/OverflowMenu.js";
 import { confirmChanges } from "../ui/prompt/prompt-options.js";
 import { setScroll } from "../util/element/scroll.js";
 import { el } from "../util/ElementHelper.js";
+import { toSlotId } from "../util/normalize/slot.js";
 import { plural } from "../util/StringHelper.js";
 import { OutfitPanelContext } from "./base/OutfitPanelContext.js";
 import { DisplaySlot } from "./slots/DisplaySlot.js";
@@ -139,11 +140,13 @@ export class SlotsRenderer extends OutfitPanelContext {
 	}
 
 	private promptAddSlot(kind: SlotKind): void {
-		const id = prompt('Name?')?.trim();
-		if (!id) {
+		const raw = prompt('Name?')?.trim();
+		if (!raw) {
 			this.panel.renderTabsAndActiveContent();
 			return;
 		}
+
+		const id = toSlotId(raw);
 
 		const duplicate = !this.outfitView.addSlot(id, kind);
 		if (duplicate) {

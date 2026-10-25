@@ -404,7 +404,7 @@ export class SlotRenderer extends OutfitPanelContext {
     }
     /* --------------------------- Slot Label Renaming -------------------------- */
     beginRename(slotNameEl, ctx) {
-        const originalValue = slotNameEl.innerText.trim();
+        const originalValue = toSlotId(slotNameEl.innerText.trim());
         const textarea = createElement('textarea', 'label-editbox');
         textarea.rows = 1;
         textarea.value = originalValue;

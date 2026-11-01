@@ -32,6 +32,9 @@ export class OutfitPanelRegistry {
             userPanel.setMinimize(true);
         }
     }
+    refreshActivePanel() {
+        this.activePanel?.renderTabsAndActiveContent();
+    }
     registerPanel(panel) {
         if (this.panels.has(panel))
             return;

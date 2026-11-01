@@ -5,6 +5,7 @@ import { getCurrentCharacterKey } from './api/character-provider.js';
 import { saveSettings as saveSettingsBase } from './api/settings.js';
 import { registerPanelCommands } from './command/panel-commands.js';
 import { OutfitPanelRegistry } from './panel/PanelRegistry.js';
+import { createSettingsUI } from './ui/settings-ui.js';
 console.log('[OutfitTracker] Starting extension loading...');
 async function initializeExtension() {
     const MODULE_NAME = 'outfit_tracker';
@@ -208,122 +209,20 @@ async function initializeExtension() {
             }
         }
     }
-    function createSettingsUI() {
-        // @ts-ignore
-        const hasAutoSystem = AutoOutfitSystem.name !== 'DummyAutoOutfitSystem';
-        const autoSettingsHtml = hasAutoSystem ? `
-            <div class="flex-container">
-                <label for="outfit-auto-system">Enable auto outfit updates</label>
-                <input type="checkbox" id="outfit-auto-system"
-                        ${extension_settings[MODULE_NAME].autoOutfitSystem ? 'checked' : ''}>
-            </div>
-            <div class="flex-container">
-                <label for="outfit-prompt-input">System Prompt:</label>
-                <textarea id="outfit-prompt-input" rows="6" placeholder="Enter system prompt for auto outfit detection">${extension_settings[MODULE_NAME].autoOutfitPrompt || ''}</textarea>
-            </div>
-            <div class="flex-container">
-                <button id="outfit-prompt-reset-btn" class="menu_button">Reset to Default Prompt</button>
-                <button id="outfit-prompt-view-btn" class="menu_button">View Current Prompt</button>
-            </div>
-        ` : `
-            <div class="flex-container">
-                <label>Auto Outfit System: <span style="color: #ff6b6b;">Not Available</span></label>
-            </div>
-        `;
-        /*html*/
-        const settingsHtml = `
-        <div class="outfit-extension-settings">
-            <div class="inline-drawer">
-                <div class="inline-drawer-toggle inline-drawer-header">
-                    <b>Outfit Tracker Settings</b>
-                    <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
-                </div>
-                <div class="inline-drawer-content">
-                    <div class="flex-container">
-                        <label for="outfit-sys-toggle">Enable system messages</label>
-                        <input type="checkbox" id="outfit-sys-toggle"
-                                ${extension_settings[MODULE_NAME].enableSysMessages ? 'checked' : ''}>
-                    </div>
-                    <div class="flex-container">
-                        <label for="outfit-auto-bot">Auto-open character panel</label>
-                        <input type="checkbox" id="outfit-auto-bot"
-                                ${extension_settings[MODULE_NAME].autoOpenBot ? 'checked' : ''}>
-                    </div>
-                    <div class="flex-container">
-                        <label for="outfit-auto-user">Auto-open user panel</label>
-                        <input type="checkbox" id="outfit-auto-user"
-                                ${extension_settings[MODULE_NAME].autoOpenUser ? 'checked' : ''}>
-                    </div>
-                    ${autoSettingsHtml}
-                </div>
-            </div>
-        </div>
-        `;
-        $('#extensions_settings').append(settingsHtml);
-        $('#outfit-sys-toggle').on('input', function () {
-            extension_settings[MODULE_NAME].enableSysMessages = $(this).prop('checked');
-            saveSettings();
-        });
-        $('#outfit-auto-bot').on('input', function () {
-            extension_settings[MODULE_NAME].autoOpenBot = $(this).prop('checked');
-            saveSettings();
-        });
-        $('#outfit-auto-user').on('input', function () {
-            extension_settings[MODULE_NAME].autoOpenUser = $(this).prop('checked');
-            saveSettings();
-        });
-        // Only add auto system event listeners if it loaded successfully
-        if (hasAutoSystem) {
-            $('#outfit-auto-system').on('input', function () {
-                extension_settings[MODULE_NAME].autoOutfitSystem = $(this).prop('checked');
-                if ($(this).prop('checked')) {
-                    autoOutfitSystem.enable();
-                }
-                else {
-                    autoOutfitSystem.disable();
-                }
-                saveSettings();
-            });
-            $('#outfit-prompt-input').on('change', function () {
-                extension_settings[MODULE_NAME].autoOutfitPrompt = $(this).val();
-                autoOutfitSystem.setPrompt($(this).val());
-                saveSettings();
-            });
-            $('#outfit-prompt-reset-btn').on('click', function () {
-                const message = autoOutfitSystem.resetToDefaultPrompt();
-                // @ts-ignore
-                $('#outfit-prompt-input').val(autoOutfitSystem.systemPrompt);
-                // @ts-ignore
-                extension_settings[MODULE_NAME].autoOutfitPrompt = autoOutfitSystem.systemPrompt;
-                saveSettings();
-                if (extension_settings.outfit_tracker?.enableSysMessages) {
-                    botPanel.sendSystemMessage(message);
-                }
-                else {
-                    toastr.info(message);
-                }
-            });
-            $('#outfit-prompt-view-btn').on('click', function () {
-                const status = autoOutfitSystem.getStatus();
-                // @ts-ignore
-                const preview = autoOutfitSystem.systemPrompt.length > 100
-                    // @ts-ignore
-                    ? autoOutfitSystem.systemPrompt.substring(0, 100) + '...'
-                    // @ts-ignore
-                    : autoOutfitSystem.systemPrompt;
-                // @ts-ignore
-                toastr.info(`Prompt preview: ${preview}\n\nFull length: ${status.promptLength} characters`, 'Current System Prompt', {
-                    timeOut: 15000,
-                    extendedTimeOut: 30000,
-                });
-            });
-        }
-    }
     initSettings();
     registerOutfitCommands();
     setupEventListeners();
     updateForCurrentCharacter();
-    createSettingsUI();
+    createSettingsUI({
+        settings: extension_settings[MODULE_NAME],
+        saveSettings,
+        // @ts-ignore
+        autoOutfitSystem: AutoOutfitSystem.name !== 'DummyAutoOutfitSystem'
+            ? autoOutfitSystem
+            : undefined,
+        sendSystemMessage: message => botPanel.sendSystemMessage(message),
+        refreshActivePanel: () => panelRegistry.refreshActivePanel(),
+    });
 }
 $(async () => {
     try {

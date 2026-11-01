@@ -2,6 +2,8 @@
 import { extension_settings } from "../../../../../extensions.js";
 import { saveSettings } from "../api/settings.js";
 import { isObject, notObject } from "../ObjectHelper.js";
+import { DEFAULT_SLOT_ICON_RULES } from "../panel/slots/slot-icon.js";
+import { SlotIconRule } from "../ui/prompt/configure-slot-icons.js";
 import { isRecord } from "../util/narrowing.js";
 import { normalizeCharPanels, normalizePanelSettings } from "./mappings/PanelSettings.js";
 import { CharactersOutfitMap, ExtensionSettingsAugment, ImageBlob, ImageCacheEntry, ImageRef, OutfitTrackerModel } from "./model/Outfit.js";
@@ -68,6 +70,20 @@ class Tracker {
 
 	public slotPresets(): SlotPresetRegistry {
 		return new SlotPresetRegistry(this.settings.slotPresets);
+	}
+
+
+	public getSlotIconRules(): readonly SlotIconRule[] {
+		return this.settings.slotIconRules;
+	}
+
+	public setSlotIconRules(rules: readonly SlotIconRule[]): void {
+		this.settings.slotIconRules = rules.map(rule => ({
+			...rule,
+			keywords: [...rule.keywords],
+		}));
+
+		saveSettings();
 	}
 
 
@@ -146,6 +162,8 @@ function loadTracker(): Tracker {
 
 	normalizePanelSettings(raw, 'userPanel', defaultUserPanelSettings);
 	normalizePanelSettings(raw, 'botPanel', defaultBotPanelSettings);
+
+	raw.slotIconRules ??= structuredClone(DEFAULT_SLOT_ICON_RULES);
 
 	raw.version = 1;
 	return new Tracker(raw as OutfitTrackerModel);

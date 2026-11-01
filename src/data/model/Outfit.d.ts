@@ -1,4 +1,5 @@
 import { CharacterNoteType } from "../../Constants";
+import { SlotIconRule } from "../../ui/prompt/configure-slot-icons";
 import { CharPanelsTree, PanelSettings } from "./Panels";
 import { SlotPresetV1 } from "./SlotPreset";
 
@@ -128,6 +129,8 @@ export interface OutfitTrackerModel {
 	images: Record<string, ImageRef>;
 
 	slotPresets: Record<string, SlotPresetV1>;
+
+	slotIconRules: SlotIconRule[];
 }
 
 export interface ExtensionSettingsAugment {

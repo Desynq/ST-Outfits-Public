@@ -2,6 +2,7 @@
 import { extension_settings } from "../../../../../extensions.js";
 import { saveSettings } from "../api/settings.js";
 import { notObject } from "../ObjectHelper.js";
+import { DEFAULT_SLOT_ICON_RULES } from "../panel/slots/slot-icon.js";
 import { isRecord } from "../util/narrowing.js";
 import { normalizeCharPanels, normalizePanelSettings } from "./mappings/PanelSettings.js";
 import { normalizeImageBlobs, normalizeSlotPresets, validatePresets } from "./normalize.js";
@@ -47,6 +48,16 @@ class Tracker {
     }
     slotPresets() {
         return new SlotPresetRegistry(this.settings.slotPresets);
+    }
+    getSlotIconRules() {
+        return this.settings.slotIconRules;
+    }
+    setSlotIconRules(rules) {
+        this.settings.slotIconRules = rules.map(rule => ({
+            ...rule,
+            keywords: [...rule.keywords],
+        }));
+        saveSettings();
     }
     async migrate() {
         const images = this.settings.images;
@@ -100,6 +111,7 @@ function loadTracker() {
     validatePresets(raw);
     normalizePanelSettings(raw, 'userPanel', defaultUserPanelSettings);
     normalizePanelSettings(raw, 'botPanel', defaultBotPanelSettings);
+    raw.slotIconRules ??= structuredClone(DEFAULT_SLOT_ICON_RULES);
     raw.version = 1;
     return new Tracker(raw);
 }

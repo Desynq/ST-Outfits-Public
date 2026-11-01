@@ -60,6 +60,12 @@ export class OutfitPanelRegistry implements IPanelGrouper {
 		}
 	}
 
+	public refreshActivePanel(): void {
+		this.activePanel?.renderTabsAndActiveContent();
+	}
+
+
+
 	private registerPanel(panel: OutfitPanel): void {
 		if (this.panels.has(panel)) return;
 

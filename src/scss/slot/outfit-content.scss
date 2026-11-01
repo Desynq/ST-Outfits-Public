@@ -184,14 +184,14 @@
 	}
 }
 
+.slot-value-container,
 .slot-character-note-container,
 .slot-chat-note-container {
 	display: flex;
 	align-items: center;
 	gap: 0.5rem;
 
-	& > .slot-character-note-textbox,
-	& > .slot-chat-note-textbox {
+	& > .slot-textbox {
 		min-height: calc(1lh + 12px);
 	}
 }

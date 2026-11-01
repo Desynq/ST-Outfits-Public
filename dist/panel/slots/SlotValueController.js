@@ -2,6 +2,7 @@ import { getCurrentCharacterKey } from "../../api/character-provider.js";
 import { ChatOutfitStorage } from "../../api/chat-metadata.js";
 import * as SlotPresetsApi from "../../api/internal/slot-preset.js";
 import { CHARACTER_NOTE_OPTIONS } from "../../Constants.js";
+import { OutfitTracker } from "../../data/tracker.js";
 import { SlotTextbox } from "../../ui/components/slot/slot-textbox.js";
 import { SlotValueText } from "../../ui/components/SlotValueText.js";
 import { popupConfirm } from "../../util/adapter/popup-adapter.js";
@@ -13,6 +14,7 @@ import { EventBus } from "../../util/EventBus.js";
 import { exact } from "../../util/narrowing.js";
 import { stringIf } from "../../util/StringHelper.js";
 import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
+import { getSlotIcon } from "./slot-icon.js";
 export class SlotTextboxFactory extends OutfitPanelContext {
     constructor(deps) {
         super(deps.panel);
@@ -73,16 +75,34 @@ export class SlotTextboxFactory extends OutfitPanelContext {
             textbox
         };
     }
+    createThumbFromName({ rootEl, ctx }) {
+        const character = getCurrentCharacterKey();
+        const collection = this.outfitManager.getOutfitCollection();
+        const hasNote = (type) => !!character
+            && !!collection.getCharacterNoteText(character, ctx.slot.id, type);
+        const icon = getSlotIcon(ctx.slot.id, hasNote, OutfitTracker.getSlotIconRules());
+        if (!icon)
+            return;
+        el('div', {
+            className: mergeClassNames('slot-textbox-thumb', icon),
+            parent: rootEl
+        });
+    }
     createValueElements(ctx) {
+        const rootEl = el('div', {
+            className: 'slot-value-container'
+        });
+        this.createThumbFromName({ rootEl, ctx });
         const valueEl = el('div', {
             className: 'slot-value slot-textbox',
             classes: [
                 stringIf(ctx.slot.isDisabled(), 'disabled'),
                 stringIf(this.isEmpty(ctx.slot), 'none')
-            ]
+            ],
+            parent: rootEl
         });
         return {
-            rootEl: valueEl,
+            rootEl,
             valueEl
         };
     }

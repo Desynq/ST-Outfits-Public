@@ -7,6 +7,7 @@ import { OutfitTracker } from "../../data/tracker.js";
 import { PanelType } from "../../types/maps.js";
 import { SlotTextbox } from "../../ui/components/slot/slot-textbox.js";
 import { SlotValueText } from "../../ui/components/SlotValueText.js";
+import { promptConfigureSlotIcons } from "../../ui/prompt/configure-slot-icons.js";
 import { popupConfirm } from "../../util/adapter/popup-adapter.js";
 import { substituteParams } from "../../util/adapter/script-adapter.js";
 import { addDoubleTapListener, onSingleClick } from "../../util/element/click-actions.js";
@@ -145,9 +146,16 @@ export class SlotTextboxFactory extends OutfitPanelContext {
 
 		if (!icon) return;
 
-		el('div', {
+		const thumb = el('div', {
 			className: mergeClassNames('slot-textbox-thumb', icon),
 			parent: rootEl
+		});
+		onSingleClick(thumb, async () => {
+			await promptConfigureSlotIcons({
+				onSave: () => {
+					this.panel.renderTabsAndActiveContent();
+				}
+			});
 		});
 	}
 

@@ -1,5 +1,3 @@
-import { OutfitTracker } from "../data/tracker.js";
-import { DEFAULT_SLOT_ICON_RULES } from "../panel/slots/slot-icon.js";
 import { el } from "../util/ElementHelper.js";
 import { promptConfigureSlotIcons } from "./prompt/configure-slot-icons.js";
 export function createSettingsUI({ settings, saveSettings, autoOutfitSystem, sendSystemMessage, refreshActivePanel, }) {
@@ -52,12 +50,9 @@ export function createSettingsUI({ settings, saveSettings, autoOutfitSystem, sen
                 children: [
                     settingsButton('Configure Slot Icons', async () => {
                         await promptConfigureSlotIcons({
-                            settings: OutfitTracker.getSlotIconRules(),
-                            defaultSettings: DEFAULT_SLOT_ICON_RULES,
-                            save: rules => {
-                                OutfitTracker.setSlotIconRules(rules);
+                            onSave: () => {
                                 refreshActivePanel();
-                            },
+                            }
                         });
                     })
                 ]

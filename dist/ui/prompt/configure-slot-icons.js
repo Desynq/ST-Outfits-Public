@@ -1,6 +1,8 @@
-import { el } from '../../util/ElementHelper.js';
 import { CHARACTER_NOTE_OPTIONS } from '../../Constants.js';
-export async function promptConfigureSlotIcons({ settings, defaultSettings, save, }) {
+import { OutfitTracker } from '../../data/tracker.js';
+import { DEFAULT_SLOT_ICON_RULES } from '../../panel/slots/slot-icon.js';
+import { el } from '../../util/ElementHelper.js';
+export async function promptConfigureSlotIcons({ settings = OutfitTracker.getSlotIconRules(), defaultSettings = DEFAULT_SLOT_ICON_RULES, save = rules => OutfitTracker.setSlotIconRules(rules), onSave, }) {
     const clone = (rules) => rules.map(rule => ({
         ...rule,
         keywords: [...rule.keywords],
@@ -25,79 +27,95 @@ export async function promptConfigureSlotIcons({ settings, defaultSettings, save
     });
     function render() {
         list.replaceChildren();
-        rules.forEach((rule, index) => {
-            const iconClass = rule.type
-                ? CHARACTER_NOTE_OPTIONS[rule.type].icon
-                : rule.icon;
-            const icon = el('i', {
-                className: iconClass,
-            });
-            const keywords = el('textarea', {
-                rows: 1,
-                className: 'text_pole',
-                placeholder: 'Keywords (comma-separated)',
-                value: rule.keywords.join(', '),
-                events: {
-                    input() {
-                        rule.keywords = this.value
-                            .split(',')
-                            .map(value => value.trim().toLowerCase())
-                            .filter(Boolean);
-                    },
+        for (const [index, rule] of rules.entries()) {
+            renderRule(rule, index);
+        }
+    }
+    function renderRule(rule, index) {
+        const iconClass = rule.type
+            ? CHARACTER_NOTE_OPTIONS[rule.type].icon
+            : rule.icon;
+        const icon = el('i', {
+            className: iconClass,
+            title: 'Click to change icon',
+            events: {
+                click() {
+                    const newIcon = prompt('Font Awesome icon class:', iconClass)?.trim();
+                    if (!newIcon || newIcon === iconClass)
+                        return;
+                    rules[index] = {
+                        icon: newIcon,
+                        keywords: [...rule.keywords],
+                    };
+                    render();
                 },
-            });
-            const up = el('button', {
-                type: 'button',
-                className: 'menu_button',
-                text: '↑',
-                title: 'Move up',
-                disabled: index === 0,
-                events: {
-                    click() {
-                        [rules[index - 1], rules[index]] =
-                            [rules[index], rules[index - 1]];
-                        render();
-                    },
-                },
-            });
-            const down = el('button', {
-                type: 'button',
-                className: 'menu_button',
-                text: '↓',
-                title: 'Move down',
-                disabled: index === rules.length - 1,
-                events: {
-                    click() {
-                        [rules[index + 1], rules[index]] =
-                            [rules[index], rules[index + 1]];
-                        render();
-                    },
-                },
-            });
-            const remove = el('button', {
-                type: 'button',
-                className: 'menu_button',
-                text: '×',
-                title: 'Remove rule',
-                events: {
-                    click() {
-                        rules.splice(index, 1);
-                        render();
-                    },
-                },
-            });
-            const row = el('div', {
-                className: 'slot-icon-config-row',
-                children: [
-                    icon,
-                    keywords,
-                    up,
-                    down,
-                    remove,
-                ],
-            });
-            list.append(row);
+            }
         });
+        const keywords = el('textarea', {
+            rows: 1,
+            className: 'text_pole',
+            placeholder: 'Keywords (comma-separated)',
+            value: rule.keywords.join(', '),
+            events: {
+                input() {
+                    rule.keywords = this.value
+                        .split(',')
+                        .map(value => value.trim().toLowerCase())
+                        .filter(Boolean);
+                },
+            },
+        });
+        const up = el('button', {
+            type: 'button',
+            className: 'menu_button',
+            text: '↑',
+            title: 'Move up',
+            disabled: index === 0,
+            events: {
+                click() {
+                    [rules[index - 1], rules[index]] =
+                        [rules[index], rules[index - 1]];
+                    render();
+                },
+            },
+        });
+        const down = el('button', {
+            type: 'button',
+            className: 'menu_button',
+            text: '↓',
+            title: 'Move down',
+            disabled: index === rules.length - 1,
+            events: {
+                click() {
+                    [rules[index + 1], rules[index]] =
+                        [rules[index], rules[index + 1]];
+                    render();
+                },
+            },
+        });
+        const remove = el('button', {
+            type: 'button',
+            className: 'menu_button',
+            text: '×',
+            title: 'Remove rule',
+            events: {
+                click() {
+                    rules.splice(index, 1);
+                    render();
+                },
+            },
+        });
+        const row = el('div', {
+            className: 'slot-icon-config-row',
+            children: [
+                icon,
+                keywords,
+                up,
+                down,
+                remove,
+            ],
+        });
+        list.append(row);
     }
     render();
     const addCustomIcon = el('button', {
@@ -183,6 +201,7 @@ export async function promptConfigureSlotIcons({ settings, defaultSettings, save
             reset.disabled = true;
             try {
                 await save(clone(rules));
+                await onSave?.(clone(rules));
                 close();
             }
             catch (error) {

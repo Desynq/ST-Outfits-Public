@@ -8,6 +8,7 @@ import { OutfitPanelContext } from "./base/OutfitPanelContext.js";
 import { DisplaySlot } from "./slots/DisplaySlot.js";
 import { EditCoordinator } from "./slots/edit-coordinator.js";
 import { TextSlotRenderer } from "./slots/renderer/text-slot.js";
+import { TraitSlotRenderer } from "./slots/renderer/trait-slot.js";
 import { SlotImageElementFactory } from "./slots/SlotImageController.js";
 function updateBottomPadding(container, child, topOffset, below = []) {
     // 16:10 and under needs bottom padding for comfortable scrolling
@@ -34,32 +35,32 @@ export class SlotsRenderer extends OutfitPanelContext {
         const imageFactory = new SlotImageElementFactory(this.panel, slotContainer.getBoundingClientRect().width);
         const overflowMenuFactory = new OverflowMenuFactory();
         const editCoordinator = new EditCoordinator();
-        const textSlotRenderer = new TextSlotRenderer({
+        const rendererDeps = {
             panel: this.panel,
             displaySlots,
             imageFactory,
             overflowMenuFactory,
             editCoordinator
-        });
+        };
+        const textSlotRenderer = new TextSlotRenderer(rendererDeps);
+        const traitSlotRenderer = new TraitSlotRenderer(rendererDeps);
         const fragment = document.createDocumentFragment();
         let lastSlotEl = null;
         for (let i = 0; i < displaySlots.length; i++) {
             const display = displaySlots[i];
             let slotEl;
             switch (display.slot.type) {
-                case 'text':
+                case 'text': {
                     slotEl = textSlotRenderer.createSlotElement(slotContainer, display);
                     break;
-                /*
-                case 'traits':
-                    slotEl = traitRenderer.createSlotElement(
-                        slotContainer,
-                        display as DisplaySlot<TraitSlotState>
-                    );
+                }
+                case 'traits': {
+                    slotEl = traitSlotRenderer.createSlotElement(slotContainer, display);
                     break;
-                */
-                default:
+                }
+                default: {
                     throw new Error(`Unsupported slot type: ${display.slot.type}`);
+                }
             }
             if (i === displaySlots.length - 1) {
                 lastSlotEl = slotEl;
@@ -105,13 +106,22 @@ export class SlotsRenderer extends OutfitPanelContext {
     }
     promptAddSlot(kind) {
         const raw = prompt('Name?')?.trim();
-        if (!raw) {
-            this.panel.renderTabsAndActiveContent();
+        if (!raw)
             return;
+        let type;
+        let attempts = 0; // got bored
+        while (true) {
+            const input = prompt(`Slot type${'?'.repeat(++attempts)} (text/traits)`, 'text')?.trim().toLowerCase();
+            if (input === undefined)
+                return;
+            if (input === 'text' || input === 'traits') {
+                type = input;
+                break;
+            }
         }
         const id = toSlotId(raw);
-        const duplicate = !this.outfitView.addSlot(id, kind);
-        if (duplicate) {
+        const result = this.outfitView.addSlot(id, kind, type);
+        if (result === 'slot-already-exists') {
             this.panel.sendSystemMessage(`Slot with id ${id} already exists.`);
             return;
         }

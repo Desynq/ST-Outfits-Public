@@ -6,6 +6,9 @@ export class MutableOutfitView extends OutfitView {
     setValue(slotId, value) {
         return this.slotView.setValue(slotId, value);
     }
+    setTraits(slotId, traits) {
+        return this.slotView.setTraits(slotId, traits);
+    }
     toggleSlot(slotId) {
         const slot = this.getSlotById(slotId);
         if (!slot)
@@ -19,8 +22,8 @@ export class MutableOutfitView extends OutfitView {
     shiftSlotByIndex(sourceIndex, targetIndex) {
         return this.slotView.moveIndex(sourceIndex, targetIndex);
     }
-    addSlot(id, kind) {
-        return this.slotView.addSlot(id, kind);
+    addSlot(id, kind, type) {
+        return this.slotView.addSlot(id, kind, type);
     }
     deleteSlot(slotId) {
         return this.slotView.deleteSlot(slotId);

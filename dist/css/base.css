@@ -1076,6 +1076,97 @@
   transform: translateY(1px);
 }
 
+.slot-trait-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  min-width: 0;
+}
+.slot-trait-container .slot-trait-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.slot-trait-container .slot-trait-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.65rem;
+  min-width: 0;
+  background: rgba(0, 0, 0, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+}
+.slot-trait-container .slot-trait-row > i {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 2rem;
+  width: 2rem;
+  height: 2rem;
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+}
+.slot-trait-container .slot-trait-body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.slot-trait-container .slot-trait-name {
+  font-weight: 650;
+  line-height: 1.3;
+}
+.slot-trait-container .slot-trait-description {
+  font-size: 0.9rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+.slot-trait-container .slot-trait-addendum {
+  padding-left: 0.6rem;
+  border-left: 2px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.85rem;
+  font-style: italic;
+  line-height: 1.4;
+  white-space: pre-wrap;
+}
+.slot-trait-container .slot-trait-controls {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 0.25rem;
+}
+.slot-trait-container .slot-trait-controls .slot-button {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  font-size: 0.85rem;
+  opacity: 0.65;
+}
+.slot-trait-container .slot-trait-controls .slot-button:hover {
+  opacity: 1;
+}
+.slot-trait-container .slot-add-trait {
+  align-self: flex-start;
+  height: 30px;
+  padding: 0 0.75rem;
+  font-size: 0.85rem;
+}
+@media (max-width: 600px) {
+  .slot-trait-container .slot-trait-row {
+    gap: 0.5rem;
+    padding: 0.5rem;
+  }
+  .slot-trait-container .slot-trait-controls {
+    flex-direction: column;
+  }
+}
+
 .outfit-header {
   touch-action: none;
   padding-bottom: 8px;

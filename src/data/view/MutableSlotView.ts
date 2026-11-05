@@ -1,4 +1,4 @@
-import { ContextSlot, SlotCondition, SlotConditionMapMode, SlotKind } from "../model/Outfit.js";
+import { ContextSlot, SlotCondition, SlotConditionMapMode, SlotKind, TraitAssignment } from "../model/Outfit.js";
 import { OutfitTracker } from "../tracker.js";
 import { createSlot } from "../util/slot.js";
 
@@ -163,6 +163,18 @@ export class MutableSlotView implements ISlotManipulator {
 		if (index === -1) return false;
 
 		slot.traits.splice(index, 1);
+		return true;
+	}
+
+	public setTraits(
+		id: string,
+		traits: DeepReadonly<TraitAssignment[]>
+	): boolean {
+		const slot = this.getMutableSlotById(id);
+
+		if (slot?.type !== 'traits') return false;
+
+		slot.traits = traits.map(trait => ({ ...trait }));
 		return true;
 	}
 

@@ -1,4 +1,4 @@
-import { SlotKind } from "../model/Outfit.js";
+import { ContextSlot, SlotKind, TraitAssignment } from "../model/Outfit.js";
 import { AddSlotResult, AttachImageResult, DeleteImageResponse, ISlotManipulator, MoveSlotResult, MoveToKindResult, RenameKindResult, RenameSlotResult, ResizeImageResult, SetActiveImageResult, ToggleImageResult } from "./MutableSlotView.js";
 import { OutfitView } from "./OutfitView.js";
 
@@ -11,6 +11,15 @@ export class MutableOutfitView extends OutfitView {
 	public setValue(slotId: string, value: string): boolean {
 		return this.slotView.setValue(slotId, value);
 	}
+
+	public setTraits(
+		slotId: string,
+		traits: readonly TraitAssignment[]
+	): boolean {
+		return this.slotView.setTraits(slotId, traits);
+	}
+
+
 
 	public toggleSlot(slotId: string): boolean {
 		const slot = this.getSlotById(slotId);
@@ -28,8 +37,8 @@ export class MutableOutfitView extends OutfitView {
 		return this.slotView.moveIndex(sourceIndex, targetIndex);
 	}
 
-	public addSlot(id: string, kind: SlotKind): AddSlotResult {
-		return this.slotView.addSlot(id, kind);
+	public addSlot(id: string, kind: SlotKind, type?: ContextSlot['type']): AddSlotResult {
+		return this.slotView.addSlot(id, kind, type);
 	}
 
 	public deleteSlot(slotId: string): boolean {

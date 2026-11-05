@@ -68,6 +68,13 @@ export class MutableSlotView {
         slot.traits.splice(index, 1);
         return true;
     }
+    setTraits(id, traits) {
+        const slot = this.getMutableSlotById(id);
+        if (slot?.type !== 'traits')
+            return false;
+        slot.traits = traits.map(trait => ({ ...trait }));
+        return true;
+    }
     moveToKind(id, kind) {
         const i = this.indexById[id];
         if (i === undefined)

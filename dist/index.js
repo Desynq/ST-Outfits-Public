@@ -222,6 +222,7 @@ async function initializeExtension() {
             : undefined,
         sendSystemMessage: message => botPanel.sendSystemMessage(message),
         refreshActivePanel: () => panelRegistry.refreshActivePanel(),
+        recontextualize: (options) => panelRegistry.recontextualize(options)
     });
 }
 $(async () => {

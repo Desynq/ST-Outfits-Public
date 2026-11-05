@@ -1,6 +1,7 @@
 import { el } from "../util/ElementHelper.js";
 import { promptConfigureSlotIcons } from "./prompt/configure-slot-icons.js";
-export function createSettingsUI({ settings, saveSettings, autoOutfitSystem, sendSystemMessage, refreshActivePanel, }) {
+import { promptConfigureTraits } from "./prompt/configure-traits.js";
+export function createSettingsUI({ settings, saveSettings, autoOutfitSystem, sendSystemMessage, refreshActivePanel, recontextualize }) {
     function checkboxSetting(label, checked, onChange) {
         return el('div', {
             className: 'flex-container',
@@ -51,6 +52,24 @@ export function createSettingsUI({ settings, saveSettings, autoOutfitSystem, sen
                     settingsButton('Configure Slot Icons', async () => {
                         await promptConfigureSlotIcons({
                             onSave: () => {
+                                saveSettings();
+                                refreshActivePanel();
+                            }
+                        });
+                    })
+                ]
+            }),
+            el('div', {
+                className: 'flex-container',
+                children: [
+                    settingsButton('Configure Slot Traits', async () => {
+                        await promptConfigureTraits({
+                            onSave: () => {
+                                saveSettings();
+                                recontextualize({
+                                    allPanels: true,
+                                    filter: slot => slot.type === 'traits'
+                                });
                                 refreshActivePanel();
                             }
                         });

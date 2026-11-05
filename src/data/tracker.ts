@@ -83,8 +83,6 @@ class Tracker {
 			...rule,
 			keywords: [...rule.keywords],
 		}));
-
-		saveSettings();
 	}
 
 

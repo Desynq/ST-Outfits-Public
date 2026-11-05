@@ -6,7 +6,7 @@ import { getCurrentCharacterKey } from './api/character-provider.js';
 import { saveSettings as saveSettingsBase } from './api/settings.js';
 import { registerPanelCommands } from './command/panel-commands.js';
 import { OutfitTrackerModel } from './data/model/Outfit.js';
-import { OutfitPanelRegistry } from './panel/PanelRegistry.js';
+import { OutfitPanelRegistry, RecontextualizeOptions } from './panel/PanelRegistry.js';
 import { createSettingsUI } from './ui/settings-ui.js';
 
 console.log('[OutfitTracker] Starting extension loading...');
@@ -260,6 +260,7 @@ async function initializeExtension(): Promise<void> {
                 : undefined,
         sendSystemMessage: message => botPanel.sendSystemMessage(message),
         refreshActivePanel: () => panelRegistry.refreshActivePanel(),
+        recontextualize: (options: RecontextualizeOptions) => panelRegistry.recontextualize(options)
     });
 }
 

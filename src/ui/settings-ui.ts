@@ -1,6 +1,8 @@
 import { OutfitTrackerModel } from "../data/model/Outfit.js";
+import { RecontextualizeOptions } from "../panel/PanelRegistry.js";
 import { el } from "../util/ElementHelper.js";
 import { promptConfigureSlotIcons } from "./prompt/configure-slot-icons.js";
+import { promptConfigureTraits } from "./prompt/configure-traits.js";
 
 interface AutoOutfitSystemLike {
 	enable(): unknown;
@@ -17,6 +19,7 @@ interface SettingsUIOptions {
 	autoOutfitSystem?: AutoOutfitSystemLike;
 	sendSystemMessage: (message: string) => void;
 	refreshActivePanel: () => void;
+	recontextualize: (options: RecontextualizeOptions) => void;
 }
 
 export function createSettingsUI({
@@ -25,6 +28,7 @@ export function createSettingsUI({
 	autoOutfitSystem,
 	sendSystemMessage,
 	refreshActivePanel,
+	recontextualize
 }: SettingsUIOptions): void {
 
 	function checkboxSetting(
@@ -101,6 +105,25 @@ export function createSettingsUI({
 					settingsButton('Configure Slot Icons', async () => {
 						await promptConfigureSlotIcons({
 							onSave: () => {
+								saveSettings();
+								refreshActivePanel();
+							}
+						});
+					})
+				]
+			}),
+
+			el('div', {
+				className: 'flex-container',
+				children: [
+					settingsButton('Configure Slot Traits', async () => {
+						await promptConfigureTraits({
+							onSave: () => {
+								saveSettings();
+								recontextualize({
+									allPanels: true,
+									filter: slot => slot.type === 'traits'
+								});
 								refreshActivePanel();
 							}
 						});

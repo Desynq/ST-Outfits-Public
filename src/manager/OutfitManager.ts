@@ -414,7 +414,13 @@ export abstract class OutfitManager {
 	 */
 	public updateSlotContext(
 		slotId: string,
-		{ debounceMacros = false }: { debounceMacros?: boolean; } = {}
+		{
+			debounceMacros = false,
+			skipMacros = false
+		}: {
+			debounceMacros?: boolean;
+			skipMacros?: boolean;
+		} = {}
 	): void {
 		const view = this.getOutfitView();
 		const slot = view.resolveSlot(slotId);
@@ -426,13 +432,34 @@ export abstract class OutfitManager {
 
 		setGlobalVariable(varName, prompt);
 
+		if (skipMacros) return;
+
 		if (debounceMacros) {
 			this.updateMacrosDebounced();
-		}
-		else {
+		} else {
 			this.updateMacros();
 		}
 	}
+
+	public recontextualize(
+		filter: (slot: ContextSlot) => boolean = () => true
+	): void {
+		for (const slot of this.getOutfitView().slots) {
+			if (!filter(slot)) continue;
+
+			this.updateSlotContext(slot.id, {
+				skipMacros: true
+			});
+		}
+
+		this.updateMacros();
+	}
+
+
+
+
+
+
 
 	public getSlots(): readonly string[] {
 		return this.getOutfitView().getSlotIds();

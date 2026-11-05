@@ -58,7 +58,6 @@ class Tracker {
             ...rule,
             keywords: [...rule.keywords],
         }));
-        saveSettings();
     }
     viewTraitRegistry() {
         return new TraitRegistryView(this.settings.traits);

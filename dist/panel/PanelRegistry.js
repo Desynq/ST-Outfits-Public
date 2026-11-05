@@ -35,6 +35,16 @@ export class OutfitPanelRegistry {
     refreshActivePanel() {
         this.activePanel?.renderTabsAndActiveContent();
     }
+    recontextualize({ allPanels = false, filter }) {
+        if (allPanels) {
+            for (const panel of this.panels) {
+                panel.outfitManager.recontextualize(filter);
+            }
+        }
+        else {
+            this.activePanel?.outfitManager.recontextualize(filter);
+        }
+    }
     registerPanel(panel) {
         if (this.panels.has(panel))
             return;

@@ -45,7 +45,7 @@ export interface TraitDefinition {
 	// serves as the raw name for the trait from which its display name is derived
 	id: string;
 	description: string; // what the trait does
-	icon?: TraitVisual;
+	icon: TraitVisual | null;
 }
 
 export interface TraitAssignment {

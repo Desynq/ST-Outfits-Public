@@ -1,0 +1,113 @@
+.trait-config {
+	width: min(90vw, 700px);
+	max-height: 85vh;
+
+	.trait-config-list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		overflow-y: auto;
+		min-height: 0;
+	}
+
+	.trait-config-row {
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr) minmax(0, 2fr) auto;
+		align-items: center;
+		gap: 0.75rem;
+		padding: 0.5rem 0.75rem;
+
+		background: rgba(127, 127, 127, 0.08);
+		border: 1px solid rgba(127, 127, 127, 0.2);
+		border-radius: 0.75rem;
+
+		transition: background 0.15s, border-color 0.15s;
+
+		&:hover {
+			background: rgba(127, 127, 127, 0.12);
+			border-color: rgba(127, 127, 127, 0.35);
+		}
+
+		> i {
+			width: 1.5rem;
+			font-size: 1.5rem;
+			text-align: center;
+			cursor: pointer;
+			transition: opacity 0.15s;
+
+			&:hover {
+				opacity: 0.6;
+			}
+		}
+
+		> input,
+		> textarea {
+			width: 100%;
+			min-width: 0;
+			margin: 0;
+		}
+
+		> input {
+			text-overflow: ellipsis;
+		}
+
+		> textarea {
+			resize: none;
+			overflow-y: hidden;
+			field-sizing: content;
+			white-space: pre-wrap;
+			overflow-wrap: anywhere;
+		}
+
+		> button {
+			width: 2rem;
+			min-width: 2rem;
+			margin: 0;
+		}
+
+		@media (max-width: 600px) {
+			grid-template-columns: auto minmax(0, 1fr) auto;
+			gap: 0.5rem;
+
+			> i {
+				grid-column: 1;
+				grid-row: 1;
+			}
+
+			> input {
+				grid-column: 2;
+				grid-row: 1;
+			}
+
+			> textarea {
+				grid-column: 1 / -1;
+				grid-row: 2;
+			}
+
+			> button {
+				grid-column: 3;
+				grid-row: 1;
+			}
+		}
+	}
+
+	.trait-config-buttons {
+		display: flex;
+		flex-direction: row;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: flex-end;
+		gap: 0.5rem;
+		width: 100%;
+
+		> button {
+			flex: 0 0 auto;
+			width: auto;
+			margin: 0;
+		}
+
+		> button:nth-child(2) {
+			margin-left: auto;
+		}
+	}
+}

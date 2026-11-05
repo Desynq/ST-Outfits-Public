@@ -1,3 +1,4 @@
+import { ContextSlot } from "../data/model/Outfit.js";
 import { OutfitTracker } from "../data/tracker.js";
 import { PanelType } from "../types/maps.js";
 import { MappedEventBus } from "../util/EventBus.js";
@@ -13,6 +14,11 @@ export interface IPanelGrouper {
 	getGroup(): OutfitPanel[];
 
 	onGroupFocus(name: string, listener: (panel: OutfitPanel) => void): void;
+}
+
+export interface RecontextualizeOptions {
+	allPanels?: boolean;
+	filter?: (slot: ContextSlot) => boolean;
 }
 
 
@@ -62,6 +68,20 @@ export class OutfitPanelRegistry implements IPanelGrouper {
 
 	public refreshActivePanel(): void {
 		this.activePanel?.renderTabsAndActiveContent();
+	}
+
+	public recontextualize({
+		allPanels = false,
+		filter
+	}: RecontextualizeOptions): void {
+		if (allPanels) {
+			for (const panel of this.panels) {
+				panel.outfitManager.recontextualize(filter);
+			}
+		}
+		else {
+			this.activePanel?.outfitManager.recontextualize(filter);
+		}
 	}
 
 

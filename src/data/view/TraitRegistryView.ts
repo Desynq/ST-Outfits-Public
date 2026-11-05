@@ -1,5 +1,5 @@
 import { hasOwnProperty } from "../../util/object-helper.js";
-import type { TraitDefinition, TraitRegistry } from "../model/Outfit.js";
+import type { TraitDefinition, TraitRegistry, TraitVisual } from "../model/Outfit.js";
 
 
 

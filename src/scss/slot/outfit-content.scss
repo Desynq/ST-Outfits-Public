@@ -121,6 +121,11 @@
 		overflow: visible;
 	}
 
+	&.--overflowing {
+		user-select: none;
+		-webkit-user-select: none;
+	}
+
 	&.--overflowing:not(.--reveal)::after {
 		content: '';
 		position: absolute;
@@ -217,6 +222,13 @@
 	font-size: 0.9em;
 	white-space: pre-wrap;
 	overflow-wrap: anywhere;
+
+	&.--kind {
+		color: #7dd3fc;
+		background: rgba(125, 211, 252, 0.15);
+		border-left: 2px solid #7dd3fc;
+		border-right: 2px solid #7dd3fc;
+	}
 }
 
 .slot-macro-span.--error {

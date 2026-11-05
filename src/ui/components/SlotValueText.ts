@@ -2,68 +2,7 @@ import { substituteParams } from "../../util/adapter/script-adapter.js";
 import { onSingleClick } from "../../util/element/click-actions.js";
 import { addLongPressAction, el } from "../../util/ElementHelper.js";
 import { branch } from "../../util/logic.js";
-
-
-
-
-interface MacroMatch {
-	full: string;
-	content: string;
-	index: number;
-	end: number;
-}
-
-function iterateMacros(value: string): Iterable<MacroMatch> {
-	return (function* () {
-		let i = 0;
-
-		while (i < value.length) {
-			// Find opening {{
-			if (value[i] === '{' && value[i + 1] === '{') {
-				const start = i;
-				i += 2;
-
-				let depth = 1;
-
-				while (i < value.length && depth > 0) {
-					if (value[i] === '{' && value[i + 1] === '{') {
-						depth++;
-						i += 2;
-						continue;
-					}
-
-					if (value[i] === '}' && value[i + 1] === '}') {
-						depth--;
-						i += 2;
-						continue;
-					}
-
-					i++;
-				}
-
-				if (depth === 0) {
-					const end = i;
-					const full = value.slice(start, end);
-					const content = full.slice(2, -2);
-
-					yield {
-						full,
-						content,
-						index: start,
-						end
-					};
-				}
-				else {
-					// Unbalanced braces — stop parsing
-					break;
-				}
-			}
-			else {
-				i++;
-			}
-		}
-	})();
-}
+import { iterateMacros, MacroMatch } from "../../util/slot.js";
 
 interface SlotValueTextDeps {
 	showPromptModal(promptText: string): Promise<void>;
@@ -76,7 +15,7 @@ export class SlotValueText {
 		private readonly deps: SlotValueTextDeps
 	) { }
 
-	public createFrag(value: string): DocumentFragment {
+	public createFrag(value: string, kind: string): DocumentFragment {
 		const frag = document.createDocumentFragment();
 		const appendText = (start: number, end?: number): void => {
 			const text = value.slice(start, end);
@@ -86,12 +25,11 @@ export class SlotValueText {
 		let lastIndex = 0;
 
 		for (const macro of iterateMacros(value)) {
-			// Plain text before token
 			if (macro.index > lastIndex) {
 				appendText(lastIndex, macro.index);
 			}
 
-			const span = this.createMacroSpan(macro);
+			const span = this.createMacroSpan(macro, kind);
 
 			frag.append(span);
 
@@ -246,20 +184,30 @@ export class SlotValueText {
 		return nodes;
 	}
 
-	private createMacroSpan(macro: MacroMatch): HTMLSpanElement {
+	private createMacroSpan(macro: MacroMatch, kind: string): HTMLSpanElement {
 		// macro static content does not change until rerender
 		const text = macro.full;
 		const isOutlet = macro.content.startsWith('outlet::');
 		const isSpoiler = macro.content.startsWith('spoiler::');
 
 		if (isSpoiler) {
-			return this.createSpoilerSpan(macro);
+			return this.createSpoilerSpan(macro, kind);
 		}
 
 		const span = el('span', {
 			className: 'slot-macro-span',
 			text
 		});
+
+		const isKind = kind?.toLowerCase() ===
+			macro.content.toLowerCase().replace(/\s+/g, '-');
+
+		if (isKind) {
+			span.classList.add('--kind');
+			span.textContent = macro.content;
+			span.title = kind ?? '';
+			return span;
+		}
 
 		const getPrompt = (): string | null => {
 			const prompt = substituteParams(text);
@@ -313,7 +261,7 @@ export class SlotValueText {
 		return span;
 	}
 
-	private createSpoilerSpan(macro: MacroMatch): HTMLSpanElement {
+	private createSpoilerSpan(macro: MacroMatch, kind: string): HTMLSpanElement {
 		const span = el('span', {
 			className: 'slot-macro-span',
 			text: macro.full
@@ -332,7 +280,7 @@ export class SlotValueText {
 			className: 'spoiler-content'
 		});
 
-		const nodes = this.renderMacroText(inner);
+		const nodes = this.renderMacroText(inner, kind);
 		content.append(...nodes);
 
 		span.replaceChildren(placeholder, content);
@@ -350,7 +298,7 @@ export class SlotValueText {
 		return span;
 	}
 
-	private renderMacroText(text: string): Node[] {
+	private renderMacroText(text: string, kind: string): Node[] {
 		const nodes: Node[] = [];
 		let lastIndex = 0;
 
@@ -361,7 +309,7 @@ export class SlotValueText {
 				);
 			}
 
-			nodes.push(this.createMacroSpan(macro));
+			nodes.push(this.createMacroSpan(macro, kind));
 			lastIndex = macro.end;
 		}
 

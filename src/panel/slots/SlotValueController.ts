@@ -87,7 +87,7 @@ export class SlotTextboxFactory extends OutfitPanelContext {
 
 		// set text
 		textboxEl.replaceChildren(
-			valueRenderer.createFrag(this.getSlotText(ctx.slot))
+			valueRenderer.createFrag(this.getSlotText(ctx.slot), ctx.slot.kind)
 		);
 
 		addDoubleTapListener(

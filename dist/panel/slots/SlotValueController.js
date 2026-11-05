@@ -52,7 +52,7 @@ export class SlotTextboxFactory extends OutfitPanelContext {
             }
         });
         // set text
-        textboxEl.replaceChildren(valueRenderer.createFrag(this.getSlotText(ctx.slot)));
+        textboxEl.replaceChildren(valueRenderer.createFrag(this.getSlotText(ctx.slot), ctx.slot.kind));
         addDoubleTapListener(textboxEl, () => textbox.beginInlineEdit());
         addLongPressAction(textboxEl, 300, () => {
             const text = textboxEl.textContent;

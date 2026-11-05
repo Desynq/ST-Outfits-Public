@@ -8,7 +8,7 @@ import { assertNever, formatAccessorySlotName, toSlotName } from "../shared.js";
 import { promptOptions } from "../ui/prompt/prompt-options.js";
 import { ifPresent } from "../util/logic.js";
 import { typedEntries } from "../util/narrowing.js";
-import { isSlotBlocked } from "../util/slot.js";
+import { isSlotBlocked, resolveKindMacros } from "../util/slot.js";
 import { indentString, plural, toKebabCase } from "../util/StringHelper.js";
 import { toSummaryKey } from "../util/SummaryHelper.js";
 import { deleteGlobalVariable, getGlobalVariable, setGlobalVariable } from "./GlobalVarManager.js";
@@ -71,7 +71,7 @@ export class OutfitManager {
         if (chatNote) {
             parts.push(`Chat context:\n${chatNote}`);
         }
-        return parts.join(`\n\n`);
+        return resolveKindMacros(parts.join(`\n\n`), s.kind);
     }
     getVisibleSlotMap() {
         return this.getOutfitView().getSlotValueMap((s, arr) => s.enabled && !isSlotBlocked(s, arr));

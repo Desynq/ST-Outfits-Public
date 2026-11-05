@@ -2,55 +2,12 @@ import { substituteParams } from "../../util/adapter/script-adapter.js";
 import { onSingleClick } from "../../util/element/click-actions.js";
 import { addLongPressAction, el } from "../../util/ElementHelper.js";
 import { branch } from "../../util/logic.js";
-function iterateMacros(value) {
-    return (function* () {
-        let i = 0;
-        while (i < value.length) {
-            // Find opening {{
-            if (value[i] === '{' && value[i + 1] === '{') {
-                const start = i;
-                i += 2;
-                let depth = 1;
-                while (i < value.length && depth > 0) {
-                    if (value[i] === '{' && value[i + 1] === '{') {
-                        depth++;
-                        i += 2;
-                        continue;
-                    }
-                    if (value[i] === '}' && value[i + 1] === '}') {
-                        depth--;
-                        i += 2;
-                        continue;
-                    }
-                    i++;
-                }
-                if (depth === 0) {
-                    const end = i;
-                    const full = value.slice(start, end);
-                    const content = full.slice(2, -2);
-                    yield {
-                        full,
-                        content,
-                        index: start,
-                        end
-                    };
-                }
-                else {
-                    // Unbalanced braces — stop parsing
-                    break;
-                }
-            }
-            else {
-                i++;
-            }
-        }
-    })();
-}
+import { iterateMacros } from "../../util/slot.js";
 export class SlotValueText {
     constructor(deps) {
         this.deps = deps;
     }
-    createFrag(value) {
+    createFrag(value, kind) {
         const frag = document.createDocumentFragment();
         const appendText = (start, end) => {
             const text = value.slice(start, end);
@@ -58,11 +15,10 @@ export class SlotValueText {
         };
         let lastIndex = 0;
         for (const macro of iterateMacros(value)) {
-            // Plain text before token
             if (macro.index > lastIndex) {
                 appendText(lastIndex, macro.index);
             }
-            const span = this.createMacroSpan(macro);
+            const span = this.createMacroSpan(macro, kind);
             frag.append(span);
             lastIndex = macro.end;
         }
@@ -181,18 +137,26 @@ export class SlotValueText {
         }
         return nodes;
     }
-    createMacroSpan(macro) {
+    createMacroSpan(macro, kind) {
         // macro static content does not change until rerender
         const text = macro.full;
         const isOutlet = macro.content.startsWith('outlet::');
         const isSpoiler = macro.content.startsWith('spoiler::');
         if (isSpoiler) {
-            return this.createSpoilerSpan(macro);
+            return this.createSpoilerSpan(macro, kind);
         }
         const span = el('span', {
             className: 'slot-macro-span',
             text
         });
+        const isKind = kind?.toLowerCase() ===
+            macro.content.toLowerCase().replace(/\s+/g, '-');
+        if (isKind) {
+            span.classList.add('--kind');
+            span.textContent = macro.content;
+            span.title = kind ?? '';
+            return span;
+        }
         const getPrompt = () => {
             const prompt = substituteParams(text);
             return prompt === text ? null : prompt;
@@ -233,7 +197,7 @@ export class SlotValueText {
         }, { stopImmediatePropagation: true });
         return span;
     }
-    createSpoilerSpan(macro) {
+    createSpoilerSpan(macro, kind) {
         const span = el('span', {
             className: 'slot-macro-span',
             text: macro.full
@@ -247,7 +211,7 @@ export class SlotValueText {
         const content = el('span', {
             className: 'spoiler-content'
         });
-        const nodes = this.renderMacroText(inner);
+        const nodes = this.renderMacroText(inner, kind);
         content.append(...nodes);
         span.replaceChildren(placeholder, content);
         const toggleReveal = () => {
@@ -260,14 +224,14 @@ export class SlotValueText {
         });
         return span;
     }
-    renderMacroText(text) {
+    renderMacroText(text, kind) {
         const nodes = [];
         let lastIndex = 0;
         for (const macro of iterateMacros(text)) {
             if (macro.index > lastIndex) {
                 nodes.push(document.createTextNode(text.slice(lastIndex, macro.index)));
             }
-            nodes.push(this.createMacroSpan(macro));
+            nodes.push(this.createMacroSpan(macro, kind));
             lastIndex = macro.end;
         }
         if (lastIndex < text.length) {

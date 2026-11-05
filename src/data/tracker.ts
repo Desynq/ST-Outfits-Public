@@ -13,6 +13,7 @@ import { CharacterOutfitCollectionView, UserOutfitCollectionView } from "./view/
 import { OutfitGalleryView } from "./view/OutfitGalleryView.js";
 import { BotPanelSettingsView, defaultBotPanelSettings, defaultUserPanelSettings, UserPanelSettingsView } from "./view/PanelViews.js";
 import { SlotPresetRegistry } from "./view/SlotPresetsView.js";
+import { TraitRegistryView } from "./view/TraitRegistryView.js";
 
 class Tracker {
 
@@ -84,6 +85,14 @@ class Tracker {
 		}));
 
 		saveSettings();
+	}
+
+
+
+	public viewTraitRegistry(): TraitRegistryView {
+		return new TraitRegistryView(
+			this.settings.traits
+		);
 	}
 
 
@@ -164,6 +173,9 @@ function loadTracker(): Tracker {
 	normalizePanelSettings(raw, 'botPanel', defaultBotPanelSettings);
 
 	raw.slotIconRules ??= structuredClone(DEFAULT_SLOT_ICON_RULES);
+
+	// TODO: Normalization of traits
+	raw.traits ??= { definitions: {} };
 
 	raw.version = 1;
 	return new Tracker(raw as OutfitTrackerModel);

@@ -28,21 +28,65 @@ export interface SlotConditionMap {
 	items: SlotCondition[];
 }
 
-export interface OutfitSlot {
-	id: string;
-	value: string;
-	kind: SlotKind;
-	enabled: boolean;
-	images: Record<string, OutfitImage>;
-	activeImageTag: string | null;
 
-	equipped: boolean;
-	conditions: SlotConditionMap;
+
+export type TraitVisual =
+	| {
+		type: 'font-awesome';
+		className: string;
+	}
+	| {
+		type: 'image';
+		image: OutfitImage;
+	};
+
+export interface TraitDefinition {
+	// kebab-case unique identifier
+	// serves as the raw name for the trait from which its display name is derived
+	id: string;
+	description: string; // what the trait does
+	icon?: TraitVisual;
+}
+
+export interface TraitAssignment {
+	traitId: string;
+	addendum?: string;
+}
+
+export interface TraitRegistry {
+	definitions: Record<string, TraitDefinition>;
+}
+
+export interface TraitSlot extends ContextSlotBase {
+	type: 'traits';
+	traits: TraitAssignment[];
+}
+
+export interface TextSlot extends ContextSlotBase {
+	type: 'text'; // general context slot type for right now
+	value: string;
+}
+
+export interface ContextSlotBase {
+	id: string; // unique identifier
+	kind: SlotKind; // what group/tab the slot belongs to
+	enabled: boolean; // whether the slot be contextualized
+
+	// list of images associated with the slot that can be quickly chosen when changing the active image
+	images: Record<string, OutfitImage>;
+	activeImageTag: string | null; // which image to display
+
+	equipped: boolean; // Later: Add slot status system
+	conditions: SlotConditionMap; // under what conditions should the slot be contextualized
+	// whether the slot has its changes saved to the sync registry for other synced slots to pull from.
+	// mostly used for shared slots between outfits/characters/stories
 	synced: boolean;
 }
 
+export type ContextSlot = TextSlot | TraitSlot;
+
 export interface Outfit {
-	slots: OutfitSlot[];
+	slots: ContextSlot[];
 }
 
 export interface CharacterNote {
@@ -131,6 +175,8 @@ export interface OutfitTrackerModel {
 	slotPresets: Record<string, SlotPresetV1>;
 
 	slotIconRules: SlotIconRule[];
+
+	traits: TraitRegistry;
 }
 
 export interface ExtensionSettingsAugment {

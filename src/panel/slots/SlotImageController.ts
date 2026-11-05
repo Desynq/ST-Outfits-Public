@@ -1,6 +1,6 @@
-import { ImageBlob, ImageRef, OutfitImage } from "../../data/model/Outfit.js";
+import { ImageRef, OutfitImage } from "../../data/model/Outfit.js";
 import { OutfitImageState } from "../../data/model/OutfitImageState.js";
-import { OutfitSlotState } from "../../data/model/OutfitSnapshots.js";
+import { ContextSlotState } from "../../data/model/OutfitSnapshots.js";
 import { OutfitTracker } from "../../data/tracker.js";
 import { OutfitGalleryView } from "../../data/view/OutfitGalleryView.js";
 import { assertNever } from "../../shared.js";
@@ -9,7 +9,7 @@ import { ImageLightbox } from "../../ui/components/ImageLightbox.js";
 import { promptImageResize } from "../../ui/components/ResizeImageModal.js";
 import { multiConfirm, popupConfirm } from "../../util/adapter/popup-adapter.js";
 import { addDoubleTapListener } from "../../util/element/click-actions.js";
-import { applyImageSizing, createElement, el, setElementAspectRatio, setElementSize } from "../../util/ElementHelper.js";
+import { applyImageSizing, createElement } from "../../util/ElementHelper.js";
 import { EventBus, Listener } from "../../util/EventBus.js";
 import { promptImageUpload, resizeImage } from "../../util/image-utils.js";
 import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
@@ -64,7 +64,7 @@ export class SlotImageElementFactory extends OutfitPanelContext {
 		super(panel);
 	}
 
-	public build(slot: OutfitSlotState): SlotImageElement {
+	public build(slot: ContextSlotState): SlotImageElement {
 		return new SlotImageElement(this.panel, this.boundaryWidth, slot);
 	}
 }
@@ -90,7 +90,7 @@ export class SlotImageElement extends OutfitPanelContext {
 	public constructor(
 		panel: OutfitPanel<PanelType>,
 		private boundaryWidth: number,
-		private slot: OutfitSlotState
+		private slot: ContextSlotState
 	) {
 		super(panel);
 		this.imgWrapper = createElement('div', 'slot-image-wrapper');

@@ -1,4 +1,4 @@
-import { OutfitSlot, SlotKind } from "./data/model/Outfit.js";
+import { TextSlot, SlotKind } from "./data/model/Outfit.js";
 
 export const DEFAULT_CLOTHING_SLOTS = [
 	'headwear',
@@ -27,12 +27,13 @@ export const DEFAULT_ACCESSORY_SLOTS = [
 	'foot-accessory'
 ] as const;
 
-export function toSlot(from: {
+export function toTextSlot(from: {
 	id: string;
 	kind: SlotKind;
 	value?: string;
-}): OutfitSlot {
+}): TextSlot {
 	return {
+		type: 'text',
 		id: from.id,
 		value: from.value ?? 'None',
 		kind: from.kind,
@@ -49,8 +50,8 @@ export function toSlot(from: {
 }
 
 export const DEFAULT_SLOTS = [
-	...DEFAULT_CLOTHING_SLOTS.map(id => toSlot({ id, kind: 'clothing' })),
-	...DEFAULT_ACCESSORY_SLOTS.map(id => toSlot({ id, kind: 'accessory' }))
+	...DEFAULT_CLOTHING_SLOTS.map(id => toTextSlot({ id, kind: 'clothing' })),
+	...DEFAULT_ACCESSORY_SLOTS.map(id => toTextSlot({ id, kind: 'accessory' }))
 ];
 
 

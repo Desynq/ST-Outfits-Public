@@ -7,8 +7,8 @@ import { plural } from "../util/StringHelper.js";
 import { OutfitPanelContext } from "./base/OutfitPanelContext.js";
 import { DisplaySlot } from "./slots/DisplaySlot.js";
 import { EditCoordinator } from "./slots/edit-coordinator.js";
+import { TextSlotRenderer } from "./slots/renderer/text-slot.js";
 import { SlotImageElementFactory } from "./slots/SlotImageController.js";
-import { SlotRenderer } from "./slots/SlotRenderer.js";
 function updateBottomPadding(container, child, topOffset, below = []) {
     // 16:10 and under needs bottom padding for comfortable scrolling
     if (!window.matchMedia('(max-aspect-ratio: 1.6)').matches) {
@@ -34,7 +34,7 @@ export class SlotsRenderer extends OutfitPanelContext {
         const imageFactory = new SlotImageElementFactory(this.panel, slotContainer.getBoundingClientRect().width);
         const overflowMenuFactory = new OverflowMenuFactory();
         const editCoordinator = new EditCoordinator();
-        const slotFactory = new SlotRenderer({
+        const textSlotRenderer = new TextSlotRenderer({
             panel: this.panel,
             displaySlots,
             imageFactory,
@@ -45,7 +45,22 @@ export class SlotsRenderer extends OutfitPanelContext {
         let lastSlotEl = null;
         for (let i = 0; i < displaySlots.length; i++) {
             const display = displaySlots[i];
-            const slotEl = slotFactory.createSlotElement(slotContainer, display);
+            let slotEl;
+            switch (display.slot.type) {
+                case 'text':
+                    slotEl = textSlotRenderer.createSlotElement(slotContainer, display);
+                    break;
+                /*
+                case 'traits':
+                    slotEl = traitRenderer.createSlotElement(
+                        slotContainer,
+                        display as DisplaySlot<TraitSlotState>
+                    );
+                    break;
+                */
+                default:
+                    throw new Error(`Unsupported slot type: ${display.slot.type}`);
+            }
             if (i === displaySlots.length - 1) {
                 lastSlotEl = slotEl;
             }
@@ -124,6 +139,8 @@ export class SlotsRenderer extends OutfitPanelContext {
         const slots = this.outfitView.slots;
         const changes = [];
         for (const slot of slots) {
+            if (slot.type !== 'text')
+                continue;
             const nextValue = slot.value.replaceAll(searchValue, replaceValue);
             if (nextValue !== slot.value) {
                 changes.push({

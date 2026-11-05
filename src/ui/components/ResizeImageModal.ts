@@ -1,5 +1,5 @@
 import { Popup } from "../../../../../../popup.js";
-import { OutfitSlotState } from "../../data/model/OutfitSnapshots.js";
+import { ContextSlotState } from "../../data/model/OutfitSnapshots.js";
 import { popupConfirm } from "../../util/adapter/popup-adapter.js";
 import { el } from "../../util/ElementHelper.js";
 import { fraction } from "../../util/math.js";
@@ -16,7 +16,7 @@ export async function promptImageResize(
 		saveImageResize,
 		completeResize
 	}: {
-		slot: OutfitSlotState;
+		slot: ContextSlotState;
 		imgWrapper: HTMLElement;
 		userWidth: number,
 		userHeight: number,

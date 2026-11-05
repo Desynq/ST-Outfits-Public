@@ -1,28 +1,23 @@
-import { OutfitSlotState } from "../../data/model/OutfitSnapshots.js";
-import { assertNever, toSlotName } from "../../shared.js";
-import { PanelType } from "../../types/maps.js";
-import { OverflowMenu, OverflowMenuFactory } from "../../ui/components/OverflowMenu.js";
-import { SlotTextbox } from "../../ui/components/slot/slot-textbox.js";
-import { SlotConditionsModal } from "../../ui/components/SlotConditionsModal.js";
-import { SlotPresetsModal } from "../../ui/components/SlotPresetsModal.js";
-import { addDoubleTapListener } from "../../util/element/click-actions.js";
-import { mergeClassNames } from "../../util/element/css.js";
-import { appendElement, createDiv, createElement, el } from "../../util/ElementHelper.js";
-import { toSlotId } from "../../util/normalize/slot.js";
-import { isSlotBlocked } from "../../util/slot.js";
-import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
-import { OutfitPanel } from "../OutfitPanel.js";
-import { OutfitSlotsHost } from "../OutfitSlotsHost.js";
-import { SlotActionsMenuElement } from "./ActionOverflowElement.js";
-import { DisplaySlot } from "./DisplaySlot.js";
-import { EditCoordinator } from "./edit-coordinator.js";
-import { SlotActionsElement } from "./SlotActionsElement.js";
-import { ImageState, SlotImageElement, SlotImageElementFactory } from "./SlotImageController.js";
-import { SlotCharacterNoteFactory, SlotChatNoteFactory, SlotTextboxFactory, createCharacterNoteFactories } from "./SlotValueController.js";
+import { ContextSlotState } from "../../../data/model/OutfitSnapshots.js";
+import { assertNever, toSlotName } from "../../../shared.js";
+import { PanelType } from "../../../types/maps.js";
+import { OverflowMenu, OverflowMenuFactory } from "../../../ui/components/OverflowMenu.js";
+import { addDoubleTapListener } from "../../../util/element/click-actions.js";
+import { appendElement, createDiv, createElement, el } from "../../../util/ElementHelper.js";
+import { toSlotId } from "../../../util/normalize/slot.js";
+import { isSlotBlocked } from "../../../util/slot.js";
+import { OutfitPanelContext } from "../../base/OutfitPanelContext.js";
+import { OutfitPanel } from "../../OutfitPanel.js";
+import { OutfitSlotsHost } from "../../OutfitSlotsHost.js";
+import { DisplaySlot } from "../DisplaySlot.js";
+import { EditCoordinator } from "../edit-coordinator.js";
+import { ImageState, SlotImageElement, SlotImageElementFactory } from "../SlotImageController.js";
 
-export interface SlotContext {
-	slot: OutfitSlotState;
-	displaySlot: DisplaySlot;
+export interface SlotContext<
+	T extends ContextSlotState = ContextSlotState
+> {
+	slot: T;
+	displaySlot: DisplaySlot<T>;
 	mode: SlotRenderMode;
 
 	scroller: HTMLElement;
@@ -42,7 +37,7 @@ export interface SlotContext {
 	actionsRightEl: HTMLDivElement;
 }
 
-type SlotRenderMode = 'hidden-empty' | 'hidden-disabled' | 'disabled-empty' | 'normal';
+export type SlotRenderMode = 'hidden-empty' | 'hidden-disabled' | 'disabled-empty' | 'normal';
 type ImageParent = 'content' | 'label-right' | 'none';
 
 export interface SlotRendererDeps {
@@ -53,47 +48,25 @@ export interface SlotRendererDeps {
 	editCoordinator: EditCoordinator;
 }
 
-interface CharacterNoteTextbox {
-	factory: SlotCharacterNoteFactory;
-	textbox: SlotTextbox;
-}
 
-interface SlotTextboxes {
-	value: SlotTextbox;
-	chatNote: SlotTextbox;
-	characterNotes: CharacterNoteTextbox[];
-}
-
-export class SlotRenderer extends OutfitPanelContext {
-	private readonly valueTextboxFactory: SlotTextboxFactory;
-	private readonly chatNoteFactory: SlotChatNoteFactory;
-	private readonly characterNoteFactories: SlotCharacterNoteFactory[];
-
-	public constructor(
-		private readonly deps: SlotRendererDeps
-	) {
+export abstract class BaseSlotRenderer<
+	T extends ContextSlotState
+> extends OutfitPanelContext {
+	public constructor(protected readonly deps: SlotRendererDeps) {
 		super(deps.panel);
-
-		const textboxDeps = {
-			panel: this.panel,
-			removeActionButtons: (ctx: SlotContext): void => this.removeActionButtons(ctx),
-			editCoordinator: this.deps.editCoordinator
-		};
-
-		this.valueTextboxFactory = new SlotTextboxFactory(textboxDeps);
-
-		this.chatNoteFactory = new SlotChatNoteFactory(textboxDeps);
-
-		this.characterNoteFactories = createCharacterNoteFactories(textboxDeps);
 	}
 
-	private isValueHidden(mode: SlotRenderMode): boolean {
+	protected abstract renderContent(ctx: SlotContext<T>, imageElement: SlotImageElement): void;
+	protected abstract decorateMinimal(ctx: SlotContext<T>): void;
+	protected abstract decorate(ctx: SlotContext<T>, imageElement: SlotImageElement): void;
+
+	protected isValueHidden(mode: SlotRenderMode): boolean {
 		return mode !== 'normal';
 	}
 
 	public createSlotElement(
 		container: HTMLDivElement,
-		display: DisplaySlot
+		display: DisplaySlot<T>
 	): HTMLDivElement {
 		const slot = display.slot;
 
@@ -131,7 +104,7 @@ export class SlotRenderer extends OutfitPanelContext {
 
 		const mode = this.getSlotRenderMode(slot, this.panel);
 
-		const ctx: SlotContext = {
+		const ctx: SlotContext<T> = {
 			slot,
 			displaySlot: display,
 			mode,
@@ -168,32 +141,16 @@ export class SlotRenderer extends OutfitPanelContext {
 		const imageElement = this.renderImageElement(ctx);
 		contentEl.append(contentTextEl);
 
-		const createTextbox = <T extends SlotTextboxFactory>(factory: T): SlotTextbox => {
-			const { textbox } = factory.render(contentTextEl, ctx);
-			if (mode !== 'normal' && textbox.isEmpty()) {
-				textbox.hide();
-			}
-			return textbox;
-		};
-
-		const textboxes: SlotTextboxes = {
-			value: createTextbox(this.valueTextboxFactory),
-			chatNote: createTextbox(this.chatNoteFactory),
-
-			characterNotes: this.characterNoteFactories.map(factory => ({
-				factory,
-				textbox: createTextbox(factory)
-			}))
-		};
+		this.renderContent(ctx, imageElement);
 
 		switch (mode) {
 			case 'hidden-empty':
 			case 'hidden-disabled':
 			case 'disabled-empty':
-				this.decorateMinimal(ctx, textboxes);
+				this.decorateMinimal(ctx);
 				break;
 			case 'normal':
-				this.decorate(ctx, textboxes, imageElement);
+				this.decorate(ctx, imageElement);
 				break;
 			default: assertNever(mode);
 		}
@@ -207,7 +164,7 @@ export class SlotRenderer extends OutfitPanelContext {
 		return slotElement;
 	}
 
-	private renderImageElement(ctx: SlotContext): SlotImageElement {
+	protected renderImageElement(ctx: SlotContext): SlotImageElement {
 		const imageElement = this.deps.imageFactory.build(ctx.slot);
 		const { imgWrapper } = imageElement;
 
@@ -228,47 +185,12 @@ export class SlotRenderer extends OutfitPanelContext {
 		return imageElement;
 	}
 
-	private bindShownImageElement(ctx: SlotContext, imageElement: SlotImageElement, imgWrapper: HTMLElement): void {
+	protected bindShownImageElement(ctx: SlotContext, imageElement: SlotImageElement, imgWrapper: HTMLElement): void {
 		const menu = this.createImageMenu(ctx, imageElement, imgWrapper);
 		imageElement.onDoubleTap(() => menu.toggleMenu());
-
-		const observer = imageElement.trackResizeChanges(ctx.contentEl);
-		this.panel.onRenderDispose(observer.disconnect);
-
-		let noteEl: HTMLElement | null = null;
-		let valueEl: HTMLElement | null = null;
-
-		observer.onResize(event => {
-			if (!valueEl) return;
-
-			if (event.imageWide) {
-				this.valueTextboxFactory.setCollapsedMaxHeight(valueEl, null);
-				return;
-			}
-
-			const noteHeight = noteEl?.getBoundingClientRect().height ?? 0;
-			const height = Math.max(0, event.imageRect.height - noteHeight);
-
-			this.valueTextboxFactory.setCollapsedMaxHeight(valueEl, height);
-		});
-
-		const updateOnRender = (
-			controller: SlotTextboxFactory,
-			set: (el: HTMLElement) => void,
-		): void => {
-			controller.onRender(event => {
-				if (!event.isFor(ctx)) return;
-
-				set(event.valueEl);
-				observer.update();
-			});
-		};
-
-		updateOnRender(this.chatNoteFactory, el => noteEl = el);
-		updateOnRender(this.valueTextboxFactory, el => valueEl = el);
 	}
 
-	private createImageMenu(ctx: SlotContext, imageElement: SlotImageElement, opener: HTMLElement): OverflowMenu {
+	protected createImageMenu(ctx: SlotContext, imageElement: SlotImageElement, opener: HTMLElement): OverflowMenu {
 		return this.deps.overflowMenuFactory.create({
 			openerEl: opener,
 			onDispose: this.panel.onRenderDispose,
@@ -294,7 +216,7 @@ export class SlotRenderer extends OutfitPanelContext {
 			);
 	}
 
-	private resolveImageParent(state: ImageState, ctx: SlotContext): ImageParent {
+	protected resolveImageParent(state: ImageState, ctx: SlotContext): ImageParent {
 		if (this.isValueHidden(ctx.mode)) return 'none';
 
 		if (state === 'shown') {
@@ -304,7 +226,7 @@ export class SlotRenderer extends OutfitPanelContext {
 		return 'label-right';
 	}
 
-	private getSlotRenderMode(slot: OutfitSlotState, panel: OutfitSlotsHost): SlotRenderMode {
+	protected getSlotRenderMode(slot: ContextSlotState, panel: OutfitSlotsHost): SlotRenderMode {
 		if (slot.isEmpty() && panel.areEmptySlotsHidden()) {
 			return 'hidden-empty';
 		}
@@ -319,105 +241,7 @@ export class SlotRenderer extends OutfitPanelContext {
 
 		return 'normal';
 	}
-
-	private decorateMinimal(ctx: SlotContext, textboxes: SlotTextboxes): void {
-		const toggleBtn = this.createToggleBtn(ctx.slot);
-		ctx.labelRightDiv.append(toggleBtn);
-
-		this.appendEditBtn(ctx.labelRightDiv, ctx, textboxes.value);
-
-		if (textboxes.value.isHidden()) {
-			ctx.labelDiv.classList.add('minimized');
-			textboxes.chatNote.hide();
-
-			for (const { textbox } of textboxes.characterNotes) {
-				textbox.hide();
-			}
-		}
-
-		this.createMenuBtn(ctx, textboxes).appendTo(ctx.labelRightDiv);
-	}
-
-	private decorate(
-		ctx: SlotContext,
-		textboxes: SlotTextboxes,
-		imageElement: SlotImageElement
-	): void {
-		const actionsElement = new SlotActionsElement(this.panel);
-
-		const toggleBtn = this.createToggleBtn(ctx.slot);
-		ctx.actionsLeftEl.append(toggleBtn);
-
-		if (ctx.slot.enabled) {
-			const unequipBtn = actionsElement.createUnequipButton(ctx.slot);
-			ctx.actionsLeftEl.append(unequipBtn);
-		}
-
-		const notes = [
-			textboxes.chatNote,
-			...textboxes.characterNotes.map(({ textbox }) => textbox)
-		];
-
-		for (const note of notes) {
-			if (note.isEmpty()) {
-				note.hide();
-			}
-		}
-
-		this.appendEditBtn(ctx.actionsRightEl, ctx, textboxes.value);
-
-		this.createMenuBtn(ctx, textboxes).appendTo(ctx.actionsRightEl);
-
-		const syncBtn = this.createSyncButton(ctx);
-		ctx.labelRightDiv.append(syncBtn);
-	}
-
-	private createMenuBtn(ctx: SlotContext, textboxes: SlotTextboxes): SlotActionsMenuElement {
-		const characterNoteActions = textboxes.characterNotes.map(({ factory, textbox }) => ({
-			...factory.getAddButtonOptions(),
-
-			canAdd: () =>
-				this.getSlotRenderMode(ctx.slot, this.panel) === 'normal'
-				&& textbox.isEmpty(),
-
-			add: () => textbox.beginInlineEdit()
-		}));
-
-		return new SlotActionsMenuElement(
-			{
-				mountEl: ctx.slotElement,
-				getViewBoundary: () => ctx.scroller.getBoundingClientRect(),
-				onDispose: this.panel.onRenderDispose,
-				deleteSlot: () => this.askDeleteSlot(ctx.slotElement, ctx.slot),
-				shiftSlot: () => this.beginSlotShift(ctx),
-				moveSlot: () => this.moveSlot(ctx.slot),
-				showPresets: () => SlotPresetsModal.show(
-					ctx.slot,
-					this.outfitManager,
-					() => this.outfitManager.updateMacros(),
-					() => this.panel.saveAndRender()
-				),
-
-				canAddChatNote: () => this.getSlotRenderMode(ctx.slot, this.panel) === 'normal' && textboxes.chatNote.isEmpty(),
-				addChatNote: () => textboxes.chatNote.beginInlineEdit(),
-
-				characterNoteActions,
-
-				showConditions: () => SlotConditionsModal.show(
-					ctx.slot,
-					this.outfitManager,
-					() => this.outfitManager.updateMacros(),
-					() => this.panel.saveAndRender()
-				),
-			},
-			this.deps.overflowMenuFactory
-		)
-			.onClopen(open =>
-				ctx.slotElement.classList.toggle('--menu-open', open)
-			);
-	}
-
-	private createToggleBtn(slot: OutfitSlotState): HTMLButtonElement {
+	protected createToggleBtn(slot: ContextSlotState): HTMLButtonElement {
 		const toggleBtn = document.createElement('button');
 		toggleBtn.className = 'slot-button slot-toggle';
 
@@ -430,7 +254,7 @@ export class SlotRenderer extends OutfitPanelContext {
 		return toggleBtn;
 	}
 
-	private toggle(slot: OutfitSlotState): void {
+	protected toggle(slot: ContextSlotState): void {
 		this.outfitView.toggleSlot(slot.id);
 		void this.outfitManager.updateSlotContext(slot.id);
 		this.panel.saveAndRender();
@@ -439,30 +263,7 @@ export class SlotRenderer extends OutfitPanelContext {
 
 
 
-	private appendEditBtn(container: HTMLDivElement, ctx: SlotContext, valueTextbox: SlotTextbox): HTMLButtonElement {
-		const editBtn = appendElement(container, 'button', 'slot-button edit-slot', '✏️');
-
-		editBtn.addEventListener(
-			'click',
-			() => valueTextbox.beginInlineEdit()
-		);
-		return editBtn;
-	}
-
-	private createSyncButton(ctx: SlotContext): HTMLButtonElement {
-		return el('button', {
-			className: mergeClassNames('sync-slot-button', ctx.slot.synced ? 'active' : 'inactive'),
-			text: '⇆',
-			events: {
-				click: async () => {
-					await this.outfitManager.setSlotSync(ctx.slot.id, !ctx.slot.synced);
-					this.panel.saveAndRender();
-				}
-			}
-		});
-	}
-
-	private removeActionButtons(ctx: SlotContext): void {
+	protected removeActionButtons(ctx: SlotContext): void {
 		const selectors = [
 			'.slot-toggle',
 			'.delete-slot',
@@ -483,7 +284,7 @@ export class SlotRenderer extends OutfitPanelContext {
 
 	/* ------------------------------- Slot Moving ------------------------------ */
 
-	private moveSlot(slot: OutfitSlotState): void {
+	protected moveSlot(slot: ContextSlotState): void {
 		const kind = prompt('Move slot to kind:')?.trim();
 		if (!kind) return;
 
@@ -502,7 +303,7 @@ export class SlotRenderer extends OutfitPanelContext {
 
 	/* ------------------------------ Slot Deletion ----------------------------- */
 
-	private askDeleteSlot(slotElement: HTMLDivElement, slot: OutfitSlotState): void {
+	protected askDeleteSlot(slotElement: HTMLDivElement, slot: ContextSlotState): void {
 		const confirmed = window.confirm('Are you sure you want to delete this slot?');
 
 		if (confirmed) {
@@ -514,7 +315,7 @@ export class SlotRenderer extends OutfitPanelContext {
 
 	/* ------------------------------ Slot Shifting ----------------------------- */
 
-	private beginSlotShift(ctx: SlotContext): void {
+	protected beginSlotShift(ctx: SlotContext): void {
 		const { displayIndex, slot } = ctx.displaySlot;
 		this.removeActionButtons(ctx);
 
@@ -567,7 +368,7 @@ export class SlotRenderer extends OutfitPanelContext {
 		});
 	}
 
-	private shiftSlot(select: HTMLSelectElement, display: DisplaySlot): void {
+	protected shiftSlot(select: HTMLSelectElement, display: DisplaySlot): void {
 		const displaySlots = this.deps.displaySlots;
 		const value = select.value;
 
@@ -613,7 +414,7 @@ export class SlotRenderer extends OutfitPanelContext {
 
 	/* --------------------------- Slot Label Renaming -------------------------- */
 
-	private beginRename(slotNameEl: HTMLDivElement, ctx: SlotContext): void {
+	protected beginRename(slotNameEl: HTMLDivElement, ctx: SlotContext): void {
 		const originalValue = toSlotId(slotNameEl.innerText.trim());
 
 		const textarea = createElement('textarea', 'label-editbox');
@@ -652,7 +453,7 @@ export class SlotRenderer extends OutfitPanelContext {
 		textarea.focus();
 	}
 
-	private commitRename(slot: OutfitSlotState, textarea: HTMLTextAreaElement): void {
+	protected commitRename(slot: ContextSlotState, textarea: HTMLTextAreaElement): void {
 		const rawName = textarea.value;
 		const newSlotId = toSlotId(rawName);
 

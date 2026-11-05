@@ -62,7 +62,7 @@ export class OutfitManager {
         if (!s.equipped) {
             parts.push('Status: REMOVED');
         }
-        parts.push(`${s.value}`);
+        parts.push(this.outfit.getValue(s));
         for (const [key, { context_label }] of typedEntries(CHARACTER_NOTE_OPTIONS)) {
             ifPresent(charNotes?.[key]?.text, text => {
                 parts.push(`${context_label}:\n${text}`);
@@ -187,10 +187,14 @@ export class OutfitManager {
         const view = this.getOutfitView();
         let changed = 0;
         for (const slot of view.slots) {
+            if (slot.type !== 'text')
+                continue;
             if (!slot.synced)
                 continue;
             const resolved = view.resolveSlot(slot.id);
             if (!resolved.resolved)
+                continue;
+            if (resolved.type !== 'text')
                 continue;
             if (resolved.value === slot.value)
                 continue;
@@ -227,13 +231,17 @@ export class OutfitManager {
         const slot = view.getSlotById(slotId);
         if (!slot)
             return;
+        if (slot.type !== 'text') {
+            return;
+        }
         if (!synced) {
             view.manipulate().setSync(slotId, false);
             return;
         }
         const before = view.resolveSlot(slotId);
-        if (!before.resolved)
+        if (!before.resolved || before.type !== 'text') {
             return;
+        }
         const step = SlotPresetsApi.beginSaveSlotAsPresetAuto({
             slot: before
         });
@@ -259,7 +267,9 @@ export class OutfitManager {
         }
         view.manipulate().setSync(slotId, true);
         const after = view.resolveSlot(slotId);
-        if (after.resolved && before.value !== after.value) {
+        if (after.resolved &&
+            after.type === 'text' &&
+            before.value !== after.value) {
             view.setValue(slotId, after.value);
             this.updateSlotContext(slotId);
         }

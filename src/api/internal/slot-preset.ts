@@ -1,6 +1,6 @@
 import { OutfitImage } from "../../data/model/Outfit.js";
 import { OutfitImageState } from "../../data/model/OutfitImageState.js";
-import { OutfitSlotState } from "../../data/model/OutfitSnapshots.js";
+import { ContextSlotState } from "../../data/model/OutfitSnapshots.js";
 import { KeyedSlotPreset, KeyedSlotPresetWithImage } from "../../data/model/SlotPreset.js";
 import { OutfitTracker } from "../../data/tracker.js";
 import { SlotPresetRegistry } from "../../data/view/SlotPresetsView.js";
@@ -28,7 +28,7 @@ type SlotPresetSource = {
 	hasPreset: (preset: KeyedSlotPreset) => boolean;
 };
 
-export function canSync(slot: OutfitSlotState): boolean {
+export function canSync(slot: ContextSlotState): boolean {
 	return slot.synced;
 }
 

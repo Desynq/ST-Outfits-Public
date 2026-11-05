@@ -1,30 +1,25 @@
-import { OutfitSlotState } from "../../data/model/OutfitSnapshots.js";
+import { ContextSlotState } from "../../data/model/OutfitSnapshots.js";
 import { OutfitManager } from "../../manager/OutfitManager.js";
 import { div } from "../../util/element/divs.js";
 
-
-export interface SlotModalContext {
-	slot: OutfitSlotState;
+export interface SlotModalContext<
+	T extends ContextSlotState = ContextSlotState
+> {
+	slot: T;
 	manager: OutfitManager;
 	updateContext: () => void;
 	saveAndRender: () => void;
 	close: () => void;
 }
 
-type SlotModalConstructor<T extends SlotModal> = {
-	new(context: SlotModalContext): T;
-
-	show(
-		slot: OutfitSlotState,
-		manager: OutfitManager,
-		updateContext: () => void,
-		saveAndRender: () => void
-	): void;
+type SlotModalConstructor<T extends ContextSlotState> = {
+	new(context: SlotModalContext<T>): SlotModal<T>;
 };
 
-export abstract class SlotModal {
-
-	protected readonly slot: OutfitSlotState;
+export abstract class SlotModal<
+	T extends ContextSlotState = ContextSlotState
+> {
+	protected readonly slot: T;
 	protected readonly manager: OutfitManager;
 	protected readonly updateContext: () => void;
 	protected readonly saveAndRender: () => void;
@@ -32,7 +27,7 @@ export abstract class SlotModal {
 
 	protected root: HTMLDivElement;
 
-	public constructor(context: SlotModalContext) {
+	public constructor(context: SlotModalContext<T>) {
 		this.slot = context.slot;
 		this.manager = context.manager;
 		this.updateContext = context.updateContext;
@@ -42,7 +37,6 @@ export abstract class SlotModal {
 		this.root = this.createRoot();
 		this.construct();
 	}
-
 
 	protected createRoot(): HTMLDivElement {
 		return div('slot-presets-modal');
@@ -54,9 +48,9 @@ export abstract class SlotModal {
 		return true;
 	}
 
-	public static show<T extends SlotModal>(
+	public static show<T extends ContextSlotState>(
 		this: SlotModalConstructor<T>,
-		slot: OutfitSlotState,
+		slot: T,
 		manager: OutfitManager,
 		updateContext: () => void,
 		saveAndRender: () => void
@@ -86,7 +80,8 @@ export abstract class SlotModal {
 	public reshow(): void {
 		this.close();
 
-		const ModalClass = this.constructor as SlotModalConstructor<this>;
+		const ModalClass = this.constructor as SlotModalConstructor<T>
+			& typeof SlotModal;
 
 		ModalClass.show(
 			this.slot,

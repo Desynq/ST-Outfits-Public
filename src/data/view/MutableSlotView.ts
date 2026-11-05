@@ -1,6 +1,6 @@
-import { toSlot } from "../../Constants.js";
-import { OutfitSlot, SlotCondition, SlotConditionMapMode, SlotKind } from "../model/Outfit.js";
+import { ContextSlot, SlotCondition, SlotConditionMapMode, SlotKind } from "../model/Outfit.js";
 import { OutfitTracker } from "../tracker.js";
+import { createSlot } from "../util/slot.js";
 
 
 export type MoveSlotResult =
@@ -63,10 +63,10 @@ export interface ISlotManipulator {
 
 export class MutableSlotView implements ISlotManipulator {
 
-	private readonly _slots: OutfitSlot[];
+	private readonly _slots: ContextSlot[];
 	private indexById: Record<string, number> = {};
 
-	public constructor(slots: OutfitSlot[]) {
+	public constructor(slots: ContextSlot[]) {
 		this._slots = slots;
 		this.rebuildIndex();
 	}
@@ -83,7 +83,7 @@ export class MutableSlotView implements ISlotManipulator {
 		}
 	}
 
-	public get slots(): readonly Readonly<OutfitSlot>[] {
+	public get slots(): readonly Readonly<ContextSlot>[] {
 		return this._slots;
 	}
 
@@ -91,16 +91,36 @@ export class MutableSlotView implements ISlotManipulator {
 		return [...new Set(this.slots.map(s => s.kind))];
 	}
 
-	private getMutableSlotById(id: string): OutfitSlot | undefined {
+	private getMutableSlotById(id: string): ContextSlot | undefined {
 		const i = this.indexById[id];
 		return i === undefined ? undefined : this._slots[i];
 	}
 
-	public getSlotById(id: string): Readonly<OutfitSlot> | undefined {
-		return this.getMutableSlotById(id);
+
+
+	public getSlotById<T extends ContextSlot['type']>(
+		id: string,
+		type: T
+	): Readonly<Extract<ContextSlot, { type: T; }>> | undefined;
+
+	public getSlotById(
+		id: string
+	): Readonly<ContextSlot> | undefined;
+
+	public getSlotById(
+		id: string,
+		type?: ContextSlot['type']
+	): Readonly<ContextSlot> | undefined {
+		const slot = this.getMutableSlotById(id);
+
+		if (type && slot?.type !== type) return undefined;
+
+		return slot;
 	}
 
-	public getSlotAt(index: number): Readonly<OutfitSlot> | undefined {
+
+
+	public getSlotAt(index: number): Readonly<ContextSlot> | undefined {
 		if (index < 0 || index >= this.slots.length) return undefined;
 
 		return this.slots[index];
@@ -113,10 +133,36 @@ export class MutableSlotView implements ISlotManipulator {
 	/* -------------------------------- Mutation -------------------------------- */
 
 	public setValue(id: string, value: string): boolean {
-		const i = this.indexById[id];
-		if (i === undefined) return false;
+		const slot = this.getMutableSlotById(id);
 
-		this._slots[i].value = value;
+		if (slot?.type !== 'text') return false;
+
+		slot.value = value;
+		return true;
+	}
+
+	public addTrait(id: string, traitId: string): boolean {
+		const slot = this.getMutableSlotById(id);
+
+		if (slot?.type !== 'traits') return false;
+
+		if (slot.traits.some(t => t.traitId === traitId)) {
+			return false;
+		}
+
+		slot.traits.push({ traitId });
+		return true;
+	}
+
+	public removeTrait(id: string, traitId: string): boolean {
+		const slot = this.getMutableSlotById(id);
+
+		if (slot?.type !== 'traits') return false;
+
+		const index = slot.traits.findIndex(t => t.traitId === traitId);
+		if (index === -1) return false;
+
+		slot.traits.splice(index, 1);
 		return true;
 	}
 
@@ -271,16 +317,20 @@ export class MutableSlotView implements ISlotManipulator {
 
 
 
-	public addSlot(id: string, kind: SlotKind): AddSlotResult {
-		const i = this.indexById[id];
-		if (i !== undefined) return 'slot-already-exists';
+	public addSlot(
+		id: string,
+		kind: SlotKind,
+		type: ContextSlot['type'] = 'text'
+	): AddSlotResult {
+		if (this.getSlotById(id)) {
+			return 'slot-already-exists';
+		}
 
-		this._slots.push(toSlot({
-			id,
-			kind
-		}));
+		const slot = createSlot({ id, kind, type });
 
-		this.indexById[id] = this._slots.length - 1; // append to index
+		this._slots.push(slot);
+		this.indexById[id] = this._slots.length - 1;
+
 		return 'added';
 	}
 
@@ -341,7 +391,7 @@ export class MutableSlotView implements ISlotManipulator {
 
 
 	public sortByKind(kindOrder?: readonly SlotKind[]): void {
-		const buckets = new Map<SlotKind, OutfitSlot[]>();
+		const buckets = new Map<SlotKind, ContextSlot[]>();
 
 		for (const slot of this._slots) {
 			let bucket = buckets.get(slot.kind);

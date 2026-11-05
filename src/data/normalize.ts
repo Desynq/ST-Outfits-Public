@@ -1,9 +1,9 @@
-import { CHARACTER_NOTE_TYPES, toSlot } from "../Constants.js";
+import { CHARACTER_NOTE_TYPES, toTextSlot } from "../Constants.js";
 import { asBoolean, asObject, asStringRecord, ensureObject, notObject, resolvePositiveNumber, resolveString, resolveTimestamp } from "../ObjectHelper.js";
 import { isNonEmptyString, isRecord } from "../util/narrowing.js";
 import { toSlotId } from "../util/normalize/slot.js";
 import { normalizeOutfitSnapshots } from "./mappings/OutfitCache.js";
-import { CharacterNotes, ImageBlob, ImageRef, Outfit, OutfitCollection, OutfitImage, OutfitSlot, OutfitTrackerModel, SlotCharacterNotes, SlotCondition, SlotConditionMap, SlotKind } from "./model/Outfit.js";
+import { CharacterNotes, ContextSlot, ContextSlotBase, ImageBlob, ImageRef, Outfit, OutfitCollection, OutfitImage, OutfitTrackerModel, SlotCharacterNotes, SlotCondition, SlotConditionMap, SlotKind, TextSlot, TraitAssignment, TraitSlot } from "./model/Outfit.js";
 import { SlotPreset } from "./model/SlotPreset.js";
 
 
@@ -89,10 +89,10 @@ function inferKindFromId(id: string): SlotKind {
 function normalizeLegacyOutfit(value: any): Outfit {
 	const values = asStringRecord()(value);
 
-	const slots: OutfitSlot[] = Object.entries(values).map(
+	const slots: TextSlot[] = Object.entries(values).map(
 		([rawId, v]) => {
 			const id = toSlotId(rawId);
-			return toSlot({
+			return toTextSlot({
 				id,
 				kind: inferKindFromId(id),
 				value: v
@@ -108,6 +108,95 @@ function normalizeKind(kind: unknown): string {
 	return kind;
 }
 
+function normalizeSlotBase(
+	slot: Record<string, unknown>,
+	id: string
+): ContextSlotBase {
+	return {
+		id,
+		kind: normalizeKind(slot.kind),
+		enabled: typeof slot.enabled === 'boolean'
+			? slot.enabled : true,
+		images: normalizeImages(slot.images),
+		activeImageTag: typeof slot.activeImageTag === 'string'
+			? slot.activeImageTag : null,
+		equipped: typeof slot.equipped === 'boolean'
+			? slot.equipped : true,
+		conditions: normalizeConditionMap(slot),
+		synced: typeof slot.synced === 'boolean'
+			? slot.synced : false
+	};
+}
+
+function normalizeTraitAssignments(
+	value: unknown
+): TraitAssignment[] {
+	if (!Array.isArray(value)) return [];
+
+	const result: TraitAssignment[] = [];
+	const seen = new Set<string>();
+
+	for (const entry of value) {
+		if (!isRecord(entry)) continue;
+
+		const traitId = entry.traitId;
+		if (typeof traitId !== 'string' || !traitId.trim()) {
+			continue;
+		}
+
+		if (seen.has(traitId)) continue;
+		seen.add(traitId);
+
+		result.push({
+			traitId,
+			...(typeof entry.addendum === 'string'
+				? { addendum: entry.addendum }
+				: {})
+		});
+	}
+
+	return result;
+}
+
+function normalizeSlot(
+	value: unknown,
+	legacyValues: Record<string, string>
+): ContextSlot | undefined {
+	if (!isRecord(value) || typeof value.id !== 'string') {
+		return undefined;
+	}
+
+	const id = toSlotId(value.id);
+	if (!id) return undefined;
+
+	const base = normalizeSlotBase(value, id);
+
+	switch (value.type) {
+		case undefined:
+		case 'text':
+			return {
+				...base,
+				type: 'text',
+				value: typeof value.value === 'string'
+					? value.value
+					: legacyValues[id] ?? 'None'
+			} satisfies TextSlot;
+
+		case 'traits':
+			return {
+				...base,
+				type: 'traits',
+				traits: normalizeTraitAssignments(value.traits)
+			} satisfies TraitSlot;
+
+		default:
+			console.warn(
+				`Unknown slot type "${String(value.type)}" for "${id}"`
+			);
+			return undefined;
+	}
+}
+
 export function normalizeOutfit(value: unknown): Outfit {
 	if (isLegacyOutfit(value)) {
 		return normalizeLegacyOutfit(value);
@@ -118,49 +207,28 @@ export function normalizeOutfit(value: unknown): Outfit {
 		values: asStringRecord()
 	});
 
-	const slots: OutfitSlot[] = [];
+	const slots: ContextSlot[] = [];
 	const seen = new Set<string>();
 
-	for (const slot of raw.slots) {
-		if (!slot || typeof slot !== 'object' || typeof slot.id !== 'string') {
-			continue;
-		}
+	for (const value of raw.slots) {
+		const slot = normalizeSlot(value, raw.values);
+		if (!slot || seen.has(slot.id)) continue;
 
-		const id = toSlotId(slot.id);
-
-		if (!id) {
-			continue;
-		}
-
-		if (seen.has(id)) continue;
-		seen.add(id);
-
-		const activeImageTag = typeof slot.activeImageTag === 'string'
-			? slot.activeImageTag
-			: null;
-
-		slots.push({
-			id,
-			kind: normalizeKind(slot.kind),
-			enabled: typeof slot.enabled === 'boolean' ? slot.enabled : true,
-			value: typeof slot.value === 'string' ? slot.value : raw.values[id] ?? 'None',
-			images: normalizeImages(slot.images),
-			activeImageTag: typeof slot.activeImageTag === 'string' ? slot.activeImageTag : null,
-			equipped: typeof slot.equipped === 'boolean' ? slot.equipped : true,
-			conditions: normalizeConditionMap(slot),
-			synced: typeof slot.synced === 'boolean' ? slot.synced : false
-		});
+		seen.add(slot.id);
+		slots.push(slot);
 	}
 
-	// legacy
-	for (const [rawId, v] of Object.entries(raw.values)) {
+	// Legacy values not already represented by a slot
+	for (const [rawId, value] of Object.entries(raw.values)) {
 		const id = toSlotId(rawId);
 
-		if (seen.has(id)) continue;
-		slots.push(toSlot({
+		if (!id || seen.has(id)) continue;
+
+		seen.add(id);
+		slots.push(toTextSlot({
 			id,
 			kind: inferKindFromId(id),
-			value: v
+			value
 		}));
 	}
 

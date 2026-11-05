@@ -32,3 +32,8 @@ export function pruneProperty<T extends Record<string, any>>(
 
 	return false;
 }
+
+
+export function hasOwnProperty(record: Record<string, any>, key: string): boolean {
+	return Object.prototype.hasOwnProperty.call(record, key);
+}

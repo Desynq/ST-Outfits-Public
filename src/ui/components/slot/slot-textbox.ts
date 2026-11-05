@@ -1,13 +1,12 @@
-import { OutfitSlotState } from "../../../data/model/OutfitSnapshots.js";
 import { EditCoordinator } from "../../../panel/slots/edit-coordinator.js";
-import { SlotContext } from "../../../panel/slots/SlotRenderer.js";
+import { TextSlotContext } from "../../../panel/slots/renderer/text-slot.js";
 import { isWideScreen, scrollIntoViewAboveKeyboard } from "../../../shared.js";
 import { el } from "../../../util/ElementHelper.js";
 
 type SlotTextboxDeps = {
-	ctx: SlotContext;
+	ctx: TextSlotContext;
 	editCoordinator: EditCoordinator;
-	removeActionButtons: (ctx: SlotContext) => void;
+	removeActionButtons: (ctx: TextSlotContext) => void;
 
 	getOriginalText: () => string;
 	getEmptyText: () => string;

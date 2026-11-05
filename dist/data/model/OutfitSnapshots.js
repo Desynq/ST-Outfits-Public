@@ -1,10 +1,10 @@
 import { OutfitImageState } from "./OutfitImageState.js";
-class OutfitSlotBase {
+class ContextSlotBase {
     constructor(id) {
         this.id = id;
     }
 }
-export class OutfitSlotState extends OutfitSlotBase {
+export class ContextSlotState extends ContextSlotBase {
     constructor(raw, imageRegistry) {
         super(raw.id);
         this.raw = raw;
@@ -19,23 +19,31 @@ export class OutfitSlotState extends OutfitSlotBase {
             }
             images[tag] = new OutfitImageState(tag, image, ref);
         }
-        this.kind = raw.kind;
-        this.value = raw.value;
-        this.enabled = raw.enabled;
         this.images = images;
-        this.activeImageTag = raw.activeImageTag;
-        this.equipped = raw.equipped;
-        this.conditions = raw.conditions;
-        this.synced = raw.synced;
+    }
+    get kind() {
+        return this.raw.kind;
+    }
+    get enabled() {
+        return this.raw.enabled;
+    }
+    get activeImageTag() {
+        return this.raw.activeImageTag;
+    }
+    get equipped() {
+        return this.raw.equipped;
+    }
+    get conditions() {
+        return this.raw.conditions;
+    }
+    get synced() {
+        return this.raw.synced;
     }
     isEnabled() {
         return this.enabled;
     }
     isDisabled() {
         return !this.enabled;
-    }
-    isEmpty() {
-        return this.value === 'None';
     }
     getActiveImageState() {
         if (this.activeImageTag === null)
@@ -64,10 +72,32 @@ export class OutfitSlotState extends OutfitSlotBase {
         return preset.key in this.images;
     }
 }
-export class UnresolvedOutfitSlot extends OutfitSlotBase {
+export class UnresolvedOutfitSlot extends ContextSlotBase {
     constructor(id) {
         super(id);
         this.resolved = false;
+    }
+}
+export class TextSlotState extends ContextSlotState {
+    get type() {
+        return this.raw.type;
+    }
+    isEmpty() {
+        return this.value === 'None';
+    }
+    get value() {
+        return this.raw.value;
+    }
+}
+export class TraitSlotState extends ContextSlotState {
+    get type() {
+        return this.raw.type;
+    }
+    isEmpty() {
+        return this.traits.length === 0;
+    }
+    get traits() {
+        return this.raw.traits;
     }
 }
 export function areOutfitSnapshotsEqual(a, b) {

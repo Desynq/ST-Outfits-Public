@@ -1,5 +1,5 @@
-import { toSlot } from "../../Constants.js";
 import { OutfitTracker } from "../tracker.js";
+import { createSlot } from "../util/slot.js";
 export class MutableSlotView {
     constructor(slots) {
         this.indexById = {};
@@ -26,8 +26,11 @@ export class MutableSlotView {
         const i = this.indexById[id];
         return i === undefined ? undefined : this._slots[i];
     }
-    getSlotById(id) {
-        return this.getMutableSlotById(id);
+    getSlotById(id, type) {
+        const slot = this.getMutableSlotById(id);
+        if (type && slot?.type !== type)
+            return undefined;
+        return slot;
     }
     getSlotAt(index) {
         if (index < 0 || index >= this.slots.length)
@@ -39,10 +42,30 @@ export class MutableSlotView {
     }
     /* -------------------------------- Mutation -------------------------------- */
     setValue(id, value) {
-        const i = this.indexById[id];
-        if (i === undefined)
+        const slot = this.getMutableSlotById(id);
+        if (slot?.type !== 'text')
             return false;
-        this._slots[i].value = value;
+        slot.value = value;
+        return true;
+    }
+    addTrait(id, traitId) {
+        const slot = this.getMutableSlotById(id);
+        if (slot?.type !== 'traits')
+            return false;
+        if (slot.traits.some(t => t.traitId === traitId)) {
+            return false;
+        }
+        slot.traits.push({ traitId });
+        return true;
+    }
+    removeTrait(id, traitId) {
+        const slot = this.getMutableSlotById(id);
+        if (slot?.type !== 'traits')
+            return false;
+        const index = slot.traits.findIndex(t => t.traitId === traitId);
+        if (index === -1)
+            return false;
+        slot.traits.splice(index, 1);
         return true;
     }
     moveToKind(id, kind) {
@@ -172,15 +195,13 @@ export class MutableSlotView {
         slot.synced = sync;
         return true;
     }
-    addSlot(id, kind) {
-        const i = this.indexById[id];
-        if (i !== undefined)
+    addSlot(id, kind, type = 'text') {
+        if (this.getSlotById(id)) {
             return 'slot-already-exists';
-        this._slots.push(toSlot({
-            id,
-            kind
-        }));
-        this.indexById[id] = this._slots.length - 1; // append to index
+        }
+        const slot = createSlot({ id, kind, type });
+        this._slots.push(slot);
+        this.indexById[id] = this._slots.length - 1;
         return 'added';
     }
     deleteSlot(id) {

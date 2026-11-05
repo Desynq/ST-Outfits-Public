@@ -1,4 +1,5 @@
 import { SlotKind } from "../data/model/Outfit.js";
+import { TextSlotState } from "../data/model/OutfitSnapshots.js";
 import { OverflowMenuFactory } from "../ui/components/OverflowMenu.js";
 import { confirmChanges } from "../ui/prompt/prompt-options.js";
 import { setScroll } from "../util/element/scroll.js";
@@ -8,8 +9,8 @@ import { plural } from "../util/StringHelper.js";
 import { OutfitPanelContext } from "./base/OutfitPanelContext.js";
 import { DisplaySlot } from "./slots/DisplaySlot.js";
 import { EditCoordinator } from "./slots/edit-coordinator.js";
+import { TextSlotRenderer } from "./slots/renderer/text-slot.js";
 import { SlotImageElementFactory } from "./slots/SlotImageController.js";
-import { SlotRenderer } from "./slots/SlotRenderer.js";
 
 function updateBottomPadding(
 	container: HTMLElement,
@@ -64,7 +65,7 @@ export class SlotsRenderer extends OutfitPanelContext {
 
 		const editCoordinator = new EditCoordinator();
 
-		const slotFactory = new SlotRenderer({
+		const textSlotRenderer = new TextSlotRenderer({
 			panel: this.panel,
 			displaySlots,
 			imageFactory,
@@ -77,7 +78,31 @@ export class SlotsRenderer extends OutfitPanelContext {
 		let lastSlotEl: HTMLElement | null = null;
 		for (let i = 0; i < displaySlots.length; i++) {
 			const display = displaySlots[i];
-			const slotEl = slotFactory.createSlotElement(slotContainer, display);
+
+			let slotEl: HTMLDivElement;
+
+			switch (display.slot.type) {
+				case 'text':
+					slotEl = textSlotRenderer.createSlotElement(
+						slotContainer,
+						display as DisplaySlot<TextSlotState>
+					);
+					break;
+
+				/*
+				case 'traits':
+					slotEl = traitRenderer.createSlotElement(
+						slotContainer,
+						display as DisplaySlot<TraitSlotState>
+					);
+					break;
+				*/
+
+				default:
+					throw new Error(
+						`Unsupported slot type: ${display.slot.type}`
+					);
+			}
 
 			if (i === displaySlots.length - 1) {
 				lastSlotEl = slotEl;
@@ -182,6 +207,8 @@ export class SlotsRenderer extends OutfitPanelContext {
 		const slots = this.outfitView.slots;
 		const changes: { id: string; old: string; new: string; }[] = [];
 		for (const slot of slots) {
+			if (slot.type !== 'text') continue;
+
 			const nextValue = slot.value.replaceAll(searchValue, replaceValue);
 
 			if (nextValue !== slot.value) {

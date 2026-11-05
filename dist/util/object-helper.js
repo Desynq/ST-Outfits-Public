@@ -19,3 +19,6 @@ export function pruneProperty(obj, key) {
     }
     return false;
 }
+export function hasOwnProperty(record, key) {
+    return Object.prototype.hasOwnProperty.call(record, key);
+}

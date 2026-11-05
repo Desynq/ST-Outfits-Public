@@ -1,6 +1,7 @@
 import { getSlotPresetRegistry } from "../../api/internal/slot-preset.js";
-import { UnresolvedOutfitSlot, OutfitSlotState } from "../model/OutfitSnapshots.js";
+import { UnresolvedOutfitSlot } from "../model/OutfitSnapshots.js";
 import { OutfitTracker } from "../tracker.js";
+import { contextualizeSlot, createSlotState } from "../util/slot.js";
 import { MutableSlotView } from "./MutableSlotView.js";
 export class OutfitView {
     constructor(outfitName, outfit) {
@@ -11,8 +12,10 @@ export class OutfitView {
         return this.slotView.slots;
     }
     get values() {
-        return Object.fromEntries(this.slots
-            .map(s => [s.id, s.value]));
+        return Object.fromEntries(this.slots.map(slot => [
+            slot.id,
+            this.getValue(slot)
+        ]));
     }
     /**
      * @deprecated
@@ -41,6 +44,8 @@ export class OutfitView {
     getSlotValueMap(filter) {
         const out = {};
         for (const slot of this.slots) {
+            if (slot.type !== 'text')
+                continue;
             if (filter && !filter(slot, this.slots))
                 continue;
             out[slot.id] = slot.value;
@@ -67,31 +72,35 @@ export class OutfitView {
     }
     resolveSlot(slotId) {
         const slot = this.getSlotById(slotId);
-        if (!slot)
+        if (!slot) {
             return new UnresolvedOutfitSlot(slotId);
-        return new OutfitSlotState(this.resolveSyncedSlot(slot), OutfitTracker.viewGallery());
+        }
+        return createSlotState(this.resolveSyncedSlot(slot), OutfitTracker.viewGallery());
     }
+    /**
+     * TODO: Add trait slots syncing functionality
+     */
     resolveSyncedSlot(slot) {
-        if (!slot.synced)
+        if (slot.type !== 'text')
             return slot;
-        if (slot.activeImageTag === null)
+        if (!slot.synced || slot.activeImageTag === null) {
             return slot;
+        }
         const preset = getSlotPresetRegistry().get(slot.activeImageTag);
-        if (!preset)
+        if (!preset || slot.value === preset.value) {
             return slot;
-        if (slot.value === preset.value)
-            return slot; // already synced
+        }
         return {
             ...slot,
             value: preset.value
         };
     }
     getValue(slot) {
-        const realSlot = this.slotView.getSlotById(slot.id);
+        const realSlot = this.getSlotById(slot.id);
         if (!realSlot) {
             throw new Error(`Slot ${slot.id} does not belong to outfit ${this.outfitName}`);
         }
-        return realSlot.value;
+        return contextualizeSlot(this.resolveSyncedSlot(realSlot), OutfitTracker.viewTraitRegistry().definitions);
     }
     snapshot() {
         return {

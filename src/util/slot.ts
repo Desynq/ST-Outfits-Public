@@ -1,7 +1,7 @@
-import { OutfitSlot } from "../data/model/Outfit.js";
+import { ContextSlot, TextSlot } from "../data/model/Outfit.js";
 
 
-export function isSlotBlocked(slot: Readonly<OutfitSlot>, slots: readonly Readonly<OutfitSlot>[]): boolean {
+export function isSlotBlocked(slot: Readonly<ContextSlot>, slots: readonly Readonly<ContextSlot>[]): boolean {
 	const requiredIds = new Set(
 		slot.conditions.items.map(condition => condition.id)
 	);

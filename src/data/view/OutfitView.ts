@@ -1,7 +1,8 @@
 import { getSlotPresetRegistry } from "../../api/internal/slot-preset.js";
-import { Outfit, OutfitSlot, SlotKind } from "../model/Outfit.js";
-import { OutfitSlotView, UnresolvedOutfitSlot, OutfitSlotState, OutfitSnapshot } from "../model/OutfitSnapshots.js";
+import { ContextSlot, Outfit, SlotKind, TextSlot } from "../model/Outfit.js";
+import { OutfitSnapshot, UnresolvedOutfitSlot } from "../model/OutfitSnapshots.js";
 import { OutfitTracker } from "../tracker.js";
+import { ContextSlotView, contextualizeSlot, createSlotState } from "../util/slot.js";
 import { MutableSlotView } from "./MutableSlotView.js";
 
 
@@ -16,21 +17,23 @@ export class OutfitView {
 		this.slotView = new MutableSlotView(outfit.slots);
 	}
 
-	public get slots(): readonly Readonly<OutfitSlot>[] {
+	public get slots(): readonly Readonly<ContextSlot>[] {
 		return this.slotView.slots;
 	}
 
 	public get values(): Readonly<Record<string, string>> {
 		return Object.fromEntries(
-			this.slots
-				.map(s => [s.id, s.value])
+			this.slots.map(slot => [
+				slot.id,
+				this.getValue(slot)
+			])
 		);
 	}
 
 	/**
 	 * @deprecated
 	 */
-	public resolve(slotIds: readonly string[]): readonly OutfitSlotView[] {
+	public resolve(slotIds: readonly string[]): readonly ContextSlotView[] {
 		return slotIds.map(id => this.resolveSlot(id));
 	}
 
@@ -42,15 +45,18 @@ export class OutfitView {
 		return this.slotView.getKinds();
 	}
 
-	public getSlotsFromKind(kind: string): readonly Readonly<OutfitSlot>[] {
+	public getSlotsFromKind(kind: string): readonly Readonly<ContextSlot>[] {
 		return this.slots.filter(s => s.kind === kind);
 	}
 
 	public mapSlots<T>(
-		map: (slot: Readonly<OutfitSlot>) => T,
-		filter?: (slot: Readonly<OutfitSlot>, slots: readonly Readonly<OutfitSlot>[]) => boolean
-	): Readonly<Record<OutfitSlot['id'], T>> {
-		const out: Record<OutfitSlot['id'], T> = {};
+		map: (slot: Readonly<ContextSlot>) => T,
+		filter?: (
+			slot: Readonly<ContextSlot>,
+			slots: readonly Readonly<ContextSlot>[]
+		) => boolean
+	): Readonly<Record<string, T>> {
+		const out: Record<string, T> = {};
 
 		for (const slot of this.slots) {
 			if (filter && !filter(slot, this.slots)) continue;
@@ -61,12 +67,17 @@ export class OutfitView {
 	}
 
 	public getSlotValueMap(
-		filter?: (slot: Readonly<OutfitSlot>, slots: readonly Readonly<OutfitSlot>[]) => boolean
+		filter?: (
+			slot: Readonly<TextSlot>,
+			slots: readonly Readonly<ContextSlot>[]
+		) => boolean
 	): Readonly<Record<string, string>> {
 		const out: Record<string, string> = {};
 
 		for (const slot of this.slots) {
+			if (slot.type !== 'text') continue;
 			if (filter && !filter(slot, this.slots)) continue;
+
 			out[slot.id] = slot.value;
 		}
 
@@ -77,7 +88,7 @@ export class OutfitView {
 		return this.slots.some(s => s.id === slotId);
 	}
 
-	public hasSlot(slot: OutfitSlot): boolean {
+	public hasSlot(slot: ContextSlot): boolean {
 		return this.hasSlotId(slot.id);
 	}
 
@@ -88,7 +99,7 @@ export class OutfitView {
 	/**
 	 * @returns a readonly of the outfit slot or `undefined` if the outfit does not have the slot
 	 */
-	public getSlotById(slotId: string): Readonly<OutfitSlot> | undefined {
+	public getSlotById(slotId: string): Readonly<ContextSlot> | undefined {
 		return this.slotView.getSlotById(slotId);
 	}
 
@@ -96,24 +107,37 @@ export class OutfitView {
 		return this.slotView.getIndex(slotId);
 	}
 
-	public resolveSlot(slotId: string): OutfitSlotView {
+	public resolveSlot(slotId: string): ContextSlotView {
 		const slot = this.getSlotById(slotId);
-		if (!slot) return new UnresolvedOutfitSlot(slotId);
 
-		return new OutfitSlotState(
+		if (!slot) {
+			return new UnresolvedOutfitSlot(slotId);
+		}
+
+		return createSlotState(
 			this.resolveSyncedSlot(slot),
 			OutfitTracker.viewGallery()
 		);
 	}
 
-	private resolveSyncedSlot(slot: Readonly<OutfitSlot>): Readonly<OutfitSlot> {
-		if (!slot.synced) return slot;
-		if (slot.activeImageTag === null) return slot;
+	/**
+	 * TODO: Add trait slots syncing functionality
+	 */
+	private resolveSyncedSlot(
+		slot: Readonly<ContextSlot>
+	): Readonly<ContextSlot> {
+		if (slot.type !== 'text') return slot;
+		if (!slot.synced || slot.activeImageTag === null) {
+			return slot;
+		}
 
-		const preset = getSlotPresetRegistry().get(slot.activeImageTag);
-		if (!preset) return slot;
+		const preset = getSlotPresetRegistry().get(
+			slot.activeImageTag
+		);
 
-		if (slot.value === preset.value) return slot; // already synced
+		if (!preset || slot.value === preset.value) {
+			return slot;
+		}
 
 		return {
 			...slot,
@@ -121,12 +145,19 @@ export class OutfitView {
 		};
 	}
 
-	public getValue(slot: Pick<OutfitSlot, 'id'>): string {
-		const realSlot = this.slotView.getSlotById(slot.id);
+	public getValue(slot: Pick<ContextSlot, 'id'>): string {
+		const realSlot = this.getSlotById(slot.id);
+
 		if (!realSlot) {
-			throw new Error(`Slot ${slot.id} does not belong to outfit ${this.outfitName}`);
+			throw new Error(
+				`Slot ${slot.id} does not belong to outfit ${this.outfitName}`
+			);
 		}
-		return realSlot.value;
+
+		return contextualizeSlot(
+			this.resolveSyncedSlot(realSlot),
+			OutfitTracker.viewTraitRegistry().definitions
+		);
 	}
 
 	public snapshot(): OutfitSnapshot {

@@ -1,10 +1,10 @@
 import * as SlotPresetsApi from "../../api/internal/slot-preset.js";
-import { ImageRef, OutfitImage } from "../../data/model/Outfit.js";
-import { KeyedSlotPreset, KeyedSlotPresetWithImage } from "../../data/model/SlotPreset.js";
+import { ImageRef } from "../../data/model/Outfit.js";
+import { TextSlotState } from "../../data/model/OutfitSnapshots.js";
+import { KeyedSlotPreset } from "../../data/model/SlotPreset.js";
 import { OutfitTracker } from "../../data/tracker.js";
 import { MutableOutfitView } from "../../data/view/MutableOutfitView.js";
 import { SlotPresetRegistry } from "../../data/view/SlotPresetsView.js";
-import { assertNever } from "../../shared.js";
 import { div } from "../../util/element/divs.js";
 import { createDiv, createElement, el } from "../../util/ElementHelper.js";
 import { SlotModal } from "./Modal.js";
@@ -13,7 +13,7 @@ import { SlotModal } from "./Modal.js";
 
 
 
-export class SlotPresetsModal extends SlotModal {
+export class SlotPresetsModal extends SlotModal<TextSlotState> {
 
 	protected override construct(): void {
 		const presets = this.registry.getAllSorted();

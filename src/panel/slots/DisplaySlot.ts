@@ -1,9 +1,11 @@
-import { OutfitSlotState } from "../../data/model/OutfitSnapshots.js";
+import { ContextSlotState } from "../../data/model/OutfitSnapshots.js";
 
-export class DisplaySlot {
+export class DisplaySlot<
+	T extends ContextSlotState = ContextSlotState
+> {
 	public constructor(
 		public readonly displayIndex: number,
 		public readonly slotIndex: number,
-		public readonly slot: OutfitSlotState
+		public readonly slot: T
 	) { }
 }

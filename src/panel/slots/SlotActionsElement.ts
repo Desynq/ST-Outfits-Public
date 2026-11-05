@@ -1,4 +1,4 @@
-import { OutfitSlotState } from "../../data/model/OutfitSnapshots.js";
+import { ContextSlotState } from "../../data/model/OutfitSnapshots.js";
 import { el } from "../../util/ElementHelper.js";
 import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
 
@@ -7,7 +7,7 @@ import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
 
 export class SlotActionsElement extends OutfitPanelContext {
 
-	public createUnequipButton(slot: OutfitSlotState): HTMLButtonElement {
+	public createUnequipButton(slot: ContextSlotState): HTMLButtonElement {
 		const text = slot.equipped ? 'Unequip' : 'Equip';
 
 		const click = (): void => {

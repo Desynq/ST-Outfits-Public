@@ -1,4 +1,4 @@
-import { SlotTextboxFactory } from "./SlotValueController.js";
+import { SlotTextboxFactory } from "./content/text-content.js";
 
 
 export class EditCoordinator<T extends object = object> {

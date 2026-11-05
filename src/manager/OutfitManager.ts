@@ -2,7 +2,7 @@ import { getCurrentCharacterKey } from "../api/character-provider.js";
 import { ChatOutfitStorage } from "../api/chat-metadata.js";
 import * as SlotPresetsApi from "../api/internal/slot-preset.js";
 import { CHARACTER_NOTE_OPTIONS } from "../Constants.js";
-import { OutfitSlot } from "../data/model/Outfit.js";
+import { ContextSlot, TextSlot } from "../data/model/Outfit.js";
 import { areOutfitSnapshotsEqual } from "../data/model/OutfitSnapshots.js";
 import { KeyedSlotPreset, KeyedSlotPresetWithImage } from "../data/model/SlotPreset.js";
 import { OutfitTracker } from "../data/tracker.js";
@@ -109,7 +109,7 @@ export abstract class OutfitManager {
 		);
 	}
 
-	private formatSlotSummary(s: OutfitSlot): string {
+	private formatSlotSummary(s: ContextSlot): string {
 		const chatNote = ChatOutfitStorage.getNote(this.getName(), s.id);
 		const charNotes = this.getOutfitCollection().getSlotCharacterNotes(
 			getCurrentCharacterKey(),
@@ -122,7 +122,7 @@ export abstract class OutfitManager {
 			parts.push('Status: REMOVED');
 		}
 
-		parts.push(`${s.value}`);
+		parts.push(this.outfit.getValue(s));
 
 		for (const [key, { context_label }] of typedEntries(CHARACTER_NOTE_OPTIONS)) {
 			ifPresent(charNotes?.[key]?.text, text => {
@@ -298,11 +298,15 @@ export abstract class OutfitManager {
 		const view = this.getOutfitView();
 
 		let changed = 0;
+
 		for (const slot of view.slots) {
+			if (slot.type !== 'text') continue;
 			if (!slot.synced) continue;
 
 			const resolved = view.resolveSlot(slot.id);
+
 			if (!resolved.resolved) continue;
+			if (resolved.type !== 'text') continue;
 			if (resolved.value === slot.value) continue;
 
 			view.setValue(slot.id, resolved.value);
@@ -310,7 +314,10 @@ export abstract class OutfitManager {
 		}
 
 		if (changed > 0) {
-			toastr.info(`Synced ${changed} outfit slot${plural(changed)}.`);
+			toastr.info(
+				`Synced ${changed} outfit slot${plural(changed)}.`
+			);
+
 			this.saveSettings();
 		}
 	}
@@ -341,7 +348,12 @@ export abstract class OutfitManager {
 	public async setSlotSync(slotId: string, synced: boolean): Promise<void> {
 		const view = this.getOutfitView();
 		const slot = view.getSlotById(slotId);
+
 		if (!slot) return;
+
+		if (slot.type !== 'text') {
+			return;
+		}
 
 		if (!synced) {
 			view.manipulate().setSync(slotId, false);
@@ -349,7 +361,9 @@ export abstract class OutfitManager {
 		}
 
 		const before = view.resolveSlot(slotId);
-		if (!before.resolved) return;
+		if (!before.resolved || before.type !== 'text') {
+			return;
+		}
 
 		const step = SlotPresetsApi.beginSaveSlotAsPresetAuto({
 			slot: before
@@ -385,7 +399,11 @@ export abstract class OutfitManager {
 
 		const after = view.resolveSlot(slotId);
 
-		if (after.resolved && before.value !== after.value) {
+		if (
+			after.resolved &&
+			after.type === 'text' &&
+			before.value !== after.value
+		) {
 			view.setValue(slotId, after.value);
 			this.updateSlotContext(slotId);
 		}
@@ -400,6 +418,7 @@ export abstract class OutfitManager {
 	): void {
 		const view = this.getOutfitView();
 		const slot = view.resolveSlot(slotId);
+
 		if (!slot.resolved) return;
 
 		const varName = this.getVarName(slot.id);

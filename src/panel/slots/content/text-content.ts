@@ -1,30 +1,30 @@
-import { getCurrentCharacterKey } from "../../api/character-provider.js";
-import { ChatOutfitStorage } from "../../api/chat-metadata.js";
-import * as SlotPresetsApi from "../../api/internal/slot-preset.js";
-import { CHARACTER_NOTE_OPTIONS, CharacterNoteConfig, CharacterNoteType } from "../../Constants.js";
-import { OutfitSlotState } from "../../data/model/OutfitSnapshots.js";
-import { OutfitTracker } from "../../data/tracker.js";
-import { PanelType } from "../../types/maps.js";
-import { SlotTextbox } from "../../ui/components/slot/slot-textbox.js";
-import { SlotValueText } from "../../ui/components/SlotValueText.js";
-import { promptConfigureSlotIcons } from "../../ui/prompt/configure-slot-icons.js";
-import { popupConfirm } from "../../util/adapter/popup-adapter.js";
-import { substituteParams } from "../../util/adapter/script-adapter.js";
-import { addDoubleTapListener, onSingleClick } from "../../util/element/click-actions.js";
-import { mergeClassNames, triggerAfterLayout, triggerAfterTransition } from "../../util/element/css.js";
-import { addLongPressAction, createElement, el } from "../../util/ElementHelper.js";
-import { EventBus, Listener } from "../../util/EventBus.js";
-import { exact } from "../../util/narrowing.js";
-import { stringIf } from "../../util/StringHelper.js";
-import { OutfitPanelContext } from "../base/OutfitPanelContext.js";
-import { OutfitPanel } from "../OutfitPanel.js";
-import { EditCoordinator } from "./edit-coordinator.js";
-import { getSlotIcon } from "./slot-icon.js";
-import { SlotContext } from "./SlotRenderer.js";
+import { getCurrentCharacterKey } from "../../../api/character-provider.js";
+import { ChatOutfitStorage } from "../../../api/chat-metadata.js";
+import * as SlotPresetsApi from "../../../api/internal/slot-preset.js";
+import { CHARACTER_NOTE_OPTIONS, CharacterNoteConfig, CharacterNoteType } from "../../../Constants.js";
+import { ContextSlotState, TextSlotState } from "../../../data/model/OutfitSnapshots.js";
+import { OutfitTracker } from "../../../data/tracker.js";
+import { PanelType } from "../../../types/maps.js";
+import { SlotTextbox } from "../../../ui/components/slot/slot-textbox.js";
+import { SlotValueText } from "../../../ui/components/SlotValueText.js";
+import { promptConfigureSlotIcons } from "../../../ui/prompt/configure-slot-icons.js";
+import { popupConfirm } from "../../../util/adapter/popup-adapter.js";
+import { substituteParams } from "../../../util/adapter/script-adapter.js";
+import { addDoubleTapListener, onSingleClick } from "../../../util/element/click-actions.js";
+import { mergeClassNames, triggerAfterLayout, triggerAfterTransition } from "../../../util/element/css.js";
+import { addLongPressAction, createElement, el } from "../../../util/ElementHelper.js";
+import { EventBus, Listener } from "../../../util/EventBus.js";
+import { exact } from "../../../util/narrowing.js";
+import { stringIf } from "../../../util/StringHelper.js";
+import { OutfitPanelContext } from "../../base/OutfitPanelContext.js";
+import { OutfitPanel } from "../../OutfitPanel.js";
+import { EditCoordinator } from "../edit-coordinator.js";
+import { TextSlotContext } from "../renderer/text-slot.js";
+import { getSlotIcon } from "../slot-icon.js";
 
 export interface SlotValueDeps {
 	panel: OutfitPanel<PanelType>;
-	removeActionButtons: (ctx: SlotContext) => void;
+	removeActionButtons: (ctx: TextSlotContext) => void;
 	editCoordinator: EditCoordinator;
 }
 
@@ -35,9 +35,9 @@ export interface SlotValueRenderReturn {
 }
 
 export type RenderEvent = {
-	ctx: SlotContext,
+	ctx: TextSlotContext,
 	valueEl: HTMLDivElement;
-	isFor: (otherCtx: SlotContext) => boolean;
+	isFor: (otherCtx: TextSlotContext) => boolean;
 };
 
 export class SlotTextboxFactory extends OutfitPanelContext {
@@ -55,7 +55,7 @@ export class SlotTextboxFactory extends OutfitPanelContext {
 		return this;
 	}
 
-	public render(container: HTMLDivElement, ctx: SlotContext): SlotValueRenderReturn {
+	public render(container: HTMLDivElement, ctx: TextSlotContext): SlotValueRenderReturn {
 		const { rootEl, valueEl: textboxEl } = this.createValueElements(ctx);
 		const textbox = new SlotTextbox(rootEl, textboxEl, {
 			ctx,
@@ -118,7 +118,7 @@ export class SlotTextboxFactory extends OutfitPanelContext {
 		this.renderBus.emit({
 			ctx,
 			valueEl: textboxEl,
-			isFor: (otherCtx: SlotContext) => otherCtx.slot.id === ctx.slot.id
+			isFor: (otherCtx: TextSlotContext) => otherCtx.slot.id === ctx.slot.id
 		});
 		return {
 			rootEl,
@@ -129,7 +129,7 @@ export class SlotTextboxFactory extends OutfitPanelContext {
 
 	private createThumbFromName({ rootEl, ctx }: {
 		rootEl: HTMLDivElement,
-		ctx: SlotContext;
+		ctx: TextSlotContext;
 	}): void {
 		const character = getCurrentCharacterKey();
 		const collection = this.outfitManager.getOutfitCollection();
@@ -159,7 +159,7 @@ export class SlotTextboxFactory extends OutfitPanelContext {
 		});
 	}
 
-	protected createValueElements(ctx: SlotContext): {
+	protected createValueElements(ctx: TextSlotContext): {
 		rootEl: HTMLDivElement;
 		valueEl: HTMLDivElement;
 	} {
@@ -247,20 +247,20 @@ export class SlotTextboxFactory extends OutfitPanelContext {
 		return 'slot-editbox';
 	}
 
-	protected getSlotText(slot: OutfitSlotState): string {
+	protected getSlotText(slot: TextSlotState): string {
 		return slot.value;
 	}
 
-	public isEmpty(slot: OutfitSlotState): boolean {
+	public isEmpty(slot: TextSlotState): boolean {
 		return this.getSlotText(slot) === this.getEmptyText();
 	}
 
-	protected updateSlotText(slot: OutfitSlotState, text: string): void {
+	protected updateSlotText(slot: TextSlotState, text: string): void {
 		this.syncPresetFromEditedValue(slot, text);
 		this.outfitManager.updateSlotValue(slot.id, text);
 	}
 
-	private syncPresetFromEditedValue(slot: OutfitSlotState, text: string): void {
+	private syncPresetFromEditedValue(slot: TextSlotState, text: string): void {
 		if (!SlotPresetsApi.canSync(slot)) return;
 
 		const step = SlotPresetsApi.beginSaveSlotAsPresetAuto({
@@ -289,7 +289,7 @@ export class SlotChatNoteFactory extends SlotTextboxFactory {
 		return 'slot-editbox';
 	}
 
-	protected override createValueElements(ctx: SlotContext): {
+	protected override createValueElements(ctx: TextSlotContext): {
 		rootEl: HTMLDivElement;
 		valueEl: HTMLDivElement;
 	} {
@@ -317,11 +317,11 @@ export class SlotChatNoteFactory extends SlotTextboxFactory {
 		};
 	}
 
-	protected override getSlotText(slot: OutfitSlotState): string {
+	protected override getSlotText(slot: ContextSlotState): string {
 		return ChatOutfitStorage.getNote(this.getCharacter(), slot.id) ?? this.getEmptyText();
 	}
 
-	protected override updateSlotText(slot: OutfitSlotState, text: string): void {
+	protected override updateSlotText(slot: ContextSlotState, text: string): void {
 		if (!text || text === this.getEmptyText()) {
 			ChatOutfitStorage.deleteNote(this.getCharacter(), slot.id);
 			this.outfitManager.updateSlotContext(slot.id);
@@ -377,7 +377,7 @@ export class SlotCharacterNoteFactory extends SlotTextboxFactory {
 		return 'slot-editbox';
 	}
 
-	protected override createValueElements(ctx: SlotContext): {
+	protected override createValueElements(ctx: TextSlotContext): {
 		rootEl: HTMLDivElement;
 		valueEl: HTMLDivElement;
 	} {
@@ -405,7 +405,7 @@ export class SlotCharacterNoteFactory extends SlotTextboxFactory {
 		};
 	}
 
-	protected override getSlotText(slot: OutfitSlotState): string {
+	protected override getSlotText(slot: ContextSlotState): string {
 		let note: string | undefined;
 
 		const character = getCurrentCharacterKey();
@@ -418,7 +418,7 @@ export class SlotCharacterNoteFactory extends SlotTextboxFactory {
 		return note ?? this.getEmptyText();
 	}
 
-	protected override updateSlotText(slot: OutfitSlotState, text: string): void {
+	protected override updateSlotText(slot: ContextSlotState, text: string): void {
 		const collection = this.outfitManager.getOutfitCollection();
 		const character = getCurrentCharacterKey();
 		if (!character) {

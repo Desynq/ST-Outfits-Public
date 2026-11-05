@@ -23,8 +23,9 @@ export const DEFAULT_ACCESSORY_SLOTS = [
     'legs-accessory',
     'foot-accessory'
 ];
-export function toSlot(from) {
+export function toTextSlot(from) {
     return {
+        type: 'text',
         id: from.id,
         value: from.value ?? 'None',
         kind: from.kind,
@@ -40,8 +41,8 @@ export function toSlot(from) {
     };
 }
 export const DEFAULT_SLOTS = [
-    ...DEFAULT_CLOTHING_SLOTS.map(id => toSlot({ id, kind: 'clothing' })),
-    ...DEFAULT_ACCESSORY_SLOTS.map(id => toSlot({ id, kind: 'accessory' }))
+    ...DEFAULT_CLOTHING_SLOTS.map(id => toTextSlot({ id, kind: 'clothing' })),
+    ...DEFAULT_ACCESSORY_SLOTS.map(id => toTextSlot({ id, kind: 'accessory' }))
 ];
 export const CHARACTER_NOTE_OPTIONS = {
     character: {

@@ -1,10 +1,9 @@
-import { MissingBlobError } from "../../util/error.js";
-import { OutfitSlot, SlotConditionMap, SlotKind } from "./Outfit.js";
+import type { ContextSlot, SlotConditionMap, SlotKind, TextSlot, TraitAssignment, TraitSlot } from "./Outfit.js";
 import { ImageRegistry } from "./OutfitGallery.js";
 import { OutfitImageState } from "./OutfitImageState.js";
 import { KeyedSlotPreset } from "./SlotPreset.js";
 
-abstract class OutfitSlotBase {
+abstract class ContextSlotBase {
 	public constructor(
 		public readonly id: string
 	) { }
@@ -12,21 +11,16 @@ abstract class OutfitSlotBase {
 	public abstract readonly resolved: boolean;
 }
 
-export class OutfitSlotState extends OutfitSlotBase {
+export abstract class ContextSlotState<
+	T extends ContextSlot = ContextSlot
+> extends ContextSlotBase {
 
 	public readonly resolved = true as const;
 
-	public readonly kind: SlotKind;
-	public readonly value: string;
-	public readonly enabled: boolean;
 	public readonly images: Readonly<Record<string, OutfitImageState | null>>;
-	public readonly activeImageTag: string | null;
-	public readonly equipped: boolean;
-	public readonly conditions: SlotConditionMap;
-	public readonly synced: boolean;
 
 	public constructor(
-		public readonly raw: Readonly<OutfitSlot>,
+		public readonly raw: Readonly<T>,
 		imageRegistry: ImageRegistry
 	) {
 		super(raw.id);
@@ -43,14 +37,34 @@ export class OutfitSlotState extends OutfitSlotBase {
 			images[tag] = new OutfitImageState(tag, image, ref);
 		}
 
-		this.kind = raw.kind;
-		this.value = raw.value;
-		this.enabled = raw.enabled;
 		this.images = images;
-		this.activeImageTag = raw.activeImageTag;
-		this.equipped = raw.equipped;
-		this.conditions = raw.conditions;
-		this.synced = raw.synced;
+	}
+
+	public abstract get type(): T['type'];
+	public abstract isEmpty(): boolean;
+
+	public get kind(): SlotKind {
+		return this.raw.kind;
+	}
+
+	public get enabled(): boolean {
+		return this.raw.enabled;
+	}
+
+	public get activeImageTag(): string | null {
+		return this.raw.activeImageTag;
+	}
+
+	public get equipped(): boolean {
+		return this.raw.equipped;
+	}
+
+	public get conditions(): SlotConditionMap {
+		return this.raw.conditions;
+	}
+
+	public get synced(): boolean {
+		return this.raw.synced;
 	}
 
 	public isEnabled(): boolean {
@@ -59,10 +73,6 @@ export class OutfitSlotState extends OutfitSlotBase {
 
 	public isDisabled(): boolean {
 		return !this.enabled;
-	}
-
-	public isEmpty(): boolean {
-		return this.value === 'None';
 	}
 
 
@@ -98,7 +108,7 @@ export class OutfitSlotState extends OutfitSlotBase {
 	}
 }
 
-export class UnresolvedOutfitSlot extends OutfitSlotBase {
+export class UnresolvedOutfitSlot extends ContextSlotBase {
 	public readonly resolved = false as const;
 
 	public constructor(id: string) {
@@ -106,10 +116,43 @@ export class UnresolvedOutfitSlot extends OutfitSlotBase {
 	}
 }
 
-export type OutfitSlotView = OutfitSlotState | UnresolvedOutfitSlot;
+
+
+export class TextSlotState
+	extends ContextSlotState<TextSlot> {
+
+	public override get type(): 'text' {
+		return this.raw.type;
+	}
+
+	public override isEmpty(): boolean {
+		return this.value === 'None';
+	}
+
+	public get value(): string {
+		return this.raw.value;
+	}
+}
+
+export class TraitSlotState
+	extends ContextSlotState<TraitSlot> {
+
+	public override get type(): 'traits' {
+		return this.raw.type;
+	}
+
+	public override isEmpty(): boolean {
+		return this.traits.length === 0;
+	}
+
+	public get traits():
+		ReadonlyArray<Readonly<TraitAssignment>> {
+		return this.raw.traits;
+	}
+}
 
 export interface OutfitSnapshot {
-	slots: OutfitSlot[];
+	slots: ContextSlot[];
 	values: Record<string, string>;
 }
 

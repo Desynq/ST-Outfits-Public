@@ -88,3 +88,9 @@ export function ifPresent<T>(
 	fn(value as NonNullable<T>);
 	return true;
 }
+
+
+
+export function withValue<T>(value: T, callback: (value: T) => void): void {
+	callback(value);
+}

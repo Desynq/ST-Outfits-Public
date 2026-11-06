@@ -2,8 +2,11 @@ import { TraitAssignment } from "../../../data/model/Outfit.js";
 import { OutfitTracker } from "../../../data/tracker.js";
 import { TraitRegistryView } from "../../../data/view/TraitRegistryView.js";
 import { PanelType } from "../../../types/maps.js";
+import { promptConfigureTraits } from "../../../ui/prompt/configure-traits.js";
 import { promptOptions } from "../../../ui/prompt/prompt-options.js";
+import { addDoubleTapListener } from "../../../util/element/click-actions.js";
 import { el } from "../../../util/ElementHelper.js";
+import { withValue } from "../../../util/logic.js";
 import { OutfitPanelContext } from "../../base/OutfitPanelContext.js";
 import { OutfitPanel } from "../../OutfitPanel.js";
 import { TraitSlotContext } from "../renderer/trait-slot.js";
@@ -63,17 +66,27 @@ export class TraitSlotContenter extends OutfitPanelContext {
 				parent: body
 			});
 
-			el('div', {
+			const traitDescDiv = el('div', {
 				className: 'slot-trait-description',
 				text: definition.description,
 				parent: body
 			});
 
+			addDoubleTapListener(traitDescDiv, async () => {
+				await promptConfigureTraits({
+					onSave: () => this.panel.applyTraitChanges()
+				});
+			});
+
 			if (assignment.addendum) {
-				el('div', {
+				const addendumDiv = el('div', {
 					className: 'slot-trait-addendum',
 					text: assignment.addendum,
 					parent: body
+				});
+
+				addDoubleTapListener(addendumDiv, () => {
+					this.editAddendum(ctx, assignment);
 				});
 			}
 
@@ -119,6 +132,7 @@ export class TraitSlotContenter extends OutfitPanelContext {
 		container.append(root);
 	}
 
+
 	private async addTrait(ctx: TraitSlotContext): Promise<void> {
 		const registry = OutfitTracker.viewTraitRegistry();
 
@@ -129,14 +143,14 @@ export class TraitSlotContenter extends OutfitPanelContext {
 		const available = registry.getAll()
 			.filter(trait => !assigned.has(trait.id));
 
-		if (!available.length) {
-			toastr.info('No unassigned traits available.');
-			return;
-		}
+		const configureOption = '⚙ Configure Traits';
 
-		const options = available.map(trait =>
-			TraitRegistryView.getDisplayName(trait.id)
-		);
+		const options = [
+			...available.map(trait =>
+				TraitRegistryView.getDisplayName(trait.id)
+			),
+			configureOption
+		];
 
 		const selected = await promptOptions(
 			'Add which trait?',
@@ -145,8 +159,16 @@ export class TraitSlotContenter extends OutfitPanelContext {
 
 		if (!selected) return;
 
+		if (selected === configureOption) {
+			await promptConfigureTraits({
+				onSave: () => this.panel.applyTraitChanges()
+			});
+
+			return this.addTrait(ctx);
+		}
+
 		const index = options.indexOf(selected);
-		if (index < 0) return;
+		if (index < 0 || index >= available.length) return;
 
 		const traitId = available[index].id;
 
@@ -155,6 +177,7 @@ export class TraitSlotContenter extends OutfitPanelContext {
 			{ traitId }
 		]);
 	}
+
 
 	private editAddendum(
 		ctx: TraitSlotContext,
@@ -190,6 +213,18 @@ export class TraitSlotContenter extends OutfitPanelContext {
 		ctx: TraitSlotContext,
 		traitId: string
 	): void {
+		const assignment = ctx.slot.traits.find(
+			trait => trait.traitId === traitId
+		);
+
+		if (assignment?.addendum?.trim()) {
+			const confirmed = confirm(
+				'This trait has an addendum. Remove it anyway?'
+			);
+
+			if (!confirmed) return;
+		}
+
 		this.commit(
 			ctx,
 			ctx.slot.traits

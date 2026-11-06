@@ -14,6 +14,8 @@ export interface IPanelGrouper {
 	getGroup(): OutfitPanel[];
 
 	onGroupFocus(name: string, listener: (panel: OutfitPanel) => void): void;
+
+	recontextualize(options: RecontextualizeOptions): void;
 }
 
 export interface RecontextualizeOptions {

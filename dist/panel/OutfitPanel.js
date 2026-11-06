@@ -400,4 +400,18 @@ export class OutfitPanel {
         this.panelEl.style.setProperty('--panel-bg-2', s.bgColor2);
         this.panelEl.style.setProperty('--panel-border', s.borderColor);
     }
+    /**
+     * Recontextualizes trait slots for all panels
+     */
+    recontextualizeTraits() {
+        this.grouper?.recontextualize({
+            allPanels: true,
+            filter: slot => slot.type === 'traits'
+        });
+    }
+    applyTraitChanges() {
+        this.outfitManager.saveSettings();
+        this.recontextualizeTraits();
+        this.renderTabsAndActiveContent();
+    }
 }

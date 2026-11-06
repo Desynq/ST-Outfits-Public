@@ -1,6 +1,8 @@
 import { OutfitTracker } from "../../../data/tracker.js";
 import { TraitRegistryView } from "../../../data/view/TraitRegistryView.js";
+import { promptConfigureTraits } from "../../../ui/prompt/configure-traits.js";
 import { promptOptions } from "../../../ui/prompt/prompt-options.js";
+import { addDoubleTapListener } from "../../../util/element/click-actions.js";
 import { el } from "../../../util/ElementHelper.js";
 import { OutfitPanelContext } from "../../base/OutfitPanelContext.js";
 export class TraitSlotContenter extends OutfitPanelContext {
@@ -41,16 +43,24 @@ export class TraitSlotContenter extends OutfitPanelContext {
                 text: TraitRegistryView.getDisplayName(definition.id),
                 parent: body
             });
-            el('div', {
+            const traitDescDiv = el('div', {
                 className: 'slot-trait-description',
                 text: definition.description,
                 parent: body
             });
+            addDoubleTapListener(traitDescDiv, async () => {
+                await promptConfigureTraits({
+                    onSave: () => this.panel.applyTraitChanges()
+                });
+            });
             if (assignment.addendum) {
-                el('div', {
+                const addendumDiv = el('div', {
                     className: 'slot-trait-addendum',
                     text: assignment.addendum,
                     parent: body
+                });
+                addDoubleTapListener(addendumDiv, () => {
+                    this.editAddendum(ctx, assignment);
                 });
             }
             if (ctx.mode !== 'normal')
@@ -95,16 +105,22 @@ export class TraitSlotContenter extends OutfitPanelContext {
         const assigned = new Set(ctx.slot.traits.map(trait => trait.traitId));
         const available = registry.getAll()
             .filter(trait => !assigned.has(trait.id));
-        if (!available.length) {
-            toastr.info('No unassigned traits available.');
-            return;
-        }
-        const options = available.map(trait => TraitRegistryView.getDisplayName(trait.id));
+        const configureOption = '⚙ Configure Traits';
+        const options = [
+            ...available.map(trait => TraitRegistryView.getDisplayName(trait.id)),
+            configureOption
+        ];
         const selected = await promptOptions('Add which trait?', options);
         if (!selected)
             return;
+        if (selected === configureOption) {
+            await promptConfigureTraits({
+                onSave: () => this.panel.applyTraitChanges()
+            });
+            return this.addTrait(ctx);
+        }
         const index = options.indexOf(selected);
-        if (index < 0)
+        if (index < 0 || index >= available.length)
             return;
         const traitId = available[index].id;
         this.commit(ctx, [
@@ -131,6 +147,12 @@ export class TraitSlotContenter extends OutfitPanelContext {
         this.commit(ctx, traits);
     }
     removeTrait(ctx, traitId) {
+        const assignment = ctx.slot.traits.find(trait => trait.traitId === traitId);
+        if (assignment?.addendum?.trim()) {
+            const confirmed = confirm('This trait has an addendum. Remove it anyway?');
+            if (!confirmed)
+                return;
+        }
         this.commit(ctx, ctx.slot.traits
             .filter(trait => trait.traitId !== traitId)
             .map(trait => ({ ...trait })));

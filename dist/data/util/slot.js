@@ -1,5 +1,6 @@
 import { assertNever } from "../../shared.js";
 import { TextSlotState, TraitSlotState } from "../model/OutfitSnapshots.js";
+import { TraitRegistryView } from "../view/TraitRegistryView.js";
 export function createSlot({ id, kind, type }) {
     const base = {
         id,
@@ -51,10 +52,11 @@ export function contextualizeSlot(slot, traits) {
                     return null;
                 const description = trait.description.trim();
                 const manifestation = addendum?.trim();
+                const traitName = TraitRegistryView.getDisplayName(trait.id);
                 return [
-                    `- ${trait.id}: ${description}`,
+                    `- ${traitName}: ${description}`,
                     manifestation
-                        ? `  - Manifestation: ${manifestation}`
+                        ? `  - ${manifestation}`
                         : null
                 ].filter(Boolean).join('\n');
             })

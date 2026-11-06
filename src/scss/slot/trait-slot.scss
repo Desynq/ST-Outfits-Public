@@ -5,10 +5,35 @@
 	width: 100%;
 	min-width: 0;
 
+
+
 	.slot-trait-list {
 		display: flex;
 		flex-direction: column;
 		gap: 0.5rem;
+
+		min-height: 0;
+		max-height: 30vh;
+		overflow-y: auto;
+		overflow-x: hidden;
+
+		&::-webkit-scrollbar {
+			width: 6px;
+		}
+
+		&::-webkit-scrollbar-track {
+			background: rgba(0, 0, 0, 0.1);
+			border-radius: 3px;
+		}
+
+		&::-webkit-scrollbar-thumb {
+			background: rgba(255, 255, 255, 0.2);
+			border-radius: 3px;
+
+			&:hover {
+				background: rgba(255, 255, 255, 0.3);
+			}
+		}
 	}
 
 	.slot-trait-row {
@@ -58,6 +83,8 @@
 		font-size: 0.9rem;
 		line-height: 1.45;
 		white-space: pre-wrap;
+
+		cursor: text;
 	}
 
 	.slot-trait-addendum {
@@ -69,6 +96,8 @@
 		font-style: italic;
 		line-height: 1.4;
 		white-space: pre-wrap;
+
+		cursor: text;
 	}
 
 	.slot-trait-controls {

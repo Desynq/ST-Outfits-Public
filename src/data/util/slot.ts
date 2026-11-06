@@ -2,6 +2,7 @@ import { assertNever } from "../../shared.js";
 import type { ContextSlot, ContextSlotBase, SlotKind, TraitDefinition } from "../model/Outfit.js";
 import type { ImageRegistry } from "../model/OutfitGallery.js";
 import { TextSlotState, TraitSlotState, UnresolvedOutfitSlot } from "../model/OutfitSnapshots.js";
+import { TraitRegistryView } from "../view/TraitRegistryView.js";
 
 export function createSlot({
 	id,
@@ -88,10 +89,12 @@ export function contextualizeSlot(
 					const description = trait.description.trim();
 					const manifestation = addendum?.trim();
 
+					const traitName = TraitRegistryView.getDisplayName(trait.id);
+
 					return [
-						`- ${trait.id}: ${description}`,
+						`- ${traitName}: ${description}`,
 						manifestation
-							? `  - Manifestation: ${manifestation}`
+							? `  - ${manifestation}`
 							: null
 					].filter(Boolean).join('\n');
 				})

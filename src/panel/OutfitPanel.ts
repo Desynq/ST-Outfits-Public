@@ -572,4 +572,23 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 		this.panelEl.style.setProperty('--panel-bg-2', s.bgColor2);
 		this.panelEl.style.setProperty('--panel-border', s.borderColor);
 	}
+
+
+
+	/**
+	 * Recontextualizes trait slots for all panels
+	 */
+	protected recontextualizeTraits(): void {
+		this.grouper?.recontextualize({
+			allPanels: true,
+			filter: slot => slot.type === 'traits'
+		});
+	}
+
+
+	public applyTraitChanges(): void {
+		this.outfitManager.saveSettings();
+		this.recontextualizeTraits();
+		this.renderTabsAndActiveContent();
+	}
 }

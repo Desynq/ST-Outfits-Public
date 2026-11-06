@@ -52,3 +52,6 @@ export function ifPresent(value, fn) {
     fn(value);
     return true;
 }
+export function withValue(value, callback) {
+    callback(value);
+}

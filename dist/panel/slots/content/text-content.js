@@ -91,6 +91,7 @@ export class SlotTextboxFactory extends OutfitPanelContext {
         onSingleClick(thumb, async () => {
             await promptConfigureSlotIcons({
                 onSave: () => {
+                    this.outfitManager.saveSettings();
                     this.panel.renderTabsAndActiveContent();
                 }
             });

@@ -1108,7 +1108,7 @@
 }
 .slot-trait-container .slot-trait-row {
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
   gap: 0.65rem;
   padding: 0.65rem;
   min-width: 0;
@@ -1116,7 +1116,13 @@
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 8px;
 }
-.slot-trait-container .slot-trait-row > i {
+.slot-trait-container .slot-trait-row .slot-trait-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  min-width: 0;
+}
+.slot-trait-container .slot-trait-row .slot-trait-main > i {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1128,6 +1134,16 @@
   background: rgba(255, 255, 255, 0.08);
   border-radius: 6px;
 }
+.slot-trait-container .slot-trait-row .slot-trait-edit-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+}
+.slot-trait-container .slot-trait-row .slot-trait-edit-actions[hidden] {
+  display: none;
+}
 .slot-trait-container .slot-trait-body {
   display: flex;
   flex: 1 1 auto;
@@ -1135,6 +1151,14 @@
   gap: 0.3rem;
   min-width: 0;
   overflow-wrap: anywhere;
+}
+.slot-trait-container .slot-trait-body > .slot-textbox {
+  min-height: calc(1lh + 12px);
+}
+.slot-trait-container .slot-trait-body > .slot-editbox {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 .slot-trait-container .slot-trait-name {
   font-weight: 650;
@@ -1147,6 +1171,9 @@
   cursor: text;
 }
 .slot-trait-container .slot-trait-addendum {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   padding-left: 0.6rem;
   border-left: 2px solid rgba(255, 255, 255, 0.2);
   color: rgba(255, 255, 255, 0.7);
@@ -1154,7 +1181,27 @@
   font-style: italic;
   line-height: 1.4;
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
   cursor: text;
+}
+.slot-trait-container .slot-trait-addendum.none {
+  opacity: 0.5;
+}
+.slot-trait-container .slot-trait-edit-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+}
+.slot-trait-container .slot-trait-edit-actions[hidden] {
+  display: none;
+}
+.slot-trait-container .slot-trait-edit-actions-left, .slot-trait-container .slot-trait-edit-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
 }
 .slot-trait-container .slot-trait-controls {
   display: flex;

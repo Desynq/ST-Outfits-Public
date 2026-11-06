@@ -1,12 +1,15 @@
 import { EditCoordinator } from "../../../panel/slots/edit-coordinator.js";
-import { TextSlotContext } from "../../../panel/slots/renderer/text-slot.js";
+import { SlotContext } from "../../../panel/slots/renderer/base-slot.js";
 import { isWideScreen, scrollIntoViewAboveKeyboard } from "../../../shared.js";
 import { el } from "../../../util/ElementHelper.js";
 
 type SlotTextboxDeps = {
-	ctx: TextSlotContext;
+	ctx: SlotContext;
 	editCoordinator: EditCoordinator;
-	removeActionButtons: (ctx: TextSlotContext) => void;
+
+	removeActionButtons: () => void;
+	actionsLeftEl?: HTMLElement;
+	actionsRightEl?: HTMLElement;
 
 	getOriginalText: () => string;
 	getEmptyText: () => string;
@@ -49,6 +52,9 @@ export class SlotTextbox {
 			onCommit,
 			onCancel
 		} = this.deps;
+
+		const actionsLeftEl = this.deps.actionsLeftEl ?? ctx.actionsLeftEl;
+		const actionsRightEl = this.deps.actionsRightEl ?? ctx.actionsRightEl;
 
 		if (!editCoordinator.canEdit(this.textboxEl)) return false;
 
@@ -119,7 +125,7 @@ export class SlotTextbox {
 			onCancel();
 		};
 
-		removeActionButtons(ctx);
+		removeActionButtons();
 
 		textarea.addEventListener('keydown', (e) => {
 			if (e.isComposing) return;
@@ -147,7 +153,7 @@ export class SlotTextbox {
 						commitText(getEmptyText());
 					}
 				},
-				parent: ctx.actionsLeftEl
+				parent: actionsLeftEl
 			});
 
 			preventBlur(clearBtn);
@@ -155,7 +161,7 @@ export class SlotTextbox {
 
 		const tokenCounter = el('div', {
 			className: 'slot-token-count',
-			parent: ctx.actionsLeftEl
+			parent: actionsLeftEl
 		});
 
 		const updateTokenCount = (): string =>
@@ -174,7 +180,7 @@ export class SlotTextbox {
 			events: {
 				click: cancel
 			},
-			parent: ctx.actionsRightEl
+			parent: actionsRightEl
 		});
 
 		const saveBtn = el('button', {
@@ -183,7 +189,7 @@ export class SlotTextbox {
 			events: {
 				click: () => commit()
 			},
-			parent: ctx.actionsRightEl
+			parent: actionsRightEl
 		});
 		preventBlur(saveBtn);
 

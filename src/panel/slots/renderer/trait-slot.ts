@@ -16,7 +16,8 @@ export class TraitSlotRenderer extends BaseSlotRenderer<TraitSlotState> {
 		super(deps);
 
 		this.contenter = new TraitSlotContenter({
-			panel: this.panel
+			panel: this.panel,
+			editCoordinator: deps.editCoordinator
 		});
 	}
 

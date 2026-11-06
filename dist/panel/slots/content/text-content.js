@@ -31,7 +31,7 @@ export class SlotTextboxFactory extends OutfitPanelContext {
         const textbox = new SlotTextbox(rootEl, textboxEl, {
             ctx,
             editCoordinator: this.deps.editCoordinator,
-            removeActionButtons: this.deps.removeActionButtons,
+            removeActionButtons: () => this.deps.removeActionButtons(ctx),
             getOriginalText: () => this.getSlotText(ctx.slot),
             getEmptyText: () => this.getEmptyText(),
             isEmpty: () => this.isEmpty(ctx.slot),

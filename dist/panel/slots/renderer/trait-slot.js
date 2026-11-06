@@ -6,7 +6,8 @@ export class TraitSlotRenderer extends BaseSlotRenderer {
     constructor(deps) {
         super(deps);
         this.contenter = new TraitSlotContenter({
-            panel: this.panel
+            panel: this.panel,
+            editCoordinator: deps.editCoordinator
         });
     }
     renderContent(ctx, _imageElement) {

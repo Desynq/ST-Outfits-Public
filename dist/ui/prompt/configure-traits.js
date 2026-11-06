@@ -198,13 +198,13 @@ export async function promptConfigureTraits({ onSave } = {}) {
     return new Promise(resolve => {
         let closed = false;
         let saving = false;
-        function close() {
+        function close(saved = false) {
             if (closed)
                 return;
             closed = true;
             document.removeEventListener('keydown', onKeyDown);
             overlay.remove();
-            resolve();
+            resolve(saved);
         }
         function onKeyDown(event) {
             if (event.key === 'Escape' && !saving) {
@@ -232,7 +232,7 @@ export async function promptConfigureTraits({ onSave } = {}) {
             try {
                 saveTraits();
                 await onSave?.();
-                close();
+                close(true);
             }
             catch (error) {
                 console.error('Failed to save trait definitions:', error);

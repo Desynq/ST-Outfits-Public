@@ -17,6 +17,8 @@ export class SlotTextbox {
     }
     beginInlineEdit() {
         const { ctx, editCoordinator, removeActionButtons, getOriginalText, getEmptyText, isEmpty, getEditBoxClassName, onCommit, onCancel } = this.deps;
+        const actionsLeftEl = this.deps.actionsLeftEl ?? ctx.actionsLeftEl;
+        const actionsRightEl = this.deps.actionsRightEl ?? ctx.actionsRightEl;
         if (!editCoordinator.canEdit(this.textboxEl))
             return false;
         editCoordinator.beginEdit(this.textboxEl);
@@ -67,7 +69,7 @@ export class SlotTextbox {
             cleanup();
             onCancel();
         };
-        removeActionButtons(ctx);
+        removeActionButtons();
         textarea.addEventListener('keydown', (e) => {
             if (e.isComposing)
                 return;
@@ -92,13 +94,13 @@ export class SlotTextbox {
                         commitText(getEmptyText());
                     }
                 },
-                parent: ctx.actionsLeftEl
+                parent: actionsLeftEl
             });
             preventBlur(clearBtn);
         }
         const tokenCounter = el('div', {
             className: 'slot-token-count',
-            parent: ctx.actionsLeftEl
+            parent: actionsLeftEl
         });
         const updateTokenCount = () => tokenCounter.textContent = `Tokens:\n${Math.ceil(textarea.value.length / 4)}`;
         updateTokenCount();
@@ -112,7 +114,7 @@ export class SlotTextbox {
             events: {
                 click: cancel
             },
-            parent: ctx.actionsRightEl
+            parent: actionsRightEl
         });
         const saveBtn = el('button', {
             className: 'slot-button save-button',
@@ -120,7 +122,7 @@ export class SlotTextbox {
             events: {
                 click: () => commit()
             },
-            parent: ctx.actionsRightEl
+            parent: actionsRightEl
         });
         preventBlur(saveBtn);
         return true;

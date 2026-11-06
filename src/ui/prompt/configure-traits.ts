@@ -14,7 +14,7 @@ interface TraitModalOptions {
 
 export async function promptConfigureTraits({
 	onSave
-}: TraitModalOptions = {}): Promise<void> {
+}: TraitModalOptions = {}): Promise<boolean> {
 	const registry = OutfitTracker.viewTraitRegistry();
 
 	const traits: TraitDraft[] = registry.getAll().map(trait => ({
@@ -259,17 +259,17 @@ export async function promptConfigureTraits({
 
 	render();
 
-	return new Promise<void>(resolve => {
+	return new Promise<boolean>(resolve => {
 		let closed = false;
 		let saving = false;
 
-		function close(): void {
+		function close(saved = false): void {
 			if (closed) return;
 
 			closed = true;
 			document.removeEventListener('keydown', onKeyDown);
 			overlay.remove();
-			resolve();
+			resolve(saved);
 		}
 
 		function onKeyDown(event: KeyboardEvent): void {
@@ -302,7 +302,7 @@ export async function promptConfigureTraits({
 			try {
 				saveTraits();
 				await onSave?.();
-				close();
+				close(true);
 			} catch (error) {
 				console.error('Failed to save trait definitions:', error);
 				toastr.error('Failed to save trait definitions.');

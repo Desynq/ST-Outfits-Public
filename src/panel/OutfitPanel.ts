@@ -57,6 +57,8 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 
 	private grouper: IPanelGrouper | null = null;
 
+	public readonly expandedTraits = new Set<string>();
+
 	public constructor(
 		public readonly outfitManager: OutfitManagerMap[T]
 	) { }

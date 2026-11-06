@@ -1088,9 +1088,8 @@
   flex-direction: column;
   gap: 0.5rem;
   min-height: 0;
-  max-height: 30vh;
-  overflow-y: auto;
   overflow-x: hidden;
+  overscroll-behavior-y: auto;
 }
 .slot-trait-container .slot-trait-list::-webkit-scrollbar {
   width: 6px;
@@ -1109,20 +1108,71 @@
 .slot-trait-container .slot-trait-row {
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
   padding: 0.65rem;
   min-width: 0;
   background: rgba(0, 0, 0, 0.16);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 8px;
 }
-.slot-trait-container .slot-trait-row .slot-trait-main {
+.slot-trait-container .slot-trait-row.--expanded .slot-trait-expand > i {
+  transform: rotate(180deg);
+}
+.slot-trait-container .slot-trait-main {
   display: flex;
-  align-items: flex-start;
-  gap: 0.65rem;
+  align-items: center;
+  gap: 0.5rem;
   min-width: 0;
 }
-.slot-trait-container .slot-trait-row .slot-trait-main > i {
+.slot-trait-container .slot-trait-edit-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+}
+.slot-trait-container .slot-trait-edit-actions[hidden] {
+  display: none;
+}
+.slot-trait-container .slot-trait-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 0.65rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.slot-trait-container .slot-trait-content[hidden] {
+  display: none;
+}
+.slot-trait-container .slot-trait-content > .slot-textbox {
+  min-height: calc(1lh + 12px);
+}
+.slot-trait-container .slot-trait-content > .slot-editbox {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+.slot-trait-container .slot-trait-controls {
+  display: none;
+  align-items: center;
+  gap: 0.5rem;
+}
+.slot-trait-container .slot-trait-expand {
+  flex: 0 0 auto;
+}
+.slot-trait-container .slot-trait-expand > i {
+  transition: transform 0.2s ease;
+}
+.slot-trait-container .slot-trait-trigger {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  height: 32px;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+.slot-trait-container .slot-trait-trigger > i {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1134,35 +1184,30 @@
   background: rgba(255, 255, 255, 0.08);
   border-radius: 6px;
 }
-.slot-trait-container .slot-trait-row .slot-trait-edit-actions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  width: 100%;
-}
-.slot-trait-container .slot-trait-row .slot-trait-edit-actions[hidden] {
-  display: none;
-}
-.slot-trait-container .slot-trait-body {
-  display: flex;
-  flex: 1 1 auto;
-  flex-direction: column;
-  gap: 0.3rem;
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-.slot-trait-container .slot-trait-body > .slot-textbox {
-  min-height: calc(1lh + 12px);
-}
-.slot-trait-container .slot-trait-body > .slot-editbox {
-  width: 100%;
-  min-width: 0;
-  box-sizing: border-box;
-}
 .slot-trait-container .slot-trait-name {
+  min-width: 0;
   font-weight: 650;
   line-height: 1.3;
+  cursor: pointer;
+}
+.slot-trait-container .slot-trait-name.--has-addendum {
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 3px;
+}
+.slot-trait-container .slot-trait-spacer {
+  min-width: 0;
+  flex: 1;
+}
+.slot-trait-container .slot-trait-expand,
+.slot-trait-container .slot-trait-controls .slot-button {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  flex: 0 0 auto;
+}
+.slot-trait-container .slot-trait-row.--expanded .slot-trait-controls {
+  display: flex;
 }
 .slot-trait-container .slot-trait-description {
   font-size: 0.9rem;
@@ -1203,21 +1248,6 @@
   align-items: center;
   gap: 0.4rem;
 }
-.slot-trait-container .slot-trait-controls {
-  display: flex;
-  flex: 0 0 auto;
-  gap: 0.25rem;
-}
-.slot-trait-container .slot-trait-controls .slot-button {
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  font-size: 0.85rem;
-  opacity: 0.65;
-}
-.slot-trait-container .slot-trait-controls .slot-button:hover {
-  opacity: 1;
-}
 .slot-trait-container .slot-add-trait {
   align-self: flex-start;
   height: 30px;
@@ -1226,11 +1256,7 @@
 }
 @media (max-width: 600px) {
   .slot-trait-container .slot-trait-row {
-    gap: 0.5rem;
     padding: 0.5rem;
-  }
-  .slot-trait-container .slot-trait-controls {
-    flex-direction: column;
   }
 }
 

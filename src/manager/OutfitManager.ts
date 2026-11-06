@@ -17,7 +17,7 @@ import { isSlotBlocked, resolveKindMacros } from "../util/slot.js";
 import { indentString, plural, toKebabCase } from "../util/StringHelper.js";
 import { toSummaryKey } from "../util/SummaryHelper.js";
 import { deleteGlobalVariable, getGlobalVariable, setGlobalVariable } from "./GlobalVarManager.js";
-import { KindScope, OutfitMacroManager } from "./MacroManager.js";
+import { KindScope, MacroManager } from "./MacroManager.js";
 
 type RenameSlotResult =
 	| 'slot-not-found'
@@ -33,13 +33,13 @@ export abstract class OutfitManager {
 
 	private updateContextTimeout: number | null = null;
 
-	protected readonly summaryMacros: OutfitMacroManager;
+	protected readonly summaryMacros: MacroManager;
 
 	public constructor(
 		public readonly saveSettings: () => void,
 		macroOwner: string
 	) {
-		this.summaryMacros = new OutfitMacroManager(macroOwner, 'summary', 'outfit');
+		this.summaryMacros = new MacroManager(macroOwner, 'summary', 'outfit');
 	}
 
 	protected get outfit(): MutableOutfitView {

@@ -4,6 +4,7 @@ import { extension_settings } from '../../../../extensions.js';
 import { getCurrentCharacterKey } from './api/character-provider.js';
 import { saveSettings as saveSettingsBase } from './api/settings.js';
 import { registerPanelCommands } from './command/panel-commands.js';
+import { TraitManager } from './manager/TraitManager.js';
 import { OutfitPanelRegistry } from './panel/PanelRegistry.js';
 import { createSettingsUI } from './ui/settings-ui.js';
 console.log('[OutfitTracker] Starting extension loading...');
@@ -51,6 +52,7 @@ async function initializeExtension() {
         }
         saveSettingsBase();
     };
+    TraitManager.updateMacros();
     const botManager = new BotOutfitManager(saveSettings);
     const userManager = new UserOutfitManager(saveSettings);
     const botPanel = new BotOutfitPanel(botManager);

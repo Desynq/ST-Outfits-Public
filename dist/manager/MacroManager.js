@@ -1,7 +1,7 @@
 import { toKebabCase } from "../util/StringHelper.js";
 const { macros } = SillyTavern.getContext();
 const { registry: MacroRegistry, category: MacroCategory } = macros;
-export class OutfitMacroManager {
+export class MacroManager {
     constructor(owner, suffix, domain) {
         this.owner = owner;
         this.suffix = suffix;

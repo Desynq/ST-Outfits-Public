@@ -1,4 +1,5 @@
 import { OutfitTracker } from "../data/tracker.js";
+import { TraitManager } from "../manager/TraitManager.js";
 import { isWideScreen } from "../shared.js";
 import { createPanelSwitcher } from "../ui/components/button/panel-switcher.js";
 import { promptOptions } from "../ui/prompt/prompt-options.js";
@@ -412,6 +413,7 @@ export class OutfitPanel {
     applyTraitChanges() {
         this.outfitManager.saveSettings();
         this.recontextualizeTraits();
+        TraitManager.updateMacros();
         this.renderTabsAndActiveContent();
     }
 }

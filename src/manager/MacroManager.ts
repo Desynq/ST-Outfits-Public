@@ -7,7 +7,7 @@ const { registry: MacroRegistry, category: MacroCategory } = macros;
 export type OutfitOwner = 'user' | 'char' | (string & {});
 export type KindScope = '*' | (string & {});
 
-export class OutfitMacroManager {
+export class MacroManager {
 
 	private registry: Map<KindScope, string> = new Map();
 

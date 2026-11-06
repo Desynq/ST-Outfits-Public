@@ -12,12 +12,12 @@ import { isSlotBlocked, resolveKindMacros } from "../util/slot.js";
 import { indentString, plural, toKebabCase } from "../util/StringHelper.js";
 import { toSummaryKey } from "../util/SummaryHelper.js";
 import { deleteGlobalVariable, getGlobalVariable, setGlobalVariable } from "./GlobalVarManager.js";
-import { OutfitMacroManager } from "./MacroManager.js";
+import { MacroManager } from "./MacroManager.js";
 export class OutfitManager {
     constructor(saveSettings, macroOwner) {
         this.saveSettings = saveSettings;
         this.updateContextTimeout = null;
-        this.summaryMacros = new OutfitMacroManager(macroOwner, 'summary', 'outfit');
+        this.summaryMacros = new MacroManager(macroOwner, 'summary', 'outfit');
     }
     get outfit() {
         return this.getOutfitView();

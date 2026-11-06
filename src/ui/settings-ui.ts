@@ -1,8 +1,10 @@
 import { OutfitTrackerModel } from "../data/model/Outfit.js";
+import { TraitManager } from "../manager/TraitManager.js";
 import { RecontextualizeOptions } from "../panel/PanelRegistry.js";
 import { el } from "../util/ElementHelper.js";
 import { promptConfigureSlotIcons } from "./prompt/configure-slot-icons.js";
 import { promptConfigureTraits } from "./prompt/configure-traits.js";
+import { promptTraitPreview } from "./prompt/trait-preview.js";
 
 interface AutoOutfitSystemLike {
 	enable(): unknown;
@@ -113,6 +115,7 @@ export function createSettingsUI({
 				]
 			}),
 
+
 			el('div', {
 				className: 'flex-container',
 				children: [
@@ -120,16 +123,25 @@ export function createSettingsUI({
 						await promptConfigureTraits({
 							onSave: () => {
 								saveSettings();
+
 								recontextualize({
 									allPanels: true,
 									filter: slot => slot.type === 'traits'
 								});
+
+								TraitManager.updateMacros();
+
 								refreshActivePanel();
 							}
 						});
+					}),
+
+					settingsButton('Preview Trait Context (LLM)', () => {
+						promptTraitPreview();
 					})
 				]
 			})
+
 		]
 	});
 

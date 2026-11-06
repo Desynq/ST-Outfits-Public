@@ -82,23 +82,13 @@ export function contextualizeSlot(
 
 		case 'traits':
 			return slot.traits
+				.filter(({ traitId }) => traits[traitId])
 				.map(({ traitId, addendum }) => {
-					const trait = traits[traitId];
-					if (!trait) return null;
-
-					const description = trait.description.trim();
+					const name = TraitRegistryView.getDisplayName(traitId);
 					const manifestation = addendum?.trim();
 
-					const traitName = TraitRegistryView.getDisplayName(trait.id);
-
-					return [
-						`- ${traitName}: ${description}`,
-						manifestation
-							? `  - ${manifestation}`
-							: null
-					].filter(Boolean).join('\n');
+					return `- ${name}${manifestation ? `: ${manifestation}` : ''}`;
 				})
-				.filter((value): value is string => value !== null)
 				.join('\n');
 	}
 }

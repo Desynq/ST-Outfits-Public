@@ -2,6 +2,7 @@ import { XY } from "../data/model/Outfit.js";
 import { OutfitTracker } from "../data/tracker.js";
 import { IOutfitCollectionView } from "../data/view/OutfitCollectionView.js";
 import { LayoutMode, PanelSettingsViewMap } from "../data/view/PanelViews.js";
+import { TraitManager } from "../manager/TraitManager.js";
 import { isWideScreen } from "../shared.js";
 import type { OutfitManagerMap, PanelType } from "../types/maps.js";
 import { ShowOptions } from "../types/OutfitPanel.js";
@@ -588,7 +589,10 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 
 	public applyTraitChanges(): void {
 		this.outfitManager.saveSettings();
+
 		this.recontextualizeTraits();
+		TraitManager.updateMacros();
+
 		this.renderTabsAndActiveContent();
 	}
 }

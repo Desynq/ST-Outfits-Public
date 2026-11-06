@@ -1,6 +1,8 @@
+import { TraitManager } from "../manager/TraitManager.js";
 import { el } from "../util/ElementHelper.js";
 import { promptConfigureSlotIcons } from "./prompt/configure-slot-icons.js";
 import { promptConfigureTraits } from "./prompt/configure-traits.js";
+import { promptTraitPreview } from "./prompt/trait-preview.js";
 export function createSettingsUI({ settings, saveSettings, autoOutfitSystem, sendSystemMessage, refreshActivePanel, recontextualize }) {
     function checkboxSetting(label, checked, onChange) {
         return el('div', {
@@ -70,9 +72,13 @@ export function createSettingsUI({ settings, saveSettings, autoOutfitSystem, sen
                                     allPanels: true,
                                     filter: slot => slot.type === 'traits'
                                 });
+                                TraitManager.updateMacros();
                                 refreshActivePanel();
                             }
                         });
+                    }),
+                    settingsButton('Preview Trait Context (LLM)', () => {
+                        promptTraitPreview();
                     })
                 ]
             })

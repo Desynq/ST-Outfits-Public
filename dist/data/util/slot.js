@@ -8,7 +8,7 @@ export function createSlot({ id, kind, type }) {
         enabled: true,
         images: {},
         activeImageTag: null,
-        equipped: false,
+        equipped: true,
         conditions: {
             mode: 'none',
             items: []

@@ -19,7 +19,7 @@ export function createSlot({
 		enabled: true,
 		images: {},
 		activeImageTag: null,
-		equipped: false,
+		equipped: true,
 		conditions: {
 			mode: 'none',
 			items: []

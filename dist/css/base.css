@@ -1146,6 +1146,7 @@
 }
 .slot-trait-container .slot-trait-content > .slot-textbox {
   min-height: calc(1lh + 12px);
+  max-height: none;
 }
 .slot-trait-container .slot-trait-content > .slot-editbox {
   width: 100%;

@@ -6,6 +6,7 @@ import { DEFAULT_SLOT_ICON_RULES } from "../panel/slots/slot-icon.js";
 import { isRecord } from "../util/narrowing.js";
 import { normalizeCharPanels, normalizePanelSettings } from "./mappings/PanelSettings.js";
 import { migrateTraitsV2 } from "./migration/traits.js";
+import { normalizeTraits } from "./normalization/trait.js";
 import { normalizeImageBlobs, normalizeSlotPresets, validatePresets } from "./normalize.js";
 import { CharPanelsView } from "./view/CharPanelsView.js";
 import { CharacterOutfitCollectionView, UserOutfitCollectionView } from "./view/OutfitCollectionView.js";
@@ -116,8 +117,7 @@ function loadTracker() {
     normalizePanelSettings(raw, 'userPanel', defaultUserPanelSettings);
     normalizePanelSettings(raw, 'botPanel', defaultBotPanelSettings);
     raw.slotIconRules ??= structuredClone(DEFAULT_SLOT_ICON_RULES);
-    // TODO: Normalization of traits
-    raw.traits ??= { definitions: {} };
+    normalizeTraits(raw);
     raw.version = 4;
     return new Tracker(raw);
 }

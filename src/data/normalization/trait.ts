@@ -1,5 +1,5 @@
 import { isRecord } from "../../util/narrowing.js";
-import type { TraitAssignment, TraitVisual } from "../model/Outfit.js";
+import type { OutfitTrackerModel, TraitAssignment, TraitDefinition, TraitVisual } from "../model/Outfit.js";
 
 export function normalizeTraitAssignments(
 	value: unknown
@@ -29,6 +29,62 @@ export function normalizeTraitAssignments(
 	}
 
 	return result;
+}
+
+
+
+export function normalizeTraits(
+	holder: Partial<OutfitTrackerModel>
+): void {
+	const registry = holder.traits;
+	const source = isRecord(registry) && isRecord(registry.definitions)
+		? registry.definitions
+		: {};
+
+	const definitions: Record<string, TraitDefinition> = {};
+
+	for (const [key, value] of Object.entries(source)) {
+		if (!isRecord(value)) continue;
+
+		const id = key.trim();
+		if (!id) continue;
+
+		const name = typeof value.name === 'string'
+			? value.name.trim() || 'Trait'
+			: 'Trait';
+
+		const group = typeof value.group === 'string'
+			? value.group.trim()
+			: '';
+
+		const description = typeof value.description === 'string'
+			? value.description.trim()
+			: '';
+
+		let icon: TraitVisual | null = null;
+
+		if (
+			isRecord(value.icon)
+			&& value.icon.type === 'font-awesome'
+			&& typeof value.icon.className === 'string'
+			&& value.icon.className.trim()
+		) {
+			icon = {
+				type: 'font-awesome',
+				className: value.icon.className.trim()
+			};
+		}
+
+		definitions[id] = {
+			id,
+			name,
+			group,
+			description,
+			icon
+		};
+	}
+
+	holder.traits = { definitions };
 }
 
 

@@ -22,9 +22,16 @@ export function migrateTraitsV2(holder, toDisplayName) {
         }
         definitions[id] = {
             id,
-            name: legacy ? toDisplayName(oldId) : old.name,
-            description: typeof old.description === 'string' ? old.description : '',
-            icon: old.icon ?? null
+            name: legacy
+                ? toDisplayName(oldId)
+                : old.name,
+            group: typeof value.group === 'string'
+                ? value.group.trim()
+                : '',
+            description: typeof old.description === 'string'
+                ? old.description
+                : '',
+            icon: old.icon ?? null // TODO: icon normalization
         };
     }
     // Rewrite references before publishing the re-keyed registry.

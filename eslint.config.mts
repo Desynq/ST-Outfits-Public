@@ -39,7 +39,8 @@ export default defineConfig([
       "@typescript-eslint/no-explicit-any": "off",
       "no-unused-vars": "off",
       "no-useless-assignment": "off",
-      "no-empty": "off"
+      "no-empty": "off",
+      "prefer-const": "warn"
     }
   }
 ]);

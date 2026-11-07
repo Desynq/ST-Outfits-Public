@@ -32,9 +32,16 @@ export function migrateTraitsV2(
 
 		definitions[id] = {
 			id,
-			name: legacy ? toDisplayName(oldId) : (old as TraitDefinition).name,
-			description: typeof old.description === 'string' ? old.description : '',
-			icon: old.icon ?? null
+			name: legacy
+				? toDisplayName(oldId)
+				: (old as TraitDefinition).name,
+			group: typeof value.group === 'string'
+				? value.group.trim()
+				: '',
+			description: typeof old.description === 'string'
+				? old.description
+				: '',
+			icon: old.icon ?? null // TODO: icon normalization
 		};
 	}
 

@@ -1,5 +1,5 @@
 import { hasOwnProperty } from "../../util/object-helper.js";
-import type { TraitDefinition, TraitRegistry } from "../model/Outfit.js";
+import type { TraitDefinition, TraitRegistry, TraitVisual } from "../model/Outfit.js";
 
 
 
@@ -93,5 +93,11 @@ export class TraitRegistryView {
 				word.charAt(0).toUpperCase() + word.slice(1)
 			)
 			.join(' ');
+	}
+
+	public static getIconClass(visual: TraitVisual | null): string {
+		return visual?.type === 'font-awesome'
+			? visual.className
+			: 'fa-solid fa-tag';
 	}
 }

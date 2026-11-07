@@ -43,6 +43,7 @@ export type TraitVisual =
 export interface TraitDefinition {
 	id: string; // generated uuid
 	name: string; // non-unique display name, supports any char
+	group: string;
 	description: string; // what the trait does
 	icon: TraitVisual | null;
 }

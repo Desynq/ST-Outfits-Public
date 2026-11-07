@@ -4,6 +4,7 @@ import { TraitRegistryView } from "../../../data/view/TraitRegistryView.js";
 import { PanelType } from "../../../types/maps.js";
 import { SlotTextbox } from "../../../ui/components/slot/slot-textbox.js";
 import { SlotValueText } from "../../../ui/components/SlotValueText.js";
+import { promptAddTrait } from "../../../ui/prompt/add-trait.js";
 import { promptConfigureTraits } from "../../../ui/prompt/configure-traits.js";
 import { promptOptions } from "../../../ui/prompt/prompt-options.js";
 import { addDoubleTapListener } from "../../../util/element/click-actions.js";
@@ -372,47 +373,16 @@ export class TraitSlotContenter extends OutfitPanelContext {
 
 
 	private async addTrait(ctx: TraitSlotContext): Promise<void> {
-		const registry = OutfitTracker.viewTraitRegistry();
-
-		const assigned = new Set(
-			ctx.slot.traits.map(trait => trait.traitId)
-		);
-
-		const available = registry.getAll()
-			.filter(trait => !assigned.has(trait.id));
-
-		const configureOption = '⚙ Configure Traits';
-
-		const options = [
-			...available.map(trait =>
-				trait.name
+		const traitId = await promptAddTrait({
+			excludedIds: new Set(
+				ctx.slot.traits.map(trait => trait.traitId)
 			),
-			configureOption
-		];
-
-		const selected = await promptOptions(
-			'Add which trait?',
-			options
-		);
-
-		if (!selected) return;
-
-		if (selected === configureOption) {
-			const changedTraits = await promptConfigureTraits({
+			onConfigure: () => promptConfigureTraits({
 				onSave: () => this.panel.applyTraitChanges()
-			});
+			})
+		});
 
-			if (changedTraits) {
-				return this.addTrait(ctx);
-			}
-
-			return;
-		}
-
-		const index = options.indexOf(selected);
-		if (index < 0 || index >= available.length) return;
-
-		const traitId = available[index].id;
+		if (!traitId) return;
 
 		this.commit(ctx, [
 			...ctx.slot.traits.map(trait => ({ ...trait })),

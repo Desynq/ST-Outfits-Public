@@ -58,4 +58,9 @@ export class TraitRegistryView {
             .map(word => word.charAt(0).toUpperCase() + word.slice(1))
             .join(' ');
     }
+    static getIconClass(visual) {
+        return visual?.type === 'font-awesome'
+            ? visual.className
+            : 'fa-solid fa-tag';
+    }
 }

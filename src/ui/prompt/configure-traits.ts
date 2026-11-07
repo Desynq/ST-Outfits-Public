@@ -4,8 +4,9 @@ import { TraitRegistryView } from '../../data/view/TraitRegistryView.js';
 import type { TraitDefinition, TraitVisual } from '../../data/model/Outfit.js';
 import { el } from '../../util/ElementHelper.js';
 import { applyIconFallback } from '../../util/element/icon.js';
+import { renderTrait } from './render/trait.js';
 
-type TraitDraft = Omit<TraitDefinition, 'id'> & {
+export type TraitDraft = Omit<TraitDefinition, 'id'> & {
 	id?: string;
 };
 
@@ -16,16 +17,20 @@ interface TraitModalOptions {
 function comparableTraits(source: TraitDraft[]): {
 	id: string | undefined;
 	name: string;
+	group: string;
 	description: string;
 	icon: TraitVisual | null;
 }[] {
-	return source.map(({ id, name, description, icon }) => ({
+	return source.map(({ id, name, group, description, icon }) => ({
 		id,
 		name,
+		group,
 		description,
 		icon
 	}));
 }
+
+const DEFAULT_GROUP = '';
 
 export async function promptConfigureTraits({
 	onSave
@@ -43,6 +48,18 @@ export async function promptConfigureTraits({
 
 	const expandedTraits = new Set<TraitDraft>();
 
+	let activeGroup = '';
+
+	function getGroups(): string[] {
+		const groups = [...new Set(traits.map(trait => trait.group))];
+
+		if (!groups.length) {
+			groups.push(DEFAULT_GROUP);
+		}
+
+		return groups;
+	}
+
 	const overlay = el('div', {
 		className: 'sto-overlay show'
 	});
@@ -55,6 +72,10 @@ export async function promptConfigureTraits({
 
 	const title = el('h3', {
 		text: 'Configure Traits'
+	});
+
+	const groupBar = el('div', {
+		className: 'trait-config-groups'
 	});
 
 	const list = el('div', {
@@ -89,180 +110,65 @@ export async function promptConfigureTraits({
 
 	updateSaveVisibility();
 
-
-	function getIconClass(visual: TraitVisual | null): string {
-		return visual?.type === 'font-awesome'
-			? visual.className
-			: 'fa-solid fa-tag';
-	}
-
 	function render(): void {
+		renderGroups();
 		list.replaceChildren();
 
 		for (const trait of traits) {
-			renderTrait(trait);
+			if (trait.group !== activeGroup) {
+				continue;
+			}
+
+			const { traitEl } = renderTrait({
+				expandedTraits,
+				updateSaveVisibility,
+				render,
+				getGroups,
+				traits
+			}, trait);
+			list.appendChild(traitEl);
 		}
 	}
 
+	function renderGroups(): void {
+		groupBar.replaceChildren();
 
-	function renderTrait(trait: TraitDraft): void {
-		const expanded = expandedTraits.has(trait);
+		const groups = getGroups();
 
-		const row = el('div', {
-			className: 'trait-config-row',
-			classes: [expanded ? '--expanded' : ''],
-			parent: list
-		});
+		if (!groups.includes(activeGroup)) {
+			activeGroup = groups[0];
+		}
 
-		const main = el('div', {
-			className: 'trait-config-main',
-			parent: row
-		});
+		for (const group of groups) {
+			const button = el('button', {
+				type: 'button',
+				className: 'trait-config-group',
+				classes: [group === activeGroup ? '--active' : ''],
+				text: group || 'Default',
+				parent: groupBar,
+			});
 
-		const trigger = el('div', {
-			className: 'trait-config-trigger',
-			parent: main
-		});
-
-		const icon = el('i', {
-			className: getIconClass(trait.icon),
-			title: 'Click to change Font Awesome icon',
-			parent: trigger,
-			events: {
-				click(event) {
-					event.stopPropagation();
-
-					const current = trait.icon?.type === 'font-awesome'
-						? trait.icon.className
-						: 'fa-solid fa-tag';
-
-					const value = prompt(
-						'Font Awesome icon class (leave empty to clear):',
-						current
-					);
-
-					if (value === null) return;
-
-					const className = value.trim();
-
-					trait.icon = className
-						? { type: 'font-awesome', className }
-						: null;
-
-					updateSaveVisibility();
-					render();
+			button.addEventListener('click', () => {
+				if (activeGroup === group) {
+					return;
 				}
-			}
-		});
 
-		applyIconFallback(icon);
+				activeGroup = group;
+				render();
+			});
 
-		const label = el('div', {
-			className: 'trait-config-name',
-			text: trait.name || 'New Trait',
-			parent: trigger
-		});
-
-		el('div', {
-			className: 'trait-config-spacer',
-			parent: trigger
-		});
-
-		const removeBtn = el('button', {
-			type: 'button',
-			className: 'menu_button trait-config-remove',
-			title: 'Remove trait',
-			parent: main,
-			events: {
-				click() {
-					const index = traits.indexOf(trait);
-					if (index < 0) return;
-
-					traits.splice(index, 1);
-					expandedTraits.delete(trait);
-					updateSaveVisibility();
-					render();
-				}
-			},
-			children: [
-				el('i', {
-					className: 'fa-solid fa-trash-can',
-				})
-			]
-		});
-
-		const content = el('div', {
-			className: 'trait-config-content',
-			parent: row
-		});
-
-		content.hidden = !expanded;
-
-		const expandButton = el('button', {
-			type: 'button',
-			className: 'menu_button trait-config-expand',
-			title: expanded ? 'Collapse trait' : 'Expand trait',
-			parent: main,
-			events: {
-				click() {
-					const next = !expandedTraits.has(trait);
-
-					if (next) expandedTraits.add(trait);
-					else expandedTraits.delete(trait);
-
-					content.hidden = !next;
-					row.classList.toggle('--expanded', next);
-					this.setAttribute('aria-expanded', String(next));
-					this.title = next ? 'Collapse trait' : 'Expand trait';
-				}
-			}
-		});
-
-		expandButton.setAttribute('aria-expanded', String(expanded));
-
-		el('i', {
-			className: 'fa-solid fa-chevron-down',
-			parent: expandButton
-		});
-
-		trigger.addEventListener('click', () => {
-			if (window.getSelection()?.toString()) return;
-			expandButton.click();
-		});
-
-		const name = el('input', {
-			className: 'text_pole',
-			placeholder: 'Trait name',
-			value: trait.name,
-			parent: content,
-			events: {
-				input() {
-					trait.name = this.value;
-					label.textContent = this.value || 'New Trait';
-					updateSaveVisibility();
-				}
-			}
-		});
-
-		el('textarea', {
-			className: 'text_pole',
-			rows: 2,
-			placeholder: 'What does this trait do?',
-			value: trait.description,
-			parent: content,
-			events: {
-				input() {
-					trait.description = this.value;
-					updateSaveVisibility();
-				}
-			}
-		});
+			button.setAttribute(
+				'aria-pressed',
+				String(group === activeGroup)
+			);
+		}
 	}
 
 
 	function validate(): boolean {
 		for (const trait of traits) {
 			trait.name = trait.name.trim();
+			trait.group = trait.group.trim();
 			trait.description = trait.description.trim();
 
 			if (!trait.name) {
@@ -312,6 +218,7 @@ export async function promptConfigureTraits({
 	addButton.addEventListener('click', () => {
 		const trait: TraitDraft = {
 			name: '',
+			group: activeGroup,
 			description: '',
 			icon: {
 				type: 'font-awesome',
@@ -331,7 +238,7 @@ export async function promptConfigureTraits({
 	});
 
 	buttons.append(addButton, saveButton, cancelButton);
-	modal.append(title, list, buttons);
+	modal.append(title, groupBar, list, buttons);
 	overlay.append(modal);
 
 	render();

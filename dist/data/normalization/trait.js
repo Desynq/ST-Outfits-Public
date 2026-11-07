@@ -23,6 +23,47 @@ export function normalizeTraitAssignments(value) {
     }
     return result;
 }
+export function normalizeTraits(holder) {
+    const registry = holder.traits;
+    const source = isRecord(registry) && isRecord(registry.definitions)
+        ? registry.definitions
+        : {};
+    const definitions = {};
+    for (const [key, value] of Object.entries(source)) {
+        if (!isRecord(value))
+            continue;
+        const id = key.trim();
+        if (!id)
+            continue;
+        const name = typeof value.name === 'string'
+            ? value.name.trim() || 'Trait'
+            : 'Trait';
+        const group = typeof value.group === 'string'
+            ? value.group.trim()
+            : '';
+        const description = typeof value.description === 'string'
+            ? value.description.trim()
+            : '';
+        let icon = null;
+        if (isRecord(value.icon)
+            && value.icon.type === 'font-awesome'
+            && typeof value.icon.className === 'string'
+            && value.icon.className.trim()) {
+            icon = {
+                type: 'font-awesome',
+                className: value.icon.className.trim()
+            };
+        }
+        definitions[id] = {
+            id,
+            name,
+            group,
+            description,
+            icon
+        };
+    }
+    holder.traits = { definitions };
+}
 function normalizeTraitVisual(value) {
     if (!isRecord(value))
         return null;

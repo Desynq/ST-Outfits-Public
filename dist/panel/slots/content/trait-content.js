@@ -1,8 +1,8 @@
 import { OutfitTracker } from "../../../data/tracker.js";
 import { SlotTextbox } from "../../../ui/components/slot/slot-textbox.js";
 import { SlotValueText } from "../../../ui/components/SlotValueText.js";
+import { promptAddTrait } from "../../../ui/prompt/add-trait.js";
 import { promptConfigureTraits } from "../../../ui/prompt/configure-traits.js";
-import { promptOptions } from "../../../ui/prompt/prompt-options.js";
 import { addDoubleTapListener } from "../../../util/element/click-actions.js";
 import { el } from "../../../util/ElementHelper.js";
 import { OutfitPanelContext } from "../../base/OutfitPanelContext.js";
@@ -249,31 +249,14 @@ export class TraitSlotContenter extends OutfitPanelContext {
         return { textbox };
     }
     async addTrait(ctx) {
-        const registry = OutfitTracker.viewTraitRegistry();
-        const assigned = new Set(ctx.slot.traits.map(trait => trait.traitId));
-        const available = registry.getAll()
-            .filter(trait => !assigned.has(trait.id));
-        const configureOption = '⚙ Configure Traits';
-        const options = [
-            ...available.map(trait => trait.name),
-            configureOption
-        ];
-        const selected = await promptOptions('Add which trait?', options);
-        if (!selected)
-            return;
-        if (selected === configureOption) {
-            const changedTraits = await promptConfigureTraits({
+        const traitId = await promptAddTrait({
+            excludedIds: new Set(ctx.slot.traits.map(trait => trait.traitId)),
+            onConfigure: () => promptConfigureTraits({
                 onSave: () => this.panel.applyTraitChanges()
-            });
-            if (changedTraits) {
-                return this.addTrait(ctx);
-            }
+            })
+        });
+        if (!traitId)
             return;
-        }
-        const index = options.indexOf(selected);
-        if (index < 0 || index >= available.length)
-            return;
-        const traitId = available[index].id;
         this.commit(ctx, [
             ...ctx.slot.traits.map(trait => ({ ...trait })),
             { traitId }

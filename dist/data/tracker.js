@@ -5,6 +5,7 @@ import { notObject } from "../ObjectHelper.js";
 import { DEFAULT_SLOT_ICON_RULES } from "../panel/slots/slot-icon.js";
 import { isRecord } from "../util/narrowing.js";
 import { normalizeCharPanels, normalizePanelSettings } from "./mappings/PanelSettings.js";
+import { migrateTraitsV2 } from "./migration/traits.js";
 import { normalizeImageBlobs, normalizeSlotPresets, validatePresets } from "./normalize.js";
 import { CharPanelsView } from "./view/CharPanelsView.js";
 import { CharacterOutfitCollectionView, UserOutfitCollectionView } from "./view/OutfitCollectionView.js";
@@ -117,7 +118,7 @@ function loadTracker() {
     raw.slotIconRules ??= structuredClone(DEFAULT_SLOT_ICON_RULES);
     // TODO: Normalization of traits
     raw.traits ??= { definitions: {} };
-    raw.version = 1;
+    raw.version = 4;
     return new Tracker(raw);
 }
 /**
@@ -136,6 +137,9 @@ function migrateTracker(raw) {
     if (version < 3) {
         migrateSlotPresets(raw.slotPresets);
         raw.version = 3;
+    }
+    if (version < 4) {
+        migrateTraitsV2(raw, TraitRegistryView.toDisplayName);
     }
 }
 function migrateOutfitNamingV1(presets) {

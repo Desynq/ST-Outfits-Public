@@ -15,8 +15,7 @@ export class TraitManager {
 
 		return registry.getAll()
 			.map(definition => {
-				const name = TraitRegistryView.getDisplayName(definition.id);
-				return `${name}: ${definition.description}`;
+				return `${definition.name}: ${definition.description}`;
 			})
 			.join('\n\n');
 	}

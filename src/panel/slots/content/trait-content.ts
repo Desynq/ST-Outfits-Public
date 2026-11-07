@@ -152,7 +152,7 @@ export class TraitSlotContenter extends OutfitPanelContext {
 			classes: [
 				assignment.addendum?.trim() ? '--has-addendum' : ''
 			],
-			text: TraitRegistryView.getDisplayName(definition.id),
+			text: definition.name,
 			title: [
 				definition.description,
 				assignment.addendum?.trim()
@@ -385,7 +385,7 @@ export class TraitSlotContenter extends OutfitPanelContext {
 
 		const options = [
 			...available.map(trait =>
-				TraitRegistryView.getDisplayName(trait.id)
+				trait.name
 			),
 			configureOption
 		];

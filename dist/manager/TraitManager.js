@@ -1,13 +1,11 @@
 import { OutfitTracker } from "../data/tracker.js";
-import { TraitRegistryView } from "../data/view/TraitRegistryView.js";
 import { MacroManager } from "./MacroManager.js";
 export class TraitManager {
     static contextualize() {
         const registry = OutfitTracker.viewTraitRegistry();
         return registry.getAll()
             .map(definition => {
-            const name = TraitRegistryView.getDisplayName(definition.id);
-            return `${name}: ${definition.description}`;
+            return `${definition.name}: ${definition.description}`;
         })
             .join('\n\n');
     }

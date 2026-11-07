@@ -84,7 +84,7 @@ export function contextualizeSlot(
 			return slot.traits
 				.filter(({ traitId }) => traits[traitId])
 				.map(({ traitId, addendum }) => {
-					const name = TraitRegistryView.getDisplayName(traitId);
+					const name = TraitRegistryView.toDisplayName(traitId);
 					const manifestation = addendum?.trim();
 
 					return `- ${name}${manifestation ? `: ${manifestation}` : ''}`;

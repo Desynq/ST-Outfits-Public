@@ -1,5 +1,4 @@
 import { OutfitTracker } from "../../../data/tracker.js";
-import { TraitRegistryView } from "../../../data/view/TraitRegistryView.js";
 import { SlotTextbox } from "../../../ui/components/slot/slot-textbox.js";
 import { SlotValueText } from "../../../ui/components/SlotValueText.js";
 import { promptConfigureTraits } from "../../../ui/prompt/configure-traits.js";
@@ -91,7 +90,7 @@ export class TraitSlotContenter extends OutfitPanelContext {
             classes: [
                 assignment.addendum?.trim() ? '--has-addendum' : ''
             ],
-            text: TraitRegistryView.getDisplayName(definition.id),
+            text: definition.name,
             title: [
                 definition.description,
                 assignment.addendum?.trim()
@@ -256,7 +255,7 @@ export class TraitSlotContenter extends OutfitPanelContext {
             .filter(trait => !assigned.has(trait.id));
         const configureOption = '⚙ Configure Traits';
         const options = [
-            ...available.map(trait => TraitRegistryView.getDisplayName(trait.id)),
+            ...available.map(trait => trait.name),
             configureOption
         ];
         const selected = await promptOptions('Add which trait?', options);

@@ -29,14 +29,12 @@ export class TraitRegistryView {
     }
     /* -------------------------------- Mutation -------------------------------- */
     add(trait) {
-        if (!TraitRegistryView.isValidId(trait.id)) {
-            return 'invalid-id';
-        }
-        if (this.has(trait.id)) {
-            return 'trait-already-exists';
-        }
-        this.traits[trait.id] = structuredClone(trait);
-        return 'added';
+        const definition = {
+            ...structuredClone(trait),
+            id: crypto.randomUUID()
+        };
+        this.traits[definition.id] = definition;
+        return definition;
     }
     update(id, changes) {
         if (!this.has(id))
@@ -50,34 +48,12 @@ export class TraitRegistryView {
         delete this.traits[id];
         return 'removed';
     }
-    rename(oldId, newId) {
-        if (!this.has(oldId))
-            return 'trait-not-found';
-        if (oldId === newId)
-            return 'noop';
-        if (!TraitRegistryView.isValidId(newId)) {
-            return 'invalid-id';
-        }
-        if (this.has(newId)) {
-            return 'trait-already-exists';
-        }
-        const trait = this.traits[oldId];
-        this.traits[newId] = {
-            ...trait,
-            id: newId
-        };
-        delete this.traits[oldId];
-        return 'renamed';
-    }
     /* -------------------------------- Utilities -------------------------------- */
-    /**
-     * Validates whether id is a lowercase kebab-case identifier
-     */
     static isValidId(id) {
-        return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id);
+        return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
     }
-    static getDisplayName(id) {
-        return id
+    static toDisplayName(kebab) {
+        return kebab
             .split('-')
             .map(word => word.charAt(0).toUpperCase() + word.slice(1))
             .join(' ');

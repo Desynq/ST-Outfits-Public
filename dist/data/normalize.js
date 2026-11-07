@@ -3,6 +3,7 @@ import { asBoolean, asObject, asStringRecord, ensureObject, notObject, resolvePo
 import { isNonEmptyString, isRecord } from "../util/narrowing.js";
 import { toSlotId } from "../util/normalize/slot.js";
 import { normalizeOutfitSnapshots } from "./mappings/OutfitCache.js";
+import { normalizeTraitAssignments } from "./normalization/trait.js";
 export function validatePresets(holder) {
     if (!holder || typeof holder !== 'object')
         return;
@@ -96,30 +97,6 @@ function normalizeSlotBase(slot, id) {
         synced: typeof slot.synced === 'boolean'
             ? slot.synced : false
     };
-}
-function normalizeTraitAssignments(value) {
-    if (!Array.isArray(value))
-        return [];
-    const result = [];
-    const seen = new Set();
-    for (const entry of value) {
-        if (!isRecord(entry))
-            continue;
-        const traitId = entry.traitId;
-        if (typeof traitId !== 'string' || !traitId.trim()) {
-            continue;
-        }
-        if (seen.has(traitId))
-            continue;
-        seen.add(traitId);
-        result.push({
-            traitId,
-            ...(typeof entry.addendum === 'string'
-                ? { addendum: entry.addendum }
-                : {})
-        });
-    }
-    return result;
 }
 function normalizeSlot(value, legacyValues) {
     if (!isRecord(value) || typeof value.id !== 'string') {

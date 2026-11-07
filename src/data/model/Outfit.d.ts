@@ -41,12 +41,18 @@ export type TraitVisual =
 	};
 
 export interface TraitDefinition {
-	// kebab-case unique identifier
-	// serves as the raw name for the trait from which its display name is derived
-	id: string;
+	id: string; // generated uuid
+	name: string; // non-unique display name, supports any char
 	description: string; // what the trait does
 	icon: TraitVisual | null;
 }
+
+export interface TraitDefinitionV1 {
+	id: string; // kebab-case unique identifier that also served as name
+	description: string;
+	icon: TraitVisual | null;
+}
+
 
 export interface TraitAssignment {
 	traitId: string;

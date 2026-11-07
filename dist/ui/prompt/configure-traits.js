@@ -1,12 +1,22 @@
 import { OutfitTracker } from '../../data/tracker.js';
-import { TraitRegistryView } from '../../data/view/TraitRegistryView.js';
 import { el } from '../../util/ElementHelper.js';
+import { applyIconFallback } from '../../util/element/icon.js';
+function comparableTraits(source) {
+    return source.map(({ id, name, description, icon }) => ({
+        id,
+        name,
+        description,
+        icon
+    }));
+}
 export async function promptConfigureTraits({ onSave } = {}) {
     const registry = OutfitTracker.viewTraitRegistry();
-    const traits = registry.getAll().map(trait => ({
-        ...structuredClone(trait),
-        originalId: trait.id
-    }));
+    const traits = registry.getAll().map(trait => structuredClone(trait));
+    const initialState = JSON.stringify(comparableTraits(traits));
+    function hasChanges() {
+        return JSON.stringify(comparableTraits(traits)) !== initialState;
+    }
+    const expandedTraits = new Set();
     const overlay = el('div', {
         className: 'sto-overlay show'
     });
@@ -34,11 +44,15 @@ export async function promptConfigureTraits({ onSave } = {}) {
         className: 'menu_button',
         text: 'Save'
     });
+    function updateSaveVisibility() {
+        saveButton.hidden = !hasChanges();
+    }
     const cancelButton = el('button', {
         type: 'button',
         className: 'menu_button',
         text: 'Cancel'
     });
+    updateSaveVisibility();
     function getIconClass(visual) {
         return visual?.type === 'font-awesome'
             ? visual.className
@@ -51,13 +65,27 @@ export async function promptConfigureTraits({ onSave } = {}) {
         }
     }
     function renderTrait(trait) {
+        const expanded = expandedTraits.has(trait);
+        const row = el('div', {
+            className: 'trait-config-row',
+            classes: [expanded ? '--expanded' : ''],
+            parent: list
+        });
+        const main = el('div', {
+            className: 'trait-config-main',
+            parent: row
+        });
+        const trigger = el('div', {
+            className: 'trait-config-trigger',
+            parent: main
+        });
         const icon = el('i', {
             className: getIconClass(trait.icon),
-            title: trait.icon?.type === 'image'
-                ? 'Image visual (click to replace with Font Awesome)'
-                : 'Click to change Font Awesome icon',
+            title: 'Click to change Font Awesome icon',
+            parent: trigger,
             events: {
-                click() {
+                click(event) {
+                    event.stopPropagation();
                     const current = trait.icon?.type === 'font-awesome'
                         ? trait.icon.className
                         : 'fa-solid fa-tag';
@@ -65,121 +93,146 @@ export async function promptConfigureTraits({ onSave } = {}) {
                     if (value === null)
                         return;
                     const className = value.trim();
-                    if (className) {
-                        trait.icon = { type: 'font-awesome', className };
-                    }
-                    else {
-                        trait.icon = null;
-                    }
+                    trait.icon = className
+                        ? { type: 'font-awesome', className }
+                        : null;
+                    updateSaveVisibility();
                     render();
                 }
             }
         });
-        const id = el('input', {
-            className: 'text_pole',
-            placeholder: 'Trait ID (kebab-case)',
-            value: trait.id,
-            readOnly: !!trait.originalId,
-            title: trait.originalId
-                ? 'Existing trait IDs cannot be changed here'
-                : 'Unique lowercase kebab-case identifier',
-            events: {
-                input() {
-                    if (!trait.originalId) {
-                        trait.id = this.value;
-                    }
-                }
-            }
+        applyIconFallback(icon);
+        const label = el('div', {
+            className: 'trait-config-name',
+            text: trait.name || 'New Trait',
+            parent: trigger
         });
-        const description = el('textarea', {
-            className: 'text_pole',
-            rows: 2,
-            placeholder: 'What does this trait do?',
-            value: trait.description,
-            events: {
-                input() {
-                    trait.description = this.value;
-                }
-            }
+        el('div', {
+            className: 'trait-config-spacer',
+            parent: trigger
         });
-        const remove = el('button', {
+        const removeBtn = el('button', {
             type: 'button',
-            className: 'menu_button',
-            text: '×',
+            className: 'menu_button trait-config-remove',
             title: 'Remove trait',
+            parent: main,
             events: {
                 click() {
                     const index = traits.indexOf(trait);
                     if (index < 0)
                         return;
                     traits.splice(index, 1);
+                    expandedTraits.delete(trait);
+                    updateSaveVisibility();
                     render();
+                }
+            },
+            children: [
+                el('i', {
+                    className: 'fa-solid fa-trash-can',
+                })
+            ]
+        });
+        const content = el('div', {
+            className: 'trait-config-content',
+            parent: row
+        });
+        content.hidden = !expanded;
+        const expandButton = el('button', {
+            type: 'button',
+            className: 'menu_button trait-config-expand',
+            title: expanded ? 'Collapse trait' : 'Expand trait',
+            parent: main,
+            events: {
+                click() {
+                    const next = !expandedTraits.has(trait);
+                    if (next)
+                        expandedTraits.add(trait);
+                    else
+                        expandedTraits.delete(trait);
+                    content.hidden = !next;
+                    row.classList.toggle('--expanded', next);
+                    this.setAttribute('aria-expanded', String(next));
+                    this.title = next ? 'Collapse trait' : 'Expand trait';
                 }
             }
         });
-        const row = el('div', {
-            className: 'trait-config-row',
-            children: [
-                icon,
-                id,
-                description,
-                remove
-            ]
+        expandButton.setAttribute('aria-expanded', String(expanded));
+        el('i', {
+            className: 'fa-solid fa-chevron-down',
+            parent: expandButton
         });
-        list.append(row);
+        trigger.addEventListener('click', () => {
+            if (window.getSelection()?.toString())
+                return;
+            expandButton.click();
+        });
+        const name = el('input', {
+            className: 'text_pole',
+            placeholder: 'Trait name',
+            value: trait.name,
+            parent: content,
+            events: {
+                input() {
+                    trait.name = this.value;
+                    label.textContent = this.value || 'New Trait';
+                    updateSaveVisibility();
+                }
+            }
+        });
+        el('textarea', {
+            className: 'text_pole',
+            rows: 2,
+            placeholder: 'What does this trait do?',
+            value: trait.description,
+            parent: content,
+            events: {
+                input() {
+                    trait.description = this.value;
+                    updateSaveVisibility();
+                }
+            }
+        });
     }
     function validate() {
-        const ids = new Set();
         for (const trait of traits) {
-            trait.id = trait.id.trim();
+            trait.name = trait.name.trim();
             trait.description = trait.description.trim();
-            if (!TraitRegistryView.isValidId(trait.id)) {
-                toastr.error(`Invalid trait ID: "${trait.id}". Use lowercase kebab-case.`);
+            if (!trait.name) {
+                toastr.error('Trait names cannot be empty.');
                 return false;
             }
-            if (ids.has(trait.id)) {
-                toastr.error(`Duplicate trait ID: "${trait.id}".`);
-                return false;
-            }
-            ids.add(trait.id);
         }
         return true;
     }
     function saveTraits() {
         const retainedIds = new Set(traits
-            .map(trait => trait.originalId)
+            .map(trait => trait.id)
             .filter((id) => id !== undefined));
+        // Remove deleted traits.
         for (const id of registry.getIds()) {
-            if (retainedIds.has(id))
-                continue;
-            registry.remove(id);
-        }
-        // Update existing definitions first.
-        for (const trait of traits) {
-            if (!trait.originalId)
-                continue;
-            const result = registry.update(trait.originalId, {
-                description: trait.description,
-                icon: trait.icon
-            });
-            if (result !== 'updated') {
-                throw new Error(`Failed to update "${trait.originalId}": ${result}`);
+            if (!retainedIds.has(id)) {
+                registry.remove(id);
             }
         }
-        // Add new definitions.
+        // Update existing traits and add new ones.
         for (const trait of traits) {
-            if (trait.originalId)
-                continue;
-            const { originalId, ...definition } = trait;
-            const result = registry.add(definition);
-            if (result !== 'added') {
-                throw new Error(`Failed to add "${trait.id}": ${result}`);
+            const { id, ...definition } = trait;
+            if (id) {
+                const result = registry.update(id, definition);
+                if (result !== 'updated') {
+                    throw new Error(`Failed to update "${id}": ${result}`);
+                }
+            }
+            else {
+                const created = registry.add(definition);
+                trait.id = created.id; // prevent duplicate definitions
             }
         }
     }
     addButton.addEventListener('click', () => {
         const trait = {
-            id: '',
+            name: '',
             description: '',
             icon: {
                 type: 'font-awesome',
@@ -187,9 +240,11 @@ export async function promptConfigureTraits({ onSave } = {}) {
             }
         };
         traits.push(trait);
+        expandedTraits.add(trait);
+        updateSaveVisibility();
         render();
         const lastRow = list.lastElementChild;
-        lastRow?.querySelector('input')?.focus();
+        lastRow?.querySelector('.trait-config-content > input')?.focus();
     });
     buttons.append(addButton, saveButton, cancelButton);
     modal.append(title, list, buttons);
@@ -223,7 +278,7 @@ export async function promptConfigureTraits({ onSave } = {}) {
             }
         });
         saveButton.addEventListener('click', async () => {
-            if (saving || closed || !validate())
+            if (saving || closed || !hasChanges() || !validate())
                 return;
             saving = true;
             saveButton.disabled = true;

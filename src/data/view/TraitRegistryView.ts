@@ -1,15 +1,10 @@
 import { hasOwnProperty } from "../../util/object-helper.js";
-import type { TraitDefinition, TraitRegistry, TraitVisual } from "../model/Outfit.js";
+import type { TraitDefinition, TraitRegistry } from "../model/Outfit.js";
 
 
 
 
 
-
-export type AddTraitResult =
-	| 'invalid-id'
-	| 'trait-already-exists'
-	| 'added';
 
 export type UpdateTraitResult =
 	| 'trait-not-found'
@@ -18,13 +13,6 @@ export type UpdateTraitResult =
 export type RemoveTraitResult =
 	| 'trait-not-found'
 	| 'removed';
-
-export type RenameTraitResult =
-	| 'trait-not-found'
-	| 'invalid-id'
-	| 'trait-already-exists'
-	| 'noop'
-	| 'renamed';
 
 export class TraitRegistryView {
 
@@ -65,17 +53,14 @@ export class TraitRegistryView {
 
 	/* -------------------------------- Mutation -------------------------------- */
 
-	public add(trait: TraitDefinition): AddTraitResult {
-		if (!TraitRegistryView.isValidId(trait.id)) {
-			return 'invalid-id';
-		}
+	public add(trait: Omit<TraitDefinition, 'id'>): TraitDefinition {
+		const definition: TraitDefinition = {
+			...structuredClone(trait),
+			id: crypto.randomUUID()
+		};
 
-		if (this.has(trait.id)) {
-			return 'trait-already-exists';
-		}
-
-		this.traits[trait.id] = structuredClone(trait);
-		return 'added';
+		this.traits[definition.id] = definition;
+		return definition;
 	}
 
 	public update(
@@ -95,43 +80,14 @@ export class TraitRegistryView {
 		return 'removed';
 	}
 
-	public rename(
-		oldId: string,
-		newId: string
-	): RenameTraitResult {
-		if (!this.has(oldId)) return 'trait-not-found';
-		if (oldId === newId) return 'noop';
-
-		if (!TraitRegistryView.isValidId(newId)) {
-			return 'invalid-id';
-		}
-
-		if (this.has(newId)) {
-			return 'trait-already-exists';
-		}
-
-		const trait = this.traits[oldId];
-
-		this.traits[newId] = {
-			...trait,
-			id: newId
-		};
-
-		delete this.traits[oldId];
-		return 'renamed';
-	}
-
 	/* -------------------------------- Utilities -------------------------------- */
 
-	/**
-	 * Validates whether id is a lowercase kebab-case identifier
-	 */
 	public static isValidId(id: string): boolean {
-		return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id);
+		return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
 	}
 
-	public static getDisplayName(id: string): string {
-		return id
+	public static toDisplayName(kebab: string): string {
+		return kebab
 			.split('-')
 			.map(word =>
 				word.charAt(0).toUpperCase() + word.slice(1)

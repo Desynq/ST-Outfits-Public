@@ -5,6 +5,7 @@ import { toSlotId } from "../util/normalize/slot.js";
 import { normalizeOutfitSnapshots } from "./mappings/OutfitCache.js";
 import { CharacterNotes, ContextSlot, ContextSlotBase, ImageBlob, ImageRef, Outfit, OutfitCollection, OutfitImage, OutfitTrackerModel, SlotCharacterNotes, SlotCondition, SlotConditionMap, SlotKind, TextSlot, TraitAssignment, TraitSlot } from "./model/Outfit.js";
 import { SlotPreset } from "./model/SlotPreset.js";
+import { normalizeTraitAssignments } from "./normalization/trait.js";
 
 
 export function validatePresets(holder: any): void {
@@ -126,36 +127,6 @@ function normalizeSlotBase(
 		synced: typeof slot.synced === 'boolean'
 			? slot.synced : false
 	};
-}
-
-function normalizeTraitAssignments(
-	value: unknown
-): TraitAssignment[] {
-	if (!Array.isArray(value)) return [];
-
-	const result: TraitAssignment[] = [];
-	const seen = new Set<string>();
-
-	for (const entry of value) {
-		if (!isRecord(entry)) continue;
-
-		const traitId = entry.traitId;
-		if (typeof traitId !== 'string' || !traitId.trim()) {
-			continue;
-		}
-
-		if (seen.has(traitId)) continue;
-		seen.add(traitId);
-
-		result.push({
-			traitId,
-			...(typeof entry.addendum === 'string'
-				? { addendum: entry.addendum }
-				: {})
-		});
-	}
-
-	return result;
 }
 
 function normalizeSlot(

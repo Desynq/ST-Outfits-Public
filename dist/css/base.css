@@ -270,6 +270,10 @@
     padding: 0.75rem;
     border-radius: 0.75rem;
   }
+  .trait-config:has(.trait-config-content > textarea:focus) > h3,
+  .trait-config:has(.trait-config-content > textarea:focus) .trait-config-groups {
+    display: none;
+  }
 }
 .trait-config .trait-config-groups {
   display: flex;
@@ -410,9 +414,11 @@
   padding: 0;
   margin: 0;
 }
+.trait-config-row .trait-config-change-group,
 .trait-config-row .trait-config-remove {
   display: none;
 }
+.trait-config-row.--expanded .trait-config-change-group,
 .trait-config-row.--expanded .trait-config-remove {
   display: flex;
   align-items: center;

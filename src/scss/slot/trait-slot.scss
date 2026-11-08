@@ -1,3 +1,46 @@
+.outfit-slot.slot-trait {
+	.slot-label-left {
+		cursor: pointer;
+
+		.slot-ordinal {
+			cursor: auto;
+		}
+	}
+
+	.slot-content:has(.slot-image-wrapper) {
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-areas:
+			'image'
+			'value';
+
+		> .slot-image-wrapper {
+			width: calc(100% * var(--image-scale, 1));
+		}
+	}
+}
+
+.slot-trait-list-toggle {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	width: 2rem;
+	height: 2rem;
+	padding: 0;
+
+	border-radius: 0.5rem;
+
+	cursor: pointer;
+
+	> i {
+		transition: transform 0.2s ease;
+	}
+
+	&.--expanded > i {
+		transform: rotate(180deg);
+	}
+}
+
 .slot-trait-container {
 	display: flex;
 	flex-direction: column;
@@ -49,14 +92,20 @@
 		&.--expanded .slot-trait-expand > i {
 			transform: rotate(180deg);
 		}
+
+		&.--inline {
+			box-shadow: inset 3px 0 0 var(--SmartThemeQuoteColor);
+		}
 	}
 
-	.slot-trait-main {
+	.slot-trait-header {
 		display: flex;
-		align-items: center; // Was flex-start
+		align-items: center;
 		gap: 0.5rem;
 		min-width: 0;
 	}
+
+
 
 	.slot-trait-edit-actions {
 		display: flex;
@@ -198,6 +247,31 @@
 
 		&.none {
 			opacity: 0.5;
+		}
+	}
+
+	.slot-trait-inline {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+
+		font-size: 0.85rem;
+		opacity: 0.8;
+		cursor: pointer;
+
+		&:hover {
+			opacity: 1;
+		}
+
+		> input {
+			cursor: pointer;
+			margin: 0;
+			height: 16px;
+		}
+
+		> span {
+			line-height: 1;
+			height: 16px;
 		}
 	}
 

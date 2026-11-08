@@ -150,7 +150,7 @@ export class MutableSlotView implements ISlotManipulator {
 			return false;
 		}
 
-		slot.traits.push({ traitId });
+		slot.traits.push({ traitId, addendum: null, contextualizeInline: false });
 		return true;
 	}
 

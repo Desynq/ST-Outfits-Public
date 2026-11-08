@@ -1,6 +1,7 @@
 import { TraitRegistryView } from "../../../data/view/TraitRegistryView.js";
 import { applyIconFallback } from "../../../util/element/icon.js";
 import { el } from "../../../util/ElementHelper.js";
+import { promptConfigureTraitIcon } from "../configure-trait-icon.js";
 import { TraitDraft } from "../configure-traits.js";
 
 
@@ -27,7 +28,10 @@ export function renderTrait(
 
 	const row = el('div', {
 		className: 'trait-config-row',
-		classes: [expanded ? '--expanded' : '']
+		classes: [
+			expanded ? '--expanded' : '',
+			trait.contextInline === true ? '--context-inline' : ''
+		]
 	});
 
 	const main = el('div', {
@@ -42,36 +46,14 @@ export function renderTrait(
 
 	const icon = el('i', {
 		className: TraitRegistryView.getIconClass(trait.icon),
-		title: 'Click to change Font Awesome icon',
-		parent: trigger,
-		events: {
-			click(event) {
-				event.stopPropagation();
-
-				const current = trait.icon?.type === 'font-awesome'
-					? trait.icon.className
-					: 'fa-solid fa-tag';
-
-				const value = prompt(
-					'Font Awesome icon class (leave empty to clear):',
-					current
-				);
-
-				if (value === null) return;
-
-				const className = value.trim();
-
-				trait.icon = className
-					? { type: 'font-awesome', className }
-					: null;
-
-				updateSaveVisibility();
-				render();
-			}
-		}
+		title: 'Click to configure Font Awesome icon',
+		parent: trigger
 	});
 
 	applyIconFallback(icon);
+	if (trait.icon?.type === 'font-awesome') {
+		icon.style.color = trait.icon.color ?? '';
+	}
 
 	const label = el('div', {
 		className: 'trait-config-name',
@@ -141,7 +123,7 @@ export function renderTrait(
 		}
 	});
 
-	el('textarea', {
+	const description = el('textarea', {
 		className: 'text_pole',
 		rows: 2,
 		placeholder: 'What does this trait do?',
@@ -155,10 +137,50 @@ export function renderTrait(
 		}
 	});
 
+	const contextualizeInlineLabel = el('label', {
+		className: 'checkbox_label',
+		parent: content
+	});
+
+	el('input', {
+		type: 'checkbox',
+		checked: trait.contextInline === true,
+		parent: contextualizeInlineLabel,
+		events: {
+			change() {
+				trait.contextInline = this.checked;
+				row.classList.toggle('--context-inline', this.checked);
+				updateSaveVisibility();
+			}
+		}
+	});
+
+	el('span', {
+		text: 'Contextualize Inline',
+		title: 'Include this trait with its assigned slot instead of in the global trait context',
+		parent: contextualizeInlineLabel
+	});
+
 	/* --------------------------------- Events --------------------------------- */
 	trigger.addEventListener('click', () => {
-		if (window.getSelection()?.toString()) return;
+		if (window.getSelection()?.toString()) {
+			return;
+		}
 		expandButton.click();
+	});
+
+	icon.addEventListener('click', async (event) => {
+		event.stopPropagation();
+
+		const result = await promptConfigureTraitIcon(trait.icon);
+		if (result === undefined) {
+			return;
+		}
+
+		trait.icon = result;
+
+		updateSaveVisibility();
+		render();
 	});
 
 	changeGroupBtn.addEventListener('click', () => {
@@ -171,11 +193,15 @@ export function renderTrait(
 			trait.group
 		);
 
-		if (value === null) return;
+		if (value === null) {
+			return;
+		}
 
 		const group = value.trim();
 
-		if (group === trait.group) return;
+		if (group === trait.group) {
+			return;
+		}
 
 		// Reuse existing capitalization when names match
 		trait.group = groups.find(
@@ -188,7 +214,9 @@ export function renderTrait(
 
 	removeBtn.addEventListener('click', () => {
 		const index = traits.indexOf(trait);
-		if (index < 0) return;
+		if (index < 0) {
+			return;
+		}
 
 		traits.splice(index, 1);
 		expandedTraits.delete(trait);
@@ -200,8 +228,12 @@ export function renderTrait(
 	expandButton.addEventListener('click', () => {
 		const next = !expandedTraits.has(trait);
 
-		if (next) expandedTraits.add(trait);
-		else expandedTraits.delete(trait);
+		if (next) {
+			expandedTraits.add(trait);
+		}
+		else {
+			expandedTraits.delete(trait);
+		}
 
 		content.hidden = !next;
 		row.classList.toggle('--expanded', next);

@@ -44,8 +44,6 @@ export class TraitSlotContenter extends OutfitPanelContext {
 		container: HTMLDivElement,
 		ctx: TraitSlotContext
 	): void {
-		const editable = ctx.mode === 'normal';
-
 		const registry = OutfitTracker.viewTraitRegistry();
 
 		const root = el('div', {
@@ -60,7 +58,6 @@ export class TraitSlotContenter extends OutfitPanelContext {
 		for (const assignment of ctx.slot.traits) {
 			const args = {
 				ctx,
-				editable,
 				registry,
 				list,
 				assignment
@@ -69,16 +66,14 @@ export class TraitSlotContenter extends OutfitPanelContext {
 			this.addRow(args);
 		}
 
-		if (editable) {
-			el('button', {
-				className: 'slot-button slot-add-trait',
-				text: '+ Add Trait',
-				parent: root,
-				events: {
-					click: () => this.addTrait(ctx)
-				}
-			});
-		}
+		el('button', {
+			className: 'slot-button slot-add-trait',
+			text: '+ Add Trait',
+			parent: root,
+			events: {
+				click: () => this.addTrait(ctx)
+			}
+		});
 
 		container.append(root);
 	}
@@ -89,62 +84,48 @@ export class TraitSlotContenter extends OutfitPanelContext {
 
 	private addRow(args: Pick<TraitRenderContext,
 		| 'ctx'
-		| 'editable'
 		| 'registry'
 		| 'list'
 		| 'assignment'
 	>): void {
-		const { ctx, editable, registry, list, assignment } = args;
+		const { ctx, registry, list, assignment } = args;
 
-		const definition = registry.get(assignment.traitId);
+		const trait = registry.get(assignment.traitId);
 
 		// Dangling references are valid, but not displayed.
-		if (!definition) return;
+		if (!trait) {
+			return;
+		}
 
 		const row = el('div', {
 			className: 'slot-trait-row',
+			classes: [
+				assignment.contextualizeInline ? '--inline' : ''
+			],
 			parent: list
 		});
 
-		const main = el('div', {
-			className: 'slot-trait-main',
+		const header = el('div', {
+			className: 'slot-trait-header',
 			parent: row
 		});
 
 		const triggerEl = el('div', {
 			className: 'slot-trait-trigger',
-			parent: main
+			parent: header
 		});
 
 
 
 		const iconEl = el('i', {
-			className: definition.icon?.type === 'font-awesome'
-				? definition.icon.className
+			className: trait.icon?.type === 'font-awesome'
+				? trait.icon.className
 				: 'fa-solid fa-tag',
 			parent: triggerEl
 		});
-		let spin: Animation | null = null;
-
-		iconEl.addEventListener('click', event => {
-			event.stopPropagation();
-
-			if (spin?.playState === 'running') {
-				spin.reverse();
-				return;
-			}
-
-			spin = iconEl.animate(
-				[
-					{ transform: 'rotate(0deg)' },
-					{ transform: 'rotate(360deg)' }
-				],
-				{
-					duration: 500,
-					easing: 'ease-in-out'
-				}
-			);
-		});
+		if (trait.icon?.type === 'font-awesome') {
+			iconEl.style.color = trait.icon.color ?? '';
+		}
 
 
 
@@ -153,9 +134,9 @@ export class TraitSlotContenter extends OutfitPanelContext {
 			classes: [
 				assignment.addendum?.trim() ? '--has-addendum' : ''
 			],
-			text: definition.name,
+			text: trait.name,
 			title: [
-				definition.description,
+				trait.description,
 				assignment.addendum?.trim()
 			].filter(Boolean).join('\n\n'),
 			parent: triggerEl
@@ -182,35 +163,12 @@ export class TraitSlotContenter extends OutfitPanelContext {
 		const expandButton = el('button', {
 			className: 'slot-button slot-trait-expand',
 			title: 'Expand trait',
-			parent: main,
-			events: {
-				click: () => {
-					const expanded = !this.expandedTraits.has(traitKey);
-
-					if (expanded) {
-						this.expandedTraits.add(traitKey);
-					}
-					else {
-						this.expandedTraits.delete(traitKey);
-					}
-
-					content.hidden = !expanded;
-					row.classList.toggle('--expanded', expanded);
-					expandButton.title = expanded
-						? 'Collapse trait'
-						: 'Expand trait';
-					expandButton.setAttribute(
-						'aria-expanded',
-						String(expanded)
-					);
-				}
-			}
-		});
-		triggerEl.addEventListener('click', () => {
-			if (window.getSelection()?.toString()) {
-				return;
-			}
-			expandButton.click();
+			parent: header,
+			children: [
+				el('i', {
+					className: 'fa-solid fa-chevron-down',
+				})
+			]
 		});
 
 		expandButton.setAttribute('aria-expanded', String(initiallyExpanded));
@@ -218,24 +176,11 @@ export class TraitSlotContenter extends OutfitPanelContext {
 			? 'Collapse trait'
 			: 'Expand trait';
 
-		el('i', {
-			className: 'fa-solid fa-chevron-down',
-			parent: expandButton
-		});
-
 		const traitDescDiv = el('div', {
 			className: 'slot-trait-description',
-			text: definition.description,
+			text: trait.description,
 			parent: content
 		});
-
-		if (editable) {
-			addDoubleTapListener(traitDescDiv, async () => {
-				await promptConfigureTraits({
-					onSave: () => this.panel.applyTraitChanges()
-				});
-			});
-		}
 
 		const editActions = el('div', {
 			className: 'slot-trait-edit-actions'
@@ -263,34 +208,121 @@ export class TraitSlotContenter extends OutfitPanelContext {
 
 		const { textbox } = this.addAddendumEl(addendumArgs);
 
-		if (!editable) return;
+		const inlineLabel = el('label', {
+			className: 'slot-trait-inline',
+			title: 'Include this trait inline with the slot content',
+			parent: content
+		});
+
+		const inlineCheckbox = el('input', {
+			type: 'checkbox',
+			parent: inlineLabel
+		});
+
+		inlineCheckbox.checked = assignment.contextualizeInline;
+
+		el('span', {
+			text: 'Contextualize inline',
+			parent: inlineLabel
+		});
+
+		inlineCheckbox.addEventListener('change', () => {
+			this.updateContextualizeInline(
+				ctx,
+				assignment,
+				inlineCheckbox.checked
+			);
+		});
 
 		const controls = el('div', {
 			className: 'slot-trait-controls',
-			parent: main
+			parent: header
 		});
 
-		main.insertBefore(controls, expandButton);
+		header.insertBefore(controls, expandButton);
 
-		el('button', {
+		const editAddendumBtn = el('button', {
 			className: 'slot-button',
 			text: '✎',
 			title: 'Edit addendum',
 			parent: controls,
-			events: {
-				click: () => textbox.beginInlineEdit()
-			}
 		});
 
-		el('button', {
+		const removeTraitBtn = el('button', {
 			className: 'slot-button',
 			text: '×',
 			title: 'Remove trait',
-			parent: controls,
-			events: {
-				click: () => this.removeTrait(ctx, assignment.traitId)
-			}
+			parent: controls
 		});
+
+
+
+		/* --------------------------------- Events --------------------------------- */
+		let spin: Animation | null = null;
+
+		iconEl.addEventListener('click', event => {
+			event.stopPropagation();
+
+			if (spin?.playState === 'running') {
+				spin.reverse();
+				return;
+			}
+
+			spin = iconEl.animate(
+				[
+					{ transform: 'rotate(0deg)' },
+					{ transform: 'rotate(360deg)' }
+				],
+				{
+					duration: 500,
+					easing: 'ease-in-out'
+				}
+			);
+		});
+
+		triggerEl.addEventListener('click', () => {
+			if (window.getSelection()?.toString()) {
+				return;
+			}
+			expandButton.click();
+		});
+
+		expandButton.addEventListener('click', () => {
+			const expanded = !this.expandedTraits.has(traitKey);
+
+			if (expanded) {
+				this.expandedTraits.add(traitKey);
+			}
+			else {
+				this.expandedTraits.delete(traitKey);
+			}
+
+			content.hidden = !expanded;
+			row.classList.toggle('--expanded', expanded);
+			expandButton.title = expanded
+				? 'Collapse trait'
+				: 'Expand trait';
+			expandButton.setAttribute(
+				'aria-expanded',
+				String(expanded)
+			);
+		});
+
+		addDoubleTapListener(traitDescDiv, async () => {
+			await promptConfigureTraits({
+				onSave: () => this.panel.applyTraitChanges()
+			});
+		});
+
+		editAddendumBtn.addEventListener('click', () => {
+			textbox.beginInlineEdit();
+		});
+
+		removeTraitBtn.addEventListener('click', () => {
+			this.removeTrait(ctx, assignment.traitId);
+		});
+
+
 
 		content.append(editActions);
 	}
@@ -299,7 +331,6 @@ export class TraitSlotContenter extends OutfitPanelContext {
 		| 'parent'
 		| 'assignment'
 		| 'ctx'
-		| 'editable'
 		| 'editActions'
 		| 'actionsLeftEl'
 		| 'actionsRightEl'
@@ -308,7 +339,6 @@ export class TraitSlotContenter extends OutfitPanelContext {
 			parent,
 			assignment,
 			ctx,
-			editable,
 			editActions,
 			actionsLeftEl,
 			actionsRightEl
@@ -331,7 +361,7 @@ export class TraitSlotContenter extends OutfitPanelContext {
 
 		addendumEl.replaceChildren(
 			valueRenderer.createFrag(
-				assignment.addendum || (editable ? 'Add addendum' : ''),
+				assignment.addendum || 'Add addendum',
 				ctx.slot.kind
 			)
 		);
@@ -362,11 +392,9 @@ export class TraitSlotContenter extends OutfitPanelContext {
 			}
 		});
 
-		if (editable) {
-			addDoubleTapListener(addendumEl, () => {
-				textbox.beginInlineEdit();
-			});
-		}
+		addDoubleTapListener(addendumEl, () => {
+			textbox.beginInlineEdit();
+		});
 
 		return { textbox };
 	}
@@ -375,18 +403,26 @@ export class TraitSlotContenter extends OutfitPanelContext {
 	private async addTrait(ctx: TraitSlotContext): Promise<void> {
 		const traitId = await promptAddTrait({
 			excludedIds: new Set(
-				ctx.slot.traits.map(trait => trait.traitId)
+				ctx.slot.traits.map(assignment => assignment.traitId)
 			),
 			onConfigure: () => promptConfigureTraits({
 				onSave: () => this.panel.applyTraitChanges()
 			})
 		});
 
-		if (!traitId) return;
+		if (!traitId) {
+			return;
+		}
+
+		const trait = OutfitTracker.viewTraitRegistry().get(traitId);
 
 		this.commit(ctx, [
-			...ctx.slot.traits.map(trait => ({ ...trait })),
-			{ traitId }
+			...ctx.slot.traits.map(assignment => ({ ...assignment })),
+			{
+				traitId,
+				addendum: null,
+				contextualizeInline: trait?.contextInline === true
+			}
 		]);
 	}
 
@@ -401,12 +437,31 @@ export class TraitSlotContenter extends OutfitPanelContext {
 
 		const traits = ctx.slot.traits.map(trait => {
 			if (trait.traitId !== assignment.traitId) {
-				return { ...trait };
+				return trait;
 			}
 
 			return {
-				traitId: trait.traitId,
-				...(addendum && { addendum })
+				...trait,
+				addendum: addendum || null,
+			};
+		});
+
+		this.commit(ctx, traits);
+	}
+
+	private updateContextualizeInline(
+		ctx: TraitSlotContext,
+		assignment: Readonly<TraitAssignment>,
+		value: boolean
+	): void {
+		const traits = ctx.slot.traits.map(trait => {
+			if (trait.traitId !== assignment.traitId) {
+				return trait;
+			}
+
+			return {
+				...trait,
+				contextualizeInline: value
 			};
 		});
 
@@ -427,7 +482,9 @@ export class TraitSlotContenter extends OutfitPanelContext {
 				'This trait has an addendum. Remove it anyway?'
 			);
 
-			if (!confirmed) return;
+			if (!confirmed) {
+				return;
+			}
 		}
 
 		this.commit(

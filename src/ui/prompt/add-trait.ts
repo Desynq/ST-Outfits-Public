@@ -1,6 +1,6 @@
 
 import { OutfitTracker } from '../../data/tracker.js';
-import type { TraitDefinition, TraitVisual } from '../../data/model/Outfit.js';
+import type { TraitDefinition, TraitIcon } from '../../data/model/Outfit.js';
 import { el } from '../../util/ElementHelper.js';
 import { applyIconFallback } from '../../util/element/icon.js';
 
@@ -70,7 +70,7 @@ export async function promptAddTrait({
 		return groups.length ? groups : [DEFAULT_GROUP];
 	}
 
-	function getIconClass(visual: TraitVisual | null): string {
+	function getIconClass(visual: TraitIcon | null): string {
 		return visual?.type === 'font-awesome'
 			? visual.className
 			: 'fa-solid fa-tag';

@@ -55,7 +55,7 @@ export class MutableSlotView {
         if (slot.traits.some(t => t.traitId === traitId)) {
             return false;
         }
-        slot.traits.push({ traitId });
+        slot.traits.push({ traitId, addendum: null, contextualizeInline: false });
         return true;
     }
     removeTrait(id, traitId) {

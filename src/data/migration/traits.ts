@@ -41,6 +41,7 @@ export function migrateTraitsV2(
 			description: typeof old.description === 'string'
 				? old.description
 				: '',
+			contextInline: value.contextInline === true,
 			icon: old.icon ?? null // TODO: icon normalization
 		};
 	}

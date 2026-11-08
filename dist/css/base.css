@@ -78,6 +78,17 @@
   font-family: monospace;
   font-size: 0.85em;
 }
+.outfit-preview-section-text .xml-line {
+  display: block;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.outfit-preview-section-text .xml-line:not(:last-child)::after {
+  content: "\\n";
+  color: var(--SmartThemeQuoteColor);
+  opacity: 0.5;
+  user-select: none;
+}
 
 .outfit-option-modal {
   z-index: 10000;
@@ -352,6 +363,9 @@
 .trait-config-row.--expanded .trait-config-expand > i {
   transform: rotate(180deg);
 }
+.trait-config-row.--context-inline {
+  box-shadow: inset 3px 0 0 var(--SmartThemeQuoteColor);
+}
 .trait-config-row .trait-config-main {
   display: flex;
   align-items: center;
@@ -439,6 +453,65 @@
   .trait-config-row {
     padding: 0.5rem;
   }
+}
+
+.trait-icon-config {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.trait-icon-config .trait-icon-config-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 5rem;
+}
+.trait-icon-config .trait-icon-config-preview > i {
+  font-size: 2.5rem;
+}
+.trait-icon-config > input[type=text] {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 0.5rem;
+  color: var(--SmartThemeBodyColor);
+  background: var(--black30a);
+  border: 1px solid var(--SmartThemeBorderColor);
+  border-radius: 6px;
+}
+.trait-icon-config .trait-icon-config-color {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.trait-icon-config .trait-icon-config-color > input[type=checkbox] {
+  width: auto;
+  margin: 0;
+  accent-color: var(--SmartThemeQuoteColor);
+}
+.trait-icon-config .trait-icon-config-color > input[type=color] {
+  width: 3rem;
+  height: 2rem;
+  padding: 0.15rem;
+  background: var(--black30a);
+  border: 1px solid var(--SmartThemeBorderColor);
+  border-radius: 6px;
+  cursor: pointer;
+}
+.trait-icon-config .trait-config-buttons > button {
+  padding: 0.4rem 0.75rem;
+  color: var(--SmartThemeBodyColor);
+  background: var(--black30a);
+  border: 1px solid var(--SmartThemeBorderColor);
+  border-radius: 6px;
+  cursor: pointer;
+}
+.trait-icon-config .trait-config-buttons > button:hover:not(:disabled) {
+  background: var(--white20a);
+}
+.trait-icon-config .trait-config-buttons > button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .trait-add .trait-add-row {
@@ -543,22 +616,19 @@
 
 .slot-label {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   gap: 8px;
   margin-bottom: 6px;
 }
 .slot-label.minimized {
   margin-bottom: 0px;
 }
-.slot-label:has(.slot-image-wrapper) {
-  align-items: flex-start;
-}
 
 .slot-label-left {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  justify-content: flex-start;
+  justify-content: center;
   gap: 6px;
   flex: 1 1 auto;
   min-width: 0;
@@ -879,6 +949,10 @@
 }
 .slot-content > .slot-content-text {
   grid-area: value;
+}
+
+.slot-label.minimized ~ .slot-content {
+  margin-bottom: 0px;
 }
 
 .image-menu-button {
@@ -1226,6 +1300,37 @@
   transform: translateY(1px);
 }
 
+.outfit-slot.slot-trait .slot-label-left {
+  cursor: pointer;
+}
+.outfit-slot.slot-trait .slot-label-left .slot-ordinal {
+  cursor: auto;
+}
+.outfit-slot.slot-trait .slot-content:has(.slot-image-wrapper) {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "image" "value";
+}
+.outfit-slot.slot-trait .slot-content:has(.slot-image-wrapper) > .slot-image-wrapper {
+  width: calc(100% * var(--image-scale, 1));
+}
+
+.slot-trait-list-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+.slot-trait-list-toggle > i {
+  transition: transform 0.2s ease;
+}
+.slot-trait-list-toggle.--expanded > i {
+  transform: rotate(180deg);
+}
+
 .slot-trait-container {
   display: flex;
   flex-direction: column;
@@ -1267,7 +1372,10 @@
 .slot-trait-container .slot-trait-row.--expanded .slot-trait-expand > i {
   transform: rotate(180deg);
 }
-.slot-trait-container .slot-trait-main {
+.slot-trait-container .slot-trait-row.--inline {
+  box-shadow: inset 3px 0 0 var(--SmartThemeQuoteColor);
+}
+.slot-trait-container .slot-trait-header {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -1382,6 +1490,26 @@
 }
 .slot-trait-container .slot-trait-addendum.none {
   opacity: 0.5;
+}
+.slot-trait-container .slot-trait-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  opacity: 0.8;
+  cursor: pointer;
+}
+.slot-trait-container .slot-trait-inline:hover {
+  opacity: 1;
+}
+.slot-trait-container .slot-trait-inline > input {
+  cursor: pointer;
+  margin: 0;
+  height: 16px;
+}
+.slot-trait-container .slot-trait-inline > span {
+  line-height: 1;
+  height: 16px;
 }
 .slot-trait-container .slot-trait-edit-actions {
   display: flex;

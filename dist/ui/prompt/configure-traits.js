@@ -2,10 +2,11 @@ import { OutfitTracker } from '../../data/tracker.js';
 import { el } from '../../util/ElementHelper.js';
 import { renderTrait } from './render/trait.js';
 function comparableTraits(source) {
-    return source.map(({ id, name, group, description, icon }) => ({
+    return source.map(({ id, name, group, contextInline, description, icon }) => ({
         id,
         name,
         group,
+        contextInline,
         description,
         icon
     }));
@@ -95,13 +96,36 @@ export async function promptConfigureTraits({ onSave } = {}) {
                 className: 'trait-config-group',
                 classes: [group === activeGroup ? '--active' : ''],
                 text: group || 'Default',
-                parent: groupBar,
+                title: group === activeGroup
+                    ? 'Click to rename group'
+                    : 'Click to switch group',
+                parent: groupBar
             });
             button.addEventListener('click', () => {
-                if (activeGroup === group) {
+                if (activeGroup !== group) {
+                    activeGroup = group;
+                    render();
                     return;
                 }
-                activeGroup = group;
+                const value = prompt('Rename group:', group);
+                if (value === null) {
+                    return;
+                }
+                const name = value.trim();
+                if (name === group) {
+                    return;
+                }
+                if (groups.includes(name)) {
+                    toastr.warning('A group with that name already exists.');
+                    return;
+                }
+                for (const trait of traits) {
+                    if (trait.group === group) {
+                        trait.group = name;
+                    }
+                }
+                activeGroup = name;
+                updateSaveVisibility();
                 render();
             });
             button.setAttribute('aria-pressed', String(group === activeGroup));
@@ -149,9 +173,11 @@ export async function promptConfigureTraits({ onSave } = {}) {
             name: '',
             group: activeGroup,
             description: '',
+            contextInline: false,
             icon: {
                 type: 'font-awesome',
-                className: 'fa-solid fa-tag'
+                className: 'fa-solid fa-tag',
+                color: null
             }
         };
         traits.push(trait);
@@ -169,8 +195,9 @@ export async function promptConfigureTraits({ onSave } = {}) {
         let closed = false;
         let saving = false;
         function close(saved = false) {
-            if (closed)
+            if (closed) {
                 return;
+            }
             closed = true;
             document.removeEventListener('keydown', onKeyDown);
             overlay.remove();
@@ -184,8 +211,9 @@ export async function promptConfigureTraits({ onSave } = {}) {
         }
         document.addEventListener('keydown', onKeyDown);
         cancelButton.addEventListener('click', () => {
-            if (!saving)
+            if (!saving) {
                 close();
+            }
         });
         overlay.addEventListener('click', event => {
             if (event.target === overlay && !saving) {
@@ -193,8 +221,9 @@ export async function promptConfigureTraits({ onSave } = {}) {
             }
         });
         saveButton.addEventListener('click', async () => {
-            if (saving || closed || !hasChanges() || !validate())
+            if (saving || closed || !hasChanges() || !validate()) {
                 return;
+            }
             saving = true;
             saveButton.disabled = true;
             cancelButton.disabled = true;

@@ -30,10 +30,11 @@ export interface SlotConditionMap {
 
 
 
-export type TraitVisual =
+export type TraitIcon =
 	| {
 		type: 'font-awesome';
 		className: string;
+		color: string | null;
 	}
 	| {
 		type: 'image';
@@ -45,19 +46,22 @@ export interface TraitDefinition {
 	name: string; // non-unique display name, supports any char
 	group: string;
 	description: string; // what the trait does
-	icon: TraitVisual | null;
+	contextInline: boolean;
+
+	icon: TraitIcon | null;
 }
 
 export interface TraitDefinitionV1 {
 	id: string; // kebab-case unique identifier that also served as name
 	description: string;
-	icon: TraitVisual | null;
+	icon: TraitIcon | null;
 }
 
 
 export interface TraitAssignment {
 	traitId: string;
-	addendum?: string;
+	addendum: string | null;
+	contextualizeInline: boolean;
 }
 
 export interface TraitRegistry {

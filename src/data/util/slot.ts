@@ -1,4 +1,5 @@
 import { assertNever } from "../../shared.js";
+import { toKebabCase } from "../../util/StringHelper.js";
 import type { ContextSlot, ContextSlotBase, SlotKind, TraitDefinition } from "../model/Outfit.js";
 import type { ImageRegistry } from "../model/OutfitGallery.js";
 import { TextSlotState, TraitSlotState, UnresolvedOutfitSlot } from "../model/OutfitSnapshots.js";
@@ -83,12 +84,26 @@ export function contextualizeSlot(
 		case 'traits':
 			return slot.traits
 				.filter(({ traitId }) => traits[traitId])
-				.map(({ traitId, addendum }) => {
-					const name = TraitRegistryView.toDisplayName(traitId);
-					const manifestation = addendum?.trim();
+				.map(({ traitId, addendum: rawAddendum, contextualizeInline }) => {
+					const trait = traits[traitId];
+					const addendum = rawAddendum?.trim();
+					const tag = toKebabCase(trait.group.trim()) || 'trait';
 
-					return `- ${name}${manifestation ? `: ${manifestation}` : ''}`;
+					const indent = (text: string): string =>
+						text.split('\n').map(line => `  ${line}`).join('\n');
+
+					if (contextualizeInline) {
+						return [
+							`<${tag} name="${trait.name}">`,
+							indent([trait.description, addendum].filter(Boolean).join('\n')),
+							`</${tag}>`
+						].join('\n');
+					}
+
+					return addendum
+						? `<${tag} name="${trait.name}">\n${indent(addendum)}\n</${tag}>`
+						: `<${tag} name="${trait.name}" />`;
 				})
-				.join('\n');
+				.join('\n\n');
 	}
 }

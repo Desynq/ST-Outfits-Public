@@ -200,7 +200,20 @@ export class VisibilityTab extends PanelTab {
 
 		const pre = document.createElement('pre');
 		pre.classList.add('outfit-preview-section-text');
-		pre.textContent = this.outfitManager.getSummary(kindScope) ?? 'None';
+
+		const summaryText = this.outfitManager.getSummary(kindScope) ?? 'None';
+
+		for (const line of summaryText.split('\n')) {
+			const indentation = line.match(/^ */)?.[0].length ?? 0;
+
+			const lineEl = el('span', {
+				className: 'xml-line',
+				text: line.slice(indentation),
+				parent: pre
+			});
+
+			lineEl.style.paddingLeft = `${indentation}ch`;
+		}
 
 		details.appendChild(summary);
 		details.appendChild(pre);

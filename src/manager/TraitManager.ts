@@ -12,12 +12,18 @@ export class TraitManager {
 
 	private static contextualize(): string {
 		const registry = OutfitTracker.viewTraitRegistry();
+		const entries: string[] = [];
 
-		return registry.getAll()
-			.map(definition => {
-				return `${definition.name}: ${definition.description}`;
-			})
-			.join('\n\n');
+		for (const trait of registry.getAll()) {
+			if (trait.contextInline === true) {
+				continue;
+			}
+
+			const label = TraitRegistryView.getLabel(trait);
+			entries.push(`${label}: ${trait.description}`);
+		}
+
+		return entries.join('\n\n');
 	}
 
 	public static updateMacros(): void {

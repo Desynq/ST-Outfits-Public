@@ -10,8 +10,14 @@ export class TraitSlotRenderer extends BaseSlotRenderer {
             editCoordinator: deps.editCoordinator
         });
     }
+    createSlotElement(container, display) {
+        const element = super.createSlotElement(container, display);
+        element.classList.add('slot-trait');
+        return element;
+    }
     renderContent(ctx, _imageElement) {
         this.contenter.render(ctx.contentTextEl, ctx);
+        ctx.contentTextEl.hidden = !this.panel.expandedTraitLists.has(ctx.slot.id);
     }
     decorateMinimal(ctx) {
         ctx.labelRightDiv.append(this.createToggleBtn(ctx.slot));
@@ -21,6 +27,14 @@ export class TraitSlotRenderer extends BaseSlotRenderer {
         this.createMenuBtn(ctx).appendTo(ctx.labelRightDiv);
     }
     decorate(ctx, _imageElement) {
+        const expandButton = this.createExpandButton(ctx);
+        ctx.labelLeftDiv.addEventListener('click', (event) => {
+            if (event.target !== ctx.labelLeftDiv) {
+                return;
+            }
+            expandButton.click();
+        });
+        ctx.labelRightDiv.append(expandButton);
         const actions = new SlotActionsElement(this.panel);
         ctx.actionsLeftEl.append(this.createToggleBtn(ctx.slot));
         if (ctx.slot.enabled) {
@@ -86,5 +100,34 @@ export class TraitSlotRenderer extends BaseSlotRenderer {
                 parent.append(button);
             }
         };
+    }
+    createExpandButton(ctx) {
+        const slotId = ctx.slot.id;
+        const expanded = this.panel.expandedTraitLists.has(slotId);
+        const button = el('button', {
+            className: 'slot-button slot-trait-list-toggle',
+            title: expanded ? 'Collapse traits' : 'Expand traits',
+            children: [
+                el('i', {
+                    className: 'fa-solid fa-chevron-down'
+                })
+            ]
+        });
+        button.classList.toggle('--expanded', expanded);
+        button.setAttribute('aria-expanded', String(expanded));
+        button.addEventListener('click', () => {
+            const expanded = !this.panel.expandedTraitLists.has(slotId);
+            if (expanded) {
+                this.panel.expandedTraitLists.add(slotId);
+            }
+            else {
+                this.panel.expandedTraitLists.delete(slotId);
+            }
+            ctx.contentTextEl.hidden = !expanded;
+            button.classList.toggle('--expanded', expanded);
+            button.setAttribute('aria-expanded', String(expanded));
+            button.title = expanded ? 'Collapse traits' : 'Expand traits';
+        });
+        return button;
     }
 }

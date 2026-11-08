@@ -30,6 +30,7 @@ export class OutfitPanel {
         };
         this.grouper = null;
         this.expandedTraits = new Set();
+        this.expandedTraitLists = new Set();
         // Event registration
         this.onRenderDispose = (disposer) => this.disposer.add(disposer);
     }

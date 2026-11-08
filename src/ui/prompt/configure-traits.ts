@@ -1,10 +1,11 @@
 
 import { OutfitTracker } from '../../data/tracker.js';
 import { TraitRegistryView } from '../../data/view/TraitRegistryView.js';
-import type { TraitDefinition, TraitVisual } from '../../data/model/Outfit.js';
+import type { TraitDefinition, TraitIcon } from '../../data/model/Outfit.js';
 import { el } from '../../util/ElementHelper.js';
 import { applyIconFallback } from '../../util/element/icon.js';
 import { renderTrait } from './render/trait.js';
+import { addDoubleTapListener } from '../../util/element/click-actions.js';
 
 export type TraitDraft = Omit<TraitDefinition, 'id'> & {
 	id?: string;
@@ -19,12 +20,14 @@ function comparableTraits(source: TraitDraft[]): {
 	name: string;
 	group: string;
 	description: string;
-	icon: TraitVisual | null;
+	contextInline: boolean;
+	icon: TraitIcon | null;
 }[] {
-	return source.map(({ id, name, group, description, icon }) => ({
+	return source.map(({ id, name, group, contextInline, description, icon }) => ({
 		id,
 		name,
 		group,
+		contextInline,
 		description,
 		icon
 	}));
@@ -145,15 +148,44 @@ export async function promptConfigureTraits({
 				className: 'trait-config-group',
 				classes: [group === activeGroup ? '--active' : ''],
 				text: group || 'Default',
-				parent: groupBar,
+				title: group === activeGroup
+					? 'Click to rename group'
+					: 'Click to switch group',
+				parent: groupBar
 			});
 
 			button.addEventListener('click', () => {
-				if (activeGroup === group) {
+				if (activeGroup !== group) {
+					activeGroup = group;
+					render();
 					return;
 				}
 
-				activeGroup = group;
+				const value = prompt('Rename group:', group);
+
+				if (value === null) {
+					return;
+				}
+
+				const name = value.trim();
+
+				if (name === group) {
+					return;
+				}
+
+				if (groups.includes(name)) {
+					toastr.warning('A group with that name already exists.');
+					return;
+				}
+
+				for (const trait of traits) {
+					if (trait.group === group) {
+						trait.group = name;
+					}
+				}
+
+				activeGroup = name;
+				updateSaveVisibility();
 				render();
 			});
 
@@ -220,9 +252,11 @@ export async function promptConfigureTraits({
 			name: '',
 			group: activeGroup,
 			description: '',
+			contextInline: false,
 			icon: {
 				type: 'font-awesome',
-				className: 'fa-solid fa-tag'
+				className: 'fa-solid fa-tag',
+				color: null
 			}
 		};
 
@@ -248,7 +282,9 @@ export async function promptConfigureTraits({
 		let saving = false;
 
 		function close(saved = false): void {
-			if (closed) return;
+			if (closed) {
+				return;
+			}
 
 			closed = true;
 			document.removeEventListener('keydown', onKeyDown);
@@ -266,7 +302,9 @@ export async function promptConfigureTraits({
 		document.addEventListener('keydown', onKeyDown);
 
 		cancelButton.addEventListener('click', () => {
-			if (!saving) close();
+			if (!saving) {
+				close();
+			}
 		});
 
 		overlay.addEventListener('click', event => {
@@ -276,7 +314,9 @@ export async function promptConfigureTraits({
 		});
 
 		saveButton.addEventListener('click', async () => {
-			if (saving || closed || !hasChanges() || !validate()) return;
+			if (saving || closed || !hasChanges() || !validate()) {
+				return;
+			}
 
 			saving = true;
 			saveButton.disabled = true;

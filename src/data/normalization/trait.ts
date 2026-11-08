@@ -1,5 +1,5 @@
 import { isRecord } from "../../util/narrowing.js";
-import type { OutfitTrackerModel, TraitAssignment, TraitDefinition, TraitVisual } from "../model/Outfit.js";
+import type { OutfitTrackerModel, TraitAssignment, TraitDefinition, TraitIcon } from "../model/Outfit.js";
 
 export function normalizeTraitAssignments(
 	value: unknown
@@ -22,9 +22,8 @@ export function normalizeTraitAssignments(
 
 		result.push({
 			traitId,
-			...(typeof entry.addendum === 'string'
-				? { addendum: entry.addendum }
-				: {})
+			addendum: typeof entry.addendum === 'string' ? entry.addendum : null,
+			contextualizeInline: entry.contextualizeInline === true
 		});
 	}
 
@@ -61,7 +60,9 @@ export function normalizeTraits(
 			? value.description.trim()
 			: '';
 
-		let icon: TraitVisual | null = null;
+		const contextInline = value.contextInline === true;
+
+		let icon: TraitIcon | null = normalizeTraitVisual(value.icon);
 
 		if (
 			isRecord(value.icon)
@@ -71,7 +72,10 @@ export function normalizeTraits(
 		) {
 			icon = {
 				type: 'font-awesome',
-				className: value.icon.className.trim()
+				className: value.icon.className.trim(),
+				color: typeof value.icon.color === 'string'
+					? value.icon.color.trim() || null
+					: null
 			};
 		}
 
@@ -80,6 +84,7 @@ export function normalizeTraits(
 			name,
 			group,
 			description,
+			contextInline,
 			icon
 		};
 	}
@@ -89,17 +94,26 @@ export function normalizeTraits(
 
 
 
-function normalizeTraitVisual(value: unknown): TraitVisual | null {
-	if (!isRecord(value)) return null;
+function normalizeTraitVisual(icon: unknown): TraitIcon | null {
+	if (!isRecord(icon)) return null;
 
-	switch (value.type) {
-		case 'font-awesome':
-			return typeof value.className === 'string'
-				? { type: 'font-awesome', className: value.className }
-				: null;
+	switch (icon.type) {
+		case 'font-awesome': {
+			if (typeof icon.className !== 'string' || !icon.className.trim()) {
+				return null;
+			}
+
+			return {
+				type: 'font-awesome',
+				className: icon.className.trim(),
+				color: typeof icon.color === 'string'
+					? icon.color.trim() || null
+					: null
+			};
+		}
 
 		case 'image': {
-			const image = value.image;
+			const image = icon.image;
 			if (!isRecord(image)) return null;
 
 			if (

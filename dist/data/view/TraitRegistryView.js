@@ -63,4 +63,12 @@ export class TraitRegistryView {
             ? visual.className
             : 'fa-solid fa-tag';
     }
+    /**
+     * @returns "(`trait.group`) `trait.name`"
+     */
+    static getLabel(trait) {
+        return trait.group
+            ? `(${trait.group}) ${trait.name}`
+            : trait.name;
+    }
 }

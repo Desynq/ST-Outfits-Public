@@ -40,7 +40,10 @@ export default defineConfig([
       "no-unused-vars": "off",
       "no-useless-assignment": "off",
       "no-empty": "off",
-      "prefer-const": "warn"
+      "prefer-const": "warn",
+
+      // custom
+      "curly": ["warn", "all"]
     }
   }
 ]);

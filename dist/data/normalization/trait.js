@@ -16,9 +16,8 @@ export function normalizeTraitAssignments(value) {
         seen.add(traitId);
         result.push({
             traitId,
-            ...(typeof entry.addendum === 'string'
-                ? { addendum: entry.addendum }
-                : {})
+            addendum: typeof entry.addendum === 'string' ? entry.addendum : null,
+            contextualizeInline: entry.contextualizeInline === true
         });
     }
     return result;
@@ -44,14 +43,18 @@ export function normalizeTraits(holder) {
         const description = typeof value.description === 'string'
             ? value.description.trim()
             : '';
-        let icon = null;
+        const contextInline = value.contextInline === true;
+        let icon = normalizeTraitVisual(value.icon);
         if (isRecord(value.icon)
             && value.icon.type === 'font-awesome'
             && typeof value.icon.className === 'string'
             && value.icon.className.trim()) {
             icon = {
                 type: 'font-awesome',
-                className: value.icon.className.trim()
+                className: value.icon.className.trim(),
+                color: typeof value.icon.color === 'string'
+                    ? value.icon.color.trim() || null
+                    : null
             };
         }
         definitions[id] = {
@@ -59,21 +62,30 @@ export function normalizeTraits(holder) {
             name,
             group,
             description,
+            contextInline,
             icon
         };
     }
     holder.traits = { definitions };
 }
-function normalizeTraitVisual(value) {
-    if (!isRecord(value))
+function normalizeTraitVisual(icon) {
+    if (!isRecord(icon))
         return null;
-    switch (value.type) {
-        case 'font-awesome':
-            return typeof value.className === 'string'
-                ? { type: 'font-awesome', className: value.className }
-                : null;
+    switch (icon.type) {
+        case 'font-awesome': {
+            if (typeof icon.className !== 'string' || !icon.className.trim()) {
+                return null;
+            }
+            return {
+                type: 'font-awesome',
+                className: icon.className.trim(),
+                color: typeof icon.color === 'string'
+                    ? icon.color.trim() || null
+                    : null
+            };
+        }
         case 'image': {
-            const image = value.image;
+            const image = icon.image;
             if (!isRecord(image))
                 return null;
             if (typeof image.key !== 'string' ||

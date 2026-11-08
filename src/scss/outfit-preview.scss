@@ -93,4 +93,17 @@
 
 	font-family: monospace;
 	font-size: 0.85em;
+
+	.xml-line {
+		display: block;
+		white-space: pre-wrap;
+		overflow-wrap: anywhere;
+
+		&:not(:last-child)::after {
+			content: '\\n';
+			color: var(--SmartThemeQuoteColor);
+			opacity: 0.5;
+			user-select: none;
+		}
+	}
 }

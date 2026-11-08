@@ -1,5 +1,5 @@
 import { hasOwnProperty } from "../../util/object-helper.js";
-import type { TraitDefinition, TraitRegistry, TraitVisual } from "../model/Outfit.js";
+import type { TraitDefinition, TraitRegistry, TraitIcon } from "../model/Outfit.js";
 
 
 
@@ -95,9 +95,18 @@ export class TraitRegistryView {
 			.join(' ');
 	}
 
-	public static getIconClass(visual: TraitVisual | null): string {
+	public static getIconClass(visual: TraitIcon | null): string {
 		return visual?.type === 'font-awesome'
 			? visual.className
 			: 'fa-solid fa-tag';
+	}
+
+	/**
+	 * @returns "(`trait.group`) `trait.name`"
+	 */
+	public static getLabel(trait: TraitDefinition): string {
+		return trait.group
+			? `(${trait.group}) ${trait.name}`
+			: trait.name;
 	}
 }

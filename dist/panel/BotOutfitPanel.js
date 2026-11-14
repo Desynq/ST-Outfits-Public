@@ -11,8 +11,9 @@ export class BotOutfitPanel extends OutfitPanel {
         return this.outfitManager.character;
     }
     initializePanel() {
-        if (this.panelEl)
+        if (this.panelEl) {
             return false;
+        }
         const panel = document.createElement('div');
         panel.className = 'outfit-panel bot-outfit-panel';
         /*html*/
@@ -37,8 +38,9 @@ export class BotOutfitPanel extends OutfitPanel {
     }
     async exportButtonClickListener() {
         const presetName = prompt('Name this export:');
-        if (!presetName)
+        if (!presetName) {
             return;
+        }
         const characterName = prompt('Export for which character?\nAdd "_user" to the end to export to a persona.\n' +
             '(Leave blank to export as a global user preset)');
         let message;
@@ -67,8 +69,9 @@ export class BotOutfitPanel extends OutfitPanel {
         }
         if (this.panelEl && !this.minimized) {
             const header = this.panelEl.querySelector('.outfit-header h3');
-            if (header)
+            if (header) {
                 header.textContent = `${name}'s Outfit`;
+            }
         }
         this.renderTabsAndActiveContent();
         this.updateCharBus.emit();
@@ -80,14 +83,16 @@ export class BotOutfitPanel extends OutfitPanel {
         this.updateCharBus.add(listener);
     }
     saveToChat() {
-        if (!this.getPanelSettings().canLoadFromChat())
+        if (!this.getPanelSettings().canLoadFromChat()) {
             return false;
+        }
         OutfitTracker.characterOutfits(this.character).saveCurrentOutfitToChat();
         return true;
     }
     loadFromChat() {
-        if (!this.getPanelSettings().canLoadFromChat())
+        if (!this.getPanelSettings().canLoadFromChat()) {
             return false;
+        }
         this.outfitManager.getOutfitCollection().loadCurrentOutfitFromChat();
         this.renderTabsAndActiveContent();
         return true;

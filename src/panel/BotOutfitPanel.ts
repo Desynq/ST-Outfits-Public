@@ -20,7 +20,9 @@ export class BotOutfitPanel extends OutfitPanel<'bot'> {
 	}
 
 	protected override initializePanel(): boolean {
-		if (this.panelEl) return false;
+		if (this.panelEl) {
+			return false;
+		}
 
 		const panel = document.createElement('div');
 		panel.className = 'outfit-panel bot-outfit-panel';
@@ -53,7 +55,9 @@ export class BotOutfitPanel extends OutfitPanel<'bot'> {
 
 	public override async exportButtonClickListener(): Promise<void> {
 		const presetName = prompt('Name this export:');
-		if (!presetName) return;
+		if (!presetName) {
+			return;
+		}
 
 		const characterName = prompt(
 			'Export for which character?\nAdd "_user" to the end to export to a persona.\n' +
@@ -92,7 +96,9 @@ export class BotOutfitPanel extends OutfitPanel<'bot'> {
 
 		if (this.panelEl && !this.minimized) {
 			const header = this.panelEl.querySelector('.outfit-header h3');
-			if (header) header.textContent = `${name}'s Outfit`;
+			if (header) {
+				header.textContent = `${name}'s Outfit`;
+			}
 		}
 		this.renderTabsAndActiveContent();
 
@@ -109,14 +115,18 @@ export class BotOutfitPanel extends OutfitPanel<'bot'> {
 
 
 	public saveToChat(): boolean {
-		if (!this.getPanelSettings().canLoadFromChat()) return false;
+		if (!this.getPanelSettings().canLoadFromChat()) {
+			return false;
+		}
 
 		OutfitTracker.characterOutfits(this.character).saveCurrentOutfitToChat();
 		return true;
 	}
 
 	public loadFromChat(): boolean {
-		if (!this.getPanelSettings().canLoadFromChat()) return false;
+		if (!this.getPanelSettings().canLoadFromChat()) {
+			return false;
+		}
 
 		this.outfitManager.getOutfitCollection().loadCurrentOutfitFromChat();
 		this.renderTabsAndActiveContent();

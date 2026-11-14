@@ -42,10 +42,12 @@ export class CacheTab extends PanelTab {
                 restoreButton();
             };
             input.addEventListener('keyup', (e) => {
-                if (e.key === 'Enter')
+                if (e.key === 'Enter') {
                     commit();
-                else if (e.key === 'Escape')
+                }
+                else if (e.key === 'Escape') {
                     cancel();
+                }
             });
             // input.addEventListener('blur', cancel);
             const restoreButton = () => {

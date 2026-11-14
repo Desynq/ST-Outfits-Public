@@ -31,8 +31,9 @@ export class CharOutfitPanel extends OutfitPanel {
         return OutfitTracker.viewCharPanels();
     }
     initializePanel() {
-        if (this.panelEl)
+        if (this.panelEl) {
             return false;
+        }
         const outfitHeader = el('div', {
             className: 'outfit-header',
             children: [
@@ -68,8 +69,9 @@ export class CharOutfitPanel extends OutfitPanel {
     }
     async exportButtonClickListener() {
         const presetName = prompt('Name this export:');
-        if (!presetName)
+        if (!presetName) {
             return;
+        }
         const characterName = prompt('Export for which character?\nAdd "_user" to the end to export to a persona.\n' +
             '(Leave blank to export as a global user preset)');
         let message;
@@ -103,16 +105,18 @@ export class CharOutfitPanel extends OutfitPanel {
         return 'char';
     }
     show(options = {}) {
-        if (!super.show(options))
+        if (!super.show(options)) {
             return false;
+        }
         this.panelsView.setActive(this.characterKey);
         this.outfitManager.saveSettings();
         return true;
     }
     close({ destroy = true } = {}) {
         super.close();
-        if (destroy)
+        if (destroy) {
             this.destroy();
+        }
     }
     destroy() {
         this.panelEl?.remove();
@@ -128,34 +132,40 @@ export class CharOutfitPanel extends OutfitPanel {
      * @returns `false` if chat persistence is disabled.
      */
     saveToChat() {
-        if (!this.getPanelSettings().canLoadFromChat())
+        if (!this.getPanelSettings().canLoadFromChat()) {
             return false;
+        }
         OutfitTracker.characterOutfits(this.characterKey).saveCurrentOutfitToChat();
         return true;
     }
     loadFromChat() {
-        if (!this.getPanelSettings().canLoadFromChat())
+        if (!this.getPanelSettings().canLoadFromChat()) {
             return false;
+        }
         this.outfitManager.getOutfitCollection().loadCurrentOutfitFromChat();
         this.renderTabsAndActiveContent();
         return true;
     }
     saveToCharacter() {
-        if (this.getPanelSettings().getLoadState() !== 'character')
+        if (this.getPanelSettings().getLoadState() !== 'character') {
             return false;
+        }
         const ck = this.getCurrentCharacterKey();
-        if (ck === null)
+        if (ck === null) {
             return false;
+        }
         const name = `@character:${ck}`;
         this.outfitManager.saveOutfitAs(name);
         return true;
     }
     loadFromCharacter() {
-        if (this.getPanelSettings().getLoadState() !== 'character')
+        if (this.getPanelSettings().getLoadState() !== 'character') {
             return false;
+        }
         const ck = this.getCurrentCharacterKey();
-        if (ck === null)
+        if (ck === null) {
             return false;
+        }
         const name = `@character:${ck}`;
         const result = this.outfitManager.loadSavedOutfit(name);
         if (result === 'not-found') {

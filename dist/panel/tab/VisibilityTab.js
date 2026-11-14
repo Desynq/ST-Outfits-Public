@@ -20,8 +20,9 @@ export class VisibilityTab extends PanelTab {
     }
     renderTagInputs(contentArea) {
         // only character panels can have a custom tag and attributes
-        if (!(this.panel instanceof CharOutfitPanel))
+        if (!(this.panel instanceof CharOutfitPanel)) {
             return;
+        }
         const settings = this.panel.getPanelSettings();
         const existing = settings.getFullSummaryTag();
         const wrapper = el('div', {
@@ -126,8 +127,9 @@ export class VisibilityTab extends PanelTab {
             overlay.remove();
         });
         overlay.addEventListener('click', (e) => {
-            if (e.target === overlay)
+            if (e.target === overlay) {
                 overlay.remove();
+            }
         });
     }
     createPreviewSection(header, kindScope) {

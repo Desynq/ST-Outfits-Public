@@ -12,7 +12,9 @@ export class UserOutfitPanel extends OutfitPanel<'user'> {
 	}
 
 	protected override initializePanel(): boolean {
-		if (this.panelEl) return false;
+		if (this.panelEl) {
+			return false;
+		}
 
 		const panel = document.createElement('div');
 		panel.className = 'outfit-panel user-outfit-panel';
@@ -45,7 +47,9 @@ export class UserOutfitPanel extends OutfitPanel<'user'> {
 
 	public override async exportButtonClickListener(): Promise<void> {
 		const presetName = prompt('Name this export:');
-		if (!presetName) return;
+		if (!presetName) {
+			return;
+		}
 
 		const characterName = prompt(
 			'Export for which character?\nAdd "_user" to the end to export to a persona.\n',

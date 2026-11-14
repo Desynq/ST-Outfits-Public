@@ -267,12 +267,16 @@ export class OutfitTabsRenderer {
 		});
 
 		tabList.addEventListener('focusout', (e) => {
-			if (tabList.contains(e.relatedTarget as Node)) return;
+			if (tabList.contains(e.relatedTarget as Node)) {
+				return;
+			}
 
 			tabList.classList.add('fading');
 
 			const onTransitionEnd = (ev: TransitionEvent): void => {
-				if (ev.propertyName !== 'opacity') return;
+				if (ev.propertyName !== 'opacity') {
+					return;
+				}
 
 				tabList.classList.remove('fading');
 				tabList.classList.add('collapsed');
@@ -306,7 +310,10 @@ export class OutfitTabsRenderer {
 	}
 
 	private tryRenameTab(tabEl: HTMLElement): void {
-		if (!tabEl.classList.contains('active')) return; // user can only rename current tab
+		if (!tabEl.classList.contains('active')) {
+			// user can only rename current tab
+			return;
+		}
 		const result = this.renameTab(tabEl);
 		if (result.status === 'renamed') {
 			this.currentTab = {
@@ -323,7 +330,10 @@ export class OutfitTabsRenderer {
 		const kind = this.assertKindTab(tabElement).kind;
 
 		const newKind = this.promptKind();
-		if (newKind === null) return { status: 'cancelled', newName: null }; // user cancelled
+		if (newKind === null) {
+			// user cancelled
+			return { status: 'cancelled', newName: null };
+		}
 
 		const result = this.outfitView.renameKind(kind, newKind);
 		switch (result) {
@@ -341,7 +351,9 @@ export class OutfitTabsRenderer {
 	private promptKind(): string | null {
 		const message = `New slot kind name:`;
 		const raw = prompt(message)?.trim();
-		if (raw === undefined || raw === '') return null;
+		if (raw === undefined || raw === '') {
+			return null;
+		}
 		return this.normalizeKindInput(raw);
 	}
 
@@ -362,7 +374,9 @@ export class OutfitTabsRenderer {
 
 		tab.addEventListener('drop', (e) => {
 			e.preventDefault();
-			if (!this.draggedTab || this.draggedTab === tab) return;
+			if (!this.draggedTab || this.draggedTab === tab) {
+				return;
+			}
 
 			const list = tab.parentElement!;
 			const draggedIndex = [...list.children].indexOf(this.draggedTab);
@@ -445,14 +459,18 @@ export class OutfitTabsRenderer {
 
 		if (tabType === 'system') {
 			const id = this.getSystemTabId(element);
-			if (id === undefined) return undefined;
+			if (id === undefined) {
+				return undefined;
+			}
 
 			return { type: 'system', id: id };
 		}
 
 		if (tabType === 'kind') {
 			const kind = element.dataset.kind;
-			if (!kind) return undefined;
+			if (!kind) {
+				return undefined;
+			}
 
 			return { type: 'kind', kind };
 		}
@@ -470,7 +488,9 @@ export class OutfitTabsRenderer {
 
 	private getKindTabFromElement(element: HTMLElement): OutfitKindTab | undefined {
 		const tab = this.getTabFromElement(element);
-		if (!tab) return undefined;
+		if (!tab) {
+			return undefined;
+		}
 
 		return tab.type === 'kind' ? tab : undefined;
 	}
@@ -489,13 +509,19 @@ export class OutfitTabsRenderer {
 
 	private getSystemTabId(element: HTMLElement): OutfitSystemTabId | undefined {
 		const id = element.dataset.tabId as OutfitSystemTabId | undefined;
-		if (id === undefined) return undefined;
-		if (!this.isOutfitSystemTabId(id)) return undefined;
+		if (id === undefined) {
+			return undefined;
+		}
+		if (!this.isOutfitSystemTabId(id)) {
+			return undefined;
+		}
 		return id;
 	}
 
 	private tabsEqual(a: OutfitTab, b: OutfitTab): boolean {
-		if (a.type !== b.type) return false;
+		if (a.type !== b.type) {
+			return false;
+		}
 		switch (a.type) {
 			case 'system':
 				return b.type === 'system' && a.id === b.id;
@@ -520,7 +546,9 @@ export class OutfitTabsRenderer {
 
 	private onAddTabClick(): void {
 		const kind = this.promptKind();
-		if (kind === null) return; // user cancelled
+		if (kind === null) { // user cancelled
+			return;
+		}
 		const id = toSlotId(kind);
 
 		const result = this.outfitManager.getOutfitView().addSlot(id, kind);

@@ -106,14 +106,16 @@ export class SlotsRenderer extends OutfitPanelContext {
     }
     promptAddSlot(kind) {
         const raw = prompt('Name?')?.trim();
-        if (!raw)
+        if (!raw) {
             return;
+        }
         let type;
         let attempts = 0; // got bored
         while (true) {
             const input = prompt(`Slot type${'?'.repeat(++attempts)} (text/traits)`, 'text')?.trim().toLowerCase();
-            if (input === undefined)
+            if (input === undefined) {
                 return;
+            }
             if (input === 'text' || input === 'traits') {
                 type = input;
                 break;
@@ -149,8 +151,9 @@ export class SlotsRenderer extends OutfitPanelContext {
         const slots = this.outfitView.slots;
         const changes = [];
         for (const slot of slots) {
-            if (slot.type !== 'text')
+            if (slot.type !== 'text') {
                 continue;
+            }
             const nextValue = slot.value.replaceAll(searchValue, replaceValue);
             if (nextValue !== slot.value) {
                 changes.push({
@@ -173,8 +176,9 @@ export class SlotsRenderer extends OutfitPanelContext {
             confirmText: 'Replace',
             cancelText: 'Cancel'
         });
-        if (!ok)
+        if (!ok) {
             return;
+        }
         for (const change of changes) {
             this.outfitView.setValue(change.id, change.new);
             this.outfitManager.updateSlotContext(change.id, { debounceMacros: true });

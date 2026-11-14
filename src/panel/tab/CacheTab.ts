@@ -57,8 +57,12 @@ export class CacheTab extends PanelTab {
 			};
 
 			input.addEventListener('keyup', (e) => {
-				if (e.key === 'Enter') commit();
-				else if (e.key === 'Escape') cancel();
+				if (e.key === 'Enter') {
+					commit();
+				}
+				else if (e.key === 'Escape') {
+					cancel();
+				}
 			});
 
 			// input.addEventListener('blur', cancel);

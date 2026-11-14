@@ -63,7 +63,9 @@ export class CharOutfitPanel extends OutfitPanel<'char'> {
 	}
 
 	protected override initializePanel(): boolean {
-		if (this.panelEl) return false;
+		if (this.panelEl) {
+			return false;
+		}
 
 		const outfitHeader = el('div', {
 			className: 'outfit-header',
@@ -109,7 +111,9 @@ export class CharOutfitPanel extends OutfitPanel<'char'> {
 
 	public override async exportButtonClickListener(): Promise<void> {
 		const presetName = prompt('Name this export:');
-		if (!presetName) return;
+		if (!presetName) {
+			return;
+		}
 
 		const characterName = prompt(
 			'Export for which character?\nAdd "_user" to the end to export to a persona.\n' +
@@ -155,7 +159,9 @@ export class CharOutfitPanel extends OutfitPanel<'char'> {
 	}
 
 	public override show(options: ShowOptions = {}): boolean {
-		if (!super.show(options)) return false;
+		if (!super.show(options)) {
+			return false;
+		}
 
 		this.panelsView.setActive(this.characterKey);
 		this.outfitManager.saveSettings();
@@ -165,7 +171,9 @@ export class CharOutfitPanel extends OutfitPanel<'char'> {
 
 	public override close({ destroy = true }: { destroy?: boolean; } = {}): void {
 		super.close();
-		if (destroy) this.destroy();
+		if (destroy) {
+			this.destroy();
+		}
 	}
 
 	private destroy(): void {
@@ -186,14 +194,18 @@ export class CharOutfitPanel extends OutfitPanel<'char'> {
 	 * @returns `false` if chat persistence is disabled.
 	 */
 	public saveToChat(): boolean {
-		if (!this.getPanelSettings().canLoadFromChat()) return false;
+		if (!this.getPanelSettings().canLoadFromChat()) {
+			return false;
+		}
 
 		OutfitTracker.characterOutfits(this.characterKey).saveCurrentOutfitToChat();
 		return true;
 	}
 
 	public loadFromChat(): boolean {
-		if (!this.getPanelSettings().canLoadFromChat()) return false;
+		if (!this.getPanelSettings().canLoadFromChat()) {
+			return false;
+		}
 
 		this.outfitManager.getOutfitCollection().loadCurrentOutfitFromChat();
 		this.renderTabsAndActiveContent();
@@ -203,9 +215,13 @@ export class CharOutfitPanel extends OutfitPanel<'char'> {
 
 
 	public saveToCharacter(): boolean {
-		if (this.getPanelSettings().getLoadState() !== 'character') return false;
+		if (this.getPanelSettings().getLoadState() !== 'character') {
+			return false;
+		}
 		const ck = this.getCurrentCharacterKey();
-		if (ck === null) return false;
+		if (ck === null) {
+			return false;
+		}
 
 		const name = `@character:${ck}`;
 		this.outfitManager.saveOutfitAs(name);
@@ -213,9 +229,13 @@ export class CharOutfitPanel extends OutfitPanel<'char'> {
 	}
 
 	public loadFromCharacter(): boolean {
-		if (this.getPanelSettings().getLoadState() !== 'character') return false;
+		if (this.getPanelSettings().getLoadState() !== 'character') {
+			return false;
+		}
 		const ck = this.getCurrentCharacterKey();
-		if (ck === null) return false;
+		if (ck === null) {
+			return false;
+		}
 
 		const name = `@character:${ck}`;
 		const result = this.outfitManager.loadSavedOutfit(name);

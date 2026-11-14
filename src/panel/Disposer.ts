@@ -8,7 +8,9 @@ export class ResourceCleaner {
 	}
 
 	public dispose(): void {
-		for (const disposer of this.disposers) disposer();
+		for (const disposer of this.disposers) {
+			disposer();
+		}
 		this.disposers.length = 0;
 	}
 }

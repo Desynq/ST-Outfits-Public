@@ -104,21 +104,25 @@ export class OutfitPanel {
         this.renderTabsAndActiveContent();
     }
     restoreSize() {
-        if (!this.panelEl)
+        if (!this.panelEl) {
             return;
+        }
         const mode = this.getLayoutMode();
         this.panelEl.style.height = '80vh';
         this.panelEl.style.width = mode === 'desktop' ? '24svw' : '90svw';
     }
     restorePos(restoreX = true, restoreY = true) {
-        if (!this.panelEl)
+        if (!this.panelEl) {
             return;
+        }
         const mode = this.getLayoutMode();
         const [x, y] = this.getSavedXY(mode);
-        if (restoreX)
+        if (restoreX) {
             this.setX(x);
-        if (restoreY)
+        }
+        if (restoreY) {
             this.setY(y);
+        }
     }
     forcePos() {
         const mode = this.getLayoutMode();
@@ -127,13 +131,15 @@ export class OutfitPanel {
         this.setY(y);
     }
     setX(x) {
-        if (!this.panelEl)
+        if (!this.panelEl) {
             return;
+        }
         this.panelEl.style.left = `${x}px`;
     }
     setY(y) {
-        if (!this.panelEl)
+        if (!this.panelEl) {
             return;
+        }
         this.panelEl.style.top = `${y}px`;
     }
     restoreSizeAndPos(restoreX = true, restoreY = true) {
@@ -187,8 +193,9 @@ export class OutfitPanel {
     }
     beginDragFromEvent(e) {
         const handle = this.panelEl?.querySelector(".outfit-header");
-        if (!handle)
+        if (!handle) {
             return;
+        }
         // Simulate a pointerdown on the handle
         // So your existing dragging logic activates correctly
         handle.dispatchEvent(new PointerEvent("pointerdown", e));
@@ -197,11 +204,13 @@ export class OutfitPanel {
      * Makes the header and minimized panel toggle the minimized state on left-click.
      */
     bindMinimizeEvents() {
-        if (!this.panelEl)
+        if (!this.panelEl) {
             return;
+        }
         this.panelEl.addEventListener('click', event => {
-            if (!isLeftClick(event))
+            if (!isLeftClick(event)) {
                 return;
+            }
             const target = event.target;
             const clickedHeader = target.closest('.outfit-header h3') !== null;
             if (this.isMinimized() || clickedHeader) {
@@ -251,18 +260,22 @@ export class OutfitPanel {
         return actionsEl;
     }
     expandHeader() {
-        if (!this.panelEl)
+        if (!this.panelEl) {
             return;
+        }
         const titleElement = this.panelEl.querySelector(".outfit-header h3");
-        if (titleElement)
+        if (titleElement) {
             titleElement.textContent = this.getHeaderTitle();
+        }
     }
     collapseHeader() {
-        if (!this.panelEl)
+        if (!this.panelEl) {
             return;
+        }
         const titleEl = this.panelEl.querySelector('.outfit-header h3');
-        if (titleEl)
+        if (titleEl) {
             titleEl.textContent = "";
+        }
     }
     toggleMinimize() {
         this.setMinimize(!this.minimized);
@@ -273,8 +286,9 @@ export class OutfitPanel {
         this.updateMinimizeState(changed);
     }
     updateMinimizeState(changed) {
-        if (!this.panelEl)
+        if (!this.panelEl) {
             return;
+        }
         const minimizeBtn = this.panelEl.querySelector('.minimize-button');
         toggleClasses(this.panelEl, this.minimized, 'minimized');
         toggleClasses(this.panelEl, this.isFullscreen(), 'fullscreen');
@@ -354,8 +368,9 @@ export class OutfitPanel {
         return !this.disabled;
     }
     show(options = {}) {
-        if (!this.canShow())
+        if (!this.canShow()) {
             return false;
+        }
         const initialized = this.initializePanel();
         if (this.panelEl) {
             this.panelEl.hidden = false;
@@ -401,8 +416,9 @@ export class OutfitPanel {
         this.disabled = false;
     }
     applyTheme() {
-        if (!this.panelEl)
+        if (!this.panelEl) {
             return;
+        }
         const s = this.getPanelSettings();
         this.panelEl.style.setProperty('--panel-bg-1', s.bgColor1);
         this.panelEl.style.setProperty('--panel-bg-2', s.bgColor2);

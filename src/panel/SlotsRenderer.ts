@@ -170,7 +170,9 @@ export class SlotsRenderer extends OutfitPanelContext {
 
 	private promptAddSlot(kind: SlotKind): void {
 		const raw = prompt('Name?')?.trim();
-		if (!raw) return;
+		if (!raw) {
+			return;
+		}
 
 
 		let type: ContextSlot['type'];
@@ -182,7 +184,9 @@ export class SlotsRenderer extends OutfitPanelContext {
 				'text'
 			)?.trim().toLowerCase();
 
-			if (input === undefined) return;
+			if (input === undefined) {
+				return;
+			}
 
 			if (input === 'text' || input === 'traits') {
 				type = input;
@@ -227,7 +231,9 @@ export class SlotsRenderer extends OutfitPanelContext {
 		const slots = this.outfitView.slots;
 		const changes: { id: string; old: string; new: string; }[] = [];
 		for (const slot of slots) {
-			if (slot.type !== 'text') continue;
+			if (slot.type !== 'text') {
+				continue;
+			}
 
 			const nextValue = slot.value.replaceAll(searchValue, replaceValue);
 
@@ -262,7 +268,9 @@ export class SlotsRenderer extends OutfitPanelContext {
 			}
 		);
 
-		if (!ok) return;
+		if (!ok) {
+			return;
+		}
 
 		for (const change of changes) {
 			this.outfitView.setValue(change.id, change.new);

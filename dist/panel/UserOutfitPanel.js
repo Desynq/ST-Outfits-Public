@@ -6,8 +6,9 @@ export class UserOutfitPanel extends OutfitPanel {
         super(outfitManager);
     }
     initializePanel() {
-        if (this.panelEl)
+        if (this.panelEl) {
             return false;
+        }
         const panel = document.createElement('div');
         panel.className = 'outfit-panel user-outfit-panel';
         /*html*/
@@ -32,8 +33,9 @@ export class UserOutfitPanel extends OutfitPanel {
     }
     async exportButtonClickListener() {
         const presetName = prompt('Name this export:');
-        if (!presetName)
+        if (!presetName) {
             return;
+        }
         const characterName = prompt('Export for which character?\nAdd "_user" to the end to export to a persona.\n');
         let message;
         const trimmedPreset = presetName.trim();

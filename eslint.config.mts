@@ -43,7 +43,12 @@ export default defineConfig([
       "prefer-const": "warn",
 
       // custom
-      "curly": ["warn", "all"]
+      "curly": ["warn", "all"],
+      'max-lines': ['warn', {
+        max: 500,
+        skipBlankLines: true,
+        skipComments: true
+      }],
     }
   }
 ]);

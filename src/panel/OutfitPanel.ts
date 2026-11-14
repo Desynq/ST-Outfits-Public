@@ -10,11 +10,9 @@ import { createPanelSwitcher } from "../ui/components/button/panel-switcher.js";
 import { promptOptions } from "../ui/prompt/prompt-options.js";
 import { mergeClassNames } from "../util/element/css.js";
 import { isLeftClick } from "../util/element/event-helpers.js";
-import { clampPosition, enforceViewportBounds } from "../util/element/position.js";
-import { createConfiguredElements, el, ElementOptions, toggleClasses } from "../util/ElementHelper.js";
+import { el, ElementOptions, toggleClasses } from "../util/ElementHelper.js";
 import { invariant } from "../util/error.js";
 import { EventBus, EventSubscriber, Listener } from "../util/EventBus.js";
-import { assertString } from "../util/narrowing.js";
 import { ResourceCleaner } from "./Disposer.js";
 import { OutfitSlotsHost } from "./OutfitSlotsHost.js";
 import { OutfitTabsHost } from "./OutfitTabsHost.js";
@@ -174,7 +172,9 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 	}
 
 	private restoreSize(): void {
-		if (!this.panelEl) return;
+		if (!this.panelEl) {
+			return;
+		}
 
 		const mode = this.getLayoutMode();
 
@@ -183,13 +183,19 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 	}
 
 	private restorePos(restoreX = true, restoreY = true): void {
-		if (!this.panelEl) return;
+		if (!this.panelEl) {
+			return;
+		}
 
 		const mode = this.getLayoutMode();
 
 		const [x, y] = this.getSavedXY(mode);
-		if (restoreX) this.setX(x);
-		if (restoreY) this.setY(y);
+		if (restoreX) {
+			this.setX(x);
+		}
+		if (restoreY) {
+			this.setY(y);
+		}
 	}
 
 	private forcePos(): void {
@@ -201,12 +207,16 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 	}
 
 	private setX(x: number): void {
-		if (!this.panelEl) return;
+		if (!this.panelEl) {
+			return;
+		}
 		this.panelEl.style.left = `${x}px`;
 	}
 
 	private setY(y: number): void {
-		if (!this.panelEl) return;
+		if (!this.panelEl) {
+			return;
+		}
 		this.panelEl.style.top = `${y}px`;
 	}
 
@@ -279,7 +289,9 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 	protected beginDragFromEvent(e: PointerEvent): void {
 		const handle = this.panelEl?.querySelector(".outfit-header") as HTMLElement;
 
-		if (!handle) return;
+		if (!handle) {
+			return;
+		}
 
 		// Simulate a pointerdown on the handle
 		// So your existing dragging logic activates correctly
@@ -291,10 +303,14 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 	 * Makes the header and minimized panel toggle the minimized state on left-click.
 	 */
 	protected bindMinimizeEvents(): void {
-		if (!this.panelEl) return;
+		if (!this.panelEl) {
+			return;
+		}
 
 		this.panelEl.addEventListener('click', event => {
-			if (!isLeftClick(event)) return;
+			if (!isLeftClick(event)) {
+				return;
+			}
 
 			const target = event.target as HTMLElement;
 			const clickedHeader = target.closest('.outfit-header h3') !== null;
@@ -357,15 +373,25 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 	}
 
 	private expandHeader(): void {
-		if (!this.panelEl) return;
+		if (!this.panelEl) {
+			return;
+		}
 		const titleElement = this.panelEl.querySelector<HTMLElement>(".outfit-header h3");
-		if (titleElement) titleElement.textContent = this.getHeaderTitle();
+		if (titleElement) {
+			titleElement.textContent = this.getHeaderTitle();
+		}
 	}
 
 	private collapseHeader(): void {
-		if (!this.panelEl) return;
+		if (!this.panelEl) {
+			return;
+		}
+
 		const titleEl = this.panelEl.querySelector<HTMLElement>('.outfit-header h3');
-		if (titleEl) titleEl.textContent = "";
+
+		if (titleEl) {
+			titleEl.textContent = "";
+		}
 	}
 
 
@@ -380,7 +406,9 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 	}
 
 	private updateMinimizeState(changed: boolean): void {
-		if (!this.panelEl) return;
+		if (!this.panelEl) {
+			return;
+		}
 
 		const minimizeBtn = this.panelEl.querySelector('.minimize-button') as HTMLElement;
 
@@ -518,7 +546,9 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 	public show(
 		options: ShowOptions = {}
 	): boolean {
-		if (!this.canShow()) return false;
+		if (!this.canShow()) {
+			return false;
+		}
 
 		const initialized = this.initializePanel();
 
@@ -576,7 +606,9 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 	}
 
 	public applyTheme(): void {
-		if (!this.panelEl) return;
+		if (!this.panelEl) {
+			return;
+		}
 
 		const s = this.getPanelSettings();
 

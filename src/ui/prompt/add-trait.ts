@@ -1,24 +1,31 @@
 
-import { OutfitTracker } from '../../data/tracker.js';
 import type { TraitDefinition, TraitIcon } from '../../data/model/Outfit.js';
+import type { TraitModalFocus } from '../../data/model/trait.js';
+import { OutfitTracker } from '../../data/tracker.js';
 import { el } from '../../util/ElementHelper.js';
 import { applyIconFallback } from '../../util/element/icon.js';
 
 interface AddTraitModalOptions {
 	excludedIds?: ReadonlySet<string>;
-	onConfigure?: () => Promise<boolean>;
+	onConfigure?: (group: string) => Promise<boolean>;
+	focus?: TraitModalFocus | undefined;
 }
 
 const DEFAULT_GROUP = '';
 
 export async function promptAddTrait({
 	excludedIds = new Set(),
-	onConfigure
+	onConfigure,
+	focus
 }: AddTraitModalOptions = {}): Promise<string | null> {
 	const registry = OutfitTracker.viewTraitRegistry();
 
-	let activeGroup = DEFAULT_GROUP;
+	let activeGroup = focus && 'group' in focus
+		? focus.group
+		: DEFAULT_GROUP;
 	let available: TraitDefinition[] = [];
+
+	let initialFocus = true;
 
 	const overlay = el('div', {
 		className: 'sto-overlay show'
@@ -79,6 +86,14 @@ export async function promptAddTrait({
 	function refresh(): void {
 		available = registry.getAll()
 			.filter(trait => !excludedIds.has(trait.id));
+
+		if (focus && 'trait' in focus) {
+			const trait = available.find(trait => trait.id === focus.trait);
+
+			if (trait) {
+				activeGroup = trait.group;
+			}
+		}
 
 		render();
 	}
@@ -151,6 +166,11 @@ export async function promptAddTrait({
 				}
 			});
 
+			if (focus && 'trait' in focus && trait.id === focus.trait) {
+				row.classList.add('--focused');
+			}
+
+
 			const icon = el('i', {
 				className: getIconClass(trait.icon),
 				parent: row
@@ -168,6 +188,16 @@ export async function promptAddTrait({
 				className: 'fa-solid fa-plus trait-add-plus',
 				parent: row
 			});
+		}
+
+		if (initialFocus) {
+			initialFocus = false;
+
+			const focused = list.querySelector<HTMLElement>('.trait-add-row.--focused');
+
+			if (focused) {
+				list.scrollTop = focused.offsetTop - list.offsetTop;
+			}
 		}
 	}
 
@@ -200,13 +230,15 @@ export async function promptAddTrait({
 	});
 
 	configureButton.addEventListener('click', async () => {
-		if (configuring || !onConfigure) return;
+		if (configuring || !onConfigure) {
+			return;
+		}
 
 		configuring = true;
 		configureButton.disabled = true;
 
 		try {
-			const changed = await onConfigure();
+			const changed = await onConfigure(activeGroup);
 
 			if (!changed) {
 				configuring = false;

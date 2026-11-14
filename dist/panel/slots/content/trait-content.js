@@ -209,6 +209,7 @@ export class TraitSlotContenter extends OutfitPanelContext {
         });
         addDoubleTapListener(traitDescDiv, async () => {
             await promptConfigureTraits({
+                focus: { trait: assignment.traitId },
                 onSave: () => this.panel.applyTraitChanges()
             });
         });
@@ -263,16 +264,25 @@ export class TraitSlotContenter extends OutfitPanelContext {
         return { textbox };
     }
     async addTrait(ctx) {
+        const registry = OutfitTracker.viewTraitRegistry();
+        const lastTrait = [...ctx.slot.traits]
+            .reverse()
+            .map(assignment => registry.get(assignment.traitId))
+            .find(trait => trait !== undefined);
         const traitId = await promptAddTrait({
             excludedIds: new Set(ctx.slot.traits.map(assignment => assignment.traitId)),
-            onConfigure: () => promptConfigureTraits({
-                onSave: () => this.panel.applyTraitChanges()
+            focus: lastTrait
+                ? { group: lastTrait.group }
+                : undefined,
+            onConfigure: (group) => promptConfigureTraits({
+                onSave: () => this.panel.applyTraitChanges(),
+                focus: { group }
             })
         });
         if (!traitId) {
             return;
         }
-        const trait = OutfitTracker.viewTraitRegistry().get(traitId);
+        const trait = registry.get(traitId);
         this.commit(ctx, [
             ...ctx.slot.traits.map(assignment => ({ ...assignment })),
             {

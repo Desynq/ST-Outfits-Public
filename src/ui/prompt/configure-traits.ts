@@ -1,11 +1,9 @@
 
-import { OutfitTracker } from '../../data/tracker.js';
-import { TraitRegistryView } from '../../data/view/TraitRegistryView.js';
 import type { TraitDefinition, TraitIcon } from '../../data/model/Outfit.js';
+import type { TraitModalFocus } from '../../data/model/trait.js';
+import { OutfitTracker } from '../../data/tracker.js';
 import { el } from '../../util/ElementHelper.js';
-import { applyIconFallback } from '../../util/element/icon.js';
 import { renderTrait } from './render/trait.js';
-import { addDoubleTapListener } from '../../util/element/click-actions.js';
 
 export type TraitDraft = Omit<TraitDefinition, 'id'> & {
 	id?: string;
@@ -13,6 +11,7 @@ export type TraitDraft = Omit<TraitDefinition, 'id'> & {
 
 interface TraitModalOptions {
 	onSave?: () => void | Promise<void>;
+	focus?: TraitModalFocus | undefined;
 }
 
 function comparableTraits(source: TraitDraft[]): {
@@ -36,7 +35,8 @@ function comparableTraits(source: TraitDraft[]): {
 const DEFAULT_GROUP = '';
 
 export async function promptConfigureTraits({
-	onSave
+	onSave,
+	focus
 }: TraitModalOptions = {}): Promise<boolean> {
 	const registry = OutfitTracker.viewTraitRegistry();
 
@@ -51,7 +51,16 @@ export async function promptConfigureTraits({
 
 	const expandedTraits = new Set<TraitDraft>();
 
-	let activeGroup = '';
+	const focusedTrait = focus && 'trait' in focus
+		? traits.find(trait => trait.id === focus.trait)
+		: undefined;
+
+	let activeGroup = focusedTrait?.group
+		?? (focus && 'group' in focus ? focus.group : DEFAULT_GROUP);
+
+	if (focusedTrait) {
+		expandedTraits.add(focusedTrait);
+	}
 
 	function getGroups(): string[] {
 		const groups = [...new Set(traits.map(trait => trait.group))];

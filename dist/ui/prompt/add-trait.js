@@ -2,10 +2,13 @@ import { OutfitTracker } from '../../data/tracker.js';
 import { el } from '../../util/ElementHelper.js';
 import { applyIconFallback } from '../../util/element/icon.js';
 const DEFAULT_GROUP = '';
-export async function promptAddTrait({ excludedIds = new Set(), onConfigure } = {}) {
+export async function promptAddTrait({ excludedIds = new Set(), onConfigure, focus } = {}) {
     const registry = OutfitTracker.viewTraitRegistry();
-    let activeGroup = DEFAULT_GROUP;
+    let activeGroup = focus && 'group' in focus
+        ? focus.group
+        : DEFAULT_GROUP;
     let available = [];
+    let initialFocus = true;
     const overlay = el('div', {
         className: 'sto-overlay show'
     });
@@ -53,6 +56,12 @@ export async function promptAddTrait({ excludedIds = new Set(), onConfigure } = 
     function refresh() {
         available = registry.getAll()
             .filter(trait => !excludedIds.has(trait.id));
+        if (focus && 'trait' in focus) {
+            const trait = available.find(trait => trait.id === focus.trait);
+            if (trait) {
+                activeGroup = trait.group;
+            }
+        }
         render();
     }
     function renderGroups() {
@@ -108,6 +117,9 @@ export async function promptAddTrait({ excludedIds = new Set(), onConfigure } = 
                     }
                 }
             });
+            if (focus && 'trait' in focus && trait.id === focus.trait) {
+                row.classList.add('--focused');
+            }
             const icon = el('i', {
                 className: getIconClass(trait.icon),
                 parent: row
@@ -122,6 +134,13 @@ export async function promptAddTrait({ excludedIds = new Set(), onConfigure } = 
                 className: 'fa-solid fa-plus trait-add-plus',
                 parent: row
             });
+        }
+        if (initialFocus) {
+            initialFocus = false;
+            const focused = list.querySelector('.trait-add-row.--focused');
+            if (focused) {
+                list.scrollTop = focused.offsetTop - list.offsetTop;
+            }
         }
     }
     let resolveResult;
@@ -148,12 +167,13 @@ export async function promptAddTrait({ excludedIds = new Set(), onConfigure } = 
         }
     });
     configureButton.addEventListener('click', async () => {
-        if (configuring || !onConfigure)
+        if (configuring || !onConfigure) {
             return;
+        }
         configuring = true;
         configureButton.disabled = true;
         try {
-            const changed = await onConfigure();
+            const changed = await onConfigure(activeGroup);
             if (!changed) {
                 configuring = false;
                 close();

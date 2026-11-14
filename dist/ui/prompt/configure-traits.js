@@ -12,7 +12,7 @@ function comparableTraits(source) {
     }));
 }
 const DEFAULT_GROUP = '';
-export async function promptConfigureTraits({ onSave } = {}) {
+export async function promptConfigureTraits({ onSave, focus } = {}) {
     const registry = OutfitTracker.viewTraitRegistry();
     const traits = registry.getAll().map(trait => structuredClone(trait));
     const initialState = JSON.stringify(comparableTraits(traits));
@@ -20,7 +20,14 @@ export async function promptConfigureTraits({ onSave } = {}) {
         return JSON.stringify(comparableTraits(traits)) !== initialState;
     }
     const expandedTraits = new Set();
-    let activeGroup = '';
+    const focusedTrait = focus && 'trait' in focus
+        ? traits.find(trait => trait.id === focus.trait)
+        : undefined;
+    let activeGroup = focusedTrait?.group
+        ?? (focus && 'group' in focus ? focus.group : DEFAULT_GROUP);
+    if (focusedTrait) {
+        expandedTraits.add(focusedTrait);
+    }
     function getGroups() {
         const groups = [...new Set(traits.map(trait => trait.group))];
         if (!groups.length) {

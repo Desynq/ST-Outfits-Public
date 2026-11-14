@@ -3,7 +3,8 @@ import { asBoolean, asObject, asStringRecord, ensureObject, notObject, resolvePo
 import { isNonEmptyString, isRecord } from "../util/narrowing.js";
 import { toSlotId } from "../util/normalize/slot.js";
 import { normalizeOutfitSnapshots } from "./mappings/OutfitCache.js";
-import { CharacterNotes, ContextSlot, ContextSlotBase, ImageBlob, ImageRef, Outfit, OutfitCollection, OutfitImage, OutfitTrackerModel, SlotCharacterNotes, SlotCondition, SlotConditionMap, SlotKind, TextSlot, TraitAssignment, TraitSlot } from "./model/Outfit.js";
+import { CharacterNotes, ContextSlot, ContextSlotBase, ImageBlob, ImageRef, Outfit, OutfitCollection, OutfitImage, SlotCharacterNotes, SlotCondition, SlotConditionMap, SlotKind, TextSlot, TraitAssignment, TraitSlot } from "./model/Outfit.js";
+import { SettingsModel } from "./model/settings.js";
 import { SlotPreset } from "./model/SlotPreset.js";
 import { normalizeTraitAssignments } from "./normalization/trait.js";
 
@@ -292,8 +293,8 @@ function normalizeImages(
 
 
 export function normalizeImageBlobs(
-	holder: Partial<OutfitTrackerModel>
-): asserts holder is Partial<OutfitTrackerModel> & {
+	holder: Partial<SettingsModel>
+): asserts holder is Partial<SettingsModel> & {
 	images: Record<string, ImageBlob>;
 } {
 	if (!holder.images || typeof holder.images !== 'object') {

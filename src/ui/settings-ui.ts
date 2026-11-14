@@ -1,4 +1,4 @@
-import { OutfitTrackerModel } from "../data/model/Outfit.js";
+import { SettingsModel } from "../data/model/settings.js";
 import { TraitManager } from "../manager/TraitManager.js";
 import { RecontextualizeOptions } from "../panel/PanelRegistry.js";
 import { el } from "../util/ElementHelper.js";
@@ -16,7 +16,7 @@ interface AutoOutfitSystemLike {
 }
 
 interface SettingsUIOptions {
-	settings: OutfitTrackerModel;
+	settings: SettingsModel;
 	saveSettings: () => void;
 	autoOutfitSystem?: AutoOutfitSystemLike;
 	sendSystemMessage: (message: string) => void;

@@ -5,7 +5,7 @@ import { extension_settings } from '../../../../extensions.js';
 import { getCurrentCharacterKey } from './api/character-provider.js';
 import { saveSettings as saveSettingsBase } from './api/settings.js';
 import { registerPanelCommands } from './command/panel-commands.js';
-import { OutfitTrackerModel } from './data/model/Outfit.js';
+import { SettingsModel } from "./data/model/settings.js";
 import { TraitManager } from './manager/TraitManager.js';
 import { OutfitPanelRegistry, RecontextualizeOptions } from './panel/PanelRegistry.js';
 import { createSettingsUI } from './ui/settings-ui.js';
@@ -253,7 +253,7 @@ async function initializeExtension(): Promise<void> {
     updateForCurrentCharacter();
 
     createSettingsUI({
-        settings: extension_settings[MODULE_NAME] as OutfitTrackerModel,
+        settings: extension_settings[MODULE_NAME] as SettingsModel,
         saveSettings,
         // @ts-ignore
         autoOutfitSystem:

@@ -20,7 +20,7 @@ import { OutfitSlotsHost } from "./OutfitSlotsHost.js";
 import { OutfitTabsHost } from "./OutfitTabsHost.js";
 import { IPanelGrouper } from "./PanelRegistry.js";
 import { SlotsRenderer } from "./SlotsRenderer.js";
-import { OutfitTabsRenderer as TabsRenderer } from "./TabsRenderer.js";
+import { OutfitTab, OutfitTabsRenderer as TabsRenderer } from "./TabsRenderer.js";
 
 export interface DropPacket {
 	mode: LayoutMode;
@@ -91,6 +91,9 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 		this.expandedBus.add(listener);
 	}
 
+	/**
+	 * Subscriber for when the user focuses on the panel
+	 */
 	public onFocus(listener: Listener<typeof this.focusBus>): void {
 		this.focusBus.add(listener);
 	}
@@ -243,16 +246,22 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 
 	public renderTabsAndActiveContent(): void {
 		this.disposer.dispose();
-		if (!this.panelEl || this.minimized) return;
+		if (!this.panelEl || this.minimized) {
+			return;
+		}
 
 		this.applyTheme();
 		this.expandHeader();
 
 		const tabsContainer = this.panelEl.querySelector('.outfit-tabs') as HTMLDivElement | undefined;
-		if (!tabsContainer) return;
+		if (!tabsContainer) {
+			return;
+		}
 
 		const contentArea = this.panelEl.querySelector('.outfit-content') as HTMLDivElement | undefined;
-		if (!contentArea) return;
+		if (!contentArea) {
+			return;
+		}
 
 		this.tabsRenderer.renderTabs(tabsContainer, contentArea);
 
@@ -542,7 +551,6 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 			this.panelEl.hidden = true;
 		}
 		this.visible = false;
-		this.minimized = false;
 
 		this.hideBus.emit();
 	}
@@ -597,5 +605,18 @@ export abstract class OutfitPanel<T extends PanelType = PanelType> implements Ou
 		TraitManager.updateMacros();
 
 		this.renderTabsAndActiveContent();
+	}
+
+
+	public getActiveTab(): OutfitTab {
+		return this.tabsRenderer.getActiveTab();
+	}
+
+	public setActiveTab(tab: OutfitTab): void {
+		this.tabsRenderer.setActiveTab(tab);
+	}
+
+	public restoreTab(tabId: string): void {
+		this.tabsRenderer.restoreTab(tabId);
 	}
 }

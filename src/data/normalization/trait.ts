@@ -1,5 +1,6 @@
 import { isRecord } from "../../util/narrowing.js";
-import type { OutfitTrackerModel, TraitAssignment, TraitDefinition, TraitIcon } from "../model/Outfit.js";
+import type { TraitAssignment, TraitDefinition, TraitIcon } from "../model/Outfit.js";
+import type { SettingsModel } from "../model/settings.js";
 
 export function normalizeTraitAssignments(
 	value: unknown
@@ -33,7 +34,7 @@ export function normalizeTraitAssignments(
 
 
 export function normalizeTraits(
-	holder: Partial<OutfitTrackerModel>
+	holder: Partial<SettingsModel>
 ): void {
 	const registry = holder.traits;
 	const source = isRecord(registry) && isRecord(registry.definitions)

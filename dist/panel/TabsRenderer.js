@@ -1,3 +1,4 @@
+import { OutfitTracker } from "../data/tracker.js";
 import { assertNever } from "../shared.js";
 import { addHorizontalScroll, createElement, el } from "../util/ElementHelper.js";
 import { toSlotId } from "../util/normalize/slot.js";
@@ -26,6 +27,39 @@ export class OutfitTabsRenderer {
     }
     get outfitView() {
         return this.outfitManager.getOutfitView();
+    }
+    getActiveTab() {
+        return this.currentTab;
+    }
+    getActiveTabId() {
+        return this.currentTab.type === 'system'
+            ? `system:${this.currentTab.id}`
+            : `kind:${this.currentTab.kind}`;
+    }
+    restoreTab(tabId) {
+        const separator = tabId.indexOf(':');
+        if (separator === -1) {
+            return;
+        }
+        const type = tabId.slice(0, separator);
+        const id = tabId.slice(separator + 1);
+        if (type === 'system' && this.isOutfitSystemTabId(id)) {
+            this.setActiveTab({ type: 'system', id }, false);
+        }
+        else if (type === 'kind' && this.outfitView.getSlotKinds().includes(id)) {
+            this.setActiveTab({ type: 'kind', kind: id }, false);
+        }
+    }
+    setActiveTab(tab, render = true) {
+        if (this.tabsEqual(this.currentTab, tab)) {
+            return;
+        }
+        this.currentTab = tab;
+        OutfitTracker.viewUIState().setLastTab(this.outfitManager.getName(), this.getActiveTabId());
+        this.outfitManager.saveSettings();
+        if (render) {
+            this.panel.renderTabsAndActiveContent();
+        }
     }
     renderTabs(tabsContainer, contentArea) {
         this.recreateTabs(tabsContainer);
@@ -93,7 +127,7 @@ export class OutfitTabsRenderer {
         createSystemTabEl('visibility');
         for (const tabEl of tabEls) {
             const kindTab = this.getKindTabFromElement(tabEl);
-            let clickListener = () => this.changeTab(tabEls, tabEl);
+            let clickListener = () => this.changeTab(tabEl);
             if (kindTab) {
                 this.addDragCapabilityToTab(tabEl);
                 if (this.currentTab.type === 'kind' && this.currentTab.kind === kindTab.kind) {
@@ -162,16 +196,12 @@ export class OutfitTabsRenderer {
         }
         return null;
     }
-    changeTab(allTabs, clickedTab) {
+    changeTab(clickedTab) {
         const tab = this.getTabFromElement(clickedTab);
-        if (!tab)
-            throw new Error(`Element could not be coerced into a tab: ${clickedTab.outerHTML}`);
-        this.currentTab = tab;
-        this.panel.renderTabsAndActiveContent();
-        for (const t of allTabs) {
-            t.classList.remove('active');
+        if (!tab) {
+            throw new Error(`Invalid tab: ${clickedTab.outerHTML}`);
         }
-        clickedTab.classList.add('active');
+        this.setActiveTab(tab);
     }
     tryRenameTab(tabEl) {
         if (!tabEl.classList.contains('active'))

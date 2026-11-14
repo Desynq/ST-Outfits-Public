@@ -49,6 +49,9 @@ export class OutfitPanel {
     onExpand(listener) {
         this.expandedBus.add(listener);
     }
+    /**
+     * Subscriber for when the user focuses on the panel
+     */
     onFocus(listener) {
         this.focusBus.add(listener);
     }
@@ -159,16 +162,19 @@ export class OutfitPanel {
     }
     renderTabsAndActiveContent() {
         this.disposer.dispose();
-        if (!this.panelEl || this.minimized)
+        if (!this.panelEl || this.minimized) {
             return;
+        }
         this.applyTheme();
         this.expandHeader();
         const tabsContainer = this.panelEl.querySelector('.outfit-tabs');
-        if (!tabsContainer)
+        if (!tabsContainer) {
             return;
+        }
         const contentArea = this.panelEl.querySelector('.outfit-content');
-        if (!contentArea)
+        if (!contentArea) {
             return;
+        }
         this.tabsRenderer.renderTabs(tabsContainer, contentArea);
         const mode = this.getLayoutMode();
         if (mode !== 'mobile') {
@@ -376,7 +382,6 @@ export class OutfitPanel {
             this.panelEl.hidden = true;
         }
         this.visible = false;
-        this.minimized = false;
         this.hideBus.emit();
     }
     toggle(resetSizeAndPos = false) {
@@ -417,5 +422,14 @@ export class OutfitPanel {
         this.recontextualizeTraits();
         TraitManager.updateMacros();
         this.renderTabsAndActiveContent();
+    }
+    getActiveTab() {
+        return this.tabsRenderer.getActiveTab();
+    }
+    setActiveTab(tab) {
+        this.tabsRenderer.setActiveTab(tab);
+    }
+    restoreTab(tabId) {
+        this.tabsRenderer.restoreTab(tabId);
     }
 }

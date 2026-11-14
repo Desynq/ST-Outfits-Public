@@ -1,6 +1,7 @@
 import { asObject, asObjectArray, asStringArray, ensureObject } from "../../ObjectHelper.js";
 import { ensureRecordProperty } from "../../util/narrowing.js";
-import { OutfitTrackerModel, XY } from "../model/Outfit.js";
+import { XY } from "../model/Outfit.js";
+import { SettingsModel } from "../model/settings.js";
 import { CharPanelSettings, CharPanelsTree, PanelGroup, PanelSettings } from "../model/Panels.js";
 
 export function normalizeXY(value: unknown, fallback: XY): XY {
@@ -24,7 +25,7 @@ function isXY(value: unknown): value is XY {
 }
 
 export function normalizePanelSettings(
-	holder: Partial<OutfitTrackerModel>,
+	holder: Partial<SettingsModel>,
 	key: 'userPanel' | 'botPanel',
 	fallback: PanelSettings
 ): void {

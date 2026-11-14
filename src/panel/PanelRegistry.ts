@@ -1,6 +1,5 @@
 import { ContextSlot } from "../data/model/Outfit.js";
 import { OutfitTracker } from "../data/tracker.js";
-import { PanelType } from "../types/maps.js";
 import { MappedEventBus } from "../util/EventBus.js";
 import { BotOutfitPanel } from "./BotOutfitPanel.js";
 import { CharOutfitPanel } from "./CharOutfitPanel.js";
@@ -36,6 +35,11 @@ export class OutfitPanelRegistry implements IPanelGrouper {
 	private readonly groupFocusBus = new MappedEventBus<string, (panel: OutfitPanel) => void>();
 
 	private botAutoOpenTimer: ReturnType<typeof setTimeout> | null = null;
+	private readonly initialPanelId = OutfitTracker.viewUIState().lastPanelId;
+	private readonly initializationDeadline = Date.now() + 2000;
+
+	private initialPanelOpened = false;
+	private lastCharacter: string | null = null;
 
 	public constructor(
 		private readonly saveSettings: () => void,
@@ -53,19 +57,19 @@ export class OutfitPanelRegistry implements IPanelGrouper {
 		this.openActiveCharPanels();
 		this.sortInitialOrder();
 
-		botPanel.onUpdateCharacter(() => {
-			if (this.isReserved(this.botPanel.character)) {
-				this.botPanel.disable();
-				return;
+		this.initialPanelOpened = this.restoreLastPanel();
+
+		if (!this.initialPanelOpened && OutfitTracker.isAutoOpen().user) {
+			this.initialPanelOpened = this.focus(userPanel);
+
+			if (this.initialPanelOpened) {
+				userPanel.setMinimize(true);
 			}
-
-			this.openBotPanel();
-		});
-
-		if (OutfitTracker.isAutoOpen().user) {
-			this.focus(userPanel);
-			userPanel.setMinimize(true);
 		}
+
+		botPanel.onUpdateCharacter(() => {
+			this.handleCharacterUpdate();
+		});
 	}
 
 	public refreshActivePanel(): void {
@@ -89,7 +93,9 @@ export class OutfitPanelRegistry implements IPanelGrouper {
 
 
 	private registerPanel(panel: OutfitPanel): void {
-		if (this.panels.has(panel)) return;
+		if (this.panels.has(panel)) {
+			return;
+		}
 
 		this.panels.add(panel);
 		this.panelOrder.push(panel);
@@ -98,7 +104,9 @@ export class OutfitPanelRegistry implements IPanelGrouper {
 			this.promotePanel(panel);
 
 			for (const other of this.panels) {
-				if (other === panel) continue;
+				if (other === panel) {
+					continue;
+				}
 				other.setFront(false);
 			}
 
@@ -110,10 +118,33 @@ export class OutfitPanelRegistry implements IPanelGrouper {
 		});
 	}
 
+	private restoreLastPanel(): boolean {
+		if (!this.initialPanelId) {
+			return false;
+		}
+
+		if (this.initialPanelId === this.botPanel.outfitManager.getName()) {
+			return true;
+		}
+
+		const panel = this.getGroup().find(
+			panel => panel.outfitManager.getName() === this.initialPanelId
+		);
+
+		if (!panel || !this.focus(panel)) {
+			return false;
+		}
+
+		panel.setMinimize(true);
+		return true;
+	}
+
 	private promotePanel(panel: OutfitPanel): void {
 		const index = this.panelOrder.indexOf(panel);
 
-		if (index <= 0) return;
+		if (index <= 0) {
+			return;
+		}
 
 		this.panelOrder.splice(index, 1);
 		this.panelOrder.unshift(panel);
@@ -224,8 +255,13 @@ export class OutfitPanelRegistry implements IPanelGrouper {
 	 * Calling this with the already focused panel has no effect
 	 */
 	public focus(panel: OutfitPanel): boolean {
-		if (!panel.canShow()) return false;
-		if (!this.panels.has(panel)) return false;
+		if (!panel.canShow()) {
+			return false;
+		}
+
+		if (!this.panels.has(panel)) {
+			return false;
+		}
 
 		if (this.activePanel === panel) {
 			return true;
@@ -239,6 +275,18 @@ export class OutfitPanelRegistry implements IPanelGrouper {
 		}
 
 		this.activePanel = panel;
+
+		const panelId = panel.outfitManager.getName();
+		const uiState = OutfitTracker.viewUIState();
+
+		uiState.setLastPanel(panelId);
+		this.saveSettings();
+
+		const lastTabId = uiState.getLastTab(panelId);
+
+		if (lastTabId !== undefined) {
+			panel.restoreTab(lastTabId);
+		}
 
 		panel.show();
 		panel.setFront(true);
@@ -276,25 +324,52 @@ export class OutfitPanelRegistry implements IPanelGrouper {
 			return false;
 		}
 
-		this.cancelBotAutoOpen(); // debounce
-		this.botAutoOpenTimer = setTimeout(() => {
-			this.botAutoOpenTimer = null;
-
-			if (!OutfitTracker.isAutoOpen().bot) return;
-
-			if (this.isReserved(this.botPanel.character)) return;
-
-			this.focus(this.botPanel);
-			this.botPanel.setMinimize(true);
-		}, 100);
-
+		this.focus(this.botPanel);
+		this.botPanel.setMinimize(true);
 		return true;
 	}
 
-	private cancelBotAutoOpen(): void {
-		if (this.botAutoOpenTimer === null) return;
+	private handleCharacterUpdate(): void {
+		const character = this.botPanel.character;
+		const reserved = this.charPanels.has(character);
 
-		clearTimeout(this.botAutoOpenTimer);
-		this.botAutoOpenTimer = null;
+		const characterChanged = character !== this.lastCharacter;
+		this.lastCharacter = character;
+
+		// Keep the bot panel available for Unknown.
+		if (reserved) {
+			this.botPanel.disable();
+		}
+		else {
+			this.botPanel.enable();
+		}
+
+		// Unknown should update the panel without automatically focusing it.
+		if (character === 'Unknown') {
+			return;
+		}
+
+		if (
+			character !== 'Unknown'
+			&& !reserved
+			&& this.initialPanelId === this.botPanel.outfitManager.getName()
+			&& this.activePanel === null
+		) {
+			if (this.focus(this.botPanel)) {
+				this.botPanel.setMinimize(true);
+			}
+			return;
+		}
+
+		// Preserve the initially restored panel during startup.
+		if (
+			this.initialPanelOpened
+			&& Date.now() < this.initializationDeadline
+		) {
+			return;
+		}
+
+		this.focus(this.botPanel);
+		this.botPanel.setMinimize(true);
 	}
 }

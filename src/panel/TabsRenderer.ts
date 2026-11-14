@@ -1,4 +1,5 @@
 import { SlotKind } from "../data/model/Outfit.js";
+import { OutfitTracker } from "../data/tracker.js";
 import { MutableOutfitView } from "../data/view/MutableOutfitView.js";
 import { OutfitManager } from "../manager/OutfitManager.js";
 import { assertNever } from "../shared.js";
@@ -23,7 +24,7 @@ interface OutfitKindTab {
 	kind: SlotKind;
 }
 
-type OutfitTab = OutfitSystemTab | OutfitKindTab;
+export type OutfitTab = OutfitSystemTab | OutfitKindTab;
 
 type OutfitTabType = OutfitTab['type'];
 
@@ -68,6 +69,51 @@ export class OutfitTabsRenderer {
 
 	private get outfitView(): MutableOutfitView {
 		return this.outfitManager.getOutfitView();
+	}
+
+	public getActiveTab(): OutfitTab {
+		return this.currentTab;
+	}
+
+	public getActiveTabId(): string {
+		return this.currentTab.type === 'system'
+			? `system:${this.currentTab.id}`
+			: `kind:${this.currentTab.kind}`;
+	}
+
+	public restoreTab(tabId: string): void {
+		const separator = tabId.indexOf(':');
+		if (separator === -1) {
+			return;
+		}
+
+		const type = tabId.slice(0, separator);
+		const id = tabId.slice(separator + 1);
+
+		if (type === 'system' && this.isOutfitSystemTabId(id)) {
+			this.setActiveTab({ type: 'system', id }, false);
+		}
+		else if (type === 'kind' && this.outfitView.getSlotKinds().includes(id)) {
+			this.setActiveTab({ type: 'kind', kind: id }, false);
+		}
+	}
+
+	public setActiveTab(tab: OutfitTab, render = true): void {
+		if (this.tabsEqual(this.currentTab, tab)) {
+			return;
+		}
+
+		this.currentTab = tab;
+
+		OutfitTracker.viewUIState().setLastTab(
+			this.outfitManager.getName(),
+			this.getActiveTabId()
+		);
+
+		this.outfitManager.saveSettings();
+		if (render) {
+			this.panel.renderTabsAndActiveContent();
+		}
 	}
 
 	public renderTabs(tabsContainer: HTMLDivElement, contentArea: HTMLDivElement): void {
@@ -150,7 +196,7 @@ export class OutfitTabsRenderer {
 			const kindTab = this.getKindTabFromElement(tabEl);
 
 			let clickListener: (e: MouseEvent) => void =
-				() => this.changeTab(tabEls, tabEl);
+				() => this.changeTab(tabEl);
 
 			if (kindTab) {
 				this.addDragCapabilityToTab(tabEl);
@@ -250,18 +296,13 @@ export class OutfitTabsRenderer {
 		return null;
 	}
 
-	private changeTab<T extends HTMLButtonElement>(allTabs: readonly T[], clickedTab: T): void {
+	private changeTab(clickedTab: HTMLButtonElement): void {
 		const tab = this.getTabFromElement(clickedTab);
-		if (!tab) throw new Error(`Element could not be coerced into a tab: ${clickedTab.outerHTML}`);
-
-		this.currentTab = tab;
-
-		this.panel.renderTabsAndActiveContent();
-
-		for (const t of allTabs) {
-			t.classList.remove('active');
+		if (!tab) {
+			throw new Error(`Invalid tab: ${clickedTab.outerHTML}`);
 		}
-		clickedTab.classList.add('active');
+
+		this.setActiveTab(tab);
 	}
 
 	private tryRenameTab(tabEl: HTMLElement): void {

@@ -7,8 +7,10 @@ import { SlotIconRule } from "../ui/prompt/configure-slot-icons.js";
 import { isRecord } from "../util/narrowing.js";
 import { normalizeCharPanels, normalizePanelSettings } from "./mappings/PanelSettings.js";
 import { migrateTraitsV2 } from "./migration/traits.js";
-import { CharactersOutfitMap, ExtensionSettingsAugment, ImageBlob, ImageCacheEntry, ImageRef, OutfitTrackerModel } from "./model/Outfit.js";
+import { CharactersOutfitMap, ExtensionSettingsAugment, ImageBlob, ImageCacheEntry, ImageRef } from "./model/Outfit.js";
+import { SettingsModel } from "./model/settings.js";
 import { normalizeTraits } from "./normalization/trait.js";
+import { normalizeUIState } from "./normalization/ui-state.js";
 import { normalizeImageBlobs, normalizeSlotPresets, validatePresets } from "./normalize.js";
 import { CharPanelsView } from "./view/CharPanelsView.js";
 import { CharacterOutfitCollectionView, UserOutfitCollectionView } from "./view/OutfitCollectionView.js";
@@ -16,13 +18,14 @@ import { OutfitGalleryView } from "./view/OutfitGalleryView.js";
 import { BotPanelSettingsView, defaultBotPanelSettings, defaultUserPanelSettings, UserPanelSettingsView } from "./view/PanelViews.js";
 import { SlotPresetRegistry } from "./view/SlotPresetsView.js";
 import { TraitRegistryView } from "./view/TraitRegistryView.js";
+import { UIStateView } from "./view/UIStateView.js";
 
 class Tracker {
 
 	private readonly imageCache: Map<string, ImageCacheEntry> = new Map();
 
 	public constructor(
-		private readonly settings: OutfitTrackerModel
+		private readonly settings: SettingsModel
 	) { }
 
 	public areSystemMessagesEnabled(): boolean {
@@ -95,6 +98,12 @@ class Tracker {
 		);
 	}
 
+	public viewUIState(): UIStateView {
+		return new UIStateView(
+			this.settings.uiState
+		);
+	}
+
 
 
 	public async migrate(): Promise<void> {
@@ -116,7 +125,9 @@ class Tracker {
 				return { oldKey: key, newKey };
 			});
 
-		if (tasks.length === 0) return;
+		if (tasks.length === 0) {
+			return;
+		}
 
 		const results = await Promise.all(tasks);
 
@@ -156,7 +167,7 @@ class CharacterOutfitMapView {
 const settings = extension_settings as typeof extension_settings & ExtensionSettingsAugment;
 
 function loadTracker(): Tracker {
-	const raw: Partial<OutfitTrackerModel> = settings.outfit_tracker ??= {};
+	const raw: Partial<SettingsModel> = settings.outfit_tracker ??= {};
 
 	migrateTracker(raw);
 
@@ -175,15 +186,16 @@ function loadTracker(): Tracker {
 	raw.slotIconRules ??= structuredClone(DEFAULT_SLOT_ICON_RULES);
 
 	normalizeTraits(raw);
+	normalizeUIState(raw);
 
 	raw.version = 4;
-	return new Tracker(raw as OutfitTrackerModel);
+	return new Tracker(raw as SettingsModel);
 }
 
 /**
  * Will always migrate through all the versions when loading mod for the first time
  */
-function migrateTracker(raw: Partial<OutfitTrackerModel>): void {
+function migrateTracker(raw: Partial<SettingsModel>): void {
 	const version = typeof raw.version === 'number' ? raw.version : 0;
 
 	if (version < 1) {
@@ -207,10 +219,14 @@ function migrateTracker(raw: Partial<OutfitTrackerModel>): void {
 }
 
 function migrateOutfitNamingV1(presets: unknown): void {
-	if (notObject(presets)) return;
+	if (notObject(presets)) {
+		return;
+	}
 
 	for (const collection of getPresetCollections(presets as Record<string, unknown>)) {
-		if (notObject(collection)) continue;
+		if (notObject(collection)) {
+			continue;
+		}
 
 		const raw = collection as Record<string, unknown>;
 
@@ -227,15 +243,19 @@ function migrateOutfitNamingV1(presets: unknown): void {
 	}
 }
 
-function migratePanelSettingsV2(raw: Partial<OutfitTrackerModel>): void {
+function migratePanelSettingsV2(raw: Partial<SettingsModel>): void {
 	migrateSinglePanelSettingsV2(raw.userPanel);
 	migrateSinglePanelSettingsV2(raw.botPanel);
 
 	const charPanels = raw.charPanels;
-	if (notObject(charPanels)) return;
+	if (notObject(charPanels)) {
+		return;
+	}
 
 	const panels = charPanels.panels;
-	if (notObject(panels)) return;
+	if (notObject(panels)) {
+		return;
+	}
 
 	for (const panel of Object.values(panels)) {
 		migrateSinglePanelSettingsV2(panel);
@@ -243,7 +263,9 @@ function migratePanelSettingsV2(raw: Partial<OutfitTrackerModel>): void {
 }
 
 function migrateSinglePanelSettingsV2(settings: unknown): void {
-	if (!isRecord(settings)) return;
+	if (!isRecord(settings)) {
+		return;
+	}
 
 	if (!('load_state' in settings)) {
 		settings.load_state = settings.canLoadFromChat === false
@@ -255,7 +277,9 @@ function migrateSinglePanelSettingsV2(settings: unknown): void {
 }
 
 function migrateSlotPresets(presets: unknown): void {
-	if (!isRecord(presets)) return;
+	if (!isRecord(presets)) {
+		return;
+	}
 
 	for (const p of Object.values(presets as Record<string, unknown>)) {
 		if (!isRecord(p)) {

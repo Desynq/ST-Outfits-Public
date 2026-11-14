@@ -1,5 +1,6 @@
 import { isRecord } from "../../util/narrowing.js";
-import type { OutfitTrackerModel, TraitDefinition, TraitDefinitionV1 } from "../model/Outfit.js";
+import type { TraitDefinition, TraitDefinitionV1 } from "../model/Outfit.js";
+import type { SettingsModel } from "../model/settings.js";
 
 type LegacyDefinition = TraitDefinition | TraitDefinitionV1;
 
@@ -8,7 +9,7 @@ type LegacyDefinition = TraitDefinition | TraitDefinitionV1;
  * Run before outfit normalization, and only as part of the relevant version migration.
  */
 export function migrateTraitsV2(
-	holder: Partial<OutfitTrackerModel>,
+	holder: Partial<SettingsModel>,
 	toDisplayName: (id: string) => string
 ): void {
 	const registry = holder.traits;

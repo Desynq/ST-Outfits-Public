@@ -7,6 +7,7 @@ import { isRecord } from "../util/narrowing.js";
 import { normalizeCharPanels, normalizePanelSettings } from "./mappings/PanelSettings.js";
 import { migrateTraitsV2 } from "./migration/traits.js";
 import { normalizeTraits } from "./normalization/trait.js";
+import { normalizeUIState } from "./normalization/ui-state.js";
 import { normalizeImageBlobs, normalizeSlotPresets, validatePresets } from "./normalize.js";
 import { CharPanelsView } from "./view/CharPanelsView.js";
 import { CharacterOutfitCollectionView, UserOutfitCollectionView } from "./view/OutfitCollectionView.js";
@@ -14,6 +15,7 @@ import { OutfitGalleryView } from "./view/OutfitGalleryView.js";
 import { BotPanelSettingsView, defaultBotPanelSettings, defaultUserPanelSettings, UserPanelSettingsView } from "./view/PanelViews.js";
 import { SlotPresetRegistry } from "./view/SlotPresetsView.js";
 import { TraitRegistryView } from "./view/TraitRegistryView.js";
+import { UIStateView } from "./view/UIStateView.js";
 class Tracker {
     constructor(settings) {
         this.settings = settings;
@@ -64,6 +66,9 @@ class Tracker {
     viewTraitRegistry() {
         return new TraitRegistryView(this.settings.traits);
     }
+    viewUIState() {
+        return new UIStateView(this.settings.uiState);
+    }
     async migrate() {
         const images = this.settings.images;
         const gallery = this.viewGallery();
@@ -74,8 +79,9 @@ class Tracker {
             const newKey = await gallery.addImage(legacy.base64, legacy.width, legacy.height, true);
             return { oldKey: key, newKey };
         });
-        if (tasks.length === 0)
+        if (tasks.length === 0) {
             return;
+        }
         const results = await Promise.all(tasks);
         let changed = false;
         for (const { oldKey, newKey } of results) {
@@ -118,6 +124,7 @@ function loadTracker() {
     normalizePanelSettings(raw, 'botPanel', defaultBotPanelSettings);
     raw.slotIconRules ??= structuredClone(DEFAULT_SLOT_ICON_RULES);
     normalizeTraits(raw);
+    normalizeUIState(raw);
     raw.version = 4;
     return new Tracker(raw);
 }
@@ -143,11 +150,13 @@ function migrateTracker(raw) {
     }
 }
 function migrateOutfitNamingV1(presets) {
-    if (notObject(presets))
+    if (notObject(presets)) {
         return;
+    }
     for (const collection of getPresetCollections(presets)) {
-        if (notObject(collection))
+        if (notObject(collection)) {
             continue;
+        }
         const raw = collection;
         if (!('current_outfit' in raw) && 'autoOutfit' in raw) {
             raw.current_outfit = raw.autoOutfit;
@@ -163,18 +172,21 @@ function migratePanelSettingsV2(raw) {
     migrateSinglePanelSettingsV2(raw.userPanel);
     migrateSinglePanelSettingsV2(raw.botPanel);
     const charPanels = raw.charPanels;
-    if (notObject(charPanels))
+    if (notObject(charPanels)) {
         return;
+    }
     const panels = charPanels.panels;
-    if (notObject(panels))
+    if (notObject(panels)) {
         return;
+    }
     for (const panel of Object.values(panels)) {
         migrateSinglePanelSettingsV2(panel);
     }
 }
 function migrateSinglePanelSettingsV2(settings) {
-    if (!isRecord(settings))
+    if (!isRecord(settings)) {
         return;
+    }
     if (!('load_state' in settings)) {
         settings.load_state = settings.canLoadFromChat === false
             ? 'global'
@@ -183,8 +195,9 @@ function migrateSinglePanelSettingsV2(settings) {
     delete settings.canLoadFromChat;
 }
 function migrateSlotPresets(presets) {
-    if (!isRecord(presets))
+    if (!isRecord(presets)) {
         return;
+    }
     for (const p of Object.values(presets)) {
         if (!isRecord(p)) {
             continue;

@@ -1,7 +1,5 @@
-import { CharacterNoteType } from "../../Constants";
-import { SlotIconRule } from "../../ui/prompt/configure-slot-icons";
-import { CharPanelsTree, PanelSettings } from "./Panels";
-import { SlotPresetV1 } from "./SlotPreset";
+import type { CharacterNoteType } from "../../Constants.js";
+import type { SettingsModel } from "./settings.js";
 
 export type KnownSlotKind =
 	| 'clothing'
@@ -168,28 +166,6 @@ export interface ImageCacheEntry {
 
 
 
-export interface OutfitTrackerModel {
-	version: number;
-	enableSysMessages: boolean;
-	autoOpenBot: boolean;
-	autoOpenUser: boolean;
-
-
-	presets: OutfitCollectionsTree;
-	botPanel: PanelSettings;
-	userPanel: PanelSettings;
-	charPanels: CharPanelsTree;
-
-	// key: base64
-	images: Record<string, ImageRef>;
-
-	slotPresets: Record<string, SlotPresetV1>;
-
-	slotIconRules: SlotIconRule[];
-
-	traits: TraitRegistry;
-}
-
 export interface ExtensionSettingsAugment {
-	outfit_tracker?: OutfitTrackerModel;
+	outfit_tracker?: SettingsModel;
 }
